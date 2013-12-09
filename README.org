@@ -50,15 +50,45 @@ may be added or removed.
 
 ** APIs
 
+Parameter server provides several globally shared data structures, for example,
+(sparse) vectors and matrices. The class =Container= is the base class of all
+these structures. It provides two simple functions to do communication. =Push=
+sends out local modifications to other nodes, while =Pull= retrieves
+modifications from the others. These two functions are non-blocking, if the
+user specified consistency model is satisfied. All control information is set in
+=Header=.
+
 #+BEGIN_SRC C++
   Status Push(const Header& h);
   Status Pull(const Header& h);
 #+END_SRC
 
+A particular data structure may provides more convenient functions to avoid
+explicitly construct =Header=. For example, =Vectors= could store several
+sparse vectors (namely a thin sparse matrix).
+
 #+BEGIN_SRC C++
-
-
+  Status PushPull(KeyRange key_range     = KeyRange::All(),
+                  VecList  push_vec_list = {0},
+                  bool     push_delta    = kDelta,
+                  VecList  pull_vec_list = {0},
+                  bool     pull_delta    = kValue,
+                  uid_t    dest          = kServer);
 #+END_SRC
+
+A typical usage is that, we first construct 2 vectors, the first one stores the
+gradient, while the second one has the weight. Then each client write local
+computed gradient into the first one, push these values into all server nodes,
+and then retrieve the modification of weight from the server. Then we can write
+it as
+
+
+#+BEGIN_SRC C++
+  Vectors<double> W("my_vec", p, 2);
+  // write local gradient into W.vec(0)
+  W.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta, kServer);
+#+END_SRC
+
 ** Sample Codes
 
 ** Current Progress
