@@ -1,0 +1,5 @@
+message Progress {
+  optional bool finish = 1 [default = false];
+  optional double obj_value = 2 [default = 0];
+  optional int64 nonzere_weight = 3 [default = 0];
+}

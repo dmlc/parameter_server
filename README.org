@@ -34,12 +34,12 @@ use, high performance supercomputer clusters.
   replication architecture that efficiently stores data on multiple server nodes
   to enable fast (in less than 1 second) recovery from node failure.
 
-** Architecture Overview
+** Architecture
 
 The parameter server architecture has two classes of
 nodes: Each *server* node maintains a partition of the globally
 shared parameters.  They communicate with each other to replicate and/or to
-migrate parameters for reliability and scaling.  The =client=
+migrate parameters for reliability and scaling.  The *client*
 nodes perform the bulk of the computation. Each client
 typically stores locally a portion of the training data, computing
 local statistics such as gradients.  Clients communicate only with the
@@ -47,3 +47,12 @@ server nodes, updating and retrieving the shared parameters.  Clients
 may be added or removed.
 
 [[./doc/img/arch2.png]]
+
+** APIs
+
+
+** Sample Codes
+
+** Current Progress
+
+**
