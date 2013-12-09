@@ -50,7 +50,15 @@ may be added or removed.
 
 ** APIs
 
+#+BEGIN_SRC C++
+  Status Push(const Header& h);
+  Status Pull(const Header& h);
+#+END_SRC
 
+#+BEGIN_SRC C++
+
+
+#+END_SRC
 ** Sample Codes
 
 ** Current Progress
