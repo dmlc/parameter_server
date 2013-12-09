@@ -131,7 +131,7 @@ name.value  = [ 1 2 3 9 1 4 ]  // array of non-zero element value
 
 **** Google Protobuf
 TODO
-** Install
+** Build
 *** pre-build step:
 - [[http://zeromq.org/][zeromq]]
   A socket library.
@@ -144,9 +144,9 @@ TODO
 - [[https://code.google.com/p/protobuf/][protobuf]]
   Google's serialization library, used for serializing push/pull flags
 
+All these library could be installed by =make third_party_all=
 *** build
-  compiler required gcc >= 4.7 or LLVM 3.3, tested under Ubuntu >=12.04, Mac Os
-  X
+  compiler required gcc >= 4.7 or LLVM 3.3, tested under Ubuntu 12.04, 12.10
 ** Reference
 [[http://www.cs.cmu.edu/~muli/][Mu Li]], Li Zhou, Zichao Yang, Aaron Li, Fei Xia, [[http://www.cs.cmu.edu/~dga/][David Andersen]] and [[alex.smola.org][Alexander Smola]].
 [[http://www.cs.cmu.edu/~muli/file/ps.pdf][Parameter Server for Distributed Machine Learning]], Big Learning Workshop, NIPS 2013

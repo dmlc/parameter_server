@@ -5,16 +5,13 @@ OPT = -O0 -ggdb
 
 #-Wconversion -fPIC
 WARN = -Wall -Wno-unused-function -finline-functions
-INCPATH = -I. -I/usr/local/include \
-	-I../third_party/gtest-1.7.0/include \
-	-I../third_party
+INCPATH = -I. -I/usr/local/include -I${third_party_include}
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 
-LDFLAGS = -L/usr/local/lib libps.a -lgflags -lpthread -lzmq -lprotobuf -lglog
-#GTEST = ../third_party/gtest-1.7.0/libgtest_main.a \
-#	../third_party/gtest-1.7.0/libgtest.a
-GTEST = -L../third_party/gtest-1.7.0 -lgtest_main -lgtest
-#GTEST = ../third_party/gtest/libgtest_main.a
+LDFLAGS = -Wl,-rpath,/usr/local/lib -Wl,-rpath,${third_party_library}\
+	 -L/usr/local/lib -L${third_party_library}\
+	 libps.a -lgflags -lpthread -lzmq -lprotobuf -lglog
+GTEST =  -lgtest_main -lgtest
 
 OBJECTS = \
 	./proto/nodemgt.pb.o \
@@ -69,9 +66,7 @@ TESTS = \
 	aggregator_test \
 	common_test
 
-# PWD  := $(shell pwd)
-#r: clean all
-all: $(TESTS) ps gtest
+all: $(TESTS) ps
 
 clean:
 	rm -f */*.o *.a ps
@@ -82,18 +77,18 @@ test: # $(TESTS)
 %.o: %.cc %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-libps.a: $(OBJECTS) $(DEPS) gtest
+libps.a: $(OBJECTS) $(DEPS) #gtest
 	ar crv libps.a $(OBJECTS)
 
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
-	protoc --cpp_out=. $<
+	${third_party_bin}/protoc --cpp_out=. $<
 
 #base:
 #	make -C $(PWD)/../third_party/ #M=$(PWD)
 
-gtest:
-	cmake ../third_party/gtest-1.7.0/CMakeLists.txt
-	make -C ../third_party/gtest-1.7.0/
+#gtest:
+#	cmake ../third_party/gtest-1.7.0/CMakeLists.txt
+#	make -C ../third_party/gtest-1.7.0/
 
 ps: libps.a ps.cc
 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o parse
@@ -151,3 +146,73 @@ postmaster_test : system/postmaster_test.cc system/postmaster.cc system/postmast
 
 replica_test : system/replica_test.cc libps.a
 	$(CC) $(CFLAGS) system/replica_test.cc $(GTEST) $(LDFLAGS) -o $@
+
+
+third_party_dir=$(shell cd ..;pwd)/third_party
+third_party_src=${third_party_dir}/src
+third_party_include=${third_party_dir}/include
+third_party_library=${third_party_dir}/lib
+third_party_bin=${third_party_dir}/bin
+
+third_party_all: gflags glog gtest protobuf zeromq eigen
+
+gflags:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/gflags-2.0-no-svn-files.tar.gz -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	tar xzvf ${third_party_src}/gflags-2.0-no-svn-files.tar.gz ;\
+	cd ${third_party_src}/gflags-2.0 ;\
+	./configure --prefix=${third_party_dir} ;\
+	make ;\
+	make install
+
+glog:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/glog-0.3.3.tar.gz -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	tar xzvf ${third_party_src}/glog-0.3.3.tar.gz ;\
+	cd ${third_party_src}/glog-0.3.3 ;\
+	./configure --prefix=${third_party_dir} ;\
+	make ;\
+	make install
+
+gtest:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/gtest-1.7.0.zip -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	unzip ${third_party_src}/gtest-1.7.0.zip ;\
+	cd ${third_party_src}/gtest-1.7.0 ;\
+	./configure --prefix=${third_party_dir} ;\
+	cmake CMakeLists.txt ;\
+	make ;\
+	cp -r include/gtest ${third_party_include}; \
+	cp libgtest.a  libgtest_main.a ${third_party_library}
+
+protobuf:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/protobuf-2.5.0.tar.gz -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	tar xzvf ${third_party_src}/protobuf-2.5.0.tar.gz ;\
+	cd ${third_party_src}/protobuf-2.5.0 ;\
+	./configure --prefix=${third_party_dir} ;\
+	make ;\
+	make install
+
+zeromq:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/zeromq-4.0.1.tar.gz -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	tar xzvf ${third_party_src}/zeromq-4.0.1.tar.gz ;\
+	cd ${third_party_src}/zeromq-4.0.1 ;\
+	./configure --prefix=${third_party_dir} ;\
+	make ;\
+	make install
+
+eigen:
+	wget -r --no-check-certificate -nc https://github.com/zcyang/PS_thirdparty/raw/master/3.2.0.tar.gz -nd -P ${third_party_src}
+	cd ${third_party_src} ;\
+	pwd ;\
+	tar xzvf ${third_party_src}/3.2.0.tar.gz ;\
+	cd ${third_party_src}/eigen-eigen-ffa86ffb5570 ;\
+	mkdir ${third_party_include}/eigen3 ;\
+	cp -r Eigen/ ${third_party_include}/eigen3
