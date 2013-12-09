@@ -1,0 +1,104 @@
+import "proto/nodemgt.proto";
+
+// The synchronization flag, which is commonly used by all components:
+// - Applications:
+//   user developed applications, such as sgd, l-bfgs, lda, sketches
+// - Containers:
+//   data structures storing the shared parameter, such as sparse vectors
+// - Postoffice:
+//   The class in the core system manages sending and receiving
+//
+// The meaning of push and pull:
+// | push | pull | if i'm sender               | if i'm receiver         |
+// |------+------+-----------------------------+-------------------------|
+// |    1 |    0 | send data                   | receive data            |
+// |    0 |    1 | ask data from recver        | send data back          |
+// |    1 |    1 | send and then ask data back | get then send data back |
+
+// import "proto/replicainfo.proto";
+
+message Header {
+
+  // basic ------------------------------
+  // the type of this message, set the value as 2^k for new type
+  enum Type {
+    INVALID_TYPE = 0;
+    PUSH = 1;
+    PULL = 2;
+    PUSH_PULL = 3;
+    REPLY = 4;
+    DUPLICATE = 8;
+    BACKUP = 16;
+    NODE_RESCUE = 32;
+  }
+  required Type type = 1 [default = INVALID_TYPE];
+
+  // the unique id of the sender
+  required int32 sender = 2;
+  // the unique id of the receiver, which could be a node, or a group of nodes
+  // such as all clients nodes or all server nodes
+  required int32 recver = 3;
+
+  // the container identification
+  // TODO: use an unique integer, which is cheaper than string
+  required string name = 4;
+  // the timestamp, which could be used by the consistency model or aggregator
+  optional int32 time = 5;
+
+  // push & pull --------------------------
+  // control how to apply the data, i.e. = value or += delta
+  message ApplyFlag {
+    // communication by the delta (modification) or by value
+    required bool delta = 1;
+    // the vectors will be communicated. used by PS::Vectors
+    repeated int32 vectors = 2 [packed = true];
+  }
+  // the flag for push and pull
+  optional ApplyFlag push = 6;
+  optional ApplyFlag pull = 7;
+
+  // keys --------------
+  message KeyFlag {
+    // an optimization trick
+    // if true, the key list is not sent. it means the sender expects the
+    // recever knows the the actual key list.
+    required bool empty = 1;
+    // the range of keys will be communicated
+    required uint64 start = 2;
+    required uint64 end = 3;
+    // the check sum of the key list. it would be used to identify the validation
+    // of the cached key list
+    required fixed32 cksum = 4;
+  }
+  optional KeyFlag key = 8;
+
+  // values -------------------
+  message ValueFlag {
+    // if true, there is no value list.
+    required bool empty = 1;
+    optional double eps = 2;
+  }
+  optional ValueFlag value = 9;
+
+  // fault tolerance ----------------------- TODO
+
+  // if true, then do synchronized communication, namely blocking until pushed
+  // or pulled successfully,
+  // optional bool no_wait = 12 [default = false];
+
+  // if true, do not send the key list to reduce communication volume
+  // optional bool no_key = 13 [default = true];
+  // if true, do not send the value list.
+  // optional bool no_value = 14 [default = false];
+
+  // if the packet is send from a server for fault tolerance, backup_packet is set to be true;
+  // TODO use enum Type
+  // optional int32 flag_type = 15 [default = false]; // 1 for standard key value flag, 2 for backup transfered pack, 3 for node managerment info
+  // optional NodeManagementInfo node_manager_info = 27;
+ message ReplicaInfo {
+  required int32 node_id = 1;
+  required int32 replica_id = 3;
+}
+ optional ReplicaInfo replica_info = 10;
+
+}

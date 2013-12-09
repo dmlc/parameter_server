@@ -34,12 +34,12 @@ use, high performance supercomputer clusters.
   replication architecture that efficiently stores data on multiple server nodes
   to enable fast (in less than 1 second) recovery from node failure.
 
-** Architecture Overview
+** Architecture
 
 The parameter server architecture has two classes of
 nodes: Each *server* node maintains a partition of the globally
 shared parameters.  They communicate with each other to replicate and/or to
-migrate parameters for reliability and scaling.  The =client=
+migrate parameters for reliability and scaling.  The *client*
 nodes perform the bulk of the computation. Each client
 typically stores locally a portion of the training data, computing
 local statistics such as gradients.  Clients communicate only with the
@@ -47,3 +47,106 @@ server nodes, updating and retrieving the shared parameters.  Clients
 may be added or removed.
 
 [[./doc/img/arch2.png]]
+
+** APIs
+
+Parameter server provides several globally shared data structures, for example,
+(sparse) vectors and matrices. The class =Container= is the base class of all
+these structures. It provides two simple functions to do communication. =Push=
+sends out local modifications to other nodes, while =Pull= retrieves
+modifications from the others. These two functions are non-blocking, if the
+user specified consistency model is satisfied. All control information is set in
+=Header=.
+
+#+BEGIN_SRC C++
+  Status Push(const Header& h);
+  Status Pull(const Header& h);
+#+END_SRC
+
+A particular data structure may provides more convenient functions to avoid
+explicitly construct =Header=. For example, =Vectors= could store several
+sparse vectors (namely a thin sparse matrix).
+
+#+BEGIN_SRC C++
+  Status PushPull(KeyRange key_range     = KeyRange::All(),
+                  VecList  push_vec_list = {0},
+                  bool     push_delta    = kDelta,
+                  VecList  pull_vec_list = {0},
+                  bool     pull_delta    = kValue,
+                  uid_t    dest          = kServer);
+#+END_SRC
+
+A typical usage is that, we first construct 2 vectors, the first one stores the
+gradient, while the second one has the weight. Then each client write local
+computed gradient into the first one, push these values into all server nodes,
+and then retrieve the modification of weight from the server. Then we can write
+it as
+
+
+#+BEGIN_SRC C++
+  Vectors<double> W("my_vec", p, 2);
+  // write local gradient into W.vec(0)
+  W.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta, kServer);
+#+END_SRC
+
+** Sample Codes
+
+TODO
+
+** Current Progress
+
+We are now on developing a total new version, which is quite different and
+contains much more features than the previous versions the authors developed at
+Yahoo, Google, Baidu and CMU. However, the current codes are not be easily
+deployed yet, we hope to release a beta version after the winter break. If
+you would like to run it for your projects, please wait for our beta release.
+
+
+** Input data
+
+*** Plain text format
+TODO
+*** Binary format
+Binary format data is often more efficient than plain text data, because of
+more compact representation, no tokenization is required, easy to seek to a particular
+row/instance.
+
+**** Sparse Matrices
+
+A row-majored [[http://en.wikipedia.org/wiki/Sparse_matrix][sparse matrix]] stores the nonzero entries in each row
+sequentially. For example, consider the following the matrix
+#+BEGIN_SRC C++
+[ 1 2 0 0 ]
+[ 0 3 9 0 ]
+[ 0 1 4 0 ]
+#+END_SRC
+
+Then it is stored by three binary files
+#+BEGIN_SRC C++
+name.rowcnt = [ 0 2 4 6 ]      // array of offsets of first nonzero element of a row
+name.colidx = [ 0 1 1 2 1 2 ]  // array of column index of each element
+name.value  = [ 1 2 3 9 1 4 ]  // array of non-zero element value
+#+END_SRC
+
+
+**** Google Protobuf
+TODO
+** Install
+*** pre-build step:
+- [[http://zeromq.org/][zeromq]]
+  A socket library.
+- [[https://code.google.com/p/gflags/][gflags]]
+  Google's flag processing library,  used for parsing commandline options
+- [[https://code.google.com/p/google-glog/][glogs]]
+  Google's log library
+- [[https://code.google.com/p/googletest/][gtest]]
+  Google's code test library
+- [[https://code.google.com/p/protobuf/][protobuf]]
+  Google's serialization library, used for serializing push/pull flags
+
+*** build
+  compiler required gcc >= 4.7 or LLVM 3.3, tested under Ubuntu >=12.04, Mac Os
+  X
+** Reference
+[[http://www.cs.cmu.edu/~muli/][Mu Li]], Li Zhou, Zichao Yang, Aaron Li, Fei Xia, [[http://www.cs.cmu.edu/~dga/][David Andersen]] and [[alex.smola.org][Alexander Smola]].
+[[http://www.cs.cmu.edu/~muli/file/ps.pdf][Parameter Server for Distributed Machine Learning]], Big Learning Workshop, NIPS 2013

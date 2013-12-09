@@ -1,13 +1,10 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+/src/*_test
+/src/proto/*.h
+/src/proto/*.cc
+/.*
+/src/core*
+/third_party/*
+/src/*/*.o
+/src/*.a
+/src/parse
+/src/*/*cscope*

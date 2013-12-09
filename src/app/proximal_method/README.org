@@ -1,0 +1,11 @@
+* Delayed Distributed Proximal Gradient Methods
+
+This directory contains the codes using delayed distributed proximal gradient
+methods to solve sparse logistic regression.
+
+It was implemented by our previous version of parameter server, we are
+migrating the codes now.
+
+** Reference
+[[http://www.cs.cmu.edu/~muli/][Mu Li]],  [[http://www.cs.cmu.edu/~dga/][David Andersen]] and [[alex.smola.org][Alexander Smola]].
+[[http://www.cs.cmu.edu/~muli/file/ddp.pdf][Distributed Delayed Proximal Gradient Methods]], Optimization Workshop, NIPS 2013
