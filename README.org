@@ -91,6 +91,58 @@ it as
 
 ** Sample Codes
 
+TODO
+
 ** Current Progress
 
-**
+We are now on developing a total new version, which is quite different and
+contains much more features than the previous versions the authors developed at
+Yahoo, Google, Baidu and CMU. However, the current codes are not be easily
+deployed yet, we hope to release a beta version after the winter break. If
+you would like to run it for your projects, please wait for our beta release.
+
+
+** Input data
+
+*** Plain text format
+TODO
+*** Binary format
+Binary format data is often more efficient than plain text data, because of
+more compact representation, no tokenization is required, easy to seek to a particular
+row/instance.
+
+**** Sparse Matrices
+
+A row-majored [[http://en.wikipedia.org/wiki/Sparse_matrix][sparse matrix]] stores the nonzero entries in each row
+sequentially. For example, consider the following the matrix
+#+BEGIN_SRC C++
+[ 1 2 0 0 ]
+[ 0 3 9 0 ]
+[ 0 1 4 0 ]
+#+END_SRC
+
+Then it is stored by three binary files
+#+BEGIN_SRC C++
+name.rowcnt = [ 0 2 4 6 ]      // array of offsets of first nonzero element of a row
+name.colidx = [ 0 1 1 2 1 2 ]  // array of column index of each element
+name.value  = [ 1 2 3 9 1 4 ]  // array of non-zero element value
+#+END_SRC
+
+
+**** Google Protobuf
+TODO
+** Install
+*** pre-build step:
+- [[http://zeromq.org/][zeromq]]
+  A socket library.
+- [[https://code.google.com/p/gflags/][gflags]]
+  Google's flag processing library,  used for parsing commandline options
+- [[https://code.google.com/p/google-glog/][glogs]]
+  Google's log library
+- [[https://code.google.com/p/googletest/][gtest]]
+  Google's code test library
+- [[https://code.google.com/p/protobuf/][protobuf]]
+  Google's serialization library, used for serializing push/pull flags
+
+*** build
+  compiler required gcc >= 4.7 or LLVM 3.3
