@@ -145,4 +145,8 @@ TODO
   Google's serialization library, used for serializing push/pull flags
 
 *** build
-  compiler required gcc >= 4.7 or LLVM 3.3
+  compiler required gcc >= 4.7 or LLVM 3.3, tested under Ubuntu >=12.04, Mac Os
+  X
+** Reference
+[[http://www.cs.cmu.edu/~muli/][Mu Li]], Li Zhou, Zichao Yang, Aaron Li, Fei Xia, [[http://www.cs.cmu.edu/~dga/][David Andersen]] and [[alex.smola.org][Alexander Smola]].
+[[http://www.cs.cmu.edu/~muli/file/ps.pdf][Parameter Server for Distributed Machine Learning]], Big Learning Workshop, NIPS 2013
