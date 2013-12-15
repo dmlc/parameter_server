@@ -1,0 +1,7 @@
+Mailbox Design:
+[[../../doc/img/system.png]]
+
+- =Postoffice=
+- =Postmaster=
+- =Van=
+- =Mail=

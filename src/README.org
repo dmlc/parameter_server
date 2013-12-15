@@ -1,0 +1,5 @@
+- =proto=: protobuf classes
+- =system=: core system components
+- =box=: global shared data structures, such as (sparse) vectors and matrices
+- =app=: applications
+- =util=: some utility classes
