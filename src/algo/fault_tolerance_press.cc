@@ -58,7 +58,7 @@ void Client() {
     for (int i = 0; i < FLAGS_local_feature_num; ++i) {
       vec.Vec(0)[i] = vec.Vec(0)[i] + 1;
     }
-    LOG(WARNING) << "push to server.";
+    // LOG(WARNING) << "push to server.";
     vec.PushPull(KeyRange::All(), {0}, kValue, {0}, kDelta);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }

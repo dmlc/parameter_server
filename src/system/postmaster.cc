@@ -29,9 +29,10 @@ void Postmaster::Init() {
   // create a postmaster thread
   // wait for command from cluster master
   // LL << "flags:" << FLAGS_my_rank << FLAGS_num_server << FLAGS_num_clietn;
+  // LL << " initializing postmaster " << FLAGS_is_backup_process;
   is_backup_process_ = FLAGS_is_backup_process;
-  size_t num_server_ = FLAGS_num_server;
-  size_t num_client_ = FLAGS_num_client;
+  num_server_ = FLAGS_num_server;
+  num_client_ = FLAGS_num_client;
   std::vector<string> s_addr = split(FLAGS_server_address, ',');
   std::vector<string> c_addr = split(FLAGS_client_address, ',');
   CHECK_GE(s_addr.size(), num_server_)
@@ -87,7 +88,7 @@ void Postmaster::Init() {
   // my node
   my_uid_ = Node::GetUid(FLAGS_my_type, FLAGS_my_rank);
   CHECK(all_.find(my_uid_) != all_.end()) << "invalid rank: " << my_uid_;
-  LL << "I'm" << my_node().ToString();
+  // LL << "I'm" << my_node().ToString();
 
   // init connections for mail
   van_ = new Van();
@@ -151,7 +152,7 @@ KeyRange Postmaster::Register(Container *ctr, KeyRange whole, Inference *ifr) {
   // first store its pointer
   containers_[ctr->name()] = ctr;
 
-  LL << "register is called";
+  // LL << "register is called";
 
   if (my_uid_ == 0)
   {
@@ -170,13 +171,13 @@ KeyRange Postmaster::Register(Container *ctr, KeyRange whole, Inference *ifr) {
 }
 
 void Postmaster::MasterAssignNodes(Container *ctr, KeyRange whole) {
-  LL << "master assign nodes";
+  // LL << "master assign nodes";
   MapServerKeyRange(ctr, whole);
   int num = group_.all()->size();
   // set the sender, then send all them to clients and servers
   for (size_t j = 0; j < num; ++j)
     SendKeyRange(ctr, group_.all()->at(j));
-  LL << "finished sending key ranges of container " << ctr->name();
+  // LL << "finished sending key ranges of container " << ctr->name();
   SendReplicaInfo(ctr);
 }
 
@@ -229,7 +230,7 @@ void Postmaster::SendKeyRange(Container *ctr, uid_t id) {
     Workload wl = workloads_[make_pair(ctr->name(), group.servers()->at(i))];
     mkr->set_key_start(wl.key_range().start());
     mkr->set_key_end(wl.key_range().end());
-    LL << "key start:" << wl.key_range().start() << " key end: "<< wl.key_range().end();
+    // LL << "key start:" << wl.key_range().start() << " key end: "<< wl.key_range().end();
   }
   
   mgt_info.set_recver(id);
@@ -241,8 +242,8 @@ void Postmaster::SendReplicaInfo(Container *ctr){
   // backup and replica
   // only replicato is sent
   // num = group_.servers()->size();
-  LL << " all server size " << group_.servers()->size();
-  LL << dhtinfo_.bkp_nodes_.size();
+  // LL << " all server size " << group_.servers()->size();
+  // LL << dhtinfo_.bkp_nodes_.size();
   auto num = dhtinfo_.bkp_nodes_.size();
 
   for (auto it = dhtinfo_.bkp_nodes_.begin(); it != dhtinfo_.bkp_nodes_.end(); ++it)
@@ -251,9 +252,9 @@ void Postmaster::SendReplicaInfo(Container *ctr){
     mgt_info.set_name(ctr->name());
     mgt_info.set_sender(my_uid_);
     mgt_info.set_command_id(NodeManagementInfo::BACKUP_NODELIST);
-    LL << "sending replica info at node " << my_uid();
+    // LL << "sending replica info at node " << my_uid();
     uid_t node_uid = it->first.second;
-    LL << "preparing for replica for node " << node_uid;
+    // LL << "preparing for replica for node " << node_uid;
     std::vector< std::vector<uid_t>> backup_list = it->second;
     int num_backup = backup_list.size();
     ReplicaTo *rt = new ReplicaTo();
@@ -267,7 +268,8 @@ void Postmaster::SendReplicaInfo(Container *ctr){
       for (size_t l = 0; l < k_backup_list.size(); ++l)
       {
         KeyRange kr = dhtinfo_.bkp_workloads_[make_tuple(ctr->name(), node_uid, k_backup_list[l])].key_range();
-        LL << " back up node info " << node_uid << k_backup_list[l] << kr.ToString();
+        // LL << " back up node info " << node_uid << " " << k_backup_list[l] << " "  << kr.ToString();
+        all_replicato_[make_tuple(ctr->name(), node_uid, k, k_backup_list[l])] = kr;
         if (node_uid == 0) {
           replicato_[make_tuple(ctr->name(), k, k_backup_list[l])] = kr;
         } else {
@@ -280,18 +282,18 @@ void Postmaster::SendReplicaInfo(Container *ctr){
       }
     }
     
-    LL << " back up node info for node " << node_uid << " finished ";
+    // LL << " back up node info for node " << node_uid << " finished ";
     // LL << rt->DebugString();
     mgt_info.set_allocated_replica_to(rt);
     // LL << rt->DebugString();
-    LL << " set replicato finished ";
+    // LL << " set replicato finished ";
     mgt_info.set_recver(node_uid);
     if (node_uid != 0) {
-      LL << " sending replica info to before" << node_uid;
+      // LL << " sending replica info to before" << node_uid;
       CHECK((cmd_van_->Send(mgt_info)).ok() == true ) << "send failed";
-      LL << " sending replica info to " << node_uid;
+      // LL << " sending replica info to " << node_uid;
     } else {
-      LL << "replica to at node 0 initialized";
+      // LL << "replica to at node 0 initialized";
     }
     
   }
@@ -301,14 +303,14 @@ void Postmaster::SlaveAssignNodes(Container *ctr, KeyRange whole) {
   // get the key range from the blocking queue
   // a stupid implementation, keep enquiring the queue until
   // the correct container is found
-  LL << "slave assign nodes";
+  // LL << "slave assign nodes";
   ReceiveKeyRange(ctr, whole);
-  LL << "finishe recived keyranges at " << my_uid();
+  // LL << "finishe recived keyranges at " << my_uid();
   if (IamServer())
   {
-    LL << "starting to receive replica info at node: " << my_uid();
+    // LL << "starting to receive replica info at node: " << my_uid();
     ReceiveReplicaInfo(ctr);
-    LL << "finished to receive replica info at node: " << my_uid();
+    // LL << "finished to receive replica info at node: " << my_uid();
   }
 }
 
@@ -319,6 +321,8 @@ void Postmaster::ReceiveKeyRange(Container *ctr, KeyRange whole) {
     // TODO how to distinguish different containers
     if ((ctr->name().compare(mgt_info.name()) == 0) && (mgt_info.recver() == my_uid_))
     {
+      // LL << "slave assign nodes";
+      // LL << mgt_info.DebugString();
       containers_[ctr->name()] = ctr;
       NodeGroup group;
       size_t num = mgt_info.msg_key_ranges_size();
@@ -327,7 +331,7 @@ void Postmaster::ReceiveKeyRange(Container *ctr, KeyRange whole) {
         MsgKeyRange mkr = mgt_info.msg_key_ranges(i);
         uid_t id = mkr.node_id();
         KeyRange kr(mkr.key_start(), mkr.key_end());
-        LL << "key start: "<< mkr.key_start() << "key end: " << mkr.key_end();
+        // LL << "key start: "<< mkr.key_start() << "key end: " << mkr.key_end();
         if (!kr.Valid()) continue;
         Workload wl(id, kr);
         group.servers()->push_back(id);
@@ -363,7 +367,7 @@ void Postmaster::ReceiveKeyRange(Container *ctr, KeyRange whole) {
     else
       keyrange_queue_.Put(mgt_info);
   }
-  LL << "finished recive keys at " << ctr->name() << " at node "<< my_uid_;
+  // LL << "finished recive keys at " << ctr->name() << " at node "<< my_uid_;
 }
 
 void Postmaster::ReceiveReplicaInfo(Container *ctr) {
@@ -373,7 +377,7 @@ void Postmaster::ReceiveReplicaInfo(Container *ctr) {
     // strcmp ??
     if (ctr->name().compare(mgt_info.name()) == 0) {
       CHECK(mgt_info.has_replica_to());
-      LL << "has replicato";
+      // LL << "has replicato";
       // CHECK(mgt_info.has_replicai_from());
       ReplicaTo rt = mgt_info.replica_to();
       size_t num = rt.replica_lists_size();
@@ -417,21 +421,26 @@ void Postmaster::send_cmd() {
   // if a node fail, broadcast to all nodes and
   // active dee back node to load the memory
   if (my_uid_ == 0) {
-    //sleep(5);
+    //sleep(30);
+    LL << "Begin ping other servers...";
     while (1) {
       size_t num = group_.servers()->size();
       for (size_t i = 0; i < num; ++i) {
         if (group_.servers()->at(i) != 0) {
-          if (!PingNode(group_.servers()->at(i)))
-            DealWithFailureNode(group_.servers()->at(i));
-          else
-            LL << "receive ack at node " << group_.servers()->at(i);
+          uid_t id = group_.servers()->at(i);
+          if (!PingNode(id)) {
+            // LL << " node " << id << "fails";
+            // DealWithFailureNode(id);
+          } else {
+            // LL << "receive ack at node " << group_.servers()->at(i);
+          }
         }
       }
       sleep(FLAGS_ping_period);
     }
   }
 }
+
 
 bool Postmaster::PingNode(uid_t id) {
   NodeManagementInfo mgt_info;
@@ -450,13 +459,16 @@ bool Postmaster::PingNode(uid_t id) {
   // wait for the package: set change the value to set the delay
   sleep(FLAGS_wait_seconds);
   Status sts = cmd_van_->Recv(&reply, false);
-  //LL << "ping node recv status: " << sts.ToString();
-  //if(!sts.ok())
-  //  return false;
+  // LL << "ping node recv status: " << sts.ToString();
+  if(!sts.ok())
+  {
+    // LL << " ping node " << id << " failed ";
+    return false;
+  }
 
   CHECK(reply.IsInitialized() == true) << "reply is not initialized";
-  CHECK(reply.has_command_id() == true) << "reply has no command id";
-  CHECK(reply.command_id() == NodeManagementInfo::SERVER_ACK) << "reply flag is not an ack";
+  CHECK(reply.has_command_id() == true) << "reply has no command id" << reply.DebugString();
+  CHECK(reply.command_id() == NodeManagementInfo::SERVER_ACK) << "reply flag is not an ack" << reply.DebugString();
   return true;
 }
 
@@ -467,19 +479,33 @@ void Postmaster::BroadcastDead(uid_t id) {
   // tell all nodes the key range
   mgt_info.set_command_id(NodeManagementInfo::NOTIFY_DEAD);
   mgt_info.set_failed_node_id(id);
+  // LL << "broadcastdead mgt_info " << mgt_info.DebugString();
   for (size_t j = 0; j < group_.all()->size(); ++j) {
-    mgt_info.set_recver(group_.all()->at(j));
-    cmd_van_->Send(mgt_info);
+    auto recver = group_.all()->at(j);
+    if (recver != my_uid()) {
+      // LL << "broadcastdead sent to node " << recver;
+      mgt_info.set_recver(recver);
+      cmd_van_->Send(mgt_info);
+    }
   }
 }
 
-bool Postmaster::ActivateBackup(FailedNode fn, string name, uid_t recver) {
+bool Postmaster::ActivateBackup(FailedNode *fn, string name, uid_t recver) {
+  // LL << " running activatebackup node at " << my_uid();
   NodeManagementInfo mgt_info;
+  mgt_info.set_allocated_failed_node(fn);
   mgt_info.set_name(name);
   mgt_info.set_sender(my_uid());
   mgt_info.set_command_id(NodeManagementInfo::ACTIVATE_BACKUP);
   mgt_info.set_recver(recver);
-  cmd_van_->Send(mgt_info);
+  if (recver != 0) {
+    cmd_van_->Send(mgt_info);
+    // LL << "activate cmd sent to " << recver;
+  } else {
+    // LL << " executing cmd locally at node 0";
+    ExecuteCmd(mgt_info);
+    return true;
+  }
   NodeManagementInfo reply;
   cmd_van_->Recv(&reply);
   CHECK(reply.command_id() == NodeManagementInfo::PROCESS_EXECUTED) << "process is not executed";
@@ -492,7 +518,7 @@ void Postmaster::AddBackupNode(int32 id, string name, KeyRange kr) {
   CHECK_GE(s_addr.size(), id)
       << "#address in " << FLAGS_server_address << " is less than num_server";
   Node node;
-  string mail_addr = s_addr[id - 1];
+  string mail_addr = s_addr[id];
   std::vector<string> part = split(mail_addr, ':');
   int port = std::stoi(part.back());
   // port + 1 used to send cmd
@@ -511,26 +537,31 @@ void Postmaster::AddBackupNode(int32 id, string name, KeyRange kr) {
   group_.all()->push_back(uid);
   NodeGroup group = nodegroups_[name];
   CHECK(kr.Valid()) << "new key is invalid";
-  Workload wl(id, kr);
-  group.servers()->push_back(id);
-  group.all()->push_back(id);
-  workloads_[make_pair(name, id)] = wl;
+  Workload wl(uid, kr);
+  group.servers()->push_back(uid);
+  group.all()->push_back(uid);
+  workloads_[make_pair(name, uid)] = wl;
 }
 
-void Postmaster::BroadcastAddNode(Node nd, KeyRange kr) {
+void Postmaster::BroadcastAddNode(Node nd, KeyRange kr, uid_t failed_node, string name) {
+  // LL << " broadcastaddnode " << nd.ToString();
   NodeManagementInfo mgt_info;
   mgt_info.set_command_id(NodeManagementInfo::ADD_NEW_NODE);
   mgt_info.set_sender(my_uid());
+  mgt_info.set_name(name);
   NewNode *nw = new NewNode();
   nw->set_server_address(nd.addr());
   nw->set_cmd_address(nd.cmd_addr());
-  MsgKeyRange msg_range;
-  msg_range.set_key_start(kr.start());
-  msg_range.set_key_end(kr.end());
-  msg_range.set_node_id(nd.uid());
+  MsgKeyRange *msg_range = new MsgKeyRange();
+  msg_range->set_key_start(kr.start());
+  msg_range->set_key_end(kr.end());
+  msg_range->set_node_id(nd.uid());
+  nw->set_allocated_range(msg_range);
+  mgt_info.set_allocated_new_node(nw);
   for (size_t j = 0; j < group_.all()->size(); ++j) {
     auto recver = group_.all()->at(j);
-    if (recver != nd.uid()) {
+    if (recver != nd.uid() && recver != failed_node && recver != my_uid()) {
+      // LL << " sending broadaddnode to " << recver;
       mgt_info.set_recver(group_.all()->at(j));
       cmd_van_->Send(mgt_info);
     }
@@ -542,38 +573,49 @@ void Postmaster::DealWithFailureNode(uid_t failed_id) {
   // TODO notify based on container, only those containers with the dead node
   // send the notify and new node info separately
   // remove the node locally first
-  RemoveNode(failed_id);
-  BroadcastDead(failed_id);
   // rescue the nodes
   // call the dht to get the replica nodes to notify
   // distinguish the containers!!!!!!!
+  // LL << "running dealwithfailurenode for node " << failed_id;
   map<uid_t, KeyRange> replica_node_info;
   // iterate each container and activate the backup of each container
   int temp_id = num_server_;
   for (auto it = containers_.begin(); it != containers_.end(); ++it) {
     string name = it->first;
-    replica_node_info = GetReplicaTo(name, 0);
+    replica_node_info = GetReplicaTo(name, 0, failed_id);
     for (auto pair = replica_node_info.begin(); pair != replica_node_info.end(); ++pair) {
       uid_t id = pair->first;
       KeyRange kr = pair->second;
-      FailedNode fn;
-      fn.set_failed_node_id(failed_id);
-      fn.set_new_node_id(temp_id);
+      FailedNode *fn = new FailedNode();
+      fn->set_failed_node_id(failed_id);
+      // LL << " new node id " << temp_id;
+      fn->set_new_node_id(temp_id);
       uid_t new_id = Node::GetUid("s", temp_id);
-      temp_id++;
-      fn.set_replica_to_use(0);
+      fn->set_replica_to_use(0);
+      // LL << "activatebackup for node " << failed_id << " container " << name << " replica node " << id << kr.ToString();
       CHECK(ActivateBackup(fn, name, id)) << " activate node " << id << " for failed node " << failed_id << " failed ";
-      NodeManagementInfo reply_ack;
-      cmd_van_->Recv(&reply_ack);
-      CHECK(reply_ack.command_id() == NodeManagementInfo::BACKUP_LOADED) << " backup loaded failure";
-      CHECK(reply_ack.sender() == new_id) << "new back up node id is wrong";
-      
-      // add the new node to the group
+      // LL << "sending keyrange to new node " << new_id;
       AddBackupNode(temp_id, name, kr);
-      BroadcastAddNode(all_[Node::GetUid("s", temp_id)], kr);
       SendKeyRange(containers_[name], new_id);
+      // NodeManagementInfo reply_ack;
+      // cmd_van_->Recv(&reply_ack);
+      // CHECK(reply_ack.command_id() == NodeManagementInfo::BACKUP_LOADED) << " backup loaded failure";
+      // CHECK(reply_ack.sender() == new_id) << "new back up node id is wrong";
+      // LL << "backup loaded at node " << new_id;
+      // add the new node to the group
+      BroadcastAddNode(all_[Node::GetUid("s", temp_id)], kr, failed_id, name);
+      // LL << "broadcasting add node completed";
+      temp_id++;
     }
   }
+
+  // LL << "remove node " << failed_id << " at 0 ";
+  RemoveNode(failed_id);
+  // LL << "broadcasting remove node " << failed_id;
+  BroadcastDead(failed_id);
+
+  sleep(FLAGS_ping_period * 2);
+
   // for the nodes in the list set the replia id then send the backup
   // send a new node id to the replica manger so that ...
   // wait for the ack and then
@@ -606,13 +648,15 @@ void Postmaster::receive_cmd() {
           break;
         case NodeManagementInfo::BACKUP_NODELIST:
           // think about how to store the informaiton
-          LL << " received replica info at node " << my_uid();
+          // LL << " received replica info at node " << my_uid();
           replicainfo_.Put(mgt_info);
           break;
         case NodeManagementInfo::NOTIFY_DEAD:
           {
             // remove the node keyrange info from the list
             // no need to specify the container
+            // LL << " received notify_dead at node " << my_uid();
+            // LL << "mgt_info notify_dead " << mgt_info.DebugString();
             uid_t id = mgt_info.failed_node_id();
             RemoveNode(id);
             break;
@@ -620,20 +664,27 @@ void Postmaster::receive_cmd() {
         case NodeManagementInfo::ADD_NEW_NODE:
           {
             // add a new node and a key range
+            // LL << " received add_new_node at node " << my_uid();
+            // LL << "mgt_info " << mgt_info.DebugString();
+            CHECK(mgt_info.has_new_node()) << " mgt_info has no new_node";
             NewNode nw = mgt_info.new_node();
+            // LL << "new node info " << nw.DebugString();
             MsgKeyRange mkr = nw.range();
             KeyRange kr(mkr.key_start(), mkr.key_end());
+            // here the id is the uid
             int id = mkr.node_id();
-            Node node(Node::kTypeServer, id, nw.server_address(), nw.cmd_address());
+            CHECK(id % 2 == 0) << "new node id is not server " << id;
+            Node node(Node::kTypeServer, id/2, nw.server_address(), nw.cmd_address());
             AddNode(mgt_info.name(), node, kr);
             break;
           }
         case NodeManagementInfo::SERVER_PING:
-          LL << "receive server ping at node:" << my_uid_;
+          // LL << "receive server ping at node:" << my_uid_;
           // set the ack and send back
           Ack();
           break;
         case NodeManagementInfo::ACTIVATE_BACKUP:
+          // LL << " received activate_backup at node " << my_uid();
           ExecuteCmd(mgt_info);
           break;
         default:
@@ -643,8 +694,17 @@ void Postmaster::receive_cmd() {
   }
 }
 
+// std::vector<uid_t>::iterator find_vector(std::vector<uid_t>::iterator begin, std::vector<uid_t>::iterator end, uid_t id) {
+//   for (auto index = begin; index != end; ++index) {
+//     if (*(index) == id)
+//       return index;
+//   }
+//   return end;
+// }
+
 void Postmaster::RemoveNode(uid_t id) {
   auto index = find(group_.all()->begin(), group_.all()->end(), id);
+      // find(group_.all()->begin(), group_.all()->end(), id);
   CHECK(index != group_.all()->end()) << "can not find failure node in group_.all";
   group_.all()->erase(index);
   index = find(group_.servers()->begin(), group_.servers()->end(), id);
@@ -656,10 +716,27 @@ void Postmaster::RemoveNode(uid_t id) {
     Container *ctr = ctrpair.second;
     string name = ctr->name();
     NodeGroup group = nodegroups_[name];
-    auto index = find(group_.all()->begin(), group_.all()->end(), id);
-    group.all()->erase(index);
+    index = find(group.all()->begin(), group.all()->end(), id);
+    if (index != group.all()->end()) {
+      // LL << "erasing all container " << name << " " << " node " << *index;
+        group.all()->erase(index);
+    } else {
+      // LL << "cannot find " << id << " in all";
+    }
+    
+    for (auto it = group.servers()->begin(); it != group.servers()->end(); ++it) {
+      // LL << name << " " << *it;
+    }
+    // LL << "test id " << id;
     index = find(group.servers()->begin(), group.servers()->end(), id);
-    group.servers()->erase(index);
+    if (index != group.servers()->end()) {
+      // LL << "erasing servers container " << name << " " << " node " << *index;
+      group.servers()->erase(index);
+    } else {
+      // LL << "cannot find " << id << " in servers";
+    }
+    
+    nodegroups_[name] = group;
     workloads_.erase(make_pair(name, id));
   }
 }
@@ -680,6 +757,7 @@ void Postmaster::AddNode(string name, Node node, KeyRange kr) {
   nodegroup.all()->push_back(uid);
   Workload wl(uid, kr);
   workloads_[make_pair(name, uid)] = wl;
+  // LL << "node " << node.ToString() << " " << kr.ToString() << " added at " << my_uid();
   num_server_++;
 
 }
@@ -719,29 +797,53 @@ map<uid_t, KeyRange> Postmaster::GetReplicaTo(string name, int32 ith_replica) {
   return replica_node_info;
 }
 
+map<uid_t, KeyRange> Postmaster::GetReplicaTo(string name, int32 ith_replica, uid_t idtofind) {
+  map<uid_t, KeyRange> replica_node_info;
+  for (auto it = all_replicato_.begin(); it != all_replicato_.end(); ++it) {
+    tuple<string, uid_t, int32, uid_t> index = it->first;
+    KeyRange kr = it->second;
+    string ctr_name = std::get<0>(index);
+    uid_t id = std::get<1>(index);
+    int32 idx_replica = std::get<2>(index);
+    uid_t id_replica = std::get<3>(index);
+    if ((ctr_name == name) && (id == idtofind) && (idx_replica == ith_replica))
+      replica_node_info[id_replica] = kr;
+  }
+  return replica_node_info;
+}
+
 void Postmaster::ExecuteCmd(NodeManagementInfo mgt_info) {
   CHECK(mgt_info.has_failed_node());
   FailedNode fn = mgt_info.failed_node();
   uid_t failed_id = fn.failed_node_id();
-  CHECK(failed_id / 2 == 0) << "failed node is is not a server";
+  CHECK(failed_id % 2 == 0) << "failed node is is not a server";
   uid_t new_id = fn.new_node_id();
   int32 replica = fn.replica_to_use();
-  int32 num_server = fn.num_server();
-  string cmd1 = StrCat("../fault_tolerance_press --my_type=server --my_rank=", new_id);
-  string cmd2 = StrCat("--num_server=", num_server, "--num_client=", FLAGS_num_client);
-  string cmd3 = StrCat("--server_address=", FLAGS_server_address, "--client_address=", FLAGS_client_address);
-  string cmd4 = StrCat("--global_feature_num=", FLAGS_global_feature_num, "--local_feature_num=", FLAGS_local_feature_num);
-  string cmd5 = StrCat("--is_backup_process");
-  string cmd6 = StrCat("--enable_fault_tolerance &> ft.log.server.${id} &");
-  string cmd = StrCat(cmd1, cmd2, cmd3, cmd4, cmd5, cmd6);
-  LL << "Start activating backups...";
+  // int32 num_server = fn.num_server();
+  string cmd0 = StrCat("./run.sh ");
+  string cmd1 = StrCat(new_id, " ");
+  string cmd2 = StrCat(new_id + 1, " ");
+  string cmd3 = StrCat(FLAGS_num_client, " ");
+  string cmd4 = StrCat(FLAGS_server_address, " ");
+  string cmd5 = StrCat(FLAGS_client_address, " ");
+  string cmd6 = StrCat(FLAGS_global_feature_num, " ");
+  string cmd7 = StrCat(FLAGS_local_feature_num, " ");
+  string cmd8 = StrCat("--isback_up_process");
+  string cmdL1 = StrCat(cmd0, cmd1, cmd2, cmd3, cmd4);
+  string cmdL2 = StrCat(cmd5, cmd6, cmd7, cmd8);
+  string cmd = StrCat(cmdL1, cmdL2);
+  // LL << "Start activating backups...";
   system(cmd.c_str());
-  NodeManagementInfo reply;
-  reply.set_command_id(NodeManagementInfo::PROCESS_EXECUTED);
-  reply.set_name(mgt_info.name());
-  reply.set_recver(0);
-  reply.set_sender(my_uid());
-  cmd_van_->Send(reply);
+  // LL << " cmd " << cmd << " finished ";
+  if (my_uid() != 0) {
+    NodeManagementInfo reply;
+    reply.set_command_id(NodeManagementInfo::PROCESS_EXECUTED);
+    reply.set_name(mgt_info.name());
+    reply.set_recver(0);
+    reply.set_sender(my_uid());
+    cmd_van_->Send(reply);
+    // LL << " executecmd act sent ";
+  }
 }
 
 const NodeGroup& Postmaster::GetNodeGroup(const string& name) const {

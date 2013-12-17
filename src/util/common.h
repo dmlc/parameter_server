@@ -41,7 +41,11 @@
 // #include "base/callback.h"
 
 #include <google/protobuf/stubs/common.h>
+
+//const int MAX_NUM_LEN = 1000;
+
 namespace PS {
+typedef uint64 Key;
 using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
@@ -108,6 +112,34 @@ static string strfy(const T& t) {
 //static string strfy(const char* const& str) {
 //  return str;
 //}
+
+static void strToUpper(string& s) {
+  for (size_t i = 0; i < s.length(); i++) {
+    s[i] = toupper(s[i]);
+  }
+}
+
+// return <result, remainder> pair
+static pair<string, PS::Key> div_mod(string dec_str, Key den) {
+  Key rem = 0;
+  string res;
+  res.resize(1000);
+
+  for(int indx=0, len = dec_str.length(); indx<len; ++indx) {
+    rem = (rem * 10) + (dec_str[indx] - '0');
+    res[indx] = rem / den + '0';
+    rem %= den;
+  }
+  res.resize( dec_str.length() );
+
+  while( res[0] == '0' && res.length() != 1)
+    res.erase(0,1);
+
+  if(res.length() == 0)
+    res= "0";
+
+  return make_pair(res, rem);
+}
 
 #define SINGLETON(Typename)                     \
   static Typename* Instance() {                 \

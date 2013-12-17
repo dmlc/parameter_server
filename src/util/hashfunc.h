@@ -2,7 +2,6 @@
 
 #include <ctime>
 #include <cstdlib>
-#include "util/md5.h"
 #include "util/key.h"
 
 //TODO
@@ -13,9 +12,16 @@ namespace PS {
   class HashFunc {
     public:
       HashFunc() { srand(time(NULL)); }
-      std::string GetHashForStr(std::string str);
+      enum Type {
+        EQUAL = 0,
+        RAND = 1,
+        MurMurHash3 = 2,
+        MD5 = 3,
+      };
 
-      Key HashToKeyRange(Key min_key, Key max_key);
+      Key MMToKeyRange(Key min_key, Key max_key, const std::string& str);
+      Key MD5ToKeyRange(Key min_key, Key max_key, const std::string& str);
+      Key RandToKeyRange(Key min_key, Key max_key);
       Key AverageToKeyRange(const Key min_key, const Key max_key, const size_t num_com, const size_t i);
   };
 

@@ -37,8 +37,8 @@ class Container {
   // about sending and receiving
   typedef std::shared_future<bool> Future;
   // push and pull
-  Status Push(const Header& h);
-  Status Pull(const Header& h);
+  Status Push(const Header& h); //, Future* push_fut=NULL, Future* pull_fut=NULL);
+  Status Pull(const Header& h); //, Future* pull_fut=NULL);
 
   // accessors
   const name_t& name() const { return name_; }

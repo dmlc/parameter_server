@@ -7,29 +7,45 @@ namespace PS {
 
   DEFINE_int32(num_backup, 1, "number of nodes that are used for backup one node");
   DEFINE_int32(num_replica, 1, "number of replicas");
+  DEFINE_int32(hash_type, 0, "type used to distribute nodes");
 
   void HashRing::AddNode(const std::string& node_mark, const size_t n, const size_t i) {
     size_t num = (n - 1) * vnode_num_ + 1;
+    Key min_key = key_range_.start();
+    Key max_key = key_range_.end();
     for(size_t v = 0; v < vnode_num_; v++) {
       string m_str = node_mark + "#" + strfy(v);
-      
-      //auto h_val_org = hash_.HashForStr(m_str);
-      //Key min_key = key_range_.start();
-      //Key max_key = key_range_.end();
-      //Key h_val_new = min_key + h_val_org % (max_key - min_key + 1);
-      
-     // Key h_val_new = hash_.HashToKeyRange(key_range_.start(), key_range_.end());
-     // while(h_val_new == key_range_.start() || ring_.find(h_val_new) != ring_.end()) {
-     //   h_val_new = hash_.HashToKeyRange(key_range_.start(), key_range_.end());
-     // }
-      Key h_val_new = hash_.AverageToKeyRange(key_range_.start(), key_range_.end(), num, i*vnode_num_ + v);
-      CHECK_NE(h_val_new, key_range_.start());
-      CHECK(ring_.find(h_val_new) == ring_.end());
 
-      ring_[h_val_new] = m_str;
-      inv_ring_[m_str] = h_val_new;
-      
-      num_tnodes++;
+      Key h_val_new;
+      if(FLAGS_hash_type == hash_.EQUAL) {
+        h_val_new = hash_.AverageToKeyRange(min_key, max_key, num, i*vnode_num_ + v);
+      } else if(FLAGS_hash_type == hash_.RAND) {
+        h_val_new = hash_.RandToKeyRange(min_key, max_key);
+        while(h_val_new == key_range_.start() || ring_.find(h_val_new) != ring_.end()) {
+          h_val_new = hash_.RandToKeyRange(min_key, max_key);
+        }
+      } else if(FLAGS_hash_type == hash_.MurMurHash3) {
+        h_val_new = hash_.MMToKeyRange(min_key, max_key, m_str);
+        string tmp = m_str;
+        while(h_val_new = key_range_.start() || ring_.find(h_val_new) != ring_.end()) {
+          tmp += strfy(h_val_new);
+          h_val_new = hash_.MMToKeyRange(min_key, max_key, tmp);
+        }
+      } else if(FLAGS_hash_type == hash_.MD5) {
+        h_val_new = hash_.MD5ToKeyRange(min_key, max_key, m_str);
+        string tmp = m_str;
+        while(h_val_new = key_range_.start() || ring_.find(h_val_new) != ring_.end()) {
+          tmp += strfy(h_val_new);
+          h_val_new = hash_.MD5ToKeyRange(min_key, max_key, tmp);
+        }
+      }
+        CHECK_NE(h_val_new, key_range_.start());
+        CHECK(ring_.find(h_val_new) == ring_.end());
+
+        ring_[h_val_new] = m_str;
+        inv_ring_[m_str] = h_val_new;
+
+        num_tnodes++;
     }
   }
 
