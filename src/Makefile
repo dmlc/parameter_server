@@ -23,9 +23,11 @@ OBJECTS = \
 	./util/stringpiece.o \
 	./util/stringprintf.o \
 	./util/futurepool.o \
+	./util/MurmurHash3.o \
 	./util/md5.o \
 	./util/hashfunc.o \
 	./util/logging.o \
+	./util/BaseConverter.o\
 	./system/van.o \
 	./system/node.o \
 	./system/node_group.o \
