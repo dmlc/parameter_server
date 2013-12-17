@@ -26,11 +26,7 @@ DEFINE_int32(local_feature_num, 10, "num of local feature");
 
 
 void Postmaster::Init() {
-  // create a postmaster thread
-  // wait for command from cluster master
-  // LL << "flags:" << FLAGS_my_rank << FLAGS_num_server << FLAGS_num_clietn;
-  // LL << " initializing postmaster " << FLAGS_is_backup_process;
-  is_backup_process_ = FLAGS_is_backup_process;
+  // initialize all node information
   num_server_ = FLAGS_num_server;
   num_client_ = FLAGS_num_client;
   std::vector<string> s_addr = split(FLAGS_server_address, ',');
@@ -39,17 +35,20 @@ void Postmaster::Init() {
       << "#address in " << FLAGS_server_address << " is less than num_server";
   CHECK_GE(c_addr.size(), num_client_)
       << "#address in " << FLAGS_client_address << " is less than num_client";
-  // init all availabe nodes
+
+  // server nodes
+  is_backup_process_ = FLAGS_is_backup_process;
   Node node;
   for (size_t i = 0; i < num_server_; ++i) {
     if (IamBackupProcess()) {
       if (i == FLAGS_failed_node_id)
         continue;
     }
+    // network address
     string mail_addr = s_addr[i];
     std::vector<string> part = split(mail_addr, ':');
+    // use data_port + 1 to send cmd
     int port = std::stoi(part.back());
-    // port + 1 used to send cmd
     port ++;
     string cmd_addr;
     for (size_t j = 0; j < part.size(); j++) {
@@ -59,17 +58,19 @@ void Postmaster::Init() {
         cmd_addr += std::to_string(port);
     }
     node.Init(Node::kTypeServer, i, mail_addr, cmd_addr);
+    // insert into node groups
     uid_t uid = node.uid();
     all_[uid] = node;
     group_.servers()->push_back(uid);
     group_.all()->push_back(uid);
     if (i==0) group_.set_root(uid);
   }
+  // client nodes
   for (size_t i = 0; i < num_client_; ++i) {
     string mail_addr = c_addr[i];
     std::vector<string> part = split(mail_addr, ':');
+    // use data_port + 1 to send cmd
     int port = std::stoi(part.back());
-    // port + 1 used to send cmd
     port ++;
     string cmd_addr;
     for (size_t j = 0; j < part.size(); j++) {
@@ -78,8 +79,8 @@ void Postmaster::Init() {
       else
         cmd_addr += std::to_string(port);
     }
-
     node.Init(Node::kTypeClient, i, mail_addr, cmd_addr);
+    // insert into node groups
     uid_t uid = node.uid();
     all_[uid] = node;
     group_.clients()->push_back(uid);
@@ -87,7 +88,8 @@ void Postmaster::Init() {
   }
   // my node
   my_uid_ = Node::GetUid(FLAGS_my_type, FLAGS_my_rank);
-  CHECK(all_.find(my_uid_) != all_.end()) << "invalid rank: " << my_uid_;
+  CHECK(all_.find(my_uid_) != all_.end())
+      << "there is no my_node [" << my_uid_ << "] info";
   // LL << "I'm" << my_node().ToString();
 
   // init connections for mail
@@ -232,7 +234,7 @@ void Postmaster::SendKeyRange(Container *ctr, uid_t id) {
     mkr->set_key_end(wl.key_range().end());
     // LL << "key start:" << wl.key_range().start() << " key end: "<< wl.key_range().end();
   }
-  
+
   mgt_info.set_recver(id);
   cmd_van_->Send(mgt_info);
 }
@@ -281,7 +283,7 @@ void Postmaster::SendReplicaInfo(Container *ctr){
         }
       }
     }
-    
+
     // LL << " back up node info for node " << node_uid << " finished ";
     // LL << rt->DebugString();
     mgt_info.set_allocated_replica_to(rt);
@@ -295,7 +297,7 @@ void Postmaster::SendReplicaInfo(Container *ctr){
     } else {
       // LL << "replica to at node 0 initialized";
     }
-    
+
   }
 }
 
@@ -723,7 +725,7 @@ void Postmaster::RemoveNode(uid_t id) {
     } else {
       // LL << "cannot find " << id << " in all";
     }
-    
+
     for (auto it = group.servers()->begin(); it != group.servers()->end(); ++it) {
       // LL << name << " " << *it;
     }
@@ -735,7 +737,7 @@ void Postmaster::RemoveNode(uid_t id) {
     } else {
       // LL << "cannot find " << id << " in servers";
     }
-    
+
     nodegroups_[name] = group;
     workloads_.erase(make_pair(name, id));
   }

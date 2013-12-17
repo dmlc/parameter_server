@@ -8,3 +8,6 @@
 /src/*.a
 /src/parse
 /src/*/*cscope*
+/src/fault_tolerance_press
+
+*.log.*
