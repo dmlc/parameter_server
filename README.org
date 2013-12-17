@@ -46,7 +46,7 @@ local statistics such as gradients.  Clients communicate only with the
 server nodes, updating and retrieving the shared parameters.  Clients
 may be added or removed.
 
-[[./doc/img/arch2.png]]
+[[./doc/img/arch.png]]
 
 ** APIs
 

@@ -75,12 +75,13 @@ TEST(Vectors, Aggregator) {
     w.SetMaxDelay(10000,delay);
     w.Vec(0) = DVec::Zero(4);
 
-    for (int i = 1; i < 100; ++i) {
+    for (int i = 1; i < 1; ++i) {
       w.Vec(0) = g * i * i;
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
-      if (FLAGS_my_rank ==0)
+      if (FLAGS_my_rank ==0) {
         LL << w.Vec(1).sum() / res;
         // LL << w.vecs().col(1).sum() / res;
+      }
     }
     std::this_thread::sleep_for(seconds(5));
   } else {

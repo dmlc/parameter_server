@@ -10,7 +10,7 @@ CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 
 LDFLAGS = -Wl,-rpath,/usr/local/lib -Wl,-rpath,${third_party_library}\
 	 -L/usr/local/lib -L${third_party_library}\
-	 libps.a -lgflags -lpthread -lzmq -lprotobuf -lglog
+	 libps.a -lgflags -lpthread -lzmq -lprotobuf #-lglog
 GTEST =  -lgtest_main -lgtest
 
 OBJECTS = \
@@ -25,6 +25,7 @@ OBJECTS = \
 	./util/futurepool.o \
 	./util/md5.o \
 	./util/hashfunc.o \
+	./util/logging.o \
 	./system/van.o \
 	./system/node.o \
 	./system/node_group.o \
@@ -81,7 +82,8 @@ libps.a: $(OBJECTS) $(DEPS) #gtest
 	ar crv libps.a $(OBJECTS)
 
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
-	${third_party_bin}/protoc --cpp_out=. $<
+#	${third_party_bin}/protoc --cpp_out=. $<
+	protoc --cpp_out=. $<
 
 #base:
 #	make -C $(PWD)/../third_party/ #M=$(PWD)

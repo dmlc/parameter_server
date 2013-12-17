@@ -29,12 +29,15 @@
 
 
 // google staff
-#include <glog/logging.h>
+// #include <glog/logging.h>
+
 #include <gflags/gflags.h>
 
 #include "util/macros.h"
 #include "util/basictypes.h"
 #include "util/join.h"
+#include "util/logging.h"
+
 // #include "base/callback.h"
 
 #include <google/protobuf/stubs/common.h>
