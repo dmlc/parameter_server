@@ -274,13 +274,14 @@ Status Van::Recv(NodeManagementInfo *mgt_info, bool blocking) {
 
   string mgt_string(buf, size);
   if (!mgt_info->ParseFromString(mgt_string)) {
-    return Status::NetError(StrCat("parse flagsync fail"));
+    return Status::NetError(StrCat("parse nodemanagementinfo fail"));
   }
 
+  // if (!zmq_msg_more(&msg)) {
+  //   return Status::NetError(StrCat("there should be more"));
+  // }
   zmq_msg_close(&msg);
-  if (!zmq_msg_more(&msg)) {
-    return Status::NetError(StrCat("there should be more"));
-  }
+
   return Status::OK();;
 }
 

@@ -45,7 +45,7 @@ void ReplicaManager::ReplicaManagerThread() {
     Mail mail = mails_received_.Take();
     const Header& flag = mail.flag();
     if (flag.type() == Header_Type_BACKUP) {
-      LOG(WARNING) << "Header_Type_BACKUP";
+      // LOG(WARNING) << "Header_Type_BACKUP";
       WriteToDisk(mail);
     } else if (flag.type() == Header_Type_NODE_RESCUE) {
       Rescue(mail);
@@ -150,8 +150,10 @@ void ReplicaManager::WriteToContainer(BlockingQueue<Mail> *queue, Container* ctr
       break;
     }
     // write mail to container
-    ctr->Accept(mail);
-    LOG(WARNING) << "get one mail, key size: " << mail.keys().size() << " val size: " << mail.vals().size();
+    // ctr->Accept(mail);
+
+    ctr->MergeRemoteData(mail);
+    // LOG(WARNING) << "get one mail, key size: " << mail.keys().size() << " val size: " << mail.vals().size();
   }
 }
 

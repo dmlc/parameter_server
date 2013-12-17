@@ -15,11 +15,19 @@ bool NodeGroup::Valid(uid_t uid) {
 
 const NodeList& NodeGroup::Get(uid_t uid) const {
   CHECK(Valid(uid));
-  if (uid == kServers)
+  // return existing group
+  if (uid == kAll)
+    return all_;
+  else if (uid == kServers)
     return servers_;
-  if (uid == kClients)
+  else if (uid == kClients)
     return clients_;
-  CHECK_EQ(uid, kAll);
-  return all_;
+  // otherwise, insert a single node into the vector
+  // NodeList node(new std::vector<uid_t>);
+  // for (auto& it : *all_) {
+  //   if (it == uid)
+  //     node->push_back(it);
+  // }
+  // return node;
 }
 } // namespace PS

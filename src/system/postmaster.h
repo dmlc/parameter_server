@@ -64,9 +64,13 @@ class Postmaster {
 
   // get ith_replica of replica node info, called by replica manager
   map<uid_t, KeyRange> GetReplicaTo(string name, int32 ith_replica);
+  map<uid_t, KeyRange> GetReplicaTo(string name, int32 ith_replica, uid_t id);
 
   void send_cmd();
   void receive_cmd();
+  
+  void RescueAck(string name);
+
 
  private:
   Postmaster()  { }
@@ -100,11 +104,10 @@ class Postmaster {
   void RemoveNode(uid_t id);
   void AddNode(string name, Node node, KeyRange kr);
   void BroadcastDead(uid_t id);
-  bool ActivateBackup(FailedNode fn, string name, uid_t recver);
+  bool ActivateBackup(FailedNode *fn, string name, uid_t recver);
   void AddBackupNode(int32 id, string name, KeyRange kr);
-  void BroadcastAddNode(Node nd, KeyRange kr);
+  void BroadcastAddNode(Node nd, KeyRange kr, uid_t failed_node, string name);
   void ExecuteCmd(NodeManagementInfo mgt_info);
-  void RescueAck(string name);
       
   // all availabe clients and servers
   NodeGroup group_;
@@ -132,6 +135,10 @@ class Postmaster {
   // back up info
   map<tuple<string, uid_t, int32>, KeyRange> replicafrom_;
   map<tuple<string, int32, uid_t>, KeyRange> replicato_;
+
+  // master node only
+  map<tuple<string, uid_t, int32, uid_t>, KeyRange> all_replicato_;
+  
 
   Van* van_;
   Van* cmd_van_;

@@ -1,4 +1,4 @@
-#include "system/postoffice.h"
+// #include "system/postoffice.h"
 #include "system/postmaster.h"
 #include "box/container.h"
 #include "system/replica_manager.h"
@@ -38,7 +38,7 @@ void Postoffice::SendPostman() {
 
     // check if is transfer packets
     if (head.type() == Header_Type_BACKUP) {
-      LOG(WARNING) << "Header_Type_BACKUP send";
+      // LOG(WARNING) << "Header_Type_BACKUP send";
       head.set_sender(postmaster_->my_uid());
       CHECK(van_->Send(mail).ok());
       continue;
@@ -114,7 +114,7 @@ void Postoffice::RecvPostman() {
     // node management info send it to postmaster queue
     // rescue mail, send it to the replica manager
     van_->Recv(&mail);
-    LOG(WARNING) << "receive a packet";
+    // LOG(WARNING) << "receive a packet";
     const Header& head = mail.flag();
     // check if is a backup mail or a rescue mail
     if (FLAGS_enable_fault_tolerance) {
@@ -140,7 +140,7 @@ void Postoffice::RecvPostman() {
       }
     } else {
       RawArray keys;
-      LL <<"I am" << postmaster_->my_uid() << " looking for cach " << head.sender() << " " << head.key().start() << " " <<head.key().end();
+      // LL <<"I am" << postmaster_->my_uid() << " looking for cach " << head.sender() << " " << head.key().start() << " " <<head.key().end();
       // TODO a fault tolerance way is just as the sender to resend the keys
       CHECK(wl->GetCache(kr, cksum, &keys))
           << "keys" << kr.ToString() << " of " << head.name() << " are not cached";
@@ -153,9 +153,9 @@ void Postoffice::RecvPostman() {
     //
     postmaster_->GetContainer(head.name())->Accept(mail);
     
-    LOG(WARNING) << "before FLAGS_enable_fault_tolerance";
+    // LOG(WARNING) << "before FLAGS_enable_fault_tolerance";
     if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
-      LOG(WARNING) << "in FLAGS_enable_fault_tolerance";
+      // LOG(WARNING) << "in FLAGS_enable_fault_tolerance";
       replica_manager_->Put(mail);
     }
   }
