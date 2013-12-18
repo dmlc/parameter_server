@@ -1,22 +1,5 @@
 import "proto/nodemgt.proto";
 
-// The synchronization flag, which is commonly used by all components:
-// - Applications:
-//   user developed applications, such as sgd, l-bfgs, lda, sketches
-// - Containers:
-//   data structures storing the shared parameter, such as sparse vectors
-// - Postoffice:
-//   The class in the core system manages sending and receiving
-//
-// The meaning of push and pull:
-// | push | pull | if i'm sender               | if i'm receiver         |
-// |------+------+-----------------------------+-------------------------|
-// |    1 |    0 | send data                   | receive data            |
-// |    0 |    1 | ask data from recver        | send data back          |
-// |    1 |    1 | send and then ask data back | get then send data back |
-
-// import "proto/replicainfo.proto";
-
 message Header {
 
   // basic ------------------------------

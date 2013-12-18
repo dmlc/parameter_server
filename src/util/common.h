@@ -45,6 +45,7 @@
 //const int MAX_NUM_LEN = 1000;
 
 namespace PS {
+
 typedef uint64 Key;
 using std::string;
 using std::shared_ptr;
@@ -54,6 +55,8 @@ using std::make_pair;
 using std::map;
 using std::tuple;
 using std::make_tuple;
+using std::to_string;
+
 using operations_research::StrCat;
 using google::protobuf::Closure;
 using google::protobuf::NewCallback;

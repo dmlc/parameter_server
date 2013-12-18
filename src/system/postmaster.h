@@ -39,7 +39,7 @@ class Postmaster {
   bool IamServer() { return node(my_uid_).is_server(); }
   // check whether my_node is the root for container/inference name
   bool IsRoot(const string& name) { return nodegroups_[name].IsRoot(my_uid_); }
-  bool IamBackupProcess() { return IamServer() && is_backup_process_; } 
+  bool IamBackupProcess() { return IamServer() && is_backup_process_; }
 
   // TODO a better way to get the whole key range of the container
   // if ifr is valid, then ctr will get all clients nodes from ifr
@@ -56,6 +56,7 @@ class Postmaster {
   Van* GetMailVan() { return van_; }
 
 
+  string DebugString();
   // accept mail from postoffice
   // void Accept(const Mail& mail) {
   // mails_received_.Put(mail);
@@ -68,7 +69,7 @@ class Postmaster {
 
   void send_cmd();
   void receive_cmd();
-  
+
   void RescueAck(string name);
 
 
@@ -85,20 +86,20 @@ class Postmaster {
   // 3) send keyrange information to new generated node
   // 4) notify all client and servers of the new node added
   void DealWithFailureNode(uid_t id);
-  
+
   // distuigh zero master and non zero master
   // call dht and send all these information
   void MasterAssignNodes(Container *ctr, KeyRange whole);
   void MapServerKeyRange(Container *ctr, KeyRange whole);
   void SendKeyRange(Container *ctr, uid_t id);
   void SendReplicaInfo(Container *ctr);
-  // void SendKeyRangeReplica(Container *ctr); 
+  // void SendKeyRangeReplica(Container *ctr);
 
   // receive the node list info and assign nodes
   void SlaveAssignNodes(Container *ctr, KeyRange whole);
   void ReceiveKeyRange(Container *ctr, KeyRange whole);
   void ReceiveReplicaInfo(Container *ctr);
-  
+
   bool PingNode(uid_t id);
   void Ack();
   void RemoveNode(uid_t id);
@@ -108,7 +109,7 @@ class Postmaster {
   void AddBackupNode(int32 id, string name, KeyRange kr);
   void BroadcastAddNode(Node nd, KeyRange kr, uid_t failed_node, string name);
   void ExecuteCmd(NodeManagementInfo mgt_info);
-      
+
   // all availabe clients and servers
   NodeGroup group_;
 
@@ -138,7 +139,7 @@ class Postmaster {
 
   // master node only
   map<tuple<string, uid_t, int32, uid_t>, KeyRange> all_replicato_;
-  
+
 
   Van* van_;
   Van* cmd_van_;

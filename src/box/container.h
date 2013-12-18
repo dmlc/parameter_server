@@ -28,10 +28,9 @@ class Container {
 
   // init postoffice and postmaster, it they are not inited'
   // get the the local key_range of this container
-
   // input : the global key range of this container,
   // TODO we may get it from the master node
-  virtual void Init(KeyRange whole);
+  void Init(KeyRange whole);
 
   // TODO replace bool by some meaningful class, say statisific informations
   // about sending and receiving

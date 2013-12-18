@@ -41,10 +41,10 @@ OBJECTS = \
 	./box/consistency.o \
 	./box/item.o \
 	./box/container.o \
+	./box/vectors.o \
 	./box/sparse_vector.o \
 	./algo/inference.o \
 	./algo/graddesc.o
-#./box/vectors.o
 
 DEPS = \
 	util/rawarray.h
@@ -134,7 +134,7 @@ xarray_test : util/xarray_test.cc util/xarray.h
 	$(CC) $(CFLAGS) util/xarray_test.cc $(GTEST) $(LDFLAGS) -o $@
 
 vectors_test : box/vectors_test.cc libps.a
-	$(CC) $(CFLAGS) box/vectors_test.cc  $(GTEST) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) box/vectors_test.cc  -lgtest $(LDFLAGS) -o $@
 
 eigen3_test : util/eigen3_test.cc libps.a
 	$(CC) $(CFLAGS) util/eigen3_test.cc  $(GTEST) $(LDFLAGS) -o $@
@@ -151,6 +151,8 @@ postmaster_test : system/postmaster_test.cc system/postmaster.cc system/postmast
 replica_test : system/replica_test.cc libps.a
 	$(CC) $(CFLAGS) system/replica_test.cc $(GTEST) $(LDFLAGS) -o $@
 
+####################################
+# install third_party
 
 third_party_dir=$(shell cd ..;pwd)/third_party
 third_party_src=${third_party_dir}/src

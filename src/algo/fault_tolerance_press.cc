@@ -33,7 +33,7 @@ void Server() {
   for (size_t i = 0; i < global_id.size(); ++i) {
     keys.set(i, global_id[i]);
   }
-  Vectors<double> vec("ft", FLAGS_global_feature_num, 1);
+  Vectors<double> vec("ft", FLAGS_global_feature_num, {kReadWrite});
   vec.SetAggregator(NodeGroup::kClients);
   while (1) {
     std::this_thread::sleep_for(seconds(1));
@@ -51,7 +51,7 @@ void Client() {
   for (size_t i = 0; i < local_id.size(); ++i) {
     keys.set(i, local_id[i]);
   }
-  Vectors<double> vec("ft", FLAGS_global_feature_num, 1, keys);
+  Vectors<double> vec("ft", FLAGS_global_feature_num, {kReadWrite}, keys);
   vec.SetMaxDelay(kint32max,kint32max);
 
   while(1) {

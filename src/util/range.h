@@ -35,7 +35,7 @@ class Range {
   T Size() const { return end_ - start_; }
   T size() const { return end_ - start_; }
   string ToString() { return StrCat("[", std::to_string(start_),",",
-                                    std::to_string(end_),"]"); }
+                                    std::to_string(end_),")"); }
  private:
   T start_;
   T end_;

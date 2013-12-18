@@ -18,7 +18,7 @@ class XArray {
   ~XArray() { }
 
   // accessors and mutators
-  size_t size() { return len_; }
+  size_t size() const { return len_; }
   T* data() { return data_; }
   T& operator[] (const size_t i) { return data_[i]; }
   const T operator[] (const size_t i) const { return data_[i]; }
@@ -30,13 +30,13 @@ class XArray {
   // assume data are ordered by non-decreasing. return the largest pointer whose
   // value <= val, return NULL if val is less than data[0]
   // TODO use binary search... refer to ../../back/common.h
-  T* LowerBound(const T& val, size_t *idx = NULL);
+  T* LowerBound(const T& val, size_t *idx = NULL) const;
   // assume data are ordered by non-decreasing. return the least pointer whose
   // value >= val, return NULL if val is greater than data[len_-1]
-  T* UpperBound(const T& val, size_t *idx = NULL);
+  T* UpperBound(const T& val, size_t *idx = NULL) const;
 
   string DebugString();
-  bool Empty() { return data_ == NULL; }
+  bool Empty() const { return data_ == NULL; }
   //TODO:
   void resetSize(size_t newSize);
  private:
@@ -81,7 +81,7 @@ XArray<T>::XArray(RawArray raw) : raw_(raw) {
 template <typename T>
 string XArray<T>::DebugString() {
   string str = std::to_string(size()) + ":[";
-  int n = std::min((int)size(), 2);
+  int n = std::min((int)size(), 50);
   for (int i = 0; i < n; ++i) {
     if (i < n - 1)
       str += std::to_string(data_[i]) + ", ";
@@ -92,7 +92,7 @@ string XArray<T>::DebugString() {
 }
 
 template<class T>
-T* XArray<T>::LowerBound(const T& val, size_t *idx) {
+T* XArray<T>::LowerBound(const T& val, size_t *idx) const {
   if (Empty() || data_[0] > val)
     return NULL;
   size_t i = 0;
@@ -110,7 +110,7 @@ T* XArray<T>::LowerBound(const T& val, size_t *idx) {
 }
 
 template<class T>
-T* XArray<T>::UpperBound(const T& val, size_t *idx) {
+T* XArray<T>::UpperBound(const T& val, size_t *idx) const {
   if (Empty() || data_[len_-1] < val)
     return NULL;
   size_t i = len_;

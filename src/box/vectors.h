@@ -7,32 +7,42 @@
 
 namespace PS {
 
+// access permission
+static const int kRead = 0;
+static const int kWrite = 1;
+static const int kReadWrite = 2;
+
 template <typename V>
 class Vectors : public Container {
  public:
   typedef Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic> EMat;
   typedef Eigen::Matrix<V, Eigen::Dynamic, 1> EVec;
-  typedef std::initializer_list<int> VecList;
-  // todo, man ask global length from the postmaster
-  Vectors(string      name,
-          size_t      global_length,
-          int         num_vec      = 1,
-          XArray<Key> key_list     = XArray<Key>());
+  typedef std::initializer_list<int> IntList;
+
+  Vectors(const string& name, size_t global_length, int num_vec = 1,
+          const XArray<Key>& global_keys = XArray<Key>());
+
+  Vectors(const string& name, size_t global_length,
+          const IntList& access_permission = {kReadWrite},
+          const XArray<Key>& global_keys   = XArray<Key>());
+
+  // initial keys and values
+  void Init(size_t global_length, const XArray<Key>& global_keys);
 
   Status Push(KeyRange key_range = KeyRange::All(),
-              VecList  vec_list  = {1},
+              IntList  vec_list  = {1},
               bool     delta     = kDelta,
               uid_t    dest      = kServer);
 
   Status Pull(KeyRange key_range = KeyRange::All(),
-              VecList  vec_list  = {1},
+              IntList  vec_list  = {1},
               bool     delta     = kValue,
               uid_t    dest      = kServer);
 
   Status PushPull(KeyRange key_range     = KeyRange::All(),
-                  VecList  push_vec_list = {0},
+                  IntList  push_vec_list = {0},
                   bool     push_delta    = kDelta,
-                  VecList  pull_vec_list = {0},
+                  IntList  pull_vec_list = {0},
                   bool     pull_delta    = kValue,
                   uid_t    dest          = kServer);
 
@@ -42,16 +52,29 @@ class Vectors : public Container {
   // return the i-th vector
   EMat vecs() { return local_; }
 
-  Eigen::Block<EMat, EMat::RowsAtCompileTime, 1> Vec(int i) {
+  Eigen::Block<EMat, EMat::RowsAtCompileTime, 1> vec(int i) {
     return Eigen::Block<EMat, EMat::RowsAtCompileTime, 1>(local_, i);
+  }
+
+  Eigen::Block<EMat, EMat::RowsAtCompileTime, 1> Vec(int i) {
+    return vec(i);
   }
 
  private:
   size_t vec_len_;
   int num_vec_;
+  // local working sets, it is a vec_len_ x num_vec_ matrix
   EMat local_;
+
   EMat synced_;
   XArray<Key> keys_;
+
+  // access control
+  std::vector<int> access_permission_;
+  // column mapping
+  std::vector<int> syn2loc_map_;
+  std::vector<int> loc2syn_map_;
+  int num_synced_vec_;
 
   // a better way?
   // map a keyrange into start index, end index, and keylist, invalid the caches
@@ -60,36 +83,70 @@ class Vectors : public Container {
   map<KeyRange, RawArray> key_caches_;
 };
 
+template <typename V>
+Vectors<V>::Vectors(const string& name,
+                    size_t global_length,
+                    int num_vec,
+                    const XArray<Key>& global_keys) : Container(name)  {
+  num_vec_ = num_vec;
+  CHECK_GT(num_vec_, 0);
+  for (int i = 0; i < num_vec_; ++i ) {
+    access_permission_.push_back(kReadWrite);
+  }
+  Init(global_length, global_keys);
+}
 
 template <typename V>
-Vectors<V>::Vectors(string name, size_t global_length,
-                    int num_vec, XArray<Key> key_list)
-    : Container(name), num_vec_(num_vec) {
-  CHECK_GT(num_vec, 0);
+Vectors<V>::Vectors(const string& name,
+                    size_t global_length,
+                    const IntList& access_permission,
+                    const XArray<Key>& global_keys) : Container(name)  {
+  num_vec_ = access_permission.size();
+  CHECK_GT(num_vec_, 0);
+  for (auto p : access_permission) {
+    access_permission_.push_back(p);
+  }
+  Init(global_length, global_keys);
+}
+
+
+template <typename V>
+void Vectors<V>::Init(size_t global_length, const XArray<Key>& global_keys) {
   Container::Init(KeyRange(0, global_length));
-  // fill  keys
-  if (key_list.Empty()) {
-    vec_len_ = key_range_.Size();
-    LL << "vec_len:" << vec_len_ << std::endl;
+  // fill keys
+  if (global_keys.Empty()) {
+    vec_len_ = key_range_.size();
     keys_ = XArray<Key>(vec_len_);
     for (size_t i = 0; i < vec_len_; ++i) {
       keys_[i] = key_range_.start() + i;
     }
   } else {
     CHECK(postmaster_->IamClient());
-    vec_len_ = key_list.size();
-    keys_ = key_list;
+    vec_len_ = global_keys.size();
+    keys_ = global_keys;
+  }
+  // construct mapping between local_ and synced_
+  num_synced_vec_ = 0;
+  loc2syn_map_.resize(num_vec_);
+  syn2loc_map_.clear();
+  int i = 0;
+  for (auto p : access_permission_) {
+    if (p == kReadWrite) {
+      loc2syn_map_[i] = num_synced_vec_;
+      syn2loc_map_.push_back(i);
+      num_synced_vec_ ++;
+    } else {
+      loc2syn_map_[i] = -1;
+    }
+    ++ i;
   }
   // fill values
-  local_ = EMat::Zero(vec_len_, num_vec);
-  synced_ = local_;
-
-
+  local_ = EMat::Zero(vec_len_, num_vec_);
+  synced_ = EMat::Zero(vec_len_, num_synced_vec_);
 }
 
-
 template <typename V>
-Status Vectors<V>::Push(KeyRange key_range, VecList vec_list,
+Status Vectors<V>::Push(KeyRange key_range, IntList vec_list,
                         bool delta, uid_t dest) {
   CHECK(0);
   return Status::OK();
@@ -97,10 +154,12 @@ Status Vectors<V>::Push(KeyRange key_range, VecList vec_list,
 
 
 template <typename V>
-Status Vectors<V>::PushPull(KeyRange key_range, VecList push_vec_list,
-                            bool push_delta, VecList  pull_vec_list,
+Status Vectors<V>::PushPull(KeyRange key_range, IntList push_vec_list,
+                            bool push_delta, IntList  pull_vec_list,
                             bool pull_delta, uid_t dest) {
-  if (key_range == KeyRange::All()) key_range = key_range_;
+  // 1. set the header
+  if (key_range == KeyRange::All())
+    key_range = key_range_;
   CHECK(key_range.Valid());
   Header head;
   head.set_type(Header::PUSH_PULL);
@@ -112,20 +171,28 @@ Status Vectors<V>::PushPull(KeyRange key_range, VecList push_vec_list,
   // push
   auto push = head.mutable_push();
   push->set_delta(push_delta);
-  for (int v : push_vec_list)
+  for (int v : push_vec_list) {
+    CHECK_NE(access_permission_[v], kRead)
+        << " vec[" << v << "] is local read-only, you cannot push it."
+        << " Change it to kReadWrite or kWrite.";
     push->add_vectors(v);
+  }
   // pull
   auto pull = head.mutable_pull();
   pull->set_delta(pull_delta);
-  for (int v : pull_vec_list)
+  for (int v : pull_vec_list) {
+    CHECK_NE(access_permission_[v], kWrite)
+        << " vec[" << v << "] is local write-only, you cannot pull it."
+        << " Change it to kReadWrite or kRead.";
     pull->add_vectors(v);
-  // do it
+  }
+  // 2. do it
   Container::Push(head);
   return Status::OK();
 }
 
 template <typename V>
-Status Vectors<V>::Pull(KeyRange key_range, VecList vec_list,
+Status Vectors<V>::Pull(KeyRange key_range, IntList vec_list,
                         bool delta, uid_t dest) {
   CHECK(0);
   return Status::OK();
@@ -134,27 +201,31 @@ Status Vectors<V>::Pull(KeyRange key_range, VecList vec_list,
 
 template<class V>
 Status Vectors<V>::GetLocalData(Mail *mail) {
-  // fill the keys, first check the cache, otherwise construct it.
-  // TODO a better way to avoid the memcpy here
+  // 1. fill the keys, first check whether hit the cache. if not, construct it.
   Header& head = mail->flag();
   KeyRange kr(head.key().start(), head.key().end());
   RawArray keys;
   size_t start_idx, end_idx;
   auto it = key_caches_.find(kr);
   if (it == key_caches_.end()) {
+    // miss the cache
     Key* start = keys_.UpperBound(kr.start(), &start_idx);
     Key* end = keys_.LowerBound(kr.end()-1, &end_idx);
     ++end_idx;
+    // LL << kr.ToString() << " " << start_idx << " " << end_idx;
     size_t n = end_idx - start_idx;
     CHECK(start != NULL);
     CHECK(end != NULL);
     CHECK_GT(end_idx, start_idx);
     CHECK_EQ(n-1, (size_t)(end-start));
     keys = RawArray(sizeof(Key), n);
+    // TODO a better way to avoid the memcpy here
     memcpy(keys.data(), start,  keys.size());
+    // set the cache
     key_caches_[kr] = keys;
     key_indices_[kr] = make_pair(start_idx, end_idx);
   } else {
+    // hit the cache
     keys = it->second;
     auto it2 = key_indices_.find(kr);
     CHECK(it2 != key_indices_.end());
@@ -163,30 +234,43 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   }
   head.mutable_key()->set_cksum(keys.ComputeCksum());
   mail->set_keys(keys);
-  // fill the values
+
+  // 2. fill the values. It is a #keys x #vec matrix, storing in a column-majored
+  // format
   int nvec = head.push().vectors_size();
   CHECK_GT(nvec, 0);
   size_t nkeys = keys.entry_num();
-  XArray<V> vals(nkeys*nvec);
-  for (size_t i = 0; i < nkeys; ++i) {
-    for (int j = 0; j < nvec; ++j) {
-      int x = head.push().vectors(j);
-      size_t y = i * nvec + j;
-      if (head.push().delta()) {
-        vals[y] = local_.coeff(i+start_idx, x) - synced_.coeff(i+start_idx, x);
-      } else {
-        vals[y] = local_.coeff(i+start_idx, x);
+  XArray<V> vals(nkeys * nvec);
+  for (int v = 0; v < nvec; ++v) {
+    int x = head.push().vectors(v);
+    if (head.push().delta()) {
+      CHECK_EQ(access_permission_[x], kReadWrite) << "vec[" << x <<
+          "] should be kReadWrite if you want to push its delta values";
+      int z = loc2syn_map_[x];
+      CHECK_GE(z, 0); CHECK_LT(z, num_synced_vec_);
+      for (size_t i = 0; i < nkeys; ++i) {
+        vals[v*nkeys+i] = local_.coeff(i+start_idx, x)
+                          - synced_.coeff(i+start_idx, z);
+      }
+    } else {
+      for (size_t i = 0; i < nkeys; ++i) {
+        vals[v*nkeys+i] = local_.coeff(i+start_idx, x);
       }
     }
   }
   head.mutable_value()->set_empty(false);
   mail->set_vals(vals.raw());
+
+  XArray<Key> xkey(keys);
+  LL << "to " << mail->flag().recver() << " keys: " << xkey.DebugString();
+  LL << "to " << mail->flag().recver() << " vals: " << vals.DebugString();
+
   return Status::OK();
 }
 
 template<class V>
 Status Vectors<V>::MergeRemoteData(const Mail& mail) {
-  // find the key segment
+  // 1. find the key range
   const Header& head = mail.flag();
   KeyRange kr(head.key().start(), head.key().end());
   auto it = key_indices_.find(kr);
@@ -194,42 +278,66 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
   if (it == key_indices_.end()) {
     keys_.UpperBound(kr.start(), &start_idx);
     keys_.LowerBound(kr.end(), &end_idx);
+    ++ end_idx;
   } else {
     start_idx = it->second.first;
     end_idx = it->second.second;
   }
-  // merge the data
+  // 2. merge the data
   XArray<Key> keys(mail.keys());
   XArray<V> vals(mail.vals());
+
+  LL << kr.ToString() << " " << start_idx << " " << end_idx;
+  LL << "from " << mail.flag().sender() << " keys: " << keys.DebugString();
+  LL << "from " << mail.flag().sender() << " vals: " << vals.DebugString();
+
   int nvec = head.push().vectors_size();
+  int nkey = keys.size();
   CHECK_GT(nvec, 0);
-  CHECK_EQ(keys.size()*nvec, vals.size()) << " I'm " << SName();
+  CHECK_EQ(nkey*nvec, vals.size());
+  // LL << head.push().delta();
+  // LL << aggregator_.ValidDefault();
+  // LL << aggregator_.IsFirst(head.time());
+
   bool delta = head.push().delta() ||
                (aggregator_.ValidDefault() && !aggregator_.IsFirst(head.time()));
-  size_t i = 0, j = start_idx;
-  while (i < keys.size() && j < end_idx) {
-    if (keys[i] < keys_[j]) {
-      ++ i;
-      continue;
-    } else if (keys[i] > keys_[j]) {
-      ++ j;
-      continue;
-    }
-    // now matched
-    for (int k = 0; k < nvec; ++k) {
-      int x = head.push().vectors(k);
-      V v = vals[i*nvec+k];
-      if(delta) {
-        local_.coeffRef(j, x) += v;
-        synced_.coeffRef(j, x) += v;
+
+  for (int v = 0; v < nvec; ++v) {
+    int x = head.push().vectors(v);
+    int z = loc2syn_map_[x];
+    bool has_sync = z > -1;
+
+    size_t i = 0, j = start_idx;
+    while (i < nkey && j < end_idx) {
+      if (keys[i] < keys_[j]) {
+        LL << "ignore received key " << keys[i];
+        ++ i;
+        continue;
+      } else if (keys[i] > keys_[j]) {
+        ++ j;
+        continue;
+      }
+      // now key matched
+      V val = vals[v*nkey+i];
+      if (delta) {
+        local_.coeffRef(j, x) += val;
+        if (has_sync)
+          synced_.coeffRef(j, z) += val;
       } else {
-        local_.coeffRef(j, x) += (v - synced_.coeff(j, x));
-        synced_.coeffRef(j, x) = v;
+        if (has_sync) {
+          local_.coeffRef(j, x) += (val - synced_.coeff(j, z));
+          synced_.coeffRef(j, z) = v;
+        } else {
+          local_.coeffRef(j, x) = val;
+        }
       }
     }
     ++i; ++j;
   }
 
+  LL << delta;
+  LL << "local: " << std::endl << local_;
+  LL << "synced: " << std::endl << synced_;
   // LL << SName() << "merge: " << local_.norm() << " " << synced_.norm();
   return Status::OK();
 }

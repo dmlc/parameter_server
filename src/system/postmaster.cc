@@ -24,6 +24,14 @@ DEFINE_int32(failed_node_id, 100, "which node fails, used to initialize a back u
 DEFINE_int32(global_feature_num, 10, "num of global feature");
 DEFINE_int32(local_feature_num, 10, "num of local feature");
 
+string Postmaster::DebugString() {
+  std::stringstream ss;
+  ss << "#client: " << FLAGS_num_client
+     << ", #server: " << FLAGS_num_server
+     << ", my rank: " << FLAGS_my_rank
+     << ", my type: " << FLAGS_my_type;
+  return ss.str();
+}
 
 void Postmaster::Init() {
   // initialize all node information
@@ -89,36 +97,37 @@ void Postmaster::Init() {
   // my node
   my_uid_ = Node::GetUid(FLAGS_my_type, FLAGS_my_rank);
   CHECK(all_.find(my_uid_) != all_.end())
-      << "there is no my_node [" << my_uid_ << "] info";
-  // LL << "I'm" << my_node().ToString();
+      << "there is no my_node [" << my_uid_ << "] info"
+      << DebugString();
+  // LL << "I'm " << my_node().ToString();
 
-  // init connections for mail
+  // initialize van:
+  // for data
   van_ = new Van();
   CHECK(van_->Init());
   CHECK(van_->Bind(my_node(), 0));
-  // init connections for cmd
+  // for command
   cmd_van_ = new Van();
   CHECK(cmd_van_->Init());
   CHECK(cmd_van_->Bind(my_node(), 1));
 
-  // connet to all (not necessary, but the class item implemeted allreduce)
-  // mail connect
+  // data connect
   if (my_node().is_client()) {
     for (auto id : *group_.servers())
       CHECK(van_->Connect(all_[id], 0));
-  }
-  else {
-    for (auto id : *group_.all())
-    {
-      if (id != my_uid())
+  } else {
+    // connect to all
+    // TODO not necessary
+    for (auto id : *group_.all()) {
+      if (id != my_uid())  // TODO no if
         CHECK(van_->Connect(all_[id], 0));
     }
   }
 
-  // cmd connect
-  if (my_uid_ == 0) {
+  // command connect
+  if (my_uid_ == 0) {  // TODO use IamRoot
     for (auto id : *group_.all()) {
-      if (id != my_uid_)
+      if (id != my_uid_)  // TODO no if
         CHECK(cmd_van_->Connect(all_[id], 1));
     }
   } else {
@@ -126,8 +135,7 @@ void Postmaster::Init() {
     CHECK(cmd_van_->Connect(all_[0], 1));
   }
 
-  // create DHT instance to manage the key-range distributation
-
+  // create a DHT instance to manage the key-range
   send_thread_ = new std::thread(&Postmaster::send_cmd, this);
   receive_thread_ = new std::thread(&Postmaster::receive_cmd, this);
 
@@ -424,7 +432,7 @@ void Postmaster::send_cmd() {
   // active dee back node to load the memory
   if (my_uid_ == 0) {
     //sleep(30);
-    LL << "Begin ping other servers...";
+    // LL << "Begin ping other servers...";
     while (1) {
       size_t num = group_.servers()->size();
       for (size_t i = 0; i < num; ++i) {

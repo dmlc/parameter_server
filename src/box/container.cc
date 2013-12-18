@@ -35,9 +35,10 @@ void Container::Init(KeyRange whole) {
     replica_manager->Rescue(this, FLAGS_failed_node_id, 0);
     // LL << " backup loaded at node " << postmaster_->my_uid();
     postmaster_->RescueAck(this->name());
-  } else
+  } // else
     // LL << " is_backup_process is not set";
   inited_ = true;
+  LL << SName() << " key_range " << key_range_.ToString();
 }
 
 void Container::Reply(const Mail& from_other, const Mail& my_reply) {
@@ -55,19 +56,20 @@ void Container::ReadAll() {
   // process all received mails, do not wait
   while (mails_received_.TryTake(&mail)) {
     // LL << my_node().ShortName() << " recved";
-    // merge data
+    // 1. update aggregator
+    aggregator_.Insert(mail);
+    // 2. merge data
     MergeRemoteData(mail);
     if (recv_callback_ != NULL)
-    	recv_callback_->Run();
-
-    // aggregator
-    aggregator_.Insert(mail);
+      recv_callback_->Run();
+    // 3. check if aggregator success, if any
     time_t time = mail.flag().time();
     if (!aggregator_.Success(time, postmaster_->GetNodeGroup(name())))
-    	continue;
-    if (aggregator_callback_ != NULL)
-    	aggregator_callback_->Run();
-    // whether need to send data back?
+      continue;
+    if (aggregator_callback_ != NULL) {
+      aggregator_callback_->Run();
+    }
+    // 4. whether need to send data back?
     bool pull = false;
     Mail my_reply;
     for (auto& it : aggregator_.GetTime(time)) {
@@ -80,14 +82,11 @@ void Container::ReadAll() {
         pull = true;
       }
     }
+    // 5. reduce memory usage
     aggregator_.Delete(time);
   }
 }
 
-// Status Container::PushToServer(Syncflag flag) {
-//   flag.set_recver(NodeGroup::kServers);
-//   return Push(flag);
-// }
 
 Status Container::Push(const Header& h) { // Future* push_fut, Future* pull_fut) {
   while (!inited_) {
@@ -129,10 +128,6 @@ Status Container::Pull(const Header& flag) { // Future* pull_fut) {
   return Status::OK();
 }
 
-// Status Container::PullFromServer(Syncflag flag) {
-//   flag.set_recver(NodeGroup::kServers);
-//   return Pull(flag);
-// }
 
 
 } // namespace PS

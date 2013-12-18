@@ -40,7 +40,7 @@ void *ReplicaManager::WrapperThread(void *args) {
 }
 
 void ReplicaManager::ReplicaManagerThread() {
-  LOG(WARNING) << "replica thread start";
+  // LOG(WARNING) << "replica thread start";
   while (ReplicaManager::NOTEXIT) {
     Mail mail = mails_received_.Take();
     const Header& flag = mail.flag();

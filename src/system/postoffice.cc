@@ -135,7 +135,7 @@ void Postoffice::RecvPostman() {
       mail.keys().ResetEntrySize(sizeof(Key));
       if (!wl->GetCache(kr, cksum, NULL))
       {
-        LL <<  "I caching "<< head.sender() <<" "<< head.key().start() << head.key().end();
+        //LL <<  "I caching "<< head.sender() <<" "<< head.key().start() << head.key().end();
         wl->SetCache(kr, cksum, mail.keys());
       }
     } else {
@@ -152,7 +152,7 @@ void Postoffice::RecvPostman() {
 
     //
     postmaster_->GetContainer(head.name())->Accept(mail);
-    
+
     // LOG(WARNING) << "before FLAGS_enable_fault_tolerance";
     if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
       // LOG(WARNING) << "in FLAGS_enable_fault_tolerance";

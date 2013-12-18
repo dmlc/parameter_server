@@ -17,7 +17,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>  // NOLINT
-#include "util/commandlineflags.h"
+//#include "util/commandlineflags.h"
+#include <gflags/gflags.h>
 #include "util/macros.h"
 
 DECLARE_int32(log_level);

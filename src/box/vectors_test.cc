@@ -23,7 +23,9 @@ TEST(Vectors, xxx) {
 }
 
 void MoveData(Vectors<double> *w) {
-  w->Vec(1) = w->Vec(0);
+  w->vec(1) = w->vec(0);
+  w->vec(0) *= 0;
+  LL << w->vec(0).sum() << " " << w->vec(1).sum();
 }
 
 TEST(Vectors, Aggregator) {
@@ -34,27 +36,32 @@ TEST(Vectors, Aggregator) {
   DVec g1 = DVec::Ones(4);
   DVec g2 = DVec::Ones(4);
 
-  FLAGS_num_client = 2;
-  FLAGS_num_server = 2;
-  FLAGS_my_type = "s";
-  pid_t pid = fork();
-  if (pid == 0) {
-    FLAGS_my_type = "c";
-    pid_t pid2 = fork();
-    if (pid2 == 0) {
-      FLAGS_my_type = "c";
-      FLAGS_my_rank ++;
-      pid_t pid3 = fork();
-      if (pid3 == 0)
-        FLAGS_my_type = "s";
-    }
-  }
-  // srand(time(0)+my_seed);
+  // FLAGS_num_client = 2;
+  // FLAGS_num_server = 2;
+  // FLAGS_my_type = "s";
+  // pid_t pid = fork();
+  // if (pid == 0) {
+  //   FLAGS_my_type = "c";
+  //   pid_t pid2 = fork();
+  //   if (pid2 == 0) {
+  //     FLAGS_my_type = "c";
+  //     FLAGS_my_rank ++;
+  //     pid_t pid3 = fork();
+  //     if (pid3 == 0)
+  //       FLAGS_my_type = "s";
+  //   }
+  // }
+  // // srand(time(0)+my_seed);
 
-  int delay = 1;
+  int delay = 0;
   double actual_delay;
 
-  if (FLAGS_my_type == "c") {
+  // s0: v v v
+  // s1:       v v v
+  // c0: v v   v v
+  // c1:   v v   v v
+
+  if (FLAGS_my_type == "client") {
     // local keys
     XArray<Key> keys;
     DVec g;
@@ -70,26 +77,32 @@ TEST(Vectors, Aggregator) {
       DVec r = g; r[0] += g1[1]; r[2] += g1[3];
       res = r.sum();
     }
-    // first col is weight, second is gradient
-    Vectors<double> w("haha", n, 2, keys);
+    // the first col is weight, the second is gradient
+    Vectors<double> w("haha", n, {kWrite, kRead}, keys);
     w.SetMaxDelay(10000,delay);
-    w.Vec(0) = DVec::Zero(4);
+    w.vec(0) = DVec::Zero(4);
 
-    for (int i = 1; i < 1; ++i) {
-      w.Vec(0) = g * i * i;
+    for (int i = 1; i < 3; ++i) {
+      w.vec(0) = g * i;
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
-      if (FLAGS_my_rank ==0) {
-        LL << w.Vec(1).sum() / res;
-        // LL << w.vecs().col(1).sum() / res;
-      }
+      // if (FLAGS_my_rank ==0) {
+      LL <<  w.vec(1).sum(); //  / res ;
+      // }
     }
-    std::this_thread::sleep_for(seconds(5));
+    std::this_thread::sleep_for(seconds(2));
   } else {
-    Vectors<double> w("haha", n, 2);
+    Vectors<double> w("haha", n, {kRead, kWrite});
     w.SetAggregator(NodeGroup::kClients);
     w.SetAggregatorFunc(NewPermanentCallback(MoveData, &w));
-    std::this_thread::sleep_for(seconds(30));
+    std::this_thread::sleep_for(seconds(10));
   }
 
   int ret; wait(&ret);
+}
+
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  RUN_ALL_TESTS();
+  // LL << "exists";
 }
