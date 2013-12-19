@@ -73,6 +73,7 @@ void Container::ReadAll() {
     bool pull = false;
     Mail my_reply;
     for (auto& it : aggregator_.GetTime(time)) {
+      // LL << it.second.flag().DebugString();
       if (it.second.flag().type() & Header::PULL) {
         if (pull == false) {
           my_reply = it.second.Reply();
@@ -84,6 +85,7 @@ void Container::ReadAll() {
     }
     // 5. reduce memory usage
     aggregator_.Delete(time);
+    // 6. update sync_
   }
 }
 
@@ -118,8 +120,10 @@ Status Container::Push(const Header& h) { // Future* push_fut, Future* pull_fut)
   // check again if max*delay = 0
   if (max_push_delay_==0)
     push_pool_.WaitUntil(time);
-  if (max_pull_delay_==0)
+  if (max_pull_delay_ == 0) {
     pull_pool_.WaitUntil(time);
+    ReadAll();
+  }
   return Status::OK();
 }
 

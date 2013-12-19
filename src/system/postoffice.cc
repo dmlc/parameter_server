@@ -113,8 +113,9 @@ void Postoffice::RecvPostman() {
     // replica key-value mail send it to replica manager
     // node management info send it to postmaster queue
     // rescue mail, send it to the replica manager
-    van_->Recv(&mail);
-    // LOG(WARNING) << "receive a packet";
+    Status stat = van_->Recv(&mail);
+    CHECK(stat.ok()) << stat.ToString();
+
     const Header& head = mail.flag();
     // check if is a backup mail or a rescue mail
     if (FLAGS_enable_fault_tolerance) {
@@ -158,7 +159,10 @@ void Postoffice::RecvPostman() {
       // LOG(WARNING) << "in FLAGS_enable_fault_tolerance";
       replica_manager_->Put(mail);
     }
+
+    // LL << "receive a packet";
   }
+  // LL << "exists...";
 }
 
 

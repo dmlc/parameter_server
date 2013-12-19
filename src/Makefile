@@ -52,7 +52,7 @@ DEPS = \
 
 TESTS = \
 	vectors_test \
-	van_test \
+#	van_test \
 	fault_tolerance_press \
 	postmaster_test \
 #	replica_test \
@@ -69,7 +69,7 @@ TESTS = \
 	aggregator_test \
 	common_test
 
-all: $(TESTS) ps
+all: $(TESTS) # ps
 
 clean:
 	rm -f */*.o *.a ps

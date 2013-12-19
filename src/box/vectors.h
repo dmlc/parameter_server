@@ -7,10 +7,10 @@
 
 namespace PS {
 
-// access permission
-static const int kRead = 0;
-static const int kWrite = 1;
-static const int kReadWrite = 2;
+// // access permission
+// static const int kRead = 0;
+// static const int kWrite = 1;
+// static const int kReadWrite = 2;
 
 template <typename V>
 class Vectors : public Container {
@@ -21,10 +21,6 @@ class Vectors : public Container {
 
   Vectors(const string& name, size_t global_length, int num_vec = 1,
           const XArray<Key>& global_keys = XArray<Key>());
-
-  Vectors(const string& name, size_t global_length,
-          const IntList& access_permission = {kReadWrite},
-          const XArray<Key>& global_keys   = XArray<Key>());
 
   // initial keys and values
   void Init(size_t global_length, const XArray<Key>& global_keys);
@@ -56,10 +52,21 @@ class Vectors : public Container {
     return Eigen::Block<EMat, EMat::RowsAtCompileTime, 1>(local_, i);
   }
 
+  // reset column i of local_ to 0, and also its synced_ one
+  void reset_vec(int i) {
+    local_.col(i) = EVec::Zero(vec_len_);
+    synced_.col(loc2syn_map_[i]) = EVec::Zero(vec_len_);
+  }
   Eigen::Block<EMat, EMat::RowsAtCompileTime, 1> Vec(int i) {
     return vec(i);
   }
 
+  string DebugString() {
+    std::stringstream ss;
+    ss << "local: " << std::endl << local_ << std::endl
+       << "synced: " << std::endl << synced_;
+    return ss.str();
+  }
  private:
   size_t vec_len_;
   int num_vec_;
@@ -70,8 +77,8 @@ class Vectors : public Container {
   XArray<Key> keys_;
 
   // access control
-  std::vector<int> access_permission_;
-  // column mapping
+  // std::vector<int> access_permission_;
+  // column mapping. some local_ columns do not need synced_ columns.
   std::vector<int> syn2loc_map_;
   std::vector<int> loc2syn_map_;
   int num_synced_vec_;
@@ -89,25 +96,25 @@ Vectors<V>::Vectors(const string& name,
                     int num_vec,
                     const XArray<Key>& global_keys) : Container(name)  {
   num_vec_ = num_vec;
-  CHECK_GT(num_vec_, 0);
-  for (int i = 0; i < num_vec_; ++i ) {
-    access_permission_.push_back(kReadWrite);
-  }
+  // CHECK_GT(num_vec_, 0);
+  // for (int i = 0; i < num_vec_; ++i ) {
+  //   access_permission_.push_back(kReadWrite);
+  // }
   Init(global_length, global_keys);
 }
 
-template <typename V>
-Vectors<V>::Vectors(const string& name,
-                    size_t global_length,
-                    const IntList& access_permission,
-                    const XArray<Key>& global_keys) : Container(name)  {
-  num_vec_ = access_permission.size();
-  CHECK_GT(num_vec_, 0);
-  for (auto p : access_permission) {
-    access_permission_.push_back(p);
-  }
-  Init(global_length, global_keys);
-}
+// template <typename V>
+// Vectors<V>::Vectors(const string& name,
+//                     size_t global_length,
+//                     const IntList& access_permission,
+//                     const XArray<Key>& global_keys) : Container(name)  {
+//   num_vec_ = access_permission.size();
+//   CHECK_GT(num_vec_, 0);
+//   for (auto p : access_permission) {
+//     access_permission_.push_back(p);
+//   }
+//   Init(global_length, global_keys);
+// }
 
 
 template <typename V>
@@ -126,21 +133,31 @@ void Vectors<V>::Init(size_t global_length, const XArray<Key>& global_keys) {
     keys_ = global_keys;
   }
   // construct mapping between local_ and synced_
-  num_synced_vec_ = 0;
-  loc2syn_map_.resize(num_vec_);
+  // TODO a naive version here
+  num_synced_vec_ = num_vec_;
+  loc2syn_map_.clear();
   syn2loc_map_.clear();
-  int i = 0;
-  for (auto p : access_permission_) {
-    if (p == kReadWrite) {
-      loc2syn_map_[i] = num_synced_vec_;
-      syn2loc_map_.push_back(i);
-      num_synced_vec_ ++;
-    } else {
-      loc2syn_map_[i] = -1;
-    }
-    ++ i;
+  for (int i = 0; i < num_vec_; ++i) {
+    loc2syn_map_.push_back(i);
+    syn2loc_map_.push_back(i);
   }
+  // num_synced_vec_ = 0;
+  // loc2syn_map_.resize(num_vec_);
+  // syn2loc_map_.clear();
+  // int i = 0;
+  // for (auto p : access_permission_) {
+  //   if (p == kReadWrite) {
+  //     loc2syn_map_[i] = num_synced_vec_;
+  //     syn2loc_map_.push_back(i);
+  //     num_synced_vec_ ++;
+  //   } else {
+  //     loc2syn_map_[i] = -1;
+  //   }
+  //   ++ i;
+  // }
+
   // fill values
+  // TODO nonzero initialization?
   local_ = EMat::Zero(vec_len_, num_vec_);
   synced_ = EMat::Zero(vec_len_, num_synced_vec_);
 }
@@ -172,18 +189,18 @@ Status Vectors<V>::PushPull(KeyRange key_range, IntList push_vec_list,
   auto push = head.mutable_push();
   push->set_delta(push_delta);
   for (int v : push_vec_list) {
-    CHECK_NE(access_permission_[v], kRead)
-        << " vec[" << v << "] is local read-only, you cannot push it."
-        << " Change it to kReadWrite or kWrite.";
+    // CHECK_NE(access_permission_[v], kRead)
+    //     << " vec[" << v << "] is local read-only, you cannot push it."
+    //     << " Change it to kReadWrite or kWrite.";
     push->add_vectors(v);
   }
   // pull
   auto pull = head.mutable_pull();
   pull->set_delta(pull_delta);
   for (int v : pull_vec_list) {
-    CHECK_NE(access_permission_[v], kWrite)
-        << " vec[" << v << "] is local write-only, you cannot pull it."
-        << " Change it to kReadWrite or kRead.";
+    // CHECK_NE(access_permission_[v], kWrite)
+    //     << " vec[" << v << "] is local write-only, you cannot pull it."
+    //     << " Change it to kReadWrite or kRead.";
     pull->add_vectors(v);
   }
   // 2. do it
@@ -244,8 +261,8 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   for (int v = 0; v < nvec; ++v) {
     int x = head.push().vectors(v);
     if (head.push().delta()) {
-      CHECK_EQ(access_permission_[x], kReadWrite) << "vec[" << x <<
-          "] should be kReadWrite if you want to push its delta values";
+      // CHECK_EQ(access_permission_[x], kReadWrite) << "vec[" << x <<
+      //     "] should be kReadWrite if you want to push its delta values";
       int z = loc2syn_map_[x];
       CHECK_GE(z, 0); CHECK_LT(z, num_synced_vec_);
       for (size_t i = 0; i < nkeys; ++i) {
@@ -326,18 +343,17 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
       } else {
         if (has_sync) {
           local_.coeffRef(j, x) += (val - synced_.coeff(j, z));
-          synced_.coeffRef(j, z) = v;
+          synced_.coeffRef(j, z) = val;
         } else {
           local_.coeffRef(j, x) = val;
         }
       }
+      ++i; ++j;
     }
-    ++i; ++j;
   }
 
-  LL << delta;
-  LL << "local: " << std::endl << local_;
-  LL << "synced: " << std::endl << synced_;
+  // LL << delta;
+  // PrintDebugString();
   // LL << SName() << "merge: " << local_.norm() << " " << synced_.norm();
   return Status::OK();
 }

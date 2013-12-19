@@ -130,7 +130,7 @@ Status Van::Send(const Mail& mail){
   CHECK_EQ(n, 0);
   CHECK_EQ(tag, 0);
 
-  // LL << "T: " << mail.flag().time() << " "
+  // LL << "T: " << mail.flag().time() << ", "
   //    << mail.flag().sender() << " => " << mail.flag().recver() << " "
   //    << mail.keys().size() << "(" << send_key <<  ") keys and "
   //    << mail.vals().size() << "(" << send_value << ") vals";
@@ -170,6 +170,7 @@ Status Van::Recv(Mail *mail) {
           }
           recv_key = mail->flag().has_key() && !mail->flag().key().empty();
           recv_value = mail->flag().has_value() && !mail->flag().value().empty();
+
           n = recv_key + recv_value;
           if (n && !recv_key) {
             // skip to receive key
@@ -197,10 +198,15 @@ Status Van::Recv(Mail *mail) {
         break;
     }
     zmq_msg_close(&msg);
-    if (!zmq_msg_more(&msg)) {
+    if (n && !zmq_msg_more(&msg)) {
       return Status::NetError(StrCat("there should be more"));
     }
   }
+
+  LL << "T: " << mail->flag().time() << ", "
+     << mail->flag().sender() << " => " << mail->flag().recver() << " "
+     << mail->keys().size() << "(" << recv_key <<  ") keys and "
+     << mail->vals().size() << "(" << recv_value << ") vals";
   return Status::OK();;
 }
 
@@ -240,7 +246,7 @@ Status Van::Recv(NodeManagementInfo *mgt_info, bool blocking) {
     rc = zmq_msg_recv(&msg, receiver_, ZMQ_DONTWAIT);
   else
     rc = zmq_msg_recv(&msg, receiver_, 0);
-  
+
   if (rc == -1) {
     return Status::NetError(StrCat("recv identity failed: ",zmq_strerror(errno)));
   }
@@ -256,12 +262,12 @@ Status Van::Recv(NodeManagementInfo *mgt_info, bool blocking) {
   if (rc) {
     return Status::NetError("init msg fail");
   }
-  
+
   if (!blocking)
     rc = zmq_msg_recv(&msg, receiver_, ZMQ_DONTWAIT);
   else
     rc = zmq_msg_recv(&msg, receiver_, 0);
-  
+
   if (rc == -1) {
     return Status::NetError(StrCat("recv nodemanagementinfo failed: ",zmq_strerror(errno)));
   }

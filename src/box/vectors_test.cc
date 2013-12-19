@@ -23,9 +23,10 @@ TEST(Vectors, xxx) {
 }
 
 void MoveData(Vectors<double> *w) {
+
   w->vec(1) = w->vec(0);
-  w->vec(0) *= 0;
-  LL << w->vec(0).sum() << " " << w->vec(1).sum();
+  w->reset_vec(0);
+  LL << w->DebugString();
 }
 
 TEST(Vectors, Aggregator) {
@@ -78,20 +79,22 @@ TEST(Vectors, Aggregator) {
       res = r.sum();
     }
     // the first col is weight, the second is gradient
-    Vectors<double> w("haha", n, {kWrite, kRead}, keys);
+    Vectors<double> w("haha", n, 2, keys);
     w.SetMaxDelay(10000,delay);
     w.vec(0) = DVec::Zero(4);
 
-    for (int i = 1; i < 3; ++i) {
+    for (int i = 1; i < 10; ++i) {
       w.vec(0) = g * i;
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
+      LL << "iter " << i;
+      LL << w.DebugString();
       // if (FLAGS_my_rank ==0) {
-      LL <<  w.vec(1).sum(); //  / res ;
+      // LL <<  w.vec(1).sum(); //  / res ;
       // }
     }
     std::this_thread::sleep_for(seconds(2));
   } else {
-    Vectors<double> w("haha", n, {kRead, kWrite});
+    Vectors<double> w("haha", n, 2);
     w.SetAggregator(NodeGroup::kClients);
     w.SetAggregatorFunc(NewPermanentCallback(MoveData, &w));
     std::this_thread::sleep_for(seconds(10));
