@@ -22,7 +22,6 @@ OBJECTS = \
 	./util/join.o \
 	./util/stringpiece.o \
 	./util/stringprintf.o \
-	./util/futurepool.o \
 	./util/MurmurHash3.o \
 	./util/md5.o \
 	./util/hashfunc.o \
@@ -37,17 +36,19 @@ OBJECTS = \
 	./system/hashring.o \
 	./system/dht.o \
 	./system/replica_manager.o \
-	./system/aggregator.o \
-	./box/consistency.o \
 	./box/item.o \
 	./box/container.o \
-	./box/vectors.o \
 	./box/sparse_vector.o \
 	./algo/inference.o \
 	./algo/graddesc.o
 
 DEPS = \
-	util/rawarray.h
+	./util/rawarray.h \
+	./box/vectors.h \
+	./box/vectors-inl.h \
+	./system/aggregator.h \
+	./box/consistency.h \
+	./util/futurepool.h
 
 
 TESTS = \

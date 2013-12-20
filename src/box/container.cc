@@ -66,8 +66,10 @@ void Container::ReadAll() {
     time_t time = mail.flag().time();
     if (!aggregator_.Success(time, postmaster_->GetNodeGroup(name())))
       continue;
-    if (aggregator_callback_ != NULL) {
-      aggregator_callback_->Run();
+    if (aggregator_.Valid(time)) {
+      if (aggregator_callback_ != NULL) {
+        aggregator_callback_->Run();
+      }
     }
     // 4. whether need to send data back?
     bool pull = false;

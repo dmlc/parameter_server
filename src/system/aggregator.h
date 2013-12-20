@@ -10,15 +10,21 @@ class Aggregator {
  public:
   Aggregator() : default_type_(NodeGroup::kInvalid) { }
   ~Aggregator() { }
+  // set the default type
   void SetDefaultType(uid_t default_type) { default_type_ = default_type; }
-  bool ValidDefault() { return NodeGroup::Valid(default_type_); }
-  // you can set different type for different time, it will overide
+  // you can set different type for different time, it will overide the default
   void SetType(int32 time, uid_t type) { type_[time] = type; }
+  inline uid_t GetType(int32 time);
 
-  // whether the type_ is valid.
-  // bool Valid() const;
-  // return true if the nodes from which we received data at time t match the
-  // expected node group
+  // whether or not there is a default valid aggregator
+  bool ValidDefault() {
+    return NodeGroup::Valid(default_type_);
+  }
+  // whether or not there is a valid aggregator on time time
+  bool Valid(int32 time) {
+    return NodeGroup::Valid(GetType(time));
+  }
+
   inline bool Success(int32 time, const NodeGroup& group);
 
   void Insert(const Mail& mail) {
@@ -30,28 +36,34 @@ class Aggregator {
   map<uid_t, Mail>& GetTime(int32 t) { return status_[t]; }
  private:
   uid_t default_type_;
-  map<time_t, uid_t> type_;
+  map<int32, uid_t> type_;
   // key: timestampe, value: a set of nodes from which we have received
   // data at this timestamp. we also keep the received flags in case pushing
   // back is required
-  map<time_t, map<uid_t, Mail> > status_;
+  map<int32, map<uid_t, Mail> > status_;
 };
 
-bool Aggregator::Success(int32 time, const NodeGroup& group) {
-  auto it = status_.find(time);
-  if (it == status_.end())
-    return false;
-
+uid_t Aggregator::GetType(int32 time) {
   uid_t type = default_type_;
   if (type_.find(time) != type_.end())
     type = type_[time];
+  return type;
+}
 
+bool Aggregator::Success(int32 time, const NodeGroup& group) {
+  // get the status
+  auto it = status_.find(time);
+  if (it == status_.end())
+    return false;
   auto& st = it->second;
+  // get the type
+  uid_t type = GetType(time);
   if (!NodeGroup::Valid(type)) {
-    CHECK_EQ(st.size(), 1) << "I expect receive only one from " << type;
+    CHECK_EQ(st.size(), 1) << "only one mail is expected from node "
+                           << type << " at time " << time;
     return true;
   }
-
+  // check if get the results from all expected nodes
   const NodeList& nodes = group.Get(type);
   if (nodes->size() > st.size())
     return false;

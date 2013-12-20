@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "box/vectors.h"
+#include "box/vectors-inl.h"
 
 using namespace PS;
 
@@ -34,8 +34,8 @@ TEST(Vectors, Aggregator) {
   int n = 6;  // global #feature
   int m = 4;  // local #feature
   // local gradients
-  DVec g1 = DVec::Ones(4);
-  DVec g2 = DVec::Ones(4);
+  DVec g1 = DVec::Ones(m);
+  DVec g2 = DVec::Ones(m);
 
   // FLAGS_num_client = 2;
   // FLAGS_num_server = 2;
@@ -54,8 +54,7 @@ TEST(Vectors, Aggregator) {
   // }
   // // srand(time(0)+my_seed);
 
-  int delay = 0;
-  double actual_delay;
+  int delay = 2;
 
   // s0: v v v
   // s1:       v v v
@@ -66,31 +65,27 @@ TEST(Vectors, Aggregator) {
     // local keys
     XArray<Key> keys;
     DVec g;
-    double res;
     if (FLAGS_my_rank == 0) {
       keys = XArray<Key>({0,1,3,4});
       g = g1;
-      DVec r = g; r[1] += g2[0]; r[3] += g2[2];
-      res = r.sum();
     } else {
       keys = XArray<Key>({1,2,4,5});
       g = g2;
-      DVec r = g; r[0] += g1[1]; r[2] += g1[3];
-      res = r.sum();
     }
     // the first col is weight, the second is gradient
     Vectors<double> w("haha", n, 2, keys);
-    w.SetMaxDelay(10000,delay);
-    w.vec(0) = DVec::Zero(4);
+    w.SetMaxPullDelay(delay);
+    w.vec(0) = DVec::Zero(m);
 
-    for (int i = 1; i < 10; ++i) {
+    for (int i = 1; i < 4; ++i) {
       w.vec(0) = g * i;
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
-      LL << "iter " << i;
       LL << w.DebugString();
-      // if (FLAGS_my_rank ==0) {
-      // LL <<  w.vec(1).sum(); //  / res ;
-      // }
+      double res = w.vec(1).sum();
+      double actual_delay =  i - (-.5 + std::sqrt(1 + 8.0 * res / 6.0) / 2.0);
+      LL << i << " " << res/6.0 << " " <<  actual_delay;
+      EXPECT_LE(actual_delay, delay);
+      EXPECT_GE(actual_delay, 0);
     }
     std::this_thread::sleep_for(seconds(2));
   } else {
@@ -106,6 +101,6 @@ TEST(Vectors, Aggregator) {
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   google::ParseCommandLineFlags(&argc, &argv, true);
-  RUN_ALL_TESTS();
+  EXPECT_EQ(RUN_ALL_TESTS(), 0);
   // LL << "exists";
 }

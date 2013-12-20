@@ -49,6 +49,13 @@ class Container {
     max_pull_delay_ = std::max(pull, 0);
   }
 
+  void SetMaxPushDelay(int delay) {
+    max_push_delay_ = std::max(delay, 0);
+  }
+  void SetMaxPullDelay(int delay) {
+    max_pull_delay_ = std::max(delay, 0);
+  }
+
   // aggregator
   void SetAggregator(int node_group) {
     aggregator_.SetDefaultType(node_group);
@@ -58,6 +65,7 @@ class Container {
   // set key* in mail.flag, fill in keys and values
   virtual Status GetLocalData(Mail *mail) = 0;
   virtual Status MergeRemoteData(const Mail& mail) = 0;
+  // virtual Status  //
 
   // increase the clock, and return the new time. it is thread safe
   int IncrClock() { ScopeLock lock(&mutex_); return ++cur_time_; }

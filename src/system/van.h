@@ -5,6 +5,8 @@
 #include "system/node.h"
 #include "proto/nodemgt.pb.h"
 
+// #define _DEBUG_VAN_
+
 // serialize message
 //#include <google/protobuf/message_lite.h>
 namespace PS {
@@ -14,7 +16,7 @@ namespace PS {
 class Van {
  public:
   // SINGLETON(Van);
-  
+
   Van() {}
   bool Init();
   bool Destroy();
@@ -27,7 +29,7 @@ class Van {
 
   Status Send(const NodeManagementInfo& mgt_info);
   Status Recv(NodeManagementInfo* mgt_info, bool blocking = true);
-  
+
 
  private:
   // DISALLOW_COPY_AND_ASSIGN(Van);

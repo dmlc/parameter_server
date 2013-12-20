@@ -3,6 +3,7 @@
 #include <zmq.h>
 // #include "util/zmq.h"
 
+
 namespace PS {
 
 bool Van::Init() {
@@ -49,7 +50,10 @@ bool Van::Bind(Node const& node, int flag) {
     LOG(ERROR) << "bind to " << address << " failed: " << zmq_strerror(errno);
     return false;
   }
-  // printf("node %d bind address %s\n", node.uid(), address.c_str());
+#ifdef _DEBUG_VAN_
+  LL << "node " << node.uid() << " binds address " << address;
+#endif
+
   return true;
 }
 
@@ -130,10 +134,13 @@ Status Van::Send(const Mail& mail){
   CHECK_EQ(n, 0);
   CHECK_EQ(tag, 0);
 
-  // LL << "T: " << mail.flag().time() << ", "
-  //    << mail.flag().sender() << " => " << mail.flag().recver() << " "
-  //    << mail.keys().size() << "(" << send_key <<  ") keys and "
-  //    << mail.vals().size() << "(" << send_value << ") vals";
+#ifdef _DEBUG_VAN_
+  LL << "time: " << mail.flag().time() << ", send to "
+     << mail.flag().sender() << " "
+     << mail.keys().size() << "(" << send_key <<  ") keys and "
+     << mail.vals().size() << "(" << send_value << ") vals";
+#endif
+
   return Status::OK();
 }
 
@@ -148,7 +155,8 @@ Status Van::Recv(Mail *mail) {
     }
     rc = zmq_msg_recv(&msg, receiver_, 0);
     if (rc == -1) {
-      return Status::NetError(StrCat("recv identity failed: ",zmq_strerror(errno)));
+      return Status::NetError(StrCat("recv identity failed: ",
+                                     zmq_strerror(errno)));
     }
     char* buf = (char *)zmq_msg_data(&msg);
     size_t size = zmq_msg_size(&msg);
@@ -203,10 +211,12 @@ Status Van::Recv(Mail *mail) {
     }
   }
 
-  LL << "T: " << mail->flag().time() << ", "
-     << mail->flag().sender() << " => " << mail->flag().recver() << " "
+#ifdef _DEBUG_VAN_
+  LL << "time: " << mail->flag().time() << ", recv from "
+     << mail->flag().recver() << " "
      << mail->keys().size() << "(" << recv_key <<  ") keys and "
      << mail->vals().size() << "(" << recv_value << ") vals";
+#endif
   return Status::OK();;
 }
 
