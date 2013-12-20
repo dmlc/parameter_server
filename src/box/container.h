@@ -116,6 +116,9 @@ class Container {
   // process all mails in the receiving queue
   void ReadAll();
   void Reply(const Mail& from_other, const Mail& my_reply);
+  bool AggregateSuccess(int32 time) {
+    return aggregator_.Success(time, postmaster_->GetNodeGroup(name()));
+  }
 
   name_t name_;
 

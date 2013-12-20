@@ -33,9 +33,10 @@ class Range {
   // segment will be zero except the 0-th
   bool Valid() const { return end_ > start_; }
   T Size() const { return end_ - start_; }
-  T size() const { return end_ - start_; }
-  string ToString() { return StrCat("[", std::to_string(start_),",",
-                                    std::to_string(end_),")"); }
+  size_t size() const { return (size_t)(end_ - start_); }
+  string ToString() {
+    return ("["+std::to_string(start_)+","+std::to_string(end_)+")");
+  }
  private:
   T start_;
   T end_;

@@ -7,6 +7,7 @@
 
 namespace PS {
 
+typedef Range<size_t> IndexRange;
 template <typename V>
 class Vectors : public Container {
  public:
@@ -63,6 +64,8 @@ class Vectors : public Container {
     return ss.str();
   }
  private:
+  // mapping the key range into local indeces
+  IndexRange FindIndex(KeyRange kr, Range<Key*>* key_ptr = NULL);
   size_t vec_len_;
   int num_vec_;
   // local working sets, it is a vec_len_ x num_vec_ matrix
@@ -81,8 +84,10 @@ class Vectors : public Container {
   // a better way?
   // map a keyrange into start index, end index, and keylist, invalid the caches
   // if keys are changed
-  map<KeyRange, std::pair<size_t, size_t>> key_indices_;
+  map<KeyRange, IndexRange> key_indices_;
   map<KeyRange, RawArray> key_caches_;
+  // store the temperal data used for aggregation
+  map<int, EMat> aggregate_data_;
 };
 
 } // namespace PS

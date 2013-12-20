@@ -134,39 +134,47 @@ Status Vectors<V>::Pull(KeyRange key_range, IntList vec_list,
   return Status::OK();
 }
 
+template<class V>
+IndexRange Vectors<V>::FindIndex(KeyRange kr, Range<Key*>* key_ptr) {
+  IndexRange idx;
+  Range<Key*> ptr;
+  auto it = key_indices_.find(kr);
+  if (it == key_indices_.end()) {
+    ptr.start() = keys_.UpperBound(kr.start(), &idx.start());
+    ptr.end() = keys_.LowerBound(kr.end(), &idx.end());
+    CHECK(ptr.start() != NULL);
+    CHECK(ptr.end() != NULL);
+    CHECK_EQ(ptr.size(), idx.size());
+    ++ idx.end();
+    key_indices_[kr] = idx;
+  } else {
+    idx = it->second;
+  }
+  if (key_ptr != NULL)
+    *key_ptr = ptr;
+  return idx;
+}
 
 template<class V>
 Status Vectors<V>::GetLocalData(Mail *mail) {
   // 1. fill the keys, first check whether hit the cache. if not, construct it.
   Header& head = mail->flag();
   KeyRange kr(head.key().start(), head.key().end());
+  Range<Key*> ptr;
+  IndexRange idx = FindIndex(kr, &ptr);
   RawArray keys;
-  size_t start_idx, end_idx;
   auto it = key_caches_.find(kr);
   if (it == key_caches_.end()) {
     // miss the cache
-    Key* start = keys_.UpperBound(kr.start(), &start_idx);
-    Key* end = keys_.LowerBound(kr.end()-1, &end_idx);
-    ++end_idx;
-    // LL << kr.ToString() << " " << start_idx << " " << end_idx;
-    size_t n = end_idx - start_idx;
-    CHECK(start != NULL);
-    CHECK(end != NULL);
-    CHECK_GT(end_idx, start_idx);
-    CHECK_EQ(n-1, (size_t)(end-start));
-    keys = RawArray(sizeof(Key), n);
-    // TODO a better way to avoid the memcpy here
-    memcpy(keys.data(), start,  keys.size());
+    CHECK(ptr.Valid());
+    keys = RawArray(sizeof(Key), idx.size());
+    // TODO find a better way to avoid the memcpy here
+    memcpy(keys.data(), keys_.data()+idx.start(),  keys.size());
     // set the cache
     key_caches_[kr] = keys;
-    key_indices_[kr] = make_pair(start_idx, end_idx);
   } else {
     // hit the cache
     keys = it->second;
-    auto it2 = key_indices_.find(kr);
-    CHECK(it2 != key_indices_.end());
-    start_idx = it2->second.first;
-    end_idx = it2->second.second;
   }
   head.mutable_key()->set_cksum(keys.ComputeCksum());
   mail->set_keys(keys);
@@ -185,12 +193,12 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
       int z = loc2syn_map_[x];
       CHECK_GE(z, 0); CHECK_LT(z, num_synced_vec_);
       for (size_t i = 0; i < nkeys; ++i) {
-        vals[v*nkeys+i] = local_.coeff(i+start_idx, x)
-                          - synced_.coeff(i+start_idx, z);
+        vals[v*nkeys+i] = local_.coeff(i+idx.start(), x)
+                          - synced_.coeff(i+idx.start(), z);
       }
     } else {
       for (size_t i = 0; i < nkeys; ++i) {
-        vals[v*nkeys+i] = local_.coeff(i+start_idx, x);
+        vals[v*nkeys+i] = local_.coeff(i+idx.start(), x);
       }
     }
   }
@@ -206,69 +214,93 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
 
 template<class V>
 Status Vectors<V>::MergeRemoteData(const Mail& mail) {
-  // 1. find the key range
+  // 1. mapping the key range into local indeces
   const Header& head = mail.flag();
   KeyRange kr(head.key().start(), head.key().end());
-  auto it = key_indices_.find(kr);
-  size_t start_idx, end_idx;
-  if (it == key_indices_.end()) {
-    keys_.UpperBound(kr.start(), &start_idx);
-    keys_.LowerBound(kr.end(), &end_idx);
-    ++ end_idx;
-  } else {
-    start_idx = it->second.first;
-    end_idx = it->second.second;
-  }
+  IndexRange idx = FindIndex(kr);
 
   // 2. construct the key mapping between remote and local
-
-  // 2. merge the data
   XArray<Key> keys(mail.keys());
+  size_t nkey = keys.size();
+  std::vector<size_t> remote_idx(idx.size()), local_idx(idx.size());
+  size_t idx_len = 0;
+  for (size_t i = 0, j = idx.start(); i < nkey && j < idx.end(); ) {
+    if (keys[i] < keys_[j]) {
+      LL << "ignore received key " << keys[i];
+      ++ i;
+      continue;
+    } else if (keys[i] > keys_[j]) {
+      ++ j;
+      continue;
+    }
+    // now key matched
+    remote_idx[idx_len] = i;
+    local_idx[idx_len] = j;
+    ++ idx_len;
+  }
+
+  // 3. merge the data
   XArray<V> vals(mail.vals());
-
-  // LL << kr.ToString() << " " << start_idx << " " << end_idx;
-
   int nvec = head.push().vectors_size();
-  int nkey = keys.size();
   CHECK_GT(nvec, 0);
   CHECK_EQ(nkey*nvec, vals.size());
-  // LL << head.push().delta();
-  // LL << aggregator_.ValidDefault();
-  // LL << aggregator_.IsFirst(head.time());
-
-  bool delta = head.push().delta() ||
-               (aggregator_.ValidDefault() && !aggregator_.IsFirst(head.time()));
-
-  for (int v = 0; v < nvec; ++v) {
-    int x = head.push().vectors(v);
-    int z = loc2syn_map_[x];
-    bool has_sync = z > -1;
-
-    size_t i = 0, j = start_idx;
-    while (i < nkey && j < end_idx) {
-      if (keys[i] < keys_[j]) {
-        LL << "ignore received key " << keys[i];
-        ++ i;
-        continue;
-      } else if (keys[i] > keys_[j]) {
-        ++ j;
-        continue;
-      }
-      // now key matched
-      V val = vals[v*nkey+i];
-      if (delta) {
-        local_.coeffRef(j, x) += val;
-        if (has_sync)
-          synced_.coeffRef(j, z) += val;
-      } else {
-        if (has_sync) {
-          local_.coeffRef(j, x) += (val - synced_.coeff(j, z));
-          synced_.coeffRef(j, z) = val;
+  int time = head.time();
+  bool delta = head.push().delta();
+  // two different cases
+  if (aggregator_.Valid(time)) {
+    // if there is a valid aggregator, first do aggregation in a temporal place.
+    if (aggregator_.IsFirst(time))
+      aggregate_data_[time] = EMat::Zero(idx.size(), nvec);
+    auto& mat = aggregate_data_[time];
+    CHECK_EQ(mat.rows(), idx.size());
+    CHECK_EQ(mat.cols(), nvec);
+    for (int v = 0; v < nvec; ++v)
+      for (size_t i = 0; i < idx_len; ++i)
+        mat.coeffRef(local_idx[i],v) += vals[v*nkey+remote_idx[i]];
+    if (AggregateSuccess(time)) {
+      // if aggregation is complete, then move temporal data to local_ and sync_
+      for (int v = 0; v < nvec; ++v) {
+        int x = head.push().vectors(v);
+        int z = loc2syn_map_[x];
+        bool valid_sync = z >= 0 && z < synced_.cols();
+        if (delta) {
+          local_.col(x).segment(idx.start(), idx.size()) += mat.col(v);
+          if (valid_sync) {
+            synced_.col(z).segment(idx.start(), idx.size()) += mat.col(v);
+          }
         } else {
-          local_.coeffRef(j, x) = val;
+          // if (valid_sync) {
+          //   local_.col(x).block(idx.start(), idx.end()-1) +=
+          //       (mat.col(v) - synced_.col(z).block(idx.start(), idx.end()-1));
+          //   synced_.col(z).block(idx.start(), idx.end()-1) = mat.col(v);
+          // } else {
+          //   local_.col(x).block(idx.start(), idx.end()-1) = mat.col(v);
+          // }
         }
       }
-      ++i; ++j;
+    }
+  } else {
+    // do merge directly
+    for (int v = 0; v < nvec; ++v) {
+      int x = head.push().vectors(v);
+      int z = loc2syn_map_[x];
+      bool valid_sync = z >= 0 && z < synced_.cols();
+      for (size_t i = 0; i < idx_len; ++i) {
+        V val = vals[v*nkey+remote_idx[i]];
+        size_t y = local_idx[i];
+        if (delta) {
+          local_.coeffRef(y, x) += val;
+          if (valid_sync)
+            synced_.coeffRef(y, z) += val;
+        } else {
+          if (valid_sync) {
+            local_.coeffRef(y, x) += (val - synced_.coeff(y, z));
+            synced_.coeffRef(y, z) = val;
+          } else {
+            local_.coeffRef(y, x) = val;
+          }
+        }
+      }
     }
   }
 

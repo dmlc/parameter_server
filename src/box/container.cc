@@ -64,7 +64,7 @@ void Container::ReadAll() {
       recv_callback_->Run();
     // 3. check if aggregator success, if any
     time_t time = mail.flag().time();
-    if (!aggregator_.Success(time, postmaster_->GetNodeGroup(name())))
+    if (!AggregateSuccess(time))
       continue;
     if (aggregator_.Valid(time)) {
       if (aggregator_callback_ != NULL) {
