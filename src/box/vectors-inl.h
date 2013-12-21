@@ -180,7 +180,7 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   head.mutable_key()->set_cksum(keys.ComputeCksum());
   mail->set_keys(keys);
 
-  // 2. fill the values. It is a #keys x #vec matrix, storing in a column-majored
+  // 2. fill the values. It is a #keys x #vec matrix, storing in a row-majored
   // format
   int nvec = head.push().vectors_size();
   CHECK_GT(nvec, 0);
@@ -194,12 +194,12 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
       int z = loc2syn_map_[x];
       CHECK_GE(z, 0); CHECK_LT(z, num_synced_vec_);
       for (size_t i = 0; i < nkeys; ++i) {
-        vals[v*nkeys+i] = local_.coeff(i+idx.start(), x)
+        vals[i*nvec+v] = local_.coeff(i+idx.start(), x)
                           - synced_.coeff(i+idx.start(), z);
       }
     } else {
       for (size_t i = 0; i < nkeys; ++i) {
-        vals[v*nkeys+i] = local_.coeff(i+idx.start(), x);
+        vals[i*nvec+v] = local_.coeff(i+idx.start(), x);
       }
     }
   }
@@ -240,7 +240,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
     }
     // now key matched
     remote_idx[idx_len] = i;
-    local_idx[idx_len] = j;
+    local_idx[idx_len] = j - idx.start();
     ++ idx_len;
     ++ i;
     ++ j;
@@ -260,9 +260,9 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
     auto& mat = aggregate_data_[time];
     CHECK_EQ(mat.rows(), (int)idx.size());
     CHECK_EQ(mat.cols(), nvec);
-    for (int v = 0; v < nvec; ++v)
-      for (size_t i = 0; i < idx_len; ++i)
-        mat.coeffRef(local_idx[i],v) += vals[v*nkey+remote_idx[i]];
+    for (size_t i = 0; i < idx_len; ++i)
+      for (int v = 0; v < nvec; ++v)
+        mat.coeffRef(local_idx[i],v) += vals[remote_idx[i]*nvec+v];
     if (AggregateSuccess(time)) {
       // if aggregation is complete, then move temporal data to local_ and sync_
       for (int v = 0; v < nvec; ++v) {
@@ -292,8 +292,8 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
       int z = loc2syn_map_[x];
       bool valid_sync = z >= 0 && z < synced_.cols();
       for (size_t i = 0; i < idx_len; ++i) {
-        V val = vals[v*nkey+remote_idx[i]];
-        size_t y = local_idx[i];
+        V val = vals[remote_idx[i]*nvec+v];
+        size_t y = local_idx[i] + idx.start();
         if (delta) {
           local_.coeffRef(y, x) += val;
           if (valid_sync)
