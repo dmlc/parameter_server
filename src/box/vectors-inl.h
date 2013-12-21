@@ -206,9 +206,11 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   head.mutable_value()->set_empty(false);
   mail->set_vals(vals.raw());
 
+#ifdef DEBUG_VECTORS_
   XArray<Key> xkey(keys);
   LL << "to " << mail->flag().recver() << " keys: " << xkey.DebugString();
   LL << "to " << mail->flag().recver() << " vals: " << vals.DebugString();
+#endif
 
   return Status::OK();
 }
@@ -307,6 +309,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
     }
   }
 
+#ifdef DEBUG_VECTORS_
   LL << "time: " << mail.flag().time() << ", merge data from "
      << mail.flag().sender() << " "
      << mail.keys().size() << "(" << !mail.flag().key().empty() <<  ") keys and "
@@ -314,6 +317,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
   LL << "keys: " << keys.DebugString();
   LL << "vals: " << vals.DebugString();
   LL << DebugString();
+#endif
   return Status::OK();
 }
 

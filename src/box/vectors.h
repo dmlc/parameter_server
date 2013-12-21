@@ -1,5 +1,7 @@
 #pragma once
 
+// #define DEBUG_VECTORS_
+
 #include "util/common.h"
 #include "util/xarray.h"
 #include "box/container.h"

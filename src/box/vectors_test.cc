@@ -77,17 +77,20 @@ TEST(Vectors, Aggregator) {
     w.SetMaxPullDelay(delay);
     w.vec(0) = DVec::Zero(m);
 
-    for (int i = 1; i < 10; ++i) {
-      w.vec(0) = g * i;
+    int max_iter = 10;
+    for (int i = 0; i <= max_iter; ++i) {
+      w.vec(0) = g * (1<<(max_iter - i));
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
-      LL << w.DebugString();
+      // LL << w.DebugString();
       double res = w.vec(1).sum();
-      double actual_delay =  i - (-.5 + std::sqrt(1 + 8.0 * res / 6.0) / 2.0);
-      LL << i << " " << res/6.0 << " " <<  actual_delay;
-      EXPECT_LE(actual_delay, delay);
-      EXPECT_GE(actual_delay, 0);
+      double expect_min = (1<<(max_iter+1)) - (1<<(max_iter+1-std::max(0,i-delay)));
+      double expect_max = (1<<(max_iter+1)) - (1<<(max_iter+1-i));
+      // LL << i << " " << res/6.0 << " " << expect_min << " " << expect_max;
+      EXPECT_LE(res/6.0, expect_max);
+      EXPECT_GE(res/6.0, expect_min);
     }
     w.Wait();
+    EXPECT_EQ(w.vec(1).sum()/6.0, (1<<(max_iter+1))-1);
     std::this_thread::sleep_for(seconds(2));
   } else {
     Vectors<double> w("haha", n, 2);

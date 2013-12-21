@@ -5,7 +5,7 @@
 #include "system/node.h"
 #include "proto/nodemgt.pb.h"
 
-#define _DEBUG_VAN_
+// #define _DEBUG_VAN_
 
 // serialize message
 //#include <google/protobuf/message_lite.h>
