@@ -119,11 +119,15 @@ void Postoffice::RecvPostman() {
     const Header& head = mail.flag();
     // check if is a backup mail or a rescue mail
     if (FLAGS_enable_fault_tolerance) {
-      if (head.type() == Header_Type_BACKUP || head.type() == Header_Type_NODE_RESCUE) {
+      if (head.type() == Header_Type_BACKUP
+          || head.type() == Header_Type_NODE_RESCUE) {
         replica_manager_->Put(mail);
         continue;
       }
     }
+
+    auto ctr = postmaster_->GetContainer(head.name());
+    ctr->WaitUntilInited();
 
     // deal with key caches
     KeyRange kr(head.key().start(), head.key().end());
@@ -134,14 +138,11 @@ void Postoffice::RecvPostman() {
     if (!head.key().empty()) {
       CHECK_EQ(cksum, mail.keys().ComputeCksum());
       mail.keys().ResetEntrySize(sizeof(Key));
-      if (!wl->GetCache(kr, cksum, NULL))
-      {
-        //LL <<  "I caching "<< head.sender() <<" "<< head.key().start() << head.key().end();
+      if (!wl->GetCache(kr, cksum, NULL)) {
         wl->SetCache(kr, cksum, mail.keys());
       }
     } else {
       RawArray keys;
-      // LL <<"I am" << postmaster_->my_uid() << " looking for cach " << head.sender() << " " << head.key().start() << " " <<head.key().end();
       // TODO a fault tolerance way is just as the sender to resend the keys
       CHECK(wl->GetCache(kr, cksum, &keys))
           << "keys" << kr.ToString() << " of " << head.name() << " are not cached";
@@ -151,18 +152,12 @@ void Postoffice::RecvPostman() {
       mail.vals().ResetEntrySize(mail.vals().size() / mail.keys().entry_num());
     }
 
-    //
-    postmaster_->GetContainer(head.name())->Accept(mail);
+    ctr->Accept(mail);
 
-    // LOG(WARNING) << "before FLAGS_enable_fault_tolerance";
     if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
-      // LOG(WARNING) << "in FLAGS_enable_fault_tolerance";
       replica_manager_->Put(mail);
     }
-
-    // LL << "receive a packet";
   }
-  // LL << "exists...";
 }
 
 

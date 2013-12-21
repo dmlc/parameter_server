@@ -61,8 +61,10 @@ class Container {
     aggregator_.SetDefaultType(node_group);
   }
 
-  // wait until time is success, the default is cur_time
+  // wait until all pull and push requests <= time are success, the default is cur_time
   void Wait(int time = kCurTime);
+  // wait until this container is initialized
+  void WaitUntilInited();
 
   // prepare data for communication
   // set key* in mail.flag, fill in keys and values
@@ -91,9 +93,7 @@ class Container {
   // postoffice threads
   // accept a mail from the postoffice
   virtual void Accept(const Mail& mail) {
-    while (!inited_) {
-      std::this_thread::sleep_for(seconds(1));
-    }
+    WaitUntilInited();
     mails_received_.Put(mail);
     if (mail.flag().type() & Header::REPLY) {
       int32 time = mail.flag().time();

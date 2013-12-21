@@ -143,4 +143,11 @@ void Container::Wait(int time) {
   ReadAll();
 }
 
+void Container::WaitUntilInited() {
+  while (!inited_) {
+    LL << "waiting " << name() << " is initialized";
+    std::this_thread::sleep_for(milliseconds(100));
+  }
+}
+
 } // namespace PS
