@@ -43,6 +43,9 @@ class Vectors : public Container {
   Status GetLocalData(Mail *mail);
   Status MergeRemoteData(const Mail& mail);
 
+  // the vector length (local)
+  size_t len() { return vec_len_; }
+
   // return the i-th vector
   EMat vecs() { return local_; }
 

@@ -3,40 +3,36 @@
 
 using namespace PS;
 
-TEST(Vectors, xxx) {
-  map<int, Header> hs;
-
-  {
-  Header x;
-  {
-    Header h;
-    h.mutable_key()->set_empty(1);
-    h.mutable_value()->set_empty(1);
-    h.mutable_push()->set_delta(1);
-    h.mutable_pull()->set_delta(1);
-    hs[0] = h;
-    x = h;
-  }
-  }
-  hs.erase(0);
-
-}
-
 void MoveData(Vectors<double> *w) {
-
-  w->vec(1) = w->vec(0);
+  w->vec(2) = w->vec(0) + w->vec(1);
   w->reset_vec(0);
-  LL << w->DebugString();
+  w->reset_vec(1);
+  // LL << w->DebugString();
 }
 
-TEST(Vectors, Aggregator) {
+void RunClient(int delay, int max_iter, Vectors<double>* w) {
+  size_t m = w->len();
+  w->SetMaxPullDelay(delay);
+  w->vec(0) = DVec::Zero(m);
+  w->vec(1) = DVec::Zero(m);
+  double factor = 18.0;
+  for (int i = 0; i <= max_iter; ++i) {
+    w->vec(0) = DVec::Ones(m) * (1<<(max_iter - i));
+    w->vec(1) = w->vec(0)*2;
+    w->PushPull(KeyRange::All(), {0,1}, kValue, {2}, kDelta);
+    // LL << w.DebugString();
+    double res = w->vec(2).sum() / factor;
+    double expect_min = (1<<(max_iter+1)) - (1<<(max_iter+1-std::max(0,i-delay)));
+    double expect_max = (1<<(max_iter+1)) - (1<<(max_iter-i));
+    // LL << i << " " << res/6.0 << " " << expect_min << " " << expect_max;
+    EXPECT_LE(res, expect_max);
+    EXPECT_GE(res, expect_min);
+  }
+  w->Wait();
+  EXPECT_EQ(w->vec(2).sum()/factor, (1<<(max_iter+1))-1);
+}
 
-  int n = 6;  // global #feature
-  int m = 4;  // local #feature
-  // local gradients
-  DVec g1 = DVec::Ones(m);
-  DVec g2 = DVec::Ones(m);
-
+TEST(Vectors, Delays) {
   // FLAGS_num_client = 2;
   // FLAGS_num_server = 2;
   // FLAGS_my_type = "s";
@@ -52,51 +48,34 @@ TEST(Vectors, Aggregator) {
   //       FLAGS_my_type = "s";
   //   }
   // }
-  // // srand(time(0)+my_seed);
 
-  int delay = 2;
-
+  // constructed vectors
   // s0: v v v
   // s1:       v v v
   // c0: v v   v v
   // c1:   v v   v v
-
-  if (FLAGS_my_type == "client") {
+  int n = 6;
+  if (Node::Client(FLAGS_my_type)) {
     // local keys
     XArray<Key> keys;
-    DVec g;
     if (FLAGS_my_rank == 0) {
       keys = XArray<Key>({0,1,3,4});
-      g = g1;
     } else {
       keys = XArray<Key>({1,2,4,5});
-      g = g2;
     }
     // the first col is weight, the second is gradient
-    Vectors<double> w("haha", n, 2, keys);
-    w.SetMaxPullDelay(delay);
-    w.vec(0) = DVec::Zero(m);
-
-    int max_iter = 10;
-    for (int i = 0; i <= max_iter; ++i) {
-      w.vec(0) = g * (1<<(max_iter - i));
-      w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
-      // LL << w.DebugString();
-      double res = w.vec(1).sum();
-      double expect_min = (1<<(max_iter+1)) - (1<<(max_iter+1-std::max(0,i-delay)));
-      double expect_max = (1<<(max_iter+1)) - (1<<(max_iter+1-i));
-      // LL << i << " " << res/6.0 << " " << expect_min << " " << expect_max;
-      EXPECT_LE(res/6.0, expect_max);
-      EXPECT_GE(res/6.0, expect_min);
+    int delay[] = {0,2,4,6};
+    for (int i = 0; i < 4; ++i) {
+      auto p = new Vectors<double>(StrCat("w",i), n, 3, keys);
+      RunClient(delay[i], 20, p);
     }
-    w.Wait();
-    EXPECT_EQ(w.vec(1).sum()/6.0, (1<<(max_iter+1))-1);
-    std::this_thread::sleep_for(seconds(2));
   } else {
-    Vectors<double> w("haha", n, 2);
-    w.SetAggregator(NodeGroup::kClients);
-    w.SetAggregatorFunc(NewPermanentCallback(MoveData, &w));
-    std::this_thread::sleep_for(seconds(10));
+    for (int i = 0; i < 4; ++i) {
+      auto p = new Vectors<double>(StrCat("w",i), n, 3);
+      p->SetAggregator(NodeGroup::kClients);
+      p->SetAggregatorFunc(NewPermanentCallback(MoveData, p));
+    }
+    std::this_thread::sleep_for(seconds(4));
   }
 
   int ret; wait(&ret);
@@ -105,6 +84,8 @@ TEST(Vectors, Aggregator) {
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   google::ParseCommandLineFlags(&argc, &argv, true);
-  EXPECT_EQ(RUN_ALL_TESTS(), 0);
+
+  return RUN_ALL_TESTS();
+
   // LL << "exists";
 }

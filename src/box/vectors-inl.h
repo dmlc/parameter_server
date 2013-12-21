@@ -204,6 +204,7 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
     }
   }
   head.mutable_value()->set_empty(false);
+  vals.raw().ResetEntrySize(nvec*sizeof(V));
   mail->set_vals(vals.raw());
 
 #ifdef DEBUG_VECTORS_

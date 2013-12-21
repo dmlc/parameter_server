@@ -12,10 +12,10 @@ void Node::Init(int type, int id, string net_addr, string cmd_addr) {
 }
 
 uid_t Node::GetUid(const string& type, int id) {
-  if (type == "server" || type == "Server" || type == "s")
+  if (Server(type))
     return Node::uid(kTypeServer, id);
-  if (type == "client" || type == "Client" || type == "c")
-      return Node::uid(kTypeClient, id);
+  if (Client(type))
+    return Node::uid(kTypeClient, id);
   CHECK(false) << "unknow node type: " << type;
   return -101;
 }

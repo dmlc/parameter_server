@@ -15,7 +15,16 @@ class Node {
   // unique id of a node, always >=0
   static uid_t uid(int type, int id) { return id * 2 + type; }
   static uid_t GetUid(const string& type, int id);
-
+  static bool Server(const string& type) {
+    if (type == "server" || type == "Server" || type == "s")
+      return true;
+    return false;
+  }
+  static bool Client(const string& type) {
+    if (type == "client" || type == "Client" || type == "c")
+      return true;
+    return false;
+  }
   // constructor
   Node() {}
   Node(int type, int id, string net_addr, string cmd_addr = "") { Init(type, id, net_addr, cmd_addr); }
