@@ -1,3 +1,14 @@
+// use glog in default.
+// llvm 3.3 failed to compile glog, uncommet the following line to use a
+// compatible version
+// #define COMPATIBLE_GLOG_
+
+#ifndef COMPATIBLE_GLOG_
+
+#include "glog/logging.h"
+
+#else
+
 // Copyright 2010-2013 Google
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +29,7 @@
 #include <stdlib.h>
 #include <iostream>  // NOLINT
 //#include "util/commandlineflags.h"
-#include <gflags/gflags.h>
+#include "gflags/gflags.h"
 #include "util/macros.h"
 
 DECLARE_int32(log_level);
@@ -123,3 +134,5 @@ class LogMessageVoidify {
 };
 
 #endif  // OR_TOOLS_BASE_LOGGING_H_
+
+#endif  // COMPATIBLE_GLOG_

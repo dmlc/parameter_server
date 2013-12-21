@@ -135,5 +135,12 @@ Status Container::Pull(const Header& flag) { // Future* pull_fut) {
 }
 
 
+void Container::Wait(int time) {
+  if (time == kCurTime)
+    time = Clock();
+  push_pool_.WaitUntil(time);
+  pull_pool_.WaitUntil(time);
+  ReadAll();
+}
 
 } // namespace PS

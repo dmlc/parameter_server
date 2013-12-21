@@ -1,16 +1,16 @@
 CC = g++
 
 # OPT = -O3
-OPT = -O0 -ggdb
+OPT = -O0 -ggdb #-rdynamic
 
 #-Wconversion -fPIC
-WARN = -Wall -Wno-unused-function -finline-functions
+WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
 INCPATH = -I. -I/usr/local/include -I${third_party_include}
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 
 LDFLAGS = -Wl,-rpath,/usr/local/lib -Wl,-rpath,${third_party_library}\
 	 -L/usr/local/lib -L${third_party_library}\
-	 libps.a -lgflags -lpthread -lzmq -lprotobuf #-lglog
+	 libps.a -lgflags -lpthread -lzmq -lprotobuf -lglog
 GTEST =  -lgtest_main -lgtest
 
 OBJECTS = \
@@ -20,12 +20,12 @@ OBJECTS = \
 	./util/key.o \
 	./util/mail.o \
 	./util/join.o \
+	./util/logging.o \
 	./util/stringpiece.o \
 	./util/stringprintf.o \
 	./util/MurmurHash3.o \
 	./util/md5.o \
 	./util/hashfunc.o \
-	./util/logging.o \
 	./util/BaseConverter.o\
 	./system/van.o \
 	./system/node.o \

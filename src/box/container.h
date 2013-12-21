@@ -18,6 +18,7 @@ class Postoffice;
 static const bool kDelta = true;
 static const bool kValue = false;
 static const uid_t kServer = NodeGroup::kServers;
+static const int kCurTime = -1;
 
 // the base container without template. this class contains the information
 // required by the engine
@@ -48,7 +49,6 @@ class Container {
     max_push_delay_ = std::max(push, 0);
     max_pull_delay_ = std::max(pull, 0);
   }
-
   void SetMaxPushDelay(int delay) {
     max_push_delay_ = std::max(delay, 0);
   }
@@ -60,6 +60,9 @@ class Container {
   void SetAggregator(int node_group) {
     aggregator_.SetDefaultType(node_group);
   }
+
+  // wait until time is success, the default is cur_time
+  void Wait(int time = kCurTime);
 
   // prepare data for communication
   // set key* in mail.flag, fill in keys and values

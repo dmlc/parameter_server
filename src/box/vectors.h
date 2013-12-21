@@ -65,7 +65,7 @@ class Vectors : public Container {
   }
  private:
   // mapping the key range into local indeces
-  IndexRange FindIndex(KeyRange kr, Range<Key*>* key_ptr = NULL);
+  IndexRange FindIndex(KeyRange kr, KeyPtrRange* key_ptr = NULL);
   size_t vec_len_;
   int num_vec_;
   // local working sets, it is a vec_len_ x num_vec_ matrix
@@ -84,7 +84,7 @@ class Vectors : public Container {
   // a better way?
   // map a keyrange into start index, end index, and keylist, invalid the caches
   // if keys are changed
-  map<KeyRange, IndexRange> key_indices_;
+  map<KeyRange, pair<IndexRange, KeyPtrRange> > key_positions_;
   map<KeyRange, RawArray> key_caches_;
   // store the temperal data used for aggregation
   map<int, EMat> aggregate_data_;

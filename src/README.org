@@ -3,3 +3,10 @@
 - =box=: global shared data structures, such as (sparse) vectors and matrices
 - =app=: applications
 - =util=: some utility classes
+
+** debug
+
+enable core dump:
+=ulimit -c unlimited=
+set core file pattern:
+=echo "core_%e_%p" | sudo tee /proc/sys/kernel/core_pattern=

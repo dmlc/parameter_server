@@ -9,6 +9,7 @@ typedef uint64 key_t;
 typedef uint64 Key;
 typedef uint32 MatrixKey;
 typedef Range<Key> KeyRange;
+typedef Range<Key*> KeyPtrRange;
 static const Key kMaxKey = kuint64max;
 
 // slice keys by the range

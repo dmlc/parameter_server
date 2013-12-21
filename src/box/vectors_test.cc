@@ -77,7 +77,7 @@ TEST(Vectors, Aggregator) {
     w.SetMaxPullDelay(delay);
     w.vec(0) = DVec::Zero(m);
 
-    for (int i = 1; i < 4; ++i) {
+    for (int i = 1; i < 10; ++i) {
       w.vec(0) = g * i;
       w.PushPull(KeyRange::All(), {0}, kValue, {1}, kDelta);
       LL << w.DebugString();
@@ -87,6 +87,7 @@ TEST(Vectors, Aggregator) {
       EXPECT_LE(actual_delay, delay);
       EXPECT_GE(actual_delay, 0);
     }
+    w.Wait();
     std::this_thread::sleep_for(seconds(2));
   } else {
     Vectors<double> w("haha", n, 2);

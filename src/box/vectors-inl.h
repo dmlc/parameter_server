@@ -135,20 +135,21 @@ Status Vectors<V>::Pull(KeyRange key_range, IntList vec_list,
 }
 
 template<class V>
-IndexRange Vectors<V>::FindIndex(KeyRange kr, Range<Key*>* key_ptr) {
+IndexRange Vectors<V>::FindIndex(KeyRange kr, KeyPtrRange* key_ptr) {
   IndexRange idx;
-  Range<Key*> ptr;
-  auto it = key_indices_.find(kr);
-  if (it == key_indices_.end()) {
+  KeyPtrRange ptr;
+  auto it = key_positions_.find(kr);
+  if (it == key_positions_.end()) {
     ptr.start() = keys_.UpperBound(kr.start(), &idx.start());
     ptr.end() = keys_.LowerBound(kr.end(), &idx.end());
     CHECK(ptr.start() != NULL);
     CHECK(ptr.end() != NULL);
     CHECK_EQ(ptr.size(), idx.size());
     ++ idx.end();
-    key_indices_[kr] = idx;
+    key_positions_[kr] = make_pair(idx, ptr);
   } else {
-    idx = it->second;
+    idx = it->second.first;
+    ptr = it->second.second;
   }
   if (key_ptr != NULL)
     *key_ptr = ptr;
@@ -206,8 +207,8 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   mail->set_vals(vals.raw());
 
   XArray<Key> xkey(keys);
-  // LL << "to " << mail->flag().recver() << " keys: " << xkey.DebugString();
-  // LL << "to " << mail->flag().recver() << " vals: " << vals.DebugString();
+  LL << "to " << mail->flag().recver() << " keys: " << xkey.DebugString();
+  LL << "to " << mail->flag().recver() << " vals: " << vals.DebugString();
 
   return Status::OK();
 }
@@ -222,6 +223,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
   // 2. construct the key mapping between remote and local
   XArray<Key> keys(mail.keys());
   size_t nkey = keys.size();
+  // LL << idx.ToString() << " " << idx.size();
   std::vector<size_t> remote_idx(idx.size()), local_idx(idx.size());
   size_t idx_len = 0;
   for (size_t i = 0, j = idx.start(); i < nkey && j < idx.end(); ) {
@@ -237,8 +239,9 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
     remote_idx[idx_len] = i;
     local_idx[idx_len] = j;
     ++ idx_len;
+    ++ i;
+    ++ j;
   }
-
   // 3. merge the data
   XArray<V> vals(mail.vals());
   int nvec = head.push().vectors_size();
@@ -252,7 +255,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
     if (aggregator_.IsFirst(time))
       aggregate_data_[time] = EMat::Zero(idx.size(), nvec);
     auto& mat = aggregate_data_[time];
-    CHECK_EQ(mat.rows(), idx.size());
+    CHECK_EQ(mat.rows(), (int)idx.size());
     CHECK_EQ(mat.cols(), nvec);
     for (int v = 0; v < nvec; ++v)
       for (size_t i = 0; i < idx_len; ++i)
@@ -269,13 +272,13 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
             synced_.col(z).segment(idx.start(), idx.size()) += mat.col(v);
           }
         } else {
-          // if (valid_sync) {
-          //   local_.col(x).block(idx.start(), idx.end()-1) +=
-          //       (mat.col(v) - synced_.col(z).block(idx.start(), idx.end()-1));
-          //   synced_.col(z).block(idx.start(), idx.end()-1) = mat.col(v);
-          // } else {
-          //   local_.col(x).block(idx.start(), idx.end()-1) = mat.col(v);
-          // }
+          if (valid_sync) {
+            local_.col(x).segment(idx.start(), idx.size()) +=
+                (mat.col(v) - synced_.col(z).segment(idx.start(), idx.size()));
+            synced_.col(z).segment(idx.start(), idx.size()) = mat.col(v);
+          } else {
+            local_.col(x).segment(idx.start(), idx.size()) = mat.col(v);
+          }
         }
       }
     }

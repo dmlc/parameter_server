@@ -136,7 +136,7 @@ Status Van::Send(const Mail& mail){
 
 #ifdef _DEBUG_VAN_
   LL << "time: " << mail.flag().time() << ", send to "
-     << mail.flag().sender() << " "
+     << mail.flag().recver() << " "
      << mail.keys().size() << "(" << send_key <<  ") keys and "
      << mail.vals().size() << "(" << send_value << ") vals";
 #endif
@@ -213,7 +213,7 @@ Status Van::Recv(Mail *mail) {
 
 #ifdef _DEBUG_VAN_
   LL << "time: " << mail->flag().time() << ", recv from "
-     << mail->flag().recver() << " "
+     << mail->flag().sender() << " "
      << mail->keys().size() << "(" << recv_key <<  ") keys and "
      << mail->vals().size() << "(" << recv_value << ") vals";
 #endif

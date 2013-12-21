@@ -59,7 +59,7 @@ bool Aggregator::Success(int32 time, const NodeGroup& group) {
   // get the type
   uid_t type = GetType(time);
   if (!NodeGroup::Valid(type)) {
-    CHECK_EQ(st.size(), 1) << "only one mail is expected from node "
+    CHECK_EQ(st.size(), (size_t)1) << "only one mail is expected from node "
                            << type << " at time " << time;
     return true;
   }
