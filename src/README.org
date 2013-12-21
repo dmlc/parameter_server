@@ -6,7 +6,7 @@
 
 ** debug
 
-enable core dump:
+- enable core dump:
 =ulimit -c unlimited=
-set core file pattern:
+- set core file pattern:
 =echo "core_%e_%p" | sudo tee /proc/sys/kernel/core_pattern=

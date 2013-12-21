@@ -47,7 +47,7 @@ void Container::Reply(const Mail& from_other, const Mail& my_reply) {
   CHECK_EQ(to_other.flag().push().delta(), my_reply.flag().push().delta());
   // filling the values
   to_other.set_vals(Slice(my_reply.keys(), my_reply.vals(), to_other.keys()));
-  CHECK_EQ(to_other.keys().size(), to_other.vals().size());
+  // CHECK_EQ(to_other.keys().size(), to_other.vals().size());
   postoffice_->Send(to_other);
 }
 

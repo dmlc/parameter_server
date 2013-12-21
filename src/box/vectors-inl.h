@@ -35,7 +35,7 @@ Vectors<V>::Vectors(const string& name,
 //   Init(global_length, global_keys);
 // }
 
-
+// TODO block other theads if init is not finished.
 template <typename V>
 void Vectors<V>::Init(size_t global_length, const XArray<Key>& global_keys) {
   Container::Init(KeyRange(0, global_length));

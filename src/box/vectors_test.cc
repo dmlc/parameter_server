@@ -5,6 +5,7 @@ using namespace PS;
 
 void MoveData(Vectors<double> *w) {
   w->vec(2) = w->vec(0) + w->vec(1);
+  w->vec(3) = w->vec(2) * 2;
   w->reset_vec(0);
   w->reset_vec(1);
   // LL << w->DebugString();
@@ -19,17 +20,21 @@ void RunClient(int delay, int max_iter, Vectors<double>* w) {
   for (int i = 0; i <= max_iter; ++i) {
     w->vec(0) = DVec::Ones(m) * (1<<(max_iter - i));
     w->vec(1) = w->vec(0)*2;
-    w->PushPull(KeyRange::All(), {0,1}, kValue, {2}, kDelta);
+    w->PushPull(KeyRange::All(), {0,1}, kValue, {2,3}, kDelta);
     // LL << w.DebugString();
-    double res = w->vec(2).sum() / factor;
     double expect_min = (1<<(max_iter+1)) - (1<<(max_iter+1-std::max(0,i-delay)));
     double expect_max = (1<<(max_iter+1)) - (1<<(max_iter-i));
     // LL << i << " " << res/6.0 << " " << expect_min << " " << expect_max;
-    EXPECT_LE(res, expect_max);
-    EXPECT_GE(res, expect_min);
+    double res2 = w->vec(2).sum() / factor;
+    EXPECT_LE(res2, expect_max);
+    EXPECT_GE(res2, expect_min);
+    double res3 = w->vec(3).sum() / factor / 2;
+    EXPECT_LE(res3, expect_max);
+    EXPECT_GE(res3, expect_min);
   }
   w->Wait();
   EXPECT_EQ(w->vec(2).sum()/factor, (1<<(max_iter+1))-1);
+  EXPECT_EQ(w->vec(3).sum()/factor/2, (1<<(max_iter+1))-1);
 }
 
 TEST(Vectors, Delays) {
@@ -66,12 +71,12 @@ TEST(Vectors, Delays) {
     // the first col is weight, the second is gradient
     int delay[] = {0,2,4,6};
     for (int i = 0; i < 4; ++i) {
-      auto p = new Vectors<double>(StrCat("w",i), n, 3, keys);
+      auto p = new Vectors<double>(StrCat("w",i), n, 4, keys);
       RunClient(delay[i], 20, p);
     }
   } else {
     for (int i = 0; i < 4; ++i) {
-      auto p = new Vectors<double>(StrCat("w",i), n, 3);
+      auto p = new Vectors<double>(StrCat("w",i), n, 4);
       p->SetAggregator(NodeGroup::kClients);
       p->SetAggregatorFunc(NewPermanentCallback(MoveData, p));
     }
@@ -86,6 +91,4 @@ int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   return RUN_ALL_TESTS();
-
-  // LL << "exists";
 }
