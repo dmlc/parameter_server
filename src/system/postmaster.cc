@@ -1,6 +1,6 @@
 #include "system/postmaster.h"
 #include "box/container.h"
-#include "algo/inference.h"
+#include "app/inference.h"
 #include "util/status.h"
 namespace PS {
 

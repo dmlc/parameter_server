@@ -1,4 +1,4 @@
-#include "algo/inference.h"
+#include "app/inference.h"
 #include "util/rspmat.h"
 
 namespace PS {

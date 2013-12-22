@@ -39,8 +39,8 @@ OBJECTS = \
 	./box/item.o \
 	./box/container.o \
 	./box/sparse_vector.o \
-	./algo/inference.o \
-	./algo/graddesc.o
+	./app/inference.o \
+	./app/gradient_descent/graddesc.o
 
 DEPS = \
 	./util/rawarray.h \

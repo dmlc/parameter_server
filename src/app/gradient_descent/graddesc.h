@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algo/inference.h"
+#include "app/inference.h"
 #include "util/eigen3.h"
 
 namespace PS {
