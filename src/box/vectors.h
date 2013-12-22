@@ -22,6 +22,8 @@ class Vectors : public Container {
 
   // initial keys and values
   void Init(size_t global_length, const XArray<Key>& global_keys);
+  // wait until this container is initialized
+  virtual void WaitInited();
 
   Status Push(KeyRange key_range = KeyRange::All(),
               IntList  vec_list  = {1},
@@ -93,6 +95,7 @@ class Vectors : public Container {
   map<KeyRange, RawArray> key_caches_;
   // store the temperal data used for aggregation
   map<int, EMat> aggregate_data_;
+  bool vectors_inited_;
 };
 
 } // namespace PS

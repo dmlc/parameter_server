@@ -7,7 +7,7 @@ DECLARE_bool(is_backup_process);
 DECLARE_int32(failed_node_id);
 
 Container::Container(const string& name) :
-    name_(name), key_range_(0, kMaxKey), inited_(false) {
+    name_(name), key_range_(0, kMaxKey), container_inited_(false) {
   postoffice_ = NULL;
   recv_callback_ = NULL;
   send_callback_ = NULL;
@@ -37,7 +37,7 @@ void Container::Init(KeyRange whole) {
     postmaster_->RescueAck(this->name());
   } // else
     // LL << " is_backup_process is not set";
-  inited_ = true;
+  container_inited_ = true;
   LL << SName() << " key_range " << key_range_.ToString();
 }
 
@@ -93,7 +93,7 @@ void Container::ReadAll() {
 
 
 Status Container::Push(const Header& h) { // Future* push_fut, Future* pull_fut) {
-  while (!inited_) {
+  while (!container_inited_) {
     std::this_thread::sleep_for(seconds(1));
   }
   int time = IncrClock();
@@ -143,9 +143,9 @@ void Container::Wait(int time) {
   ReadAll();
 }
 
-void Container::WaitUntilInited() {
-  while (!inited_) {
-    LL << "waiting " << name() << " is initialized";
+void Container::WaitInited() {
+  while (!container_inited_) {
+    LL << "waiting container(" << name() << ") is initialized";
     std::this_thread::sleep_for(milliseconds(100));
   }
 }

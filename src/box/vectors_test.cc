@@ -38,21 +38,21 @@ void RunClient(int delay, int max_iter, Vectors<double>* w) {
 }
 
 TEST(Vectors, Delays) {
-  // FLAGS_num_client = 2;
-  // FLAGS_num_server = 2;
-  // FLAGS_my_type = "s";
-  // pid_t pid = fork();
-  // if (pid == 0) {
-  //   FLAGS_my_type = "c";
-  //   pid_t pid2 = fork();
-  //   if (pid2 == 0) {
-  //     FLAGS_my_type = "c";
-  //     FLAGS_my_rank ++;
-  //     pid_t pid3 = fork();
-  //     if (pid3 == 0)
-  //       FLAGS_my_type = "s";
-  //   }
-  // }
+  FLAGS_num_client = 2;
+  FLAGS_num_server = 2;
+  FLAGS_my_type = "s";
+  pid_t pid = fork();
+  if (pid == 0) {
+    FLAGS_my_type = "c";
+    pid_t pid2 = fork();
+    if (pid2 == 0) {
+      FLAGS_my_type = "c";
+      FLAGS_my_rank ++;
+      pid_t pid3 = fork();
+      if (pid3 == 0)
+        FLAGS_my_type = "s";
+    }
+  }
 
   // constructed vectors
   // s0: v v v
@@ -80,7 +80,7 @@ TEST(Vectors, Delays) {
       p->SetAggregator(NodeGroup::kClients);
       p->SetAggregatorFunc(NewPermanentCallback(MoveData, p));
     }
-    std::this_thread::sleep_for(seconds(4));
+    std::this_thread::sleep_for(seconds(2));
   }
 
   int ret; wait(&ret);

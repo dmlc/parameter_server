@@ -127,7 +127,7 @@ void Postoffice::RecvPostman() {
     }
 
     auto ctr = postmaster_->GetContainer(head.name());
-    ctr->WaitUntilInited();
+    ctr->WaitInited();
 
     // deal with key caches
     KeyRange kr(head.key().start(), head.key().end());

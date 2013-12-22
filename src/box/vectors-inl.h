@@ -13,7 +13,8 @@ template <typename V>
 Vectors<V>::Vectors(const string& name,
                     size_t global_length,
                     int num_vec,
-                    const XArray<Key>& global_keys) : Container(name)  {
+                    const XArray<Key>& global_keys)
+    : Container(name), vectors_inited_(false)  {
   num_vec_ = num_vec;
   // CHECK_GT(num_vec_, 0);
   // for (int i = 0; i < num_vec_; ++i ) {
@@ -79,6 +80,16 @@ void Vectors<V>::Init(size_t global_length, const XArray<Key>& global_keys) {
   // TODO nonzero initialization?
   local_ = EMat::Zero(vec_len_, num_vec_);
   synced_ = EMat::Zero(vec_len_, num_synced_vec_);
+  vectors_inited_ = true;
+}
+
+template <typename V>
+void Vectors<V>::WaitInited() {
+  Container::WaitInited();
+  while (!vectors_inited_) {
+    LL << "waiting vectors(" << name() << ") is initialized";
+    std::this_thread::sleep_for(milliseconds(100));
+  }
 }
 
 template <typename V>

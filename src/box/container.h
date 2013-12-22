@@ -27,12 +27,14 @@ class Container {
   explicit Container(const string& name);
   Container(const string& name, Key min_key, Key max_key);
 
+  // initialization of container
   // init postoffice and postmaster, it they are not inited'
   // get the the local key_range of this container
   // input : the global key range of this container,
   // TODO we may get it from the master node
   void Init(KeyRange whole);
-
+  // wait until this container is initialized
+  virtual void WaitInited();
   // TODO replace bool by some meaningful class, say statisific informations
   // about sending and receiving
   typedef std::shared_future<bool> Future;
@@ -63,8 +65,6 @@ class Container {
 
   // wait until all pull and push requests <= time are success, the default is cur_time
   void Wait(int time = kCurTime);
-  // wait until this container is initialized
-  void WaitUntilInited();
 
   // prepare data for communication
   // set key* in mail.flag, fill in keys and values
@@ -93,7 +93,7 @@ class Container {
   // postoffice threads
   // accept a mail from the postoffice
   virtual void Accept(const Mail& mail) {
-    WaitUntilInited();
+    WaitInited();
     mails_received_.Put(mail);
     if (mail.flag().type() & Header::REPLY) {
       int32 time = mail.flag().time();
@@ -160,7 +160,7 @@ class Container {
   // store the receivers of pull request
   Aggregator pull_aggregator_;
 
-  bool inited_;
+  bool container_inited_;
 };
 
 } // namespace PS
