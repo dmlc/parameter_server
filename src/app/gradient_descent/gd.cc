@@ -13,7 +13,7 @@ void GD::Client() {
   // 1: weights, 2: gradient
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
   Vectors<double> W("grad_desc", fea_range.size(), 2, keys);
-  W.SetMaxPullDelay(0);
+  W.SetMaxPullDelay(FLAGS_max_pull_delay);
 
   // load data
   LL << SName() << " load " << FLAGS_train_data << " " << data_range_.ToString();

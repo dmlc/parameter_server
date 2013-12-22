@@ -90,7 +90,7 @@ void RSpMat<I,V>::Load(const string& name, Seg row)  {
   col_ = ColSeg(name);
   rows_ = row_.size();
   cols_ = col_.size();
-  nnz_ = NNZ(name);
+  // nnz_ = NNZ(name);
 
   // load row offset
   size_t rows = bin_length<size_t>(name+".rowcnt");
@@ -99,13 +99,14 @@ void RSpMat<I,V>::Load(const string& name, Seg row)  {
   load_bin<size_t>(name+".rowcnt", &offset_, row_.start(), rows_ + 1);
 
   // load column index
-  size_t nnz = load_bin<I>(name+".colidx", &index_, offset_[0], offset_[rows_]);
-  CHECK_EQ(nnz, nnz_);
+  nnz_ = offset_[rows_] - offset_[0];
+  load_bin<I>(name+".colidx", &index_, offset_[0], nnz_);
+  // CHECK_EQ(nnz, nnz_);
 
   // load values if any
   size_t nval = bin_length<V>(name+".value");
   if (nval != 0) {
-    load_bin<V>(name+".value", &value_, offset_[0], offset_[rows_]);
+    load_bin<V>(name+".value", &value_, offset_[0], nnz_);
   }
 
   // shift the offset if necessary
