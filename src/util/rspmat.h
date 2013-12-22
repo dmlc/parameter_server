@@ -79,13 +79,14 @@ void RSpMat<I,V>::Load(const string& name, Seg row)  {
     row_ = row;
   }
   col_ = ColSeg(name);
-  rows_ = row_.Size();
-  cols_ = col_.Size();
+  rows_ = row_.size();
+  cols_ = col_.size();
 
   // load row offset
   size_t rows = bin_length<size_t>(name+".rowcnt");
-  CHECK_EQ(rows-1, all.size());
-  load_bin<size_t>(name+".rowcnt", &offset_, row_.start(), rows_+1);
+  CHECK_GT(rows, 0) << name << ".rowcnt is empty";
+  CHECK_EQ(rows, all.size()+1);
+  load_bin<size_t>(name+".rowcnt", &offset_, row_.start(), rows_);
 
   // load column index
   nnz_ = load_bin<I>(name+".colidx", &index_, offset_[0], offset_[rows_]);

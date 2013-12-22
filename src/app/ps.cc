@@ -1,4 +1,4 @@
-#include "algo/graddesc.h"
+#include "app/gradient_descent/gd.h"
 
 DEFINE_string(algorithm, "sgd", "algorithm");
 
@@ -20,12 +20,12 @@ int main(int argc, char *argv[]) {
   //   }
   // }
 
-  Inference *algo = NULL;
+  Inference *ifr = NULL;
   // if (FLAGS_algorithm == "sgd")
-    algo = new GD("gradient_descent");
+    ifr = new GD("gradient_descent");
 
-  algo->Init();
-  algo->Run();
+  ifr->Init();
+  ifr->Run();
 
   LL << "exit";
   return 0;

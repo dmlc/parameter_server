@@ -40,9 +40,10 @@ OBJECTS = \
 	./box/container.o \
 	./box/sparse_vector.o \
 	./app/inference.o \
-	./app/gradient_descent/graddesc.o
+	./app/gradient_descent/gd.o
 
 DEPS = \
+	./util/rspmat.h \
 	./util/rawarray.h \
 	./box/vectors.h \
 	./box/vectors-inl.h \
@@ -70,7 +71,7 @@ TESTS = \
 	aggregator_test \
 	common_test
 
-all: $(TESTS) # ps
+all: $(TESTS) ps
 
 clean:
 	rm -f */*.o *.a ps
@@ -95,8 +96,8 @@ libps.a: $(OBJECTS) $(DEPS) #gtest
 #	cmake ../third_party/gtest-1.7.0/CMakeLists.txt
 #	make -C ../third_party/gtest-1.7.0/
 
-ps: libps.a ps.cc
-	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o parse
+ps: libps.a app/ps.cc
+	$(CC) $(CFLAGS) app/ps.cc $(LDFLAGS) -o parse
 
 fault_tolerance_press: algo/fault_tolerance_press.cc libps.a algo/fault_tolerance_press.cc
 	$(CC) $(CFLAGS) algo/fault_tolerance_press.cc $(LDFLAGS) -o fault_tolerance_press

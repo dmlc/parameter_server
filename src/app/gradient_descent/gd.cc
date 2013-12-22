@@ -1,5 +1,5 @@
-#include "app/gradient_descent/graddesc.h"
-#include "box/vectors.h"
+#include "app/gradient_descent/gd.h"
+#include "box/vectors-inl.h"
 #include "box/item.h"
 #include "util/rspmat.h"
 
@@ -15,7 +15,7 @@ void GD::Client() {
 
   // 1: weights, 2: gradient
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
-  Vectors<double> W("gd_wg", fea_range.Size(), 2, keys);
+  Vectors<double> W("grad_desc", fea_range.size(), 2, keys);
 
   RSpMat<int64, double> X;
   X.Load(FLAGS_train_data, data_range_);
@@ -57,7 +57,7 @@ void GD::Client() {
 void GD::Server() {
 
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
-  Vectors<double> W("gd_wg", fea_range.Size(), 2);
+  Vectors<double> W("grad_desc", fea_range.size(), 2);
 
   sleep(30);
   // Vector<double> W("sgd_w", num_total_feature_);

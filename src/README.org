@@ -2,6 +2,7 @@
 - =system=: core system components
 - =box=: global shared data structures, such as (sparse) vectors and matrices
 - =app=: applications
+- =data=: convert data
 - =util=: some utility classes
 
 ** debug
