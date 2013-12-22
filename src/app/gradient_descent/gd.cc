@@ -10,13 +10,12 @@ void GD::Client() {
 
   XArray<Key> keys;
 
-  // load data
-  LL << SName() << " load " << FLAGS_train_data << " " << data_range_.ToString();
-
   // 1: weights, 2: gradient
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
   Vectors<double> W("grad_desc", fea_range.size(), 2, keys);
 
+  // load data
+  LL << SName() << " load " << FLAGS_train_data << " " << data_range_.ToString();
   RSpMat<int64, double> X;
   X.Load(FLAGS_train_data, data_range_);
   X.ToEigen3(&X_);
@@ -32,7 +31,8 @@ void GD::Client() {
     // x'*(-y./(1+exp(y.*(x*w))));
     W.Vec(1) = X_.adjoint() * ( Y_.cwiseQuotient(
         (Y_.cwiseProduct(X_*W.Vec(0)).array().exp()+1).matrix()));
-    W.Vec(0) = FLAGS_eta * W.Vec(1);
+    W.Vec(0) += FLAGS_eta * W.Vec(1);
+
     // calculate objective value
     Progress prog;
     // sum(log(1+exp(-y.*(x'*w))));

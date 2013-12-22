@@ -13,9 +13,10 @@ typedef Range<size_t> Seg;
 template<typename I = size_t, typename V = double>
 class RSpMat {
  public:
+  // read data statistics from file
   static Seg RowSeg(const string& name);
   static Seg ColSeg(const string& name);
-
+  static size_t NNZ(const string& name);
   RSpMat() : offset_(NULL), index_(NULL), value_(NULL) { }
   ~RSpMat() { delete [] offset_; delete [] index_; delete [] value_; }
 
@@ -66,6 +67,14 @@ Seg RSpMat<I,V>::ColSeg(const string& name) {
   CHECK(col.Valid()) << "invalid column range " << col.ToString();;
   return col;
 }
+template<typename I, typename V>
+size_t RSpMat<I,V>::NNZ(const string& name) {
+  size_t tmp;
+  std::ifstream in(name+".size");
+  CHECK(in.good()) << "open " << name << ".size failed.";
+  in >> tmp >> tmp >> tmp >> tmp >> tmp;
+  return tmp;
+}
 
 template<typename I, typename V>
 void RSpMat<I,V>::Load(const string& name, Seg row)  {
@@ -81,15 +90,17 @@ void RSpMat<I,V>::Load(const string& name, Seg row)  {
   col_ = ColSeg(name);
   rows_ = row_.size();
   cols_ = col_.size();
+  nnz_ = NNZ(name);
 
   // load row offset
   size_t rows = bin_length<size_t>(name+".rowcnt");
   CHECK_GT(rows, 0) << name << ".rowcnt is empty";
   CHECK_EQ(rows, all.size()+1);
-  load_bin<size_t>(name+".rowcnt", &offset_, row_.start(), rows_);
+  load_bin<size_t>(name+".rowcnt", &offset_, row_.start(), rows_ + 1);
 
   // load column index
-  nnz_ = load_bin<I>(name+".colidx", &index_, offset_[0], offset_[rows_]);
+  size_t nnz = load_bin<I>(name+".colidx", &index_, offset_[0], offset_[rows_]);
+  CHECK_EQ(nnz, nnz_);
 
   // load values if any
   size_t nval = bin_length<V>(name+".value");
