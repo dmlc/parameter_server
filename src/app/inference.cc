@@ -5,7 +5,7 @@ namespace PS {
 
 DEFINE_int32(max_push_delay, 0, "maximal push delay");
 DEFINE_int32(max_pull_delay, 0, "maximal pull delay");
-DEFINE_double(eta, .001, "learning rate");
+DEFINE_double(eta, .1, "learning rate");
 DEFINE_string(train_data, "../data/rcv1.train", "training data");
 DEFINE_string(test_data, "../data/rcv1.test", "test data");
 

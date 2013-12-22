@@ -11,3 +11,4 @@
 /src/fault_tolerance_press
 
 *.log.*
+/src/app/gradient_descent/Makefile

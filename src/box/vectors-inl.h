@@ -192,18 +192,19 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
   mail->set_keys(keys);
 
   // 2. fill the values. It is a #keys x #vec matrix, storing in a row-majored
-  // format
+  // format, and update sync_
   int nvec = head.push().vectors_size();
   CHECK_GT(nvec, 0);
   size_t nkeys = keys.entry_num();
   XArray<V> vals(nkeys * nvec);
   for (int v = 0; v < nvec; ++v) {
     int x = head.push().vectors(v);
+    int z = loc2syn_map_[x];
+    bool valid_sync = z >= 0 && z < synced_.cols();
     if (head.push().delta()) {
       // CHECK_EQ(access_permission_[x], kReadWrite) << "vec[" << x <<
       //     "] should be kReadWrite if you want to push its delta values";
-      int z = loc2syn_map_[x];
-      CHECK_GE(z, 0); CHECK_LT(z, num_synced_vec_);
+      CHECK_EQ(valid_sync, true);
       for (size_t i = 0; i < nkeys; ++i) {
         vals[i*nvec+v] = local_.coeff(i+idx.start(), x)
                           - synced_.coeff(i+idx.start(), z);
@@ -213,10 +214,16 @@ Status Vectors<V>::GetLocalData(Mail *mail) {
         vals[i*nvec+v] = local_.coeff(i+idx.start(), x);
       }
     }
+    if (valid_sync) {
+      synced_.col(z).segment(idx.start(), idx.size())
+          = local_.col(x).segment(idx.start(), idx.size());
+    }
   }
   head.mutable_value()->set_empty(false);
   vals.raw().ResetEntrySize(nvec*sizeof(V));
   mail->set_vals(vals.raw());
+
+  // 3. update sync_
 
 #ifdef DEBUG_VECTORS_
   XArray<Key> xkey(keys);
@@ -297,7 +304,7 @@ Status Vectors<V>::MergeRemoteData(const Mail& mail) {
       }
     }
   } else {
-    // do merge directly
+    // merge directly
     for (int v = 0; v < nvec; ++v) {
       int x = head.push().vectors(v);
       int z = loc2syn_map_[x];

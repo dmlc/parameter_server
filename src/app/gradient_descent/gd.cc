@@ -13,9 +13,12 @@ void GD::Client() {
   // 1: weights, 2: gradient
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
   Vectors<double> W("grad_desc", fea_range.size(), 2, keys);
+  W.SetMaxPullDelay(0);
 
   // load data
   LL << SName() << " load " << FLAGS_train_data << " " << data_range_.ToString();
+  LL << "gradient descent, logistic regression, eta = " << FLAGS_eta;
+
   RSpMat<int64, double> X;
   X.Load(FLAGS_train_data, data_range_);
   X.ToEigen3(&X_);
@@ -31,7 +34,8 @@ void GD::Client() {
     // x'*(-y./(1+exp(y.*(x*w))));
     W.Vec(1) = X_.adjoint() * ( Y_.cwiseQuotient(
         (Y_.cwiseProduct(X_*W.Vec(0)).array().exp()+1).matrix()));
-    W.Vec(0) += FLAGS_eta * W.Vec(1);
+    W.PushPull(KeyRange::All(), {1}, kValue, {0}, kDelta);
+    // W.Vec(0) += FLAGS_eta * W.Vec(1);
 
     // calculate objective value
     Progress prog;
@@ -49,17 +53,25 @@ void GD::Client() {
     // // auto v = Obj.data();
     double train_err = 1 - (double)prog.err / (double) X_.rows();
     if (FLAGS_my_rank == 0)
-      LL << "T " << iter << "\tV: " << prog.objv << "\terr: " << train_err;
+      printf("%3d %10.3e %7.3f %10.3e\n",
+             iter, prog.objv, train_err, W.Vec(0).norm());
 
   }
+}
+
+void UpdateWeight(Vectors<double> *W) {
+  W->Vec(0) += FLAGS_eta * W->Vec(1);
 }
 
 void GD::Server() {
 
   Range<size_t> fea_range = RSpMat<>::ColSeg(FLAGS_train_data);
   Vectors<double> W("grad_desc", fea_range.size(), 2);
+  W.SetAggregator(NodeGroup::kClients);
+  W.SetAggregatorFunc(NewPermanentCallback(UpdateWeight, &W));
 
-  sleep(30);
+  sleep(20);
+
   // Vector<double> W("sgd_w", num_total_feature_);
   // Item<Progress> Obj("objv");
   // Obj.SetAggregator(NodeGroup::kClients);
