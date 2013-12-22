@@ -97,7 +97,7 @@ void Postmaster::Init() {
   // my node
   my_uid_ = Node::GetUid(FLAGS_my_type, FLAGS_my_rank);
   CHECK(all_.find(my_uid_) != all_.end())
-      << "there is no my_node [" << my_uid_ << "] info"
+      << "there is no my_node [" << my_uid_ << "] info. "
       << DebugString();
   // LL << "I'm " << my_node().ToString();
 
@@ -111,7 +111,7 @@ void Postmaster::Init() {
   CHECK(cmd_van_->Init());
   CHECK(cmd_van_->Bind(my_node(), 1));
 
-  // data connect
+  // data connection
   if (my_node().is_client()) {
     for (auto id : *group_.servers())
       CHECK(van_->Connect(all_[id], 0));
@@ -124,15 +124,15 @@ void Postmaster::Init() {
     }
   }
 
-  // command connect
-  if (my_uid_ == 0) {  // TODO use IamRoot
+  // command connection
+  if (IamRoot()) {
     for (auto id : *group_.all()) {
       if (id != my_uid_)  // TODO no if
         CHECK(cmd_van_->Connect(all_[id], 1));
     }
   } else {
     // connect to the master
-    CHECK(cmd_van_->Connect(all_[0], 1));
+    CHECK(cmd_van_->Connect(Root(), 1));
   }
 
   // create a DHT instance to manage the key-range
@@ -145,6 +145,7 @@ void Postmaster::Init() {
   dht_ = new DHT(num_vnode);
 }
 
+// TODO ask master to get the range
 void Postmaster::Register(Inference *ifr, DataRange whole) {
   // a simple version, give ifr all client nodes, and evenly divide the training samples
   NodeGroup group;
@@ -153,7 +154,8 @@ void Postmaster::Register(Inference *ifr, DataRange whole) {
     uid_t id = group_.clients()->at(i);
     Workload wl(id, KeyRange(), whole.EvenDivide(num, i));
     workloads_[make_pair(ifr->name(), id)] = wl;
-    group.clients()->push_back(id);    group.all()->push_back(id);
+    group.clients()->push_back(id);
+    group.all()->push_back(id);
   }
   nodegroups_[ifr->name()] = group;
 }

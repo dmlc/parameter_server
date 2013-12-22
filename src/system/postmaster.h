@@ -37,15 +37,19 @@ class Postmaster {
   Node& MyNode() { return node(my_uid_); };
   bool IamClient() { return node(my_uid_).is_client(); }
   bool IamServer() { return node(my_uid_).is_server(); }
+
+  bool IamRoot() { return my_uid_ == 0; }
+  Node& Root() { return all_[0]; }
+
+  bool IamBackupProcess() { return IamServer() && is_backup_process_; }
   // check whether my_node is the root for container/inference name
   bool IsRoot(const string& name) { return nodegroups_[name].IsRoot(my_uid_); }
-  bool IamBackupProcess() { return IamServer() && is_backup_process_; }
 
   // TODO a better way to get the whole key range of the container
   // if ifr is valid, then ctr will get all clients nodes from ifr
   // return the key range this node will maintain
   KeyRange Register(Container *ctr, KeyRange whole, Inference *ifr = NULL);
-  //
+
   void Register(Inference *ifr, DataRange whole);
 
   // get the node group associated with a container or an inference algorithm
