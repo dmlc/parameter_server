@@ -1,6 +1,7 @@
 #pragma once
 #include "util/common.h"
 #include "util/mail.h"
+#include "proto/express.pb.h"
 #include "util/blocking_queue.h"
 #include "system/van.h"
 #include "system/postmaster.h"
@@ -12,6 +13,8 @@ class Inference;
 class ReplicaManager;
 
 class Postoffice;
+typedef std::shared_future<string> ExpressReply;
+
 // the postoffice accepts sending request from containers, and also notify
 // containers if anything is received.
 class Postoffice {
@@ -19,23 +22,37 @@ class Postoffice {
   SINGLETON(Postoffice);
 
   void Init();
-  void Send(const Mail& mail) { sending_queue_.Put(mail); }
-
+  void Send(const Mail& mail) {
+    package_sending_queue_.Put(mail);
+  }
+  void Send(const Express& cmd, ExpressReply* fet) {
+    express_sending_queue_.Put(make_pair(cmd, fet));
+  }
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
   Postoffice() : inited_(false), postmaster_(NULL) { }
   bool inited_;
 
-  // two postman threads, one for sending and one for receiving
-  void RecvPostman();
-  void SendPostman();
-  std::thread *send_postman_;
-  std::thread *recv_postman_;
+  // send/receive data
+  void RecvPackage();
+  void SendPackage();
+  std::thread *send_package_;
+  std::thread *recv_package_;
+  BlockingQueue<Mail> package_sending_queue_;
+  Van* package_van_;
 
-  Van* van_;
+  // send/receive commands
+  void RecvExpress();
+  void SendExpress();
+  std::thread *send_express_;
+  std::thread *recv_express_;
+  BlockingQueue<pair<Command, ExpressReply*> > express_sending_queue_;
+  Van* express_van_;
+  FuturePool<string> express_reply_;
+  int32 available_express_label_;
+
   Postmaster* postmaster_;
-  ReplicaManager* replica_manager_;
-  BlockingQueue<Mail> sending_queue_;
+  // ReplicaManager* replica_manager_;
 };
 
 } // namespace PS

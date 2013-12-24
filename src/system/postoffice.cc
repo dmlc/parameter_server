@@ -2,7 +2,7 @@
 #include "system/postmaster.h"
 #include "box/container.h"
 #include "system/replica_manager.h"
-
+#
 namespace PS {
 
 DEFINE_bool(enable_fault_tolerance, false, "enable fault tolerance feature");
@@ -13,14 +13,20 @@ void Postoffice::Init() {
   // initial connections
   postmaster_ = Postmaster::Instance();
   postmaster_->Init();
+
   // remember to initialize
   replica_manager_ = ReplicaManager::Instance();
   replica_manager_->Init();
-  van_ = postmaster_->GetMailVan();
+  // TODO
+  package_van_ = postmaster_->GetMailVan();
   // Van::Instance();
-  // create two postman threads, one for sending, one for receiving
-  send_postman_ = new std::thread(&Postoffice::SendPostman, this);
-  recv_postman_ = new std::thread(&Postoffice::RecvPostman, this);
+  available_express_label_ = 0;
+  // create four worker threads
+  send_package_ = new std::thread(&Postoffice::SendPackage, this);
+  recv_package_ = new std::thread(&Postoffice::RecvPackage, this);
+  send_express_ = new std::thread(&Postoffice::SendExpress, this);
+  recv_express_ = new std::thread(&Postoffice::RecvExpress, this);
+
   inited_ = true;
 }
 
@@ -28,22 +34,19 @@ void Postoffice::Init() {
 // 1, fetch a mail, 2) divide the mail into several ones according to the
 // destination machines. caches keys if necessary. 3) send one-by-one 4) notify
 // the mail
-void Postoffice::SendPostman() {
+void Postoffice::SendPackage() {
   while (1) {
-
-    Mail mail = sending_queue_.Take();
+    Mail mail = package_sending_queue_.Take();
     Header& head = mail.flag();
     const string& name = head.name();
     uid_t recver = head.recver();
-
     // check if is transfer packets
     if (head.type() == Header_Type_BACKUP) {
       // LOG(WARNING) << "Header_Type_BACKUP send";
       head.set_sender(postmaster_->my_uid());
-      CHECK(van_->Send(mail).ok());
+      CHECK(package_van_->Send(mail).ok());
       continue;
     }
-
     Workload *wl = postmaster_->GetWorkload(name, recver);
     CHECK(head.has_key());
     KeyRange kr(head.key().start(), head.key().end());
@@ -87,14 +90,14 @@ void Postoffice::SendPostman() {
         head.mutable_key()->set_cksum(key2.cksum());
         head.mutable_key()->set_empty(hit2);
         Mail mail2(head, key2, value2);
-        CHECK(van_->Send(mail2).ok());
+        CHECK(package_van_->Send(mail2).ok());
       }
     } else {
       // the receiver is a single node
       head.set_sender(postmaster_->my_uid());
       head.mutable_key()->set_empty(hit);
       head.mutable_key()->set_cksum(mail.keys().cksum());
-      CHECK(van_->Send(mail).ok());
+      CHECK(package_van_->Send(mail).ok());
     }
     postmaster_->GetContainer(name)->Notify(mail.flag());
   }
@@ -102,7 +105,7 @@ void Postoffice::SendPostman() {
 
 // if mail does not have key, fetch the cached keys. otherwise, cache the keys
 // in mail.
-void Postoffice::RecvPostman() {
+void Postoffice::RecvPackage() {
   Mail mail;
   while(1) {
 
@@ -113,7 +116,7 @@ void Postoffice::RecvPostman() {
     // replica key-value mail send it to replica manager
     // node management info send it to postmaster queue
     // rescue mail, send it to the replica manager
-    Status stat = van_->Recv(&mail);
+    Status stat = package_van_->Recv(&mail);
     CHECK(stat.ok()) << stat.ToString();
 
     const Header& head = mail.flag();
@@ -157,6 +160,29 @@ void Postoffice::RecvPostman() {
     if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
       replica_manager_->Put(mail);
     }
+  }
+}
+
+void Postoffice::SendExpress() {
+  while(true) {
+    auto send = express_sending_queue_.Take();
+    Express cmd = send.first;
+    if (cmd.req()) {
+      cmd.set_seq_id(available_express_label_++);
+      express_reply_.Insert(cmd.seq_id(), send.second);
+    }
+    cmd.set_sender(postmaster_->my_uid());
+    Status stat = express_van_->Send(cmd);
+    CHECK(stat.ok()) << stat.ToString();
+  }
+}
+
+void Postmaster::RecvExpress() {
+  Express cmd;
+  while(true) {
+    Status stat = express_van_->Recv(&cmd);
+    CHECK(stat.ok()) << stat.ToString();
+    postmaster_->ProcessExpress(cmd);
   }
 }
 

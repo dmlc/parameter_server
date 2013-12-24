@@ -1,11 +1,11 @@
 // commands between nodes
 
-message Command {
-  enum CommandId {
+message Express {
+  enum Command {
     ASSIGN_OBJ_ID = 1;
   }
 
-  required CommandId command_id = 1;
+  required Command command = 1;
   required int32 sender = 2;
   required int32 recver = 3;
   required int32 seq_id = 4;

@@ -16,7 +16,7 @@ GTEST =  -lgtest_main -lgtest
 OBJECTS = \
 	./proto/nodemgt.pb.o \
 	./proto/header.pb.o \
-	./proto/command.pb.o \
+	./proto/express.pb.o \
 	./util/crc32c.o \
 	./util/key.o \
 	./util/mail.o \
