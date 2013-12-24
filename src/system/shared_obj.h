@@ -7,9 +7,6 @@
 
 namespace PS {
 
-// class Postoffice;
-// class Postmaster;
-
 // An object shared by several nodes. This object is identified by an unique
 // name (string). To reduce the communication cost, this object will be assigned
 // a unique id (int) during initialization.

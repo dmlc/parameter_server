@@ -82,12 +82,10 @@ class Container {
   void SetSendFunc(Closure* callback) {send_callback_ = callback;}
 
   // query about my node
-  Node& my_node() { return postmaster_->my_node(); }
+  Node& my_node() { return postmaster_->addr_book()->my_node(); }
 
   // the short name, for debug use
   string SName() { return StrCat(my_node().ShortName(), ": "); }
-  Node& MyNode() { return postmaster_->my_node(); }
-  bool IsRoot() { return postmaster_->IsRoot(name_); }
 
   // this two functions are provided to postoffice, and usually run by the
   // postoffice threads
@@ -104,7 +102,7 @@ class Container {
       }
       // LL << SName() << "accept: " << mail.flag().time();
     }
-    if (MyNode().is_server())
+    if (my_node().is_server())
       ReadAll();
   }
   // notify the container if the mail is sent

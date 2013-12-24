@@ -14,18 +14,29 @@ namespace PS {
 class AddressBook {
  public:
   AddressBook() { }
+
+  // init all nodes informations, and connect them
   void Init() {
     InitNodes();
     InitVans();
   }
 
+  // nodes information
+  Node& node(uid_t id) { return all_[id]; }
   Node& my_node() { return all_[my_uid_]; };
   uid_t my_uid() { return my_uid_; }
-
-  bool IamRoot() { return my_uid_ == 0; }
   Node& root() { return all_[0]; }
 
+  bool IamClient() { return my_node().is_client(); }
+  bool IamServer() { return my_node().is_server(); }
+  bool IamRoot() { return my_uid_ == 0; }
+
+  // vans
+  Van* package_van() { return package_van_; }
+  Van* express_van() { return express_van_; }
+
  private:
+  DISALLOW_COPY_AND_ASSIGN(AddressBook);
   string DebugString();
   void InitNodes();
   void InitVans();

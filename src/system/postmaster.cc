@@ -1,10 +1,12 @@
 #include "system/postmaster.h"
+#include "system/postoffice.h"
 #include "box/container.h"
 #include "app/inference.h"
 #include "util/status.h"
 namespace PS {
 
 void Postmaster::Init() {
+  postoffice_ = Postoffice::Instance();
   addr_book_.Init();
   my_uid_ = addr_book_.my_uid();
 }
@@ -53,17 +55,18 @@ Express Postmaster::Reply(const Express& req) {
 }
 
 void Postmaster::ProcessExpress(const Express& cmd) {
-  switch (cmd.command_id()) {
-    case Command::ASSIGN_OBJ_ID: {
+  switch (cmd.command()) {
+    case Express::ASSIGN_OBJ_ID: {
       LL << cmd.DebugString();
       if (cmd.req()) {
         CHECK(cmd.has_assign_id_req());
-        Command reply = Reply(cmd);
+        Express reply = Reply(cmd);
         reply.set_assign_id_ack(name_id_.GetID(cmd.assign_id_req()));
-        postoffce_->Send(reply, NULL);
+        postoffice_->Send(reply, NULL);
       } else {
         CHECK(cmd.has_assign_id_ack());
-        reply_fut_.Set(cmd.seq_id(), to_string(cmd.assign_id_ack()));
+        postoffice_->SetExpressReply(cmd.seq_id(),
+                                     to_string(cmd.assign_id_ack()));
       }
       break;
     }

@@ -15,11 +15,12 @@ void Postoffice::Init() {
   postmaster_->Init();
 
   // remember to initialize
-  replica_manager_ = ReplicaManager::Instance();
-  replica_manager_->Init();
-  // TODO
-  package_van_ = postmaster_->GetMailVan();
-  // Van::Instance();
+  // replica_manager_ = ReplicaManager::Instance();
+  // replica_manager_->Init();
+
+  package_van_ = postmaster_->addr_book()->package_van();
+  express_van_ = postmaster_->addr_book()->express_van();
+
   available_express_label_ = 0;
   // create four worker threads
   send_package_ = new std::thread(&Postoffice::SendPackage, this);
@@ -121,13 +122,13 @@ void Postoffice::RecvPackage() {
 
     const Header& head = mail.flag();
     // check if is a backup mail or a rescue mail
-    if (FLAGS_enable_fault_tolerance) {
-      if (head.type() == Header_Type_BACKUP
-          || head.type() == Header_Type_NODE_RESCUE) {
-        replica_manager_->Put(mail);
-        continue;
-      }
-    }
+    // if (FLAGS_enable_fault_tolerance) {
+    //   if (head.type() == Header_Type_BACKUP
+    //       || head.type() == Header_Type_NODE_RESCUE) {
+    //     replica_manager_->Put(mail);
+    //     continue;
+    //   }
+    // }
 
     auto ctr = postmaster_->GetContainer(head.name());
     ctr->WaitInited();
@@ -157,9 +158,9 @@ void Postoffice::RecvPackage() {
 
     ctr->Accept(mail);
 
-    if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
-      replica_manager_->Put(mail);
-    }
+    // if (FLAGS_enable_fault_tolerance && !postmaster_->IamClient()) {
+    //   replica_manager_->Put(mail);
+    // }
   }
 }
 

@@ -45,7 +45,7 @@ class Inference {
   // 3. load the data partition
   virtual void Init();
   virtual void Run() {
-    if(postmaster_->IamClient())
+    if(postmaster_->addr_book()->IamClient())
       Client();
     else
       Server();
@@ -54,7 +54,7 @@ class Inference {
   virtual void Client() = 0;
   virtual void Server() = 0;
 
-  string SName() { return StrCat(postmaster_->MyNode().ShortName(), ": "); }
+  string SName() { return StrCat(postmaster_->addr_book()->my_node().ShortName(), ": "); }
   // void Register(Container *ctr) { postmaster_->Register(ctr, this); }
   const string& name() { return name_; }
  protected:

@@ -221,7 +221,7 @@ Status Van::Recv(Mail *mail) {
 }
 
 // TODO use zmq_msg_t to allow zero_copy send
-Status Van::Send(const Command& cmd){
+Status Van::Send(const Express& cmd){
   // find the socket
   uid_t uid = (uid_t) cmd.recver();
   if (senders_.find(uid) == senders_.end()) {
@@ -244,7 +244,7 @@ Status Van::Send(const Command& cmd){
 }
 
 
-Status Van::Recv(Command* cmd) {
+Status Van::Recv(Express* cmd) {
   for (int i = 0; i < 2; ++i) {
     zmq_msg_t msg;
     int rc = zmq_msg_init(&msg);

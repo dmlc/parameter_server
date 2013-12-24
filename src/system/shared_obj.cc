@@ -9,7 +9,7 @@ void SharedObj::Init() {
   postmaster_ = Postmaster::Instance();
 
   // get assigned id
-  CmdAck fut;
+  ExpressReply fut;
   postmaster_->NameToID(name(), &fut);
   id_ = std::stoi(fut.get());
   obj_inited_ = true;
