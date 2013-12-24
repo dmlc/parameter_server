@@ -71,7 +71,7 @@ void Postmaster::ProcessExpress(const Express& cmd) {
       break;
     }
     default:
-      CHECK(false) << StrCat("unknow command: ", cmd.command_id());
+      CHECK(false) << StrCat("unknow command: ", cmd.command());
   }
 }
 
