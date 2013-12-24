@@ -4,6 +4,7 @@
 #include "util/status.h"
 #include "system/node.h"
 #include "proto/nodemgt.pb.h"
+#include "proto/command.pb.h"
 
 // #define _DEBUG_VAN_
 
@@ -26,6 +27,11 @@ class Van {
 
   Status Send(const Mail& mail);
   Status Recv(Mail* mail);
+
+  // TODO have a basic class, send/recv std::string
+
+  Status Send(const Command& cmd);
+  Status Recv(Command* cmd);
 
   Status Send(const NodeManagementInfo& mgt_info);
   Status Recv(NodeManagementInfo* mgt_info, bool blocking = true);

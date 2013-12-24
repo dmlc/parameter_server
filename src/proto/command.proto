@@ -1,0 +1,17 @@
+// commands between nodes
+
+message Command {
+  enum CommandId {
+    ASSIGN_OBJ_ID = 1;
+  }
+
+  required CommandId command_id = 1;
+  required int32 sender = 2;
+  required int32 recver = 3;
+  required int32 seq_id = 4;
+  required bool req = 5;
+
+  // assign id to a shared object via name
+  optional string assign_id_req = 9;
+  optional int32 assign_id_ack = 10;
+}

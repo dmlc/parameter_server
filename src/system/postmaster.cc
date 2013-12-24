@@ -135,10 +135,12 @@ void Postmaster::Init() {
     CHECK(cmd_van_->Connect(Root(), 1));
   }
 
-  // create a DHT instance to manage the key-range
-  send_thread_ = new std::thread(&Postmaster::send_cmd, this);
-  receive_thread_ = new std::thread(&Postmaster::receive_cmd, this);
+  send_cmd_ = new std::thread(&Postmaster::SendCmd, this);
+  recv_cmd_ = new std::thread(&Postmaster::RecvCmd, this);
+  // send_thread_ = new std::thread(&Postmaster::send_cmd, this);
+  // receive_thread_ = new std::thread(&Postmaster::receive_cmd, this);
 
+  // create a DHT instance to manage the key-range
   // dht_ needs to be deleted in deconstructor
   // set the number of virtual nodes per physical node
   size_t num_vnode = FLAGS_num_vnode;
@@ -179,8 +181,68 @@ KeyRange Postmaster::Register(Container *ctr, KeyRange whole, Inference *ifr) {
   workloads_[make_pair(ctr->name(), id)] = wl;
 
   return workloads_[make_pair(ctr->name(), my_uid())].key_range();
-
 }
+
+void Postmaster::SendCmd() {
+  while(true) {
+    auto send = sending_queue_.Take();
+    Command cmd = send.first;
+    if (cmd.req()) {
+      cmd.set_seq_id(cmd_seq_id_++);
+      reply_fut_.Insert(cmd.seq_id(), send.second);
+    }
+    cmd.set_sender(my_uid());
+    Status stat = cmd_van_->Send(cmd);
+    CHECK(stat.ok()) << stat.ToString();
+  }
+}
+
+Command Postmaster::Reply(const Command& req) {
+  Command ack;
+  ack.set_command_id(req.command_id());
+  ack.set_recver(req.sender());
+  ack.set_seq_id(req.seq_id());
+  ack.set_req(false);
+  return ack;
+}
+
+void Postmaster::RecvCmd() {
+  Command cmd;
+  while(true) {
+    Status stat = cmd_van_->Recv(&cmd);
+    CHECK(stat.ok()) << stat.ToString();
+    // process command
+    switch (cmd.command_id()) {
+      case Command::ASSIGN_OBJ_ID: {
+        LL << cmd.DebugString();
+        if (cmd.req()) {
+          CHECK(cmd.has_assign_id_req());
+          Command reply = Reply(cmd);
+          reply.set_assign_id_ack(name_id_.GetID(cmd.assign_id_req()));
+          sending_queue_.Put(make_pair(reply, (CmdAck*)NULL));
+        } else {
+          CHECK(cmd.has_assign_id_ack());
+          reply_fut_.Set(cmd.seq_id(), to_string(cmd.assign_id_ack()));
+        }
+        break;
+      }
+      default:
+        CHECK(false) << StrCat("unknow command: ", cmd.command_id());
+    }
+  }
+}
+
+
+void Postmaster::NameToID(const string name, CmdAck* fut) {
+  Command cmd;
+  cmd.set_recver(Root().uid());
+  cmd.set_command_id(Command::ASSIGN_OBJ_ID);
+  cmd.set_assign_id_req(name);
+  sending_queue_.Put(make_pair(cmd, fut));
+}
+
+
+////////////////////////////////////////////////////////////////
 
 void Postmaster::MasterAssignNodes(Container *ctr, KeyRange whole) {
   // LL << "master assign nodes";

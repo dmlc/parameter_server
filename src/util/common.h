@@ -157,4 +157,25 @@ static int32 NumberOfSetBits(int32 i) {
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
 
+
+#define FORK2C2S                                \
+  FLAGS_num_client = 2;                         \
+  FLAGS_num_server = 2;                         \
+  FLAGS_my_type = "s";                          \
+  pid_t pid = fork();                           \
+  if (pid == 0) {                               \
+    FLAGS_my_type = "c";                        \
+    pid_t pid2 = fork();                        \
+    if (pid2 == 0) {                            \
+      FLAGS_my_type = "c";                      \
+      FLAGS_my_rank ++;                         \
+      pid_t pid3 = fork();                      \
+      if (pid3 == 0)                            \
+        FLAGS_my_type = "s";                    \
+    }                                           \
+  }
+
+#define WAIT                                    \
+  int ret; wait(&ret);
+
 } // namespace PS

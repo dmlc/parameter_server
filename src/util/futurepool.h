@@ -2,7 +2,7 @@
 #include "util/common.h"
 
 namespace PS {
-// only insert and erase are thread safe
+// only Insert and Erase are thread safe
 template <typename T>
 class FuturePool {
  public:
@@ -73,7 +73,9 @@ void FuturePool<T>::WaitUntil(int32 key) const {
 
 template <typename T>
 void FuturePool<T>::Set(int32 key, T v) {
-  if (!Has(key)) Insert(key, NULL);
+  if (!Has(key))
+    Insert(key, NULL);
+  // TODO catch exception
   promises_[key].set_value(v);
 }
 

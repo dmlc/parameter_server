@@ -16,6 +16,7 @@ GTEST =  -lgtest_main -lgtest
 OBJECTS = \
 	./proto/nodemgt.pb.o \
 	./proto/header.pb.o \
+	./proto/command.pb.o \
 	./util/crc32c.o \
 	./util/key.o \
 	./util/mail.o \
@@ -34,6 +35,7 @@ OBJECTS = \
 	./system/postmaster.o \
 	./system/postoffice.o \
 	./system/hashring.o \
+	./system/shared_obj.o \
 	./system/dht.o \
 	./system/replica_manager.o \
 	./box/item.o \
@@ -54,6 +56,7 @@ DEPS = \
 
 TESTS = \
 	vectors_test \
+	shared_obj_test \
 #	van_test \
 	fault_tolerance_press \
 	postmaster_test \
@@ -101,6 +104,9 @@ ps: libps.a app/ps.cc
 
 fault_tolerance_press: algo/fault_tolerance_press.cc libps.a algo/fault_tolerance_press.cc
 	$(CC) $(CFLAGS) algo/fault_tolerance_press.cc $(LDFLAGS) -o fault_tolerance_press
+
+shared_obj_test: system/shared_obj_test.cc
+	$(CC) $(CFLAGS) system/shared_obj_test.cc $(GTEST) $(LDFLAGS) -o $@
 
 common_test : util/common_test.cc
 	$(CC) $(CFLAGS) util/common_test.cc $(GTEST) $(LDFLAGS) -o $@

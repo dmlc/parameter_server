@@ -155,7 +155,7 @@ Status Van::Recv(Mail *mail) {
     }
     rc = zmq_msg_recv(&msg, receiver_, 0);
     if (rc == -1) {
-      return Status::NetError(StrCat("recv identity failed: ",
+      return Status::NetError(StrCat("recv message failed: ",
                                      zmq_strerror(errno)));
     }
     char* buf = (char *)zmq_msg_data(&msg);
@@ -219,6 +219,69 @@ Status Van::Recv(Mail *mail) {
 #endif
   return Status::OK();;
 }
+
+// TODO use zmq_msg_t to allow zero_copy send
+Status Van::Send(const Command& cmd){
+  // find the socket
+  uid_t uid = (uid_t) cmd.recver();
+  if (senders_.find(uid) == senders_.end()) {
+    return Status::NotFound(StrCat("there is no socket to node", uid));
+  }
+  // send command
+  void *socket = senders_[uid];
+  string cmd_string;
+  if (!cmd.SerializeToString(&cmd_string)) {
+    return Status::InvalidArgument(
+        StrCat("failed to serialize ", cmd.DebugString()));
+  }
+  int tag = 0;
+  size_t rc = zmq_send(socket, cmd_string.c_str(), cmd_string.size(), tag);
+  if (rc != cmd_string.size()) {
+    return Status::NetError(
+        StrCat("failed to send command to node ", uid, ", :", zmq_strerror(errno)));
+  }
+  return Status::OK();
+}
+
+
+Status Van::Recv(Command* cmd) {
+  for (int i = 0; i < 2; ++i) {
+    zmq_msg_t msg;
+    int rc = zmq_msg_init(&msg);
+    if (rc) {
+      return Status::NetError("init msg fail");
+    }
+
+    rc = zmq_msg_recv(&msg, receiver_, 0);
+    if (rc == -1) {
+      return Status::NetError(
+          StrCat("recv message failed: ", zmq_strerror(errno)));
+    }
+
+    char* buf = (char *)zmq_msg_data(&msg);
+    size_t size = zmq_msg_size(&msg);
+    if (buf == NULL) {
+      return Status::NetError(StrCat("get buff failed"));
+    }
+
+    if (i == 0) {
+      // receive identity, ignore
+      if (!zmq_msg_more(&msg)) {
+        return Status::NetError(StrCat("there should be more"));
+      }
+    } else if (i == 1) {
+      string cmd_string(buf, size);
+      if (!cmd->ParseFromString(cmd_string)) {
+        return Status::NetError(StrCat("parse command fail"));
+      }
+    }
+    zmq_msg_close(&msg);
+  }
+
+  return Status::OK();;
+}
+
+////////////////////////////////////////////////
 
 // TODO use zmq_msg_t to allow zero_copy send
 Status Van::Send(const NodeManagementInfo& mgt_info){
