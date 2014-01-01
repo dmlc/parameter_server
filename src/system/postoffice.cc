@@ -1,8 +1,7 @@
-// #include "system/postoffice.h"
+#include "system/postoffice.h"
 #include "system/postmaster.h"
 #include "box/container.h"
-#include "system/replica_manager.h"
-#
+// #include "system/replica_manager.h"
 namespace PS {
 
 DEFINE_bool(enable_fault_tolerance, false, "enable fault tolerance feature");
@@ -42,12 +41,12 @@ void Postoffice::SendPackage() {
     const string& name = head.name();
     uid_t recver = head.recver();
     // check if is transfer packets
-    if (head.type() == Header_Type_BACKUP) {
-      // LOG(WARNING) << "Header_Type_BACKUP send";
-      head.set_sender(postmaster_->my_uid());
-      CHECK(package_van_->Send(mail).ok());
-      continue;
-    }
+    // if (head.type() == Header_Type_BACKUP) {
+    //   // LOG(WARNING) << "Header_Type_BACKUP send";
+    //   head.set_sender(postmaster_->my_uid());
+    //   CHECK(package_van_->Send(mail).ok());
+    //   continue;
+    // }
     Workload *wl = postmaster_->GetWorkload(name, recver);
     CHECK(head.has_key());
     KeyRange kr(head.key().start(), head.key().end());
@@ -164,21 +163,25 @@ void Postoffice::RecvPackage() {
   }
 }
 
+void Postoffice::Send(Express cmd, ExpressReply* fut) {
+  if (cmd.req()) {
+    cmd.set_seq_id(available_express_label_++);
+    if (fut != NULL)
+      express_reply_.Insert(cmd.seq_id(), fut);
+  }
+  express_sending_queue_.Put(cmd);
+}
+
 void Postoffice::SendExpress() {
   while(true) {
-    auto send = express_sending_queue_.Take();
-    Express cmd = send.first;
-    if (cmd.req()) {
-      cmd.set_seq_id(available_express_label_++);
-      express_reply_.Insert(cmd.seq_id(), send.second);
-    }
+    Express cmd = express_sending_queue_.Take();
     cmd.set_sender(postmaster_->my_uid());
     Status stat = express_van_->Send(cmd);
     CHECK(stat.ok()) << stat.ToString();
   }
 }
 
-void Postmaster::RecvExpress() {
+void Postoffice::RecvExpress() {
   Express cmd;
   while(true) {
     Status stat = express_van_->Recv(&cmd);

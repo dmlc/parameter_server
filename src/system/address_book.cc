@@ -102,7 +102,7 @@ void AddressBook::InitVans() {
         CHECK(package_van_->Connect(all_[id], 0));
     }
   }
-  // control connections
+  // command connections
   express_van_ = new Van();
   CHECK(express_van_->Init());
   CHECK(express_van_->Bind(my_node(), 1));

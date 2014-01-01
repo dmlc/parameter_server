@@ -65,8 +65,8 @@ class Postmaster {
 
   void ProcessExpress(const Express& cmd);
 
-  AddressBook* addr_book();
-
+  AddressBook* addr_book() { return &addr_book_; }
+  uid_t my_uid() { return addr_book_.my_uid(); }
  private:
   Postmaster() { }
   DISALLOW_COPY_AND_ASSIGN(Postmaster);
@@ -88,5 +88,4 @@ class Postmaster {
 
 };
 
-
-}
+} // namespace PS

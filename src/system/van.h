@@ -6,7 +6,6 @@
 #include "proto/nodemgt.pb.h"
 #include "proto/express.pb.h"
 
-// #define _DEBUG_VAN_
 
 // serialize message
 //#include <google/protobuf/message_lite.h>

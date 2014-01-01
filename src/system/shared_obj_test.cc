@@ -3,15 +3,28 @@
 #include "system/node.h"
 
 using namespace PS;
+
 TEST(SharedObj, GetID) {
   FORK2C2S;
 
-  if (Node::Client(FLAGS_my_type)) {
-    SharedObj o1("o1");
-    o1.Init();
-    LL << o1.id();
-  } else {
-    sleep(2);
+  for (int i = 0; i < 10; ++i) {
+    SharedObj o(StrCat("o", i));
+    o.Init();
+    EXPECT_EQ(o.id(), i);
   }
+
+  for (int i = 0; i < 10; ++i) {
+    SharedObj o(StrCat("o", i));
+    o.Init();
+    EXPECT_EQ(o.id(), i);
+  }
+  sleep(1);
   WAIT;
+}
+
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  return RUN_ALL_TESTS();
 }

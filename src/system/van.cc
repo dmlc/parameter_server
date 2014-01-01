@@ -4,6 +4,8 @@
 // #include "util/zmq.h"
 
 
+// #define _DEBUG_VAN_
+
 namespace PS {
 
 bool Van::Init() {
@@ -240,6 +242,10 @@ Status Van::Send(const Express& cmd){
     return Status::NetError(
         StrCat("failed to send command to node ", uid, ", :", zmq_strerror(errno)));
   }
+
+#ifdef _DEBUG_VAN_
+  LL << cmd.DebugString();
+#endif
   return Status::OK();
 }
 
@@ -278,6 +284,9 @@ Status Van::Recv(Express* cmd) {
     zmq_msg_close(&msg);
   }
 
+#ifdef _DEBUG_VAN_
+  LL << cmd->DebugString();
+#endif
   return Status::OK();;
 }
 

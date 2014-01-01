@@ -1,10 +1,11 @@
 #pragma once
+#include "util/futurepool.h"
 #include "util/common.h"
 #include "util/mail.h"
 #include "proto/express.pb.h"
 #include "util/blocking_queue.h"
 #include "system/van.h"
-#include "system/replica_manager.h"
+// #include "system/replica_manager.h"
 
 namespace PS {
 class Container;
@@ -26,9 +27,8 @@ class Postoffice {
   void Send(const Mail& mail) {
     package_sending_queue_.Put(mail);
   }
-  void Send(const Express& cmd, ExpressReply* fet) {
-    express_sending_queue_.Put(make_pair(cmd, fet));
-  }
+  void Send(Express cmd, ExpressReply* fut = NULL);
+
   void SetExpressReply(int express_label, const string& reply) {
     express_reply_.Set(express_label, reply);
   }
@@ -50,7 +50,7 @@ class Postoffice {
   void SendExpress();
   std::thread *send_express_;
   std::thread *recv_express_;
-  BlockingQueue<pair<Express, ExpressReply*> > express_sending_queue_;
+  BlockingQueue<Express> express_sending_queue_;
   Van* express_van_;
   FuturePool<string> express_reply_;
   int32 available_express_label_;

@@ -48,7 +48,7 @@ void Vectors<V>::Init(size_t global_length, const XArray<Key>& global_keys) {
       keys_[i] = key_range_.start() + i;
     }
   } else {
-    CHECK(postmaster_->IamClient());
+    // CHECK(postmaster_->IamClient());
     vec_len_ = global_keys.size();
     keys_ = global_keys;
   }

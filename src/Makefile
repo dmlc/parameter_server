@@ -27,23 +27,23 @@ OBJECTS = \
 	./util/MurmurHash3.o \
 	./util/md5.o \
 	./util/hashfunc.o \
-	./util/BaseConverter.o\
+	./util/BaseConverter.o \
 	./system/van.o \
 	./system/node.o \
 	./system/node_group.o \
 	./system/workload.o \
 	./system/postmaster.o \
 	./system/postoffice.o \
+	./system/address_book.o \
 	./system/hashring.o \
 	./system/shared_obj.o \
 	./system/dht.o \
-	./system/replica_manager.o \
-	./box/item.o \
 	./box/container.o \
 	./box/sparse_vector.o \
 	./app/inference.o \
 	./app/gradient_descent/gd.o
-
+#./system/replica_manager.o \
+	./box/item.o
 DEPS = \
 	./util/rspmat.h \
 	./util/rawarray.h \
@@ -55,9 +55,9 @@ DEPS = \
 
 
 TESTS = \
-	vectors_test \
 	shared_obj_test \
 #	van_test \
+	vectors_test \
 	fault_tolerance_press \
 	postmaster_test \
 #	replica_test \
@@ -74,7 +74,7 @@ TESTS = \
 	aggregator_test \
 	common_test
 
-all: $(TESTS) ps
+all: libps.a $(TESTS) #ps
 
 clean:
 	rm -f */*.o *.a ps
@@ -105,7 +105,7 @@ ps: libps.a app/ps.cc
 fault_tolerance_press: algo/fault_tolerance_press.cc libps.a algo/fault_tolerance_press.cc
 	$(CC) $(CFLAGS) algo/fault_tolerance_press.cc $(LDFLAGS) -o fault_tolerance_press
 
-shared_obj_test: system/shared_obj_test.cc
+shared_obj_test: system/shared_obj_test.cc libps.a
 	$(CC) $(CFLAGS) system/shared_obj_test.cc $(GTEST) $(LDFLAGS) -o $@
 
 common_test : util/common_test.cc

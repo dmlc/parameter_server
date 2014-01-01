@@ -42,7 +42,6 @@ void Postmaster::Register(Inference *ifr, DataRange whole) {
   // workloads_[make_pair(ctr->name(), id)] = wl;
 
   // return workloads_[make_pair(ctr->name(), my_uid())].key_range();
-}
 
 
 Express Postmaster::Reply(const Express& req) {
@@ -57,12 +56,11 @@ Express Postmaster::Reply(const Express& req) {
 void Postmaster::ProcessExpress(const Express& cmd) {
   switch (cmd.command()) {
     case Express::ASSIGN_OBJ_ID: {
-      LL << cmd.DebugString();
       if (cmd.req()) {
         CHECK(cmd.has_assign_id_req());
         Express reply = Reply(cmd);
         reply.set_assign_id_ack(name_id_.GetID(cmd.assign_id_req()));
-        postoffice_->Send(reply, NULL);
+        postoffice_->Send(reply);
       } else {
         CHECK(cmd.has_assign_id_ack());
         postoffice_->SetExpressReply(cmd.seq_id(),
@@ -75,12 +73,31 @@ void Postmaster::ProcessExpress(const Express& cmd) {
   }
 }
 
-void Postmaster::NameToID(const string name, CmdAck* fut) {
-  Command cmd;
-  cmd.set_recver(Root().uid());
-  cmd.set_command_id(Command::ASSIGN_OBJ_ID);
+void Postmaster::NameToID(const string name, ExpressReply* fut) {
+  Express cmd;
+  cmd.set_recver(addr_book_.root().uid());
+  cmd.set_command(Express::ASSIGN_OBJ_ID);
   cmd.set_assign_id_req(name);
-  sending_queue_.Put(make_pair(cmd, fut));
+  cmd.set_req(true);
+  postoffice_->Send(cmd, fut);
+}
+
+const NodeGroup& Postmaster::GetNodeGroup(const string& name) const {
+  const auto& it = nodegroups_.find(name);
+  CHECK(it != nodegroups_.end());
+  return it->second;
+}
+
+Workload* Postmaster::GetWorkload(const string& name, uid_t id) {
+  const auto& it = workloads_.find(make_pair(name, id));
+  CHECK(it != workloads_.end());
+  return &it->second;
+}
+
+Container* Postmaster::GetContainer(const string& name) const {
+  const auto& it = containers_.find(name);
+  CHECK(it != containers_.end()) << "unknow container: " << name;
+  return it->second;
 }
 
 

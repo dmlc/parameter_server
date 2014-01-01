@@ -4,12 +4,12 @@
 #include "system/node_group.h"
 #include "system/van.h"
 
+namespace PS {
+
 DECLARE_int32(num_server);
 DECLARE_int32(num_client);
 DECLARE_int32(my_rank);
 DECLARE_string(my_type);
-
-namespace PS {
 
 class AddressBook {
  public:
@@ -42,7 +42,7 @@ class AddressBook {
   void InitVans();
   size_t num_server_;
   size_t num_client_;
-  // all availabe clients and servers
+  // all available clients and servers
   NodeGroup group_;
   // this is the ground true of all nodes in this
   // system. if a node dies, or a new node comming, modify the information

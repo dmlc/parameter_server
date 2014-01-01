@@ -1,5 +1,5 @@
 #!/bin/bash
-BIN=parse
+BIN=shared_obj_test
 
 set -x
 set -u

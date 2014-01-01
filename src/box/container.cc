@@ -29,13 +29,13 @@ void Container::Init(KeyRange whole) {
   key_range_ = postmaster_->Register(this, whole);
   // LL <<" I am " << postmaster_->my_uid()<<" my key range "<< key_range_.start() << key_range_.end();
 
-  if (FLAGS_is_backup_process) {
-    // LL << "new thread activated at node " << postmaster_->my_uid();
-    ReplicaManager* replica_manager = ReplicaManager::Instance();
-    replica_manager->Rescue(this, FLAGS_failed_node_id, 0);
-    // LL << " backup loaded at node " << postmaster_->my_uid();
-    postmaster_->RescueAck(this->name());
-  } // else
+  // if (FLAGS_is_backup_process) {
+  //   // LL << "new thread activated at node " << postmaster_->my_uid();
+  //   ReplicaManager* replica_manager = ReplicaManager::Instance();
+  //   replica_manager->Rescue(this, FLAGS_failed_node_id, 0);
+  //   // LL << " backup loaded at node " << postmaster_->my_uid();
+  //   postmaster_->RescueAck(this->name());
+  // } // else
     // LL << " is_backup_process is not set";
   container_inited_ = true;
   LL << SName() << " key_range " << key_range_.ToString();

@@ -20,7 +20,7 @@ void Inference::Init() {
   postmaster_ = Postmaster::Instance();
   postmaster_->Register(this, whole_data);
 
-  if (postmaster_->IamClient())
+  if (postmaster_->addr_book()->IamClient())
     data_range_ = postmaster_->GetWorkload(name_,
                                            postmaster_->my_uid())->data_range();
 }
