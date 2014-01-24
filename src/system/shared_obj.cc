@@ -20,4 +20,9 @@ void SharedObj::Init() {
   obj_inited_ = true;
 }
 
+void SharedObj::WaitInited() {
+  while (!obj_inited_)
+    std::this_thread::sleep_for(milliseconds(100));
+}
+
 } // namespace PS

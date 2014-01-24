@@ -16,10 +16,13 @@ namespace PS {
 class SharedObj {
  public:
   static const int kInvalidId = -1;
+  SharedObj() { }
   SharedObj(const string& name) :
       name_(name), id_(kInvalidId), obj_inited_(false) { }
-  // get assigned id_ from the master
-  void Init();
+  // initialization : get assigned id_ from the master
+  virtual void Init();
+  // wait until initialization success
+  virtual void WaitInited();
   // accessors
   const string& name() { return name_; }
   int32 id() { return id_; }
@@ -33,9 +36,10 @@ class SharedObj {
  protected:
   string name_;
   int32 id_;
-
   Postoffice *postoffice_;
   Postmaster *postmaster_;
   bool obj_inited_;
+ private:
+  DISALLOW_COPY_AND_ASSIGN(SharedObj);
 };
 } // namespace PS

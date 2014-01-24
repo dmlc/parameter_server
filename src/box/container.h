@@ -8,8 +8,7 @@
 #include "util/blocking_queue.h"
 #include "box/consistency.h"
 #include "system/aggregator.h"
-#include "system/postoffice.h"
-#include "system/postmaster.h"
+#include "system/shared_obj.h"
 
 namespace PS {
 
@@ -22,7 +21,7 @@ static const int kCurTime = -1;
 
 // the base container without template. this class contains the information
 // required by the engine
-class Container {
+class Container : public SharedObj {
  public:
   explicit Container(const string& name);
   Container(const string& name, Key min_key, Key max_key);

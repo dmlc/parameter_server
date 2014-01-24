@@ -1,14 +1,29 @@
 #include "system/postmaster.h"
 #include "system/postoffice.h"
+#include "system/shared_obj.h"
+#include "util/status.h"
+
 #include "box/container.h"
 #include "app/inference.h"
-#include "util/status.h"
 namespace PS {
 
 void Postmaster::Init() {
   postoffice_ = Postoffice::Instance();
   addr_book_.Init();
-  my_uid_ = addr_book_.my_uid();
+}
+
+void Postmaster::Register(SharedObj *obj) {
+  objects_[obj->id()] = obj;
+
+}
+
+KeyRange Postmaster::Register(Box *box, KeyRange global_key_range) {
+  // a simple version, give box all available server nodes, and then evenly divide
+  // the global_key_range
+  NodeGroup group;
+  if (addr_book_.IamRoot()) {
+
+  }
 }
 
 // TODO ask master to get the range
@@ -54,12 +69,16 @@ Express Postmaster::Reply(const Express& req) {
 }
 
 void Postmaster::ProcessExpress(const Express& cmd) {
+  if (cmd.req()) {
+
+  }
   switch (cmd.command()) {
     case Express::ASSIGN_OBJ_ID: {
       if (cmd.req()) {
         CHECK(cmd.has_assign_id_req());
         Express reply = Reply(cmd);
-        reply.set_assign_id_ack(name_id_.GetID(cmd.assign_id_req()));
+        // TODO
+        // reply.set_assign_id_ack(name_id_.GetID(cmd.assign_id_req()));
         postoffice_->Send(reply);
       } else {
         CHECK(cmd.has_assign_id_ack());

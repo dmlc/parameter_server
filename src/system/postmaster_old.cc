@@ -168,8 +168,7 @@ KeyRange Postmaster::Register(Container *ctr, KeyRange whole, Inference *ifr) {
 
   // LL << "register is called";
 
-  if (my_uid_ == 0)
-  {
+  if (my_uid_ == 0) {
     dhtinfo_ = dht_->AssignNodes(ctr, whole, group_, all_);
     MasterAssignNodes(ctr, whole);
   } else {

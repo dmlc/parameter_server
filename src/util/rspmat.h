@@ -6,6 +6,7 @@
 #include "util/key.h"
 #include "util/xarray.h"
 #include "util/eigen3.h"
+
 namespace PS {
 
 typedef Range<size_t> Seg;
@@ -118,6 +119,7 @@ void RSpMat<I,V>::Load(const string& name, Seg row)  {
   }
 
 }
+
 template<typename I, typename V>
 void RSpMat<I,V>::ToEigen3(DSMat *mat) {
   IVec reserve(rows_);

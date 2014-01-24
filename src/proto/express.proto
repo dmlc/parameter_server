@@ -3,15 +3,20 @@
 message Express {
   enum Command {
     ASSIGN_OBJ_ID = 1;
+    ASSIGN_KEY_RANGE = 2;
   }
 
   required Command command = 1;
   required int32 sender = 2;
   required int32 recver = 3;
-  required int32 seq_id = 4;
-  required bool req = 5;
+  // req or ack?
+  required bool req = 4;
+  required int32 seq_id = 5;
+  optional int32 obj_id = 6;
 
   // assign id to a shared object via name
   optional string assign_id_req = 9;
   optional int32 assign_id_ack = 10;
+
+  // assign key range to a shared object
 }
