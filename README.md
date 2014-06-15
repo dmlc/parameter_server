@@ -41,29 +41,29 @@ between gcc and clang.
   [snappy](),
   [eigen3]() and optional [mpi](). We provide a way to build them from
   sources. First go to the parameter server directory, then
-  ```
-  git clone git@github.com:mli/parameter_server_third_party.git third_party
-  cd third_party
-  ./install.sh
-  ```
 
-Build parameter server.
-> cd src && make -j8
+```
+git clone git@github.com:mli/parameter_server_third_party.git third_party
+cd third_party
+./install.sh
+```
+
+Build parameter server:
+
+```
+cd src && make -j8
+```
+
 The `-j` option specifies how many threads are used to
 build the projects, you may change it to a more proper value.
 
 ## Input Data
 
-Parameter server supports several data formats. An easy way is to use a text
-format, and then use the provided program to convert them into binary format.
+The parameter server can read both raw binary data and protobuf data. It
+also supports several text formats. In a text format, each example is
+presented as a line of plain text.
 
-### text format
-
-In a text format, each instance is presented as a line of plain text.  It is
-easy to be read by human, but at the cost of reading and parsing. We provide
-program to parse the following text formats into a protobuf or a binary format.
-
-#### parameter server format
+### parameter server format
 
 The format of one instance:
 
@@ -71,19 +71,16 @@ The format of one instance:
 label;group_id feature[:value] feature[:value] ...;groud_id ...;...;
 ```
 
-- *label*: the label, +1/-1 for binary classification, 0,1,2,... for multiclass
+- *label*: +1/-1 for binary classification, 0,1,2,... for multiclass
 classification, a float value for regression. And certainly it can be empty.
-
 - *group_id*: an integer identity of a feature group, each instance should
 contains at least one feature group.
-
 - *feature*: for sparse data, it is an 64-bit integer presenting the feature id,
 while for dense data, it is a float feature value
-
 - *weight*: only valid for non-binary sparse data, it is a float feature
 value.
 
-#### libsvm format
+### libsvm format
 
 The [libsvm format](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) uses the sparse
 format. It presents each instance as:
@@ -92,43 +89,45 @@ format. It presents each instance as:
 label feature_id:value feature_id:value ...
 ```
 
-#### vowpal wabbit format
+### vowpal wabbit format
 
-[link](https://github.com/JohnLangford/vowpal_wabbit/wiki/Input-format)
+[TODO](https://github.com/JohnLangford/vowpal_wabbit/wiki/Input-format)
 
-TODO
+### binary format
 
-### protobuf format
+Example on [RCV1](https://github.com/mli/parameter_server_data).
 
-see [pserver_input.proto](src/proto/pserver_input.proto) for more details.
+## How to start
 
-### bianry format
-
-The binary format is the direct dump of the memory into the disk.
-
-Each feature group, or the label are stored as a binary matrix.
-
-A row-majored  stores the nonzero entries in each row
-sequentially. For example, consider the following the matrix
+One way to start the system is using `mpirun`. To install `mpi` on Ubuntu `sudo
+apt-get install mpich`, on Mac OS `sudo port install mpich`. The system can be
+also started via `ssh` and resource manager such as `yarn`. (In progress.)
 
 ```
-[ 1 2 0 0 ]
-[ 0 3 9 0 ]
-[ 0 1 4 0 ]
+mpirun -np 5 ./ps_mpi -interface lo0 -num_workers 2 -num_servers 2 -app ../config/block_prox_grad.config
 ```
 
-Then it is stored by three binary files
+The augments:
+- -np: the number of processes created by `mpirun`. It should >= num_workers +
+num_servers + 1 (the scheduler)
+- -interface: the network interface, check `ifconfig` to find the available
+  network interfaces
+- -num_workers: the number of worker nodes. Each one will get a part of training
+  data
+- -num_servers: the number of server nodes. Each one will get a part of the
+  model.
+- -app: the application configuration
 
+Use `./ps_mpi --help` to see more arguments.
+
+** Wrap up
 ```
-name.offset = [ 0 2 4 6 ]      // array of offsets of first nonzero element of a row
-name.index = [ 0 1 1 2 1 2 ]   // array of column index of each element
-name.value  = [ 1 2 3 9 1 4 ]  // array of non-zero element value
-```
-
-## Run
-
-
-```
+mkdir your_working_dir
+cd your_working_dir
+git clone git@github.com:mli/parameter_server.git .
+git clone git@github.com:mli/parameter_server_third_party.git third_party
 git clone git@github.com:mli/parameter_server_data.git data
+third_party/install.sh
+cd src && make -j8
+mpirun -np 5 ./ps_mpi -interface lo0 -num_workers 2 -num_servers 2 -app ../config/block_prox_grad.config
 ```
-config, how to start, ...
