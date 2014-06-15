@@ -25,28 +25,19 @@ samples and features, 100 to 1000 machines. It is a joint project by
 
 ## How to Build
 
-
 Requirement:
 - compiler: gcc >= 4.7 (tested on 4.7.x, 4.8.x) or clang >= 3.4 (tested
-on 3.4). You can change the first line of [src/Makefile](src/Makefile) to switch
+on 3.4). You can change the first two lines of [src/Makefile](src/Makefile) to switch
 between gcc and clang.
-- system: should work on both Linux and Mac OS (tested on Ubuntu 12.10, 13.10, Max OS X 10.8 10.9)
-- depended libraries: The system depends on
-  [zeromq](http://zeromq.org/),
+- system: Should work on both Linux and Mac OS (tested on Ubuntu 12.10, 13.10, Max OS X 10.8 10.9)
+- depended libraries: The system depends on [zeromq](http://zeromq.org/),
   [gflags](https://code.google.com/p/gflags/),
   [glogs](https://code.google.com/p/google-glog/),
   [gtest](https://code.google.com/p/googletest/),
-  [protobuf](https://code.google.com/p/protobuf/),
-  [zlib](),
-  [snappy](),
-  [eigen3]() and optional [mpi](). We provide a way to build them from
-  sources. First go to the parameter server directory, then
-
-```
-git clone git@github.com:mli/parameter_server_third_party.git third_party
-cd third_party
-./install.sh
-```
+  [protobuf](https://code.google.com/p/protobuf/), [zlib](), [snappy](),
+  [eigen3]() and optional [mpi](). We provide
+  [install.sh](https://github.com/mli/parameter_server_third_party) to build
+  them from sources automatically.
 
 Build parameter server:
 
@@ -59,7 +50,7 @@ build the projects, you may change it to a more proper value.
 
 ## Input Data
 
-The parameter server can read both raw binary data and protobuf data. It
+The system can read both raw binary data and protobuf data. It
 also supports several text formats. In a text format, each example is
 presented as a line of plain text.
 
@@ -80,7 +71,7 @@ while for dense data, it is a float feature value
 - *weight*: only valid for non-binary sparse data, it is a float feature
 value.
 
-### libsvm format
+### More in progress
 
 The [libsvm format](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) uses the sparse
 format. It presents each instance as:
@@ -89,19 +80,17 @@ format. It presents each instance as:
 label feature_id:value feature_id:value ...
 ```
 
-### vowpal wabbit format
-
-[TODO](https://github.com/JohnLangford/vowpal_wabbit/wiki/Input-format)
+[vowpal wabbit format](https://github.com/JohnLangford/vowpal_wabbit/wiki/Input-format)
 
 ### binary format
 
-Example on [RCV1](https://github.com/mli/parameter_server_data).
+Check examples on [RCV1](https://github.com/mli/parameter_server_data).
 
 ## How to start
 
-One way to start the system is using `mpirun`. To install `mpi` on Ubuntu `sudo
-apt-get install mpich`, on Mac OS `sudo port install mpich`. The system can be
-also started via `ssh` and resource manager such as `yarn`. (In progress.)
+One way to start the system is using `mpirun`. To install `mpi` on Ubuntu, run `sudo
+apt-get install mpich`, or `sudo port install mpich` for Mac OS. The system can be
+also started via `ssh` and resource manager such as `yarn` without mpi (In progress).
 
 ```
 mpirun -np 5 ./ps_mpi -interface lo0 -num_workers 2 -num_servers 2 -app ../config/block_prox_grad.config
@@ -109,8 +98,8 @@ mpirun -np 5 ./ps_mpi -interface lo0 -num_workers 2 -num_servers 2 -app ../confi
 
 The augments:
 - -np: the number of processes created by `mpirun`. It should >= num_workers +
-num_servers + 1 (the scheduler)
-- -interface: the network interface, check `ifconfig` to find the available
+num_servers + 1 (the scheduler). Use `-hostfile hosts` to specify the machines.
+- -interface: the network interface, run `ifconfig` to find the available
   network interfaces
 - -num_workers: the number of worker nodes. Each one will get a part of training
   data
@@ -120,7 +109,10 @@ num_servers + 1 (the scheduler)
 
 Use `./ps_mpi --help` to see more arguments.
 
-** Wrap up
+## Wrap up
+
+To run sparse logistic regression on RCV1 from scratch:
+
 ```
 mkdir your_working_dir
 cd your_working_dir
