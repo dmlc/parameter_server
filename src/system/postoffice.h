@@ -1,62 +1,72 @@
 #pragma once
-#include "util/futurepool.h"
 #include "util/common.h"
-#include "util/mail.h"
-#include "proto/express.pb.h"
-#include "util/blocking_queue.h"
-#include "system/van.h"
-// #include "system/replica_manager.h"
+#include "system/message.h"
+#include "system/yellow_pages.h"
+#include "util/threadsafe_queue.h"
 
 namespace PS {
-class Container;
-class Inference;
-class ReplicaManager;
 
-class Postmaster;
-typedef std::shared_future<string> ExpressReply;
+DECLARE_int32(num_servers);
+DECLARE_int32(num_workers);
+DECLARE_int32(num_unused);
+DECLARE_int32(num_replicas);
+DECLARE_string(node_file);
 
-// the postoffice accepts sending request from containers, and also notify
-// containers if anything is received.
 class Postoffice {
  public:
   SINGLETON(Postoffice);
 
-  // init postmaster, start threads
-  void Init();
+  ~Postoffice();
 
-  void Send(const Mail& mail) {
-    package_sending_queue_.Put(mail);
-  }
-  void Send(Express cmd, ExpressReply* fut = NULL);
+  void run();
 
-  void SetExpressReply(int express_label, const string& reply) {
-    express_reply_.Set(express_label, reply);
+  // std::vector<Node> requestNodes() { CHECK(false); }
+
+  void queue(const Message& msg);
+
+  YellowPages& yp() { return yp_; }
+  Node& myNode() { return yp_.van().myNode(); }
+
+  void reply(
+      const NodeID& recver, const Task& task, const string& reply_msg = string()) {
+    if (!task.request()) return;
+    Task tk;
+    tk.set_customer(task.customer());
+    tk.set_request(false);
+    tk.set_type(Task::REPLY);
+    if (!reply_msg.empty()) tk.set_msg(reply_msg);
+    tk.set_time(task.time());
+
+    Message re(tk);
+    re.recver = recver;
+    queue(re);
   }
+
+  void reply(const Message& msg, const string& reply_msg = string());
+  void manage_node(const Task& pt);
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
-  Postoffice() : inited_(false), postmaster_(NULL) { }
-  bool inited_;
+  Postoffice() { }
 
-  // send/receive data
-  void RecvPackage();
-  void SendPackage();
-  std::thread *send_package_;
-  std::thread *recv_package_;
-  BlockingQueue<Mail> package_sending_queue_;
-  Van* package_van_;
+  std::mutex mutex_;
 
-  // send/receive commands
-  void RecvExpress();
-  void SendExpress();
-  std::thread *send_express_;
-  std::thread *recv_express_;
-  BlockingQueue<Express> express_sending_queue_;
-  Van* express_van_;
-  FuturePool<string> express_reply_;
-  int32 available_express_label_;
+  bool done_ = false;
 
-  Postmaster* postmaster_;
-  // ReplicaManager* replica_manager_;
+  YellowPages yp_;
+
+  void recv();
+
+  // TODO fault tolerance
+  void send();
+  std::unique_ptr<std::thread> recving_;
+  std::unique_ptr<std::thread> sending_;
+  // std::thread *sending_;
+  // std::thread *recving_;
+
+  threadsafe_queue<Message> sending_queue_;
+
+  void manage_app(const Task& pt);
+
 };
 
 } // namespace PS

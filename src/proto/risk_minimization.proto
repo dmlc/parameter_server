@@ -1,0 +1,22 @@
+import "proto/range.proto";
+
+message RiskMinProgress {
+  optional double objv = 1;
+  optional int64 nnz_w = 2;
+
+  // performance
+  optional double total_time = 10;
+  repeated double busy_time = 11;
+}
+
+message RiskMinCall {
+  enum Command {
+    PREPARE_DATA = 1;
+    UPDATE_MODEL = 2;
+    EVALUATE_PROGRESS = 3;
+    RECOVER = 4;
+  }
+  required Command cmd = 1;
+  optional PbRange key = 2;
+  optional int32 feature_group_id = 3;
+}

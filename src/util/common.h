@@ -2,6 +2,7 @@
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 // concurrency
 #include <future>
@@ -14,39 +15,49 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <streambuf>
 // containers
 #include <vector>
+#include <list>
+#include <queue>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <tuple>
 #include <set>
 #include <algorithm>
-// time
-#include <ctime>
-#include <ratio>
-#include <chrono>
 
-#include <unistd.h>
+#include <functional>
 
 
 // google staff
-// #include <glog/logging.h>
+#include "gflags/gflags.h"
+#include "glog/logging.h"
 
-#include <gflags/gflags.h>
-
+// util
 #include "util/macros.h"
-#include "util/basictypes.h"
-#include "util/join.h"
-#include "util/logging.h"
+#include "util/integral_types.h"
+#include "util/resource_usage.h"
 
-// #include "base/callback.h"
-
+// base
 #include <google/protobuf/stubs/common.h>
+#include "google/protobuf/text_format.h"
 
 //const int MAX_NUM_LEN = 1000;
 
 namespace PS {
 
+// uint64 is the default key size. We can change it into uint32 to reduce the
+// spaces for storing the keys. Howerver, if we want a larger key size, say
+// uint128, we need to change proto/range.proto to string type, because uint64
+// is the largest integer type supported by protobuf
 typedef uint64 Key;
+typedef std::vector<Key> Keys;
+
+// profobuf. if we want to larger ones, such as uint128, we need to typedef uint64 Key;
+
+typedef std::lock_guard<std::mutex> Lock;
+
 using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
@@ -56,99 +67,13 @@ using std::map;
 using std::tuple;
 using std::make_tuple;
 using std::to_string;
+using std::initializer_list;
 
-using operations_research::StrCat;
-using google::protobuf::Closure;
-using google::protobuf::NewCallback;
-using google::protobuf::NewPermanentCallback;
-
-// all about time
-using std::chrono::system_clock;
-using std::chrono::milliseconds;
-using std::chrono::microseconds;
-using std::chrono::seconds;
-
-static system_clock::time_point tic() { return system_clock::now(); }
-// return the time since tic in millionsecond
-static int32 toc(system_clock::time_point start) {
-  return std::chrono::duration_cast<milliseconds>(
-      system_clock::now() - start).count();
-}
-
-
-// use string as the unique id to identify containers and inference
-// algorithms. as we pass it quite office, between functions and machines, we
-// may use a cheaper type late. TODO
-typedef string name_t;
-
+using google::protobuf::TextFormat;
 
 #define LL LOG(ERROR)
 
-// split a string by delim. will not skip empty tokens, such as
-// split("one:two::three", ':'); will return 4 items
-static std::vector<std::string> split(const string &s, char delim) {
-    std::vector<string> elems;
-    std::stringstream ss(s);
-    string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-// convert a non-string to string
-template <class T>
-static string strfy(const T& t) {
-  std::ostringstream os;
-  if(!(os << t)) {
-    // TODO Handle the Error
-    std::cerr << "[Error] strfy error!!!" << std::endl;
-    exit(1);
-  }
-  return os.str();
-}
-
-//static string strfy(const string& str) {
-//  return str;
-//}
-//
-//static string strfy(const char* const& str) {
-//  return str;
-//}
-
-static void strToUpper(string& s) {
-  for (size_t i = 0; i < s.length(); i++) {
-    s[i] = toupper(s[i]);
-  }
-}
-
-// return <result, remainder> pair
-static pair<string, PS::Key> div_mod(string dec_str, Key den) {
-  Key rem = 0;
-  string res;
-  res.resize(1000);
-
-  for(int indx=0, len = dec_str.length(); indx<len; ++indx) {
-    rem = (rem * 10) + (dec_str[indx] - '0');
-    res[indx] = rem / den + '0';
-    rem %= den;
-  }
-  res.resize( dec_str.length() );
-
-  while( res[0] == '0' && res.length() != 1)
-    res.erase(0,1);
-
-  if(res.length() == 0)
-    res= "0";
-
-  return make_pair(res, rem);
-}
-
-#define SINGLETON(Typename)                     \
-  static Typename* Instance() {                 \
-    static Typename e;                          \
-    return &e;                                   \
-  }                                             \
+DECLARE_int32(num_threads);
 
 // http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
 static int32 NumberOfSetBits(int32 i) {
@@ -157,25 +82,19 @@ static int32 NumberOfSetBits(int32 i) {
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
 
-
-#define FORK2C2S                                \
-  FLAGS_num_client = 2;                         \
-  FLAGS_num_server = 2;                         \
-  FLAGS_my_type = "s";                          \
-  pid_t pid = fork();                           \
-  if (pid == 0) {                               \
-    FLAGS_my_type = "c";                        \
-    pid_t pid2 = fork();                        \
-    if (pid2 == 0) {                            \
-      FLAGS_my_type = "c";                      \
-      FLAGS_my_rank ++;                         \
-      pid_t pid3 = fork();                      \
-      if (pid3 == 0)                            \
-        FLAGS_my_type = "s";                    \
-    }                                           \
+template <typename V>
+static string dbstr(const V* data, int n, int m = 5) {
+  std::stringstream ss;
+  ss << "[" << n << "]: ";
+  if (n < 2 * m) {
+    for (int i = 0; i < n; ++i) ss << data[i] << " ";
+  } else {
+    for (int i = 0; i < m; ++i) ss << data[i] << " ";
+    ss << "... ";
+    for (int i = n-m; i < n; ++i) ss << data[i] << " ";
   }
+  return ss.str();
+}
 
-#define WAIT                                    \
-  int ret; wait(&ret);
 
 } // namespace PS

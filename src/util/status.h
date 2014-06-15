@@ -5,12 +5,22 @@
 // external synchronization, but if any of the threads may call a
 // non-const method, all threads accessing the same Status must use
 // external synchronization.
-//
-// adapted from level-db
 #pragma once
 #include "util/common.h"
 
 namespace PS {
+
+// convert a non-string to string
+template <class T>
+static string strfy(const T& t) {
+  std::ostringstream os;
+  if(!(os << t)) {
+    // TODO Handle the Error
+    std::cerr << "[Error] strfy error!!!" << std::endl;
+    exit(1);
+  }
+  return os.str();
+}
 
 class Status {
  public:

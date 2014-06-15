@@ -1,0 +1,59 @@
+import "proto/range.proto";
+
+// information
+message PServerInputInfo {
+  // TODO multi-label
+  enum LabelType {
+    // unsupvervised learning
+    EMPTY = 1;
+    // -1, 1
+    BINARY = 2;
+    // 0, 1, 2, ...
+    MULTICLASS = 3;
+    // regression
+    CONTINUOUS = 4;
+  }
+  required LabelType label_type = 1 [default = EMPTY];
+  repeated FeatureGroupInfo feature_group_info = 2;
+
+  // total number of examples
+  required uint64 num_examples = 4;
+  required uint64 feature_begin = 5;
+  required uint64 feature_end = 6;
+}
+
+message FeatureGroupInfo {
+  required int32 group_id = 1;
+  enum FeatureType {
+    DENSE = 1;
+    SPARSE = 2;
+    SPARSE_BINARY = 3;
+  }
+  required FeatureType feature_type = 2;
+
+  required uint64 num_examples = 4;
+  required uint64 feature_begin = 5;
+  required uint64 feature_end = 6;
+
+  required uint64 num_entries = 7;
+}
+
+// one instance
+message PServerInput {
+  // -1, 1 for binary classification, 0,1,2,... for multiclass classfication,
+  // real value for regression, and empty for unsupverised learning
+  optional float label = 1;
+  // features are grouped, an instance should contain at least one feature_group
+  repeated FeatureGroup feature_group = 2;
+}
+
+message FeatureGroup {
+  // the group id
+  required int32 group_id = 1;
+  // three cases:
+  // 1. dense: feature is emtpy
+  // 2. sparse binary: value is emtpy
+  // 3. sparse real-value: the size of feature should be equal to the size of value
+  repeated int64 feature_id = 2;
+  repeated float value = 3;
+}

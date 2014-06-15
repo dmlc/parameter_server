@@ -1,46 +1,71 @@
 #pragma once
 #include "util/common.h"
-#include "util/mail.h"
 #include "util/status.h"
-#include "system/node.h"
-#include "proto/nodemgt.pb.h"
-#include "proto/express.pb.h"
+#include "proto/node.pb.h"
+#include "system/message.h"
 
-
-// serialize message
-//#include <google/protobuf/message_lite.h>
 namespace PS {
 
-// Van is a wrapper of zeromq, it sends and receives a flag with a updt to a
-// node.
+DECLARE_string(my_node);
+// Van sends (receives) packages to (from) a node
+// The current implementation uses ZeroMQ
 class Van {
  public:
-  // SINGLETON(Van);
+  Van() : context_(nullptr), receiver_(nullptr) {}
+  ~Van() { }
+  // void Init(const Node& my_node);
+  void init();
+  void destroy();
 
-  Van() {}
-  bool Init();
-  bool Destroy();
+  // connect to a node
+  Status connect(Node const& node);
 
-  bool Bind(Node const& node, int flag = 0);
-  bool Connect(Node const& node, int flag = 0);
+  Status send(const Message& msg);
+  Status recv(Message* msg);
 
-  Status Send(const Mail& mail);
-  Status Recv(Mail* mail);
+  Node& myNode() { return my_node_; }
 
-  // TODO have a basic class, send/recv std::string
+  // utility functions for node
+  static Node parseNode(const string& config) {
+    Node node;
+    CHECK(TextFormat::ParseFromString(config, &node));
+    if (!node.has_id())
+      node.set_id(id(address(node)));
+    return node;
+  }
 
-  Status Send(const Express& cmd);
-  Status Recv(Express* cmd);
+  static std::string address(const Node& node) {
+    return node.hostname() + ":" + std::to_string(node.port());
+  }
+  static const NodeID id(const std::string& name) {
+    return name;
+    // std::hash<std::string> fn;
+    // return fn(name);
+  }
+  // static NodeID id(const Node& node) {
+  //   return id(address(node));
+  // }
 
-  Status Send(const NodeManagementInfo& mgt_info);
-  Status Recv(NodeManagementInfo* mgt_info, bool blocking = true);
-
+  // print statistic info
+  void statistic();
 
  private:
-  // DISALLOW_COPY_AND_ASSIGN(Van);
+  DISALLOW_COPY_AND_ASSIGN(Van);
+  // bind to my port
+  void bind();
   void *context_;
   void *receiver_;
-  std::map<uid_t, void *> senders_;
+  Node my_node_;
+  std::mutex mu_;
+  std::map<NodeID, void *> senders_;
+
+  size_t send_head_ = 0;
+  size_t send_uncompressed_ = 0;
+  size_t send_compressed_ = 0;
+
+  size_t recv_head_ = 0;
+  size_t recv_uncompressed_ = 0;
+  size_t recv_compressed_ = 0;
 };
 
 } // namespace PS

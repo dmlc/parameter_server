@@ -1,0 +1,219 @@
+import "proto/node.proto";
+import "proto/range.proto";
+import "proto/app.proto";
+import "proto/risk_minimization.proto";
+
+message Task {
+  enum Type {
+    TERMINATE = 1;  // exit
+    TERMINATE_CONFIRM = 2;
+    REPLY = 3;      // a reply message
+    MANAGE = 4;        // add
+    CALL_CUSTOMER = 5; //
+  }
+  required Type type = 1;
+
+  required bool request = 2 [default = false];
+  required string customer = 3;
+
+  optional int32 time = 4;
+  optional int32 wait_time = 5 [default = -1];
+  // optional string wait_group = 6;
+
+  // the higher the more important, 1024 is deserved for recovery
+  optional int32 priority = 6 [default = 0];
+
+  // if or not there is the key list
+  optional bool has_key = 7 [default = false];
+
+  // set values if data are compressed, empty means data are not compressed
+  repeated uint64 uncompressed_size = 8;
+  // optional bool is_compressed = 8 [default = false];
+
+  // general task
+  optional bytes msg = 10;
+  optional ManageNode mng_node = 11;
+  optional ManageApp mng_app = 12;
+
+  // parameters
+  optional CallSharedPara shared_para = 101;
+
+  // applications
+  optional RiskMinCall risk = 199;
+  optional CallSketch sketch = 200;
+}
+
+message ManageNode {
+  enum Command {
+    INIT = 1;
+    REPLACE = 2;
+    REMOVE = 3;
+  }
+
+  required Command cmd = 1;
+  repeated Node nodes = 2;
+}
+
+message ManageApp {
+  enum Command {
+    ADD = 1;
+    REMOVE = 2;
+  }
+  required Command cmd = 1;
+  required AppConfig app_config = 2;
+}
+
+message Timestamp {
+  required string sender = 1;
+  required int32 time = 2;
+}
+
+message CallSharedPara {
+  enum Command {
+    PUSH = 1;
+    PULL = 2;
+    PUSH_REPLICA = 3;
+    PULL_REPLICA = 4;
+  }
+
+  required Command cmd = 1;
+  required PbRange key = 5;
+
+  repeated Timestamp backup = 6;
+
+  // repeated int32 vec = 7;
+}
+
+// message CallVec {
+//   enum Command {
+//     ADD_KEY = 1;
+//     PUSH = 2;
+//     PULL = 3;
+//     DUPLICATE = 4;
+//   }
+//   required Command cmd = 1;
+//   required PbRange key = 5;
+//   repeated int32 vec = 7;
+// }
+
+// message CallMVec {
+//   enum Command {
+//     ADD_KEY = 1;
+//     PUSH = 2;
+//     PULL = 3;
+//   }
+//   required Command cmd = 1;
+
+//   enum Retrieve {
+//     DELTA = 1;
+//     VALUE = 2;
+//   }
+//   optional Retrieve retrieve  = 2;
+
+//   enum Merge {
+//     SET = 1;
+//     SUM = 2;
+//     RESET_SUM = 3;
+//   }
+//   optional Merge merge = 3;
+
+//   required PbRange key = 5;
+//   repeated int32 vector = 7;
+
+// }
+
+
+// message CallGradDesc {
+//   enum Command {
+//     PREPARE_DATA = 1;
+//     UPDATE = 2;
+//     EVAL_PROGRESS = 3;
+//   }
+//   required Command cmd = 1;
+// }
+
+// message CallBlkProxGrad {
+//   enum Command {
+//     PREPARE_DATA = 1;
+//     UPDATE = 2;
+//     EVAL_PROGRESS = 3;
+//   }
+//   required Command cmd = 1;
+//   optional PbRange key = 2;
+// }
+
+  // // push & pull --------------------------
+  // // control how to apply the data, i.e. = value or += delta
+  // message ApplyFlag {
+  //   // communication by the delta (modification) or by value
+  //   required bool delta = 1;
+  //   // the vectors will be communicated. used by PS::Vectors
+  //   repeated int32 vectors = 2 [packed = true];
+  // }
+  // // the flag for push and pull
+  // optional ApplyFlag push = 6;
+  // optional ApplyFlag pull = 7;
+
+  // // keys --------------
+  // message KeyFlag {
+  //   // an optimization trick
+  //   // if true, the key list is not sent. it means the sender expects the
+  //   // recever knows the the actual key list.
+  //   required bool empty = 1;
+  //   // the range of keys will be communicated
+  //   required uint64 start = 2;
+  //   required uint64 end = 3;
+  //   // the check sum of the key list. it would be used to identify the validation
+  //   // of the cached key list
+  //   required fixed32 cksum = 4;
+  // }
+  // optional KeyFlag key = 8;
+
+  // // values -------------------
+  // message ValueFlag {
+  //   // if true, there is no value list.
+  //   required bool empty = 1;
+  //   optional double eps = 2;
+  // }
+  // optional ValueFlag value = 9;
+
+  // fault tolerance ----------------------- TODO
+
+  // if true, then do synchronized communication, namely blocking until pushed
+  // or pulled successfully,
+  // optional bool no_wait = 12 [default = false];
+
+  // if true, do not send the key list to reduce communication volume
+  // optional bool no_key = 13 [default = true];
+  // if true, do not send the value list.
+  // optional bool no_value = 14 [default = false];
+
+  // if the packet is send from a server for fault tolerance, backup_packet is set to be true;
+  // TODO use enum Type
+  // optional int32 flag_type = 15 [default = false]; // 1 for standard key value flag, 2 for backup transfered pack, 3 for node managerment info
+  // optional NodeManagementInfo node_manager_info = 27;
+
+//  message ReplicaInfo {
+//   required int32 node_id = 1;
+//   required int32 replica_id = 3;
+// }
+//  optional ReplicaInfo replica_info = 10;
+
+ message CallSketch {
+   enum Command {
+     PREPARE_DATA = 1;
+     INSERT_DATA = 2;
+     EVAL_PROGRESS = 3;
+     QUERY_DATA = 4;
+     RECOVER = 5;
+   }
+   required Command cmd = 1;
+   optional PbRange key = 2;
+ }
+
+ message SketchResponse {
+   optional string nodeid = 1;
+   optional double process_time = 2;
+   optional uint32 payload = 3;
+   optional uint32 key = 4;
+ }

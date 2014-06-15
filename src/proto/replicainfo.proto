@@ -1,4 +1,0 @@
-message ReplicaInfo {
-  required int32 node_id = 1;
-  required int32 replica_id = 3;
-}

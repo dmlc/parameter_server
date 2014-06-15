@@ -1,377 +1,226 @@
 #include "system/van.h"
 #include <string.h>
 #include <zmq.h>
-// #include "util/zmq.h"
+#include "base/shared_array_io.h"
 
-
-// #define _DEBUG_VAN_
-
+// TODO data compression
 namespace PS {
+// #define _DEBUG_VAN_
+static string van_filter = "S0";
 
-bool Van::Init() {
+DEFINE_string(my_node, "", "my node");
+DEFINE_bool(compress_message, true, "");
+
+void Van::init() {
+  my_node_ = parseNode(FLAGS_my_node);
   context_ = zmq_ctx_new ();
-  if (!context_) {
-    LOG(ERROR) << "create 0mq context failed";
-    return false;
-  }
-  receiver_ = NULL;
-  return true;
+  zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
+  zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
+  // LL << "ZMQ_MAX_SOCKETS: " << zmq_ctx_get(context_, ZMQ_MAX_SOCKETS);
+
+  CHECK(context_ != NULL) << "create 0mq context failed";
+  bind();
+  connect(my_node_);
 }
 
-bool Van::Destroy() {
-  // TODO add some check
+void Van::destroy() {
+  for (auto& it : senders_)
+    zmq_close (it.second);
   zmq_close (receiver_);
-  for (size_t i = 0; i < senders_.size(); ++i) {
-    if (!senders_[i])
-      zmq_close (senders_[i]);
-  }
   zmq_ctx_destroy (context_);
-  return true;
 }
 
-bool Van::Bind(Node const& node, int flag) {
-  if (receiver_ != NULL) {
-    LOG(ERROR) << "receiver already exists";
-    return false;
-  }
+void Van::bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
-  if (receiver_ == NULL) {
-    LOG(ERROR) << "create receiver socket failed: " << zmq_strerror(errno);
-    return false;
-  }
-  // it is tricky, replace localhost or ip into *. so we extract the port from
-  // the address:
-  std::vector<string> part;
-  if (!flag)
-    part = split(node.addr(), ':');
-  else
-    part = split(node.cmd_addr(), ':');
-  string address = "tcp://*:" + part.back();
-  int rc = zmq_bind(receiver_, address.c_str());
-  if (rc == -1) {
-    LOG(ERROR) << "bind to " << address << " failed: " << zmq_strerror(errno);
-    return false;
-  }
-#ifdef _DEBUG_VAN_
-  LL << "node " << node.uid() << " binds address " << address;
-#endif
+  CHECK(receiver_ != NULL)
+      << "create receiver socket failed: " << zmq_strerror(errno);
+  CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
+  string addr = "tcp://*:" + std::to_string(my_node_.port());
+  // string addr = "tcp://" + address(my_node_);
+  CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
+      << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-  return true;
+#ifdef _DEBUG_VAN_
+  // if (van_filter.empty || van_filter==my_node_.id())
+  LL << my_node_.id() << ": binds address " << addr;
+#endif
 }
 
-bool Van::Connect(Node const& node, int flag) {
-  uid_t uid = node.uid();
-  // uid_t ruid = - uid;
-  int rc;
-  if (senders_.find(uid) != senders_.end()) {
-    LOG(ERROR) << "sender already exists";
-    return false;
+Status Van::connect(Node const& node) {
+  CHECK(node.has_id()) << node.ShortDebugString();
+  CHECK(node.has_port()) << node.ShortDebugString();
+  CHECK(node.has_hostname()) << node.ShortDebugString();
+  NodeID id = node.id();
+  // the socket already exists? probably we are re-connecting to this node
+  if (senders_.find(id) != senders_.end()) {
+    // zmq_close (senders_[id]);
+    return Status::OK();
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);
-  if (sender == NULL) goto CONNECT_FAIL;
-  // TODO it doesn't work! instead, we set the identity in the protobuf
-  // rc = zmq_setsockopt(sender, ZMQ_IDENTITY, &ruid, sizeof(ruid));
-  // if (rc == -1) goto CONNECT_FAIL;
+  CHECK(sender != NULL) << zmq_strerror(errno);
+  string my_id = my_node_.id(); // address(my_node_);
+  zmq_setsockopt (sender, ZMQ_IDENTITY, my_id.data(), my_id.size());
 
-  if (!flag)
-    rc = zmq_connect(sender, node.addr().c_str());
-  else
-    rc = zmq_connect(sender, node.cmd_addr().c_str());
-  if (rc == -1) {
-    LOG(ERROR) << "failed to connect to " << node.ToString();
-    goto CONNECT_FAIL;
-  }
-  senders_[uid] = sender;
-  return true;
+  // TODO is it useful?
+   uint64_t hwm = 5000000;
+   zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
-CONNECT_FAIL:
-  LOG(ERROR) << "zmq connection fail: " << zmq_strerror(errno);
-  return false;
+  // connect
+  string addr = "tcp://" + address(node);
+  if (zmq_connect(sender, addr.c_str()) != 0)
+    return Status:: NetError(
+        "connect to " + addr + " failed: " + zmq_strerror(errno));
+  senders_[id] = sender;
+
+#ifdef _DEBUG_VAN_
+  LL << my_node_.id() << ": connect to " << addr;
+#endif
+  return Status::OK();
 }
 
 // TODO use zmq_msg_t to allow zero_copy send
-Status Van::Send(const Mail& mail){
+// TODO socket is not thread safe!
+Status Van::send(const Message& msg) {
 
   // find the socket
-  const Header& head = mail.flag();
-  uid_t uid = (uid_t) head.recver();
-  if (senders_.find(uid) == senders_.end()) {
-    return Status::NotFound(StrCat("there is no socket to node ", uid));
+  NodeID id = msg.recver;
+  auto it = senders_.find(id);
+  if (it == senders_.end())
+    return Status::NotFound("there is no socket to node " + (id));
+  void *socket = it->second;
+
+  // fill data
+  auto task = msg.task;
+  task.clear_uncompressed_size();
+  bool has_key = !msg.key.empty();
+  std::vector<SArray<char> > data;
+  if (FLAGS_compress_message) {
+    if (has_key) {
+      data.push_back(msg.key.compressTo());
+      task.add_uncompressed_size(msg.key.size());
+    }
+    for (auto& m : msg.value) {
+      data.push_back(m.compressTo());
+      task.add_uncompressed_size(m.size());
+    }
+    for (int i = 0; i < data.size(); ++i) {
+      send_uncompressed_ += task.uncompressed_size(i);
+      send_compressed_ += data[i].size();
+      // LL << task.uncompressed_size(i) << " " << data[i].size();
+    }
+  } else {
+    if (has_key) data.push_back(msg.key);
+    for (auto& m : msg.value) data.push_back(m);
+    for (int i = 0; i < data.size(); ++i) {
+      send_uncompressed_ += data[i].size();
+    }
   }
-  // send the header
-  void *socket = senders_[uid];
-  string head_string;
-  if (!head.SerializeToString(&head_string)) {
-    return Status::InvalidArgument(StrCat("failed to serialize ",
-                                          head.DebugString()));
-  }
+
+  // send task
+  string str;
+  task.set_has_key(has_key);
+  CHECK(task.SerializeToString(&str))
+      << "failed to serialize " << task.ShortDebugString();
   int tag = ZMQ_SNDMORE;
-  bool send_key = head.has_key() && !head.key().empty();
-  bool send_value = head.has_value() && !head.value().empty();
-  int n = send_key + send_value;
-  if (n == 0) tag = 0;
-  size_t rc = zmq_send(socket, head_string.c_str(), head_string.size(), tag);
-  if (rc != head_string.size()) {
-    return Status::NetError(StrCat("failed to send header to node ",
-                                   uid,zmq_strerror(errno)));
-  }
-  // send keys
-  if (send_key) {
-    if ((--n) == 0) tag = 0;
-    rc = zmq_send(socket, mail.keys().data(), mail.keys().size(), tag);
-    if (rc != mail.keys().size()) {
-      return Status::NetError(StrCat("failed to send keys to node ",
-                                     uid, zmq_strerror(errno)));
-    }
-  }
-  // send values
-  if (send_value) {
-    if ((--n) == 0) tag = 0;
-    rc = zmq_send(socket, mail.vals().data(), mail.vals().size(), tag);
-    if (rc != mail.vals().size()) {
-      return Status::NetError(StrCat("failed to send values to node ",
-                                     uid, zmq_strerror(errno)));
-    }
-  }
-  CHECK_EQ(n, 0);
-  CHECK_EQ(tag, 0);
-
-#ifdef _DEBUG_VAN_
-  LL << "time: " << mail.flag().time() << ", send to "
-     << mail.flag().recver() << " "
-     << mail.keys().size() << "(" << send_key <<  ") keys and "
-     << mail.vals().size() << "(" << send_value << ") vals";
-#endif
-
-  return Status::OK();
-}
-
-Status Van::Recv(Mail *mail) {
-  int n = 1;
-  bool recv_key, recv_value;
-  for (int i = 0; n > 0; ++i) {
-    zmq_msg_t msg;
-    int rc = zmq_msg_init(&msg);
-    if (rc) {
-      return Status::NetError("init msg fail");
-    }
-    rc = zmq_msg_recv(&msg, receiver_, 0);
-    if (rc == -1) {
-      return Status::NetError(StrCat("recv message failed: ",
-                                     zmq_strerror(errno)));
-    }
-    char* buf = (char *)zmq_msg_data(&msg);
-    size_t size = zmq_msg_size(&msg);
-    if (buf == NULL) {
-      return Status::NetError(StrCat("get buff failed"));
-    }
-    switch (i) {
-      case 0:
-      // receive the identity
-      // TODO didn't figure out how to get the id now.
-      // *uid = - (uid_t) atoi(buf);
-        break;
-      case 1:
-        {
-          // it's the header
-          string head_string(buf, size);
-          if (!mail->flag().ParseFromString(head_string)) {
-            return Status::NetError(StrCat("parse header fail"));
-          }
-          recv_key = mail->flag().has_key() && !mail->flag().key().empty();
-          recv_value = mail->flag().has_value() && !mail->flag().value().empty();
-
-          n = recv_key + recv_value;
-          if (n && !recv_key) {
-            // skip to receive key
-            ++ i;
-          }
-        }
-        break;
-      case 2:
-        {
-          // receive keys
-          char *data = (char*) malloc(size+5);
-          memcpy(data, buf, size);
-          mail->keys().Fill(data, 1, size);
-          if ((--n) == 0) ++i;
-        }
-        break;
-
-      case 3:
-        {
-          char *data = (char*) malloc(size+5);
-          memcpy(data, buf, size);
-          mail->vals().Fill(data, 1, size);
-          --n;
-        }
-        break;
-    }
-    zmq_msg_close(&msg);
-    if (n && !zmq_msg_more(&msg)) {
-      return Status::NetError(StrCat("there should be more"));
-    }
-  }
-
-#ifdef _DEBUG_VAN_
-  LL << "time: " << mail->flag().time() << ", recv from "
-     << mail->flag().sender() << " "
-     << mail->keys().size() << "(" << recv_key <<  ") keys and "
-     << mail->vals().size() << "(" << recv_value << ") vals";
-#endif
-  return Status::OK();;
-}
-
-// TODO use zmq_msg_t to allow zero_copy send
-Status Van::Send(const Express& cmd){
-  // find the socket
-  uid_t uid = (uid_t) cmd.recver();
-  if (senders_.find(uid) == senders_.end()) {
-    return Status::NotFound(StrCat("there is no socket to node", uid));
-  }
-  // send command
-  void *socket = senders_[uid];
-  string cmd_string;
-  if (!cmd.SerializeToString(&cmd_string)) {
-    return Status::InvalidArgument(
-        StrCat("failed to serialize ", cmd.DebugString()));
-  }
-  int tag = 0;
-  size_t rc = zmq_send(socket, cmd_string.c_str(), cmd_string.size(), tag);
-  if (rc != cmd_string.size()) {
+  if (data.size() == 0) tag = 0; // ZMQ_DONTWAIT;
+  if (zmq_send(socket, str.c_str(), str.size(), tag) != str.size())
     return Status::NetError(
-        StrCat("failed to send command to node ", uid, ", :", zmq_strerror(errno)));
-  }
+        "failed to send mailer to node " + (id) + zmq_strerror(errno));
+  send_head_ += str.size();
 
+  // send key and value
+  for (int i = 0; i < data.size(); ++i) {
+    const auto& raw = data[i];
+    if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
+    if (zmq_send(socket, raw.data(), raw.size(), tag) != raw.size())
+      return Status::NetError(
+          "failed to send mailer to node " + (id) +
+          zmq_strerror(errno));
+  }
+  // my_node_.id() == "S29" &&
+  // if (msg.recver == "U0")
+  //   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #ifdef _DEBUG_VAN_
-  LL << cmd.DebugString();
+  if (van_filter.empty() || van_filter==my_node_.id())
+  LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #endif
+
   return Status::OK();
 }
 
-
-Status Van::Recv(Express* cmd) {
-  for (int i = 0; i < 2; ++i) {
-    zmq_msg_t msg;
-    int rc = zmq_msg_init(&msg);
-    if (rc) {
-      return Status::NetError("init msg fail");
-    }
-
-    rc = zmq_msg_recv(&msg, receiver_, 0);
-    if (rc == -1) {
+// TODO Zero copy
+Status Van::recv(Message *msg) {
+  msg->key = SArray<char>();
+  msg->value.clear();
+  NodeID sender;
+  for (int i = 0; ; ++i) {
+    zmq_msg_t zmsg;
+    CHECK(zmq_msg_init(&zmsg) == 0) << zmq_strerror(errno);
+    if (zmq_msg_recv(&zmsg, receiver_, 0) == -1)
       return Status::NetError(
-          StrCat("recv message failed: ", zmq_strerror(errno)));
-    }
-
-    char* buf = (char *)zmq_msg_data(&msg);
-    size_t size = zmq_msg_size(&msg);
-    if (buf == NULL) {
-      return Status::NetError(StrCat("get buff failed"));
-    }
+          "recv message failed: " + std::string(zmq_strerror(errno)));
+    char* buf = (char *)zmq_msg_data(&zmsg);
+    CHECK(buf != NULL);
+    size_t size = zmq_msg_size(&zmsg);
 
     if (i == 0) {
-      // receive identity, ignore
-      if (!zmq_msg_more(&msg)) {
-        return Status::NetError(StrCat("there should be more"));
-      }
+      // identify
+      sender = id(std::string(buf, size));
+      msg->sender = sender;
+      msg->recver = my_node_.id();
     } else if (i == 1) {
-      string cmd_string(buf, size);
-      if (!cmd->ParseFromString(cmd_string)) {
-        return Status::NetError(StrCat("parse command fail"));
+      // task
+      CHECK(msg->task.ParseFromString(std::string(buf, size)))
+          << "parse string failed";
+      recv_head_ += size;
+    } else {
+      // key and value
+      SArray<char> data;
+      int n = msg->task.uncompressed_size_size();
+      if (n > 0) {
+        // data are compressed
+        CHECK_GT(n, i - 2);
+        data.resize(msg->task.uncompressed_size(i-2)+16);
+        data.uncompressFrom(buf, size);
+
+        recv_compressed_ += size;
+        recv_uncompressed_ += data.size();
+      } else {
+        // data are not compressed
+        data = SArray<char>(buf, buf+size);
+
+        recv_uncompressed_ += size;
+      }
+
+      if (i == 2 && msg->task.has_key()) {
+        msg->key = data;
+      } else {
+        msg->value.push_back(data);
       }
     }
-    zmq_msg_close(&msg);
+    zmq_msg_close(&zmsg);
+    if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
+  // if (msg->task.type() == Task::CALL_CUSTOMER && msg->task.has_vector() &&
+  //     msg->task.vector().cmd() == CallVec::DUPLICATE)
+    // LL << *msg;
+
 #ifdef _DEBUG_VAN_
-  LL << cmd->DebugString();
+  if (van_filter.empty() || van_filter==my_node_.id())
+  LL << my_node_.id() << "<<<: " << msg->shortDebugString();
 #endif
   return Status::OK();;
 }
 
-////////////////////////////////////////////////
+void Van::statistic() {
+  auto mb = [](size_t x) { return  (x * 10 / 1000000) / 10.0; };
+  auto s = FLAGS_compress_message ? send_compressed_ : send_uncompressed_;
+  auto r = FLAGS_compress_message ? recv_compressed_ : recv_uncompressed_;
 
-// TODO use zmq_msg_t to allow zero_copy send
-Status Van::Send(const NodeManagementInfo& mgt_info){
-  // find the socket
-  uid_t uid = (uid_t) mgt_info.recver();
-  if (senders_.find(uid) == senders_.end()) {
-    return Status::NotFound(StrCat("there is no socket to node ", uid));
-  }
-  // send nodemanagementinfo
-  void *socket = senders_[uid];
-  string mgt_info_string;
-  if (!mgt_info.SerializeToString(&mgt_info_string)) {
-    return Status::InvalidArgument(StrCat("failed to serialize ",
-                                          mgt_info.DebugString()));
-  }
-  int tag = 0;
-  size_t rc = zmq_send(socket, mgt_info_string.c_str(), mgt_info_string.size(), tag);
-  if (rc != mgt_info_string.size()) {
-    return Status::NetError(StrCat("failed to send syncflag to node ",
-                                   uid,zmq_strerror(errno)));
-  }
-  return Status::OK();
+  printf("%s sent %.1f Mb, saved %.1f%%; received %.1f Mb, saved %.1f%%\n",
+         my_node_.id().c_str(), mb(s), 100 - 100.0 * mb(s) / mb(send_uncompressed_),
+         mb(r), 100 - 100.0 * mb(r) / mb(recv_uncompressed_));
 }
-
-
-Status Van::Recv(NodeManagementInfo *mgt_info, bool blocking) {
-  zmq_msg_t msg;
-  // receive identity
-  int rc = zmq_msg_init(&msg);
-  if (rc) {
-    return Status::NetError("init msg fail");
-  }
-
-  if (!blocking)
-    rc = zmq_msg_recv(&msg, receiver_, ZMQ_DONTWAIT);
-  else
-    rc = zmq_msg_recv(&msg, receiver_, 0);
-
-  if (rc == -1) {
-    return Status::NetError(StrCat("recv identity failed: ",zmq_strerror(errno)));
-  }
-
-  char* buf = (char *)zmq_msg_data(&msg);
-  size_t size = zmq_msg_size(&msg);
-  if (buf == NULL) {
-    return Status::NetError(StrCat("get buff failed"));
-  }
-
-  // receive message
-  rc = zmq_msg_init(&msg);
-  if (rc) {
-    return Status::NetError("init msg fail");
-  }
-
-  if (!blocking)
-    rc = zmq_msg_recv(&msg, receiver_, ZMQ_DONTWAIT);
-  else
-    rc = zmq_msg_recv(&msg, receiver_, 0);
-
-  if (rc == -1) {
-    return Status::NetError(StrCat("recv nodemanagementinfo failed: ",zmq_strerror(errno)));
-  }
-
-  buf = (char *)zmq_msg_data(&msg);
-  size = zmq_msg_size(&msg);
-  if (buf == NULL) {
-    return Status::NetError(StrCat("get buff failed"));
-  }
-
-  string mgt_string(buf, size);
-  if (!mgt_info->ParseFromString(mgt_string)) {
-    return Status::NetError(StrCat("parse nodemanagementinfo fail"));
-  }
-
-  // if (!zmq_msg_more(&msg)) {
-  //   return Status::NetError(StrCat("there should be more"));
-  // }
-  zmq_msg_close(&msg);
-
-  return Status::OK();;
-}
-
 
 } // namespace PS
