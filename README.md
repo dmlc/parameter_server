@@ -1,27 +1,24 @@
 # Parameter Server
 
-Parameter server is distributed machine learning framework. It scales machine
-learning applications to industry level problems.
+Parameter server is a distributed machine learning framework. It scales machine
+learning applications to industry-level problems, namely billions of samples and
+features.
 
 ## Features
 
 - **Efficient communication:** The asynchronous communication model does not
   block computation (unless requested). It is optimized for machine learning
   tasks to reduce network traffic and overhead.
-
 - **Flexible consistency models:** Relaxed consistency further hides
   synchronization cost and latency. We allow the algorithm designer to balance
   algorithmic convergence rate and system efficiency. The best trade-off depends
   on data, algorithm, and hardware.
-
 - **Elastic Scalability:** New nodes can be added without restarting the running
   framework.
-
 - **Fault Tolerance and Durability:** Recovery from and repair of
   non-catastraphic machine failures within several seconds, without interrupting
   computation.  Vector clocks ensure well-defined behavior after network
   partition and failure.
-
 - **Ease of Use:** The globally shared parameters are represented as
   (potentially sparse) vectors and matrices to facilitate development of machine
   learning applications. The linear algebra data types come with
