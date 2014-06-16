@@ -35,9 +35,8 @@ class SharedParameter : public Customer {
       Fn fin_handle = Fn(),
       // block or non-block
       bool no_wait = true) {
-    auto arg = setCall(&(msg.task));
-    arg->set_cmd(cmd);
-    range.to(arg->mutable_key());
+    setCall(&(msg.task))->set_cmd(cmd);
+    range.to(msg.task.mutable_key_range());
     if (time >= 0) msg.task.set_time(time);
     msg.task.set_wait_time(wait_time);
 
@@ -129,7 +128,7 @@ std::vector<Message> SharedParameter<K,V>::decompose(
   }
 
   CHECK(std::is_sorted(partition.begin(), partition.end()));
-  auto kr = Range<K>(getCall(msg).key());
+  auto kr = Range<K>(msg.task.key_range());
   std::vector<K> keys;
   keys.reserve(partition.size());
   for (auto k : partition)
@@ -173,7 +172,7 @@ void SharedParameter<K,V>::process(Message* msg) {
       break;
 
     case Call::PULL_REPLICA: {
-      auto range = Range<K>(getCall(*msg).key());
+      auto range = Range<K>(msg->task.key_range());
       if (req) {
         Message re = *msg;
         std::swap(re.sender, re.recver);

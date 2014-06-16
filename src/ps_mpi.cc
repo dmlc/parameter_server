@@ -16,7 +16,8 @@ void Init() {
   // get my node
   int nserver = FLAGS_num_servers;
   int nclient = FLAGS_num_workers;
-  CHECK_GT(rank_size, nserver + nclient);
+  if (my_rank == 0) CHECK_GT(rank_size, nserver + nclient);
+
   FLAGS_num_unused = rank_size - nserver - nclient - 1;
 
   auto ip = LocalMachine::IP(FLAGS_interface);

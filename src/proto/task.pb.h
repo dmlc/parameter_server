@@ -285,10 +285,26 @@ class Task : public ::google::protobuf::Message {
   inline bool has_key() const;
   inline void set_has_key(bool value);
 
-  // repeated uint64 uncompressed_size = 8;
+  // optional .PbRange key_range = 8;
+  inline bool has_key_range() const;
+  inline void clear_key_range();
+  static const int kKeyRangeFieldNumber = 8;
+  inline const ::PbRange& key_range() const;
+  inline ::PbRange* mutable_key_range();
+  inline ::PbRange* release_key_range();
+  inline void set_allocated_key_range(::PbRange* key_range);
+
+  // optional uint32 key_signature = 9;
+  inline bool has_key_signature() const;
+  inline void clear_key_signature();
+  static const int kKeySignatureFieldNumber = 9;
+  inline ::google::protobuf::uint32 key_signature() const;
+  inline void set_key_signature(::google::protobuf::uint32 value);
+
+  // repeated uint64 uncompressed_size = 10;
   inline int uncompressed_size_size() const;
   inline void clear_uncompressed_size();
-  static const int kUncompressedSizeFieldNumber = 8;
+  static const int kUncompressedSizeFieldNumber = 10;
   inline ::google::protobuf::uint64 uncompressed_size(int index) const;
   inline void set_uncompressed_size(int index, ::google::protobuf::uint64 value);
   inline void add_uncompressed_size(::google::protobuf::uint64 value);
@@ -297,10 +313,10 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
       mutable_uncompressed_size();
 
-  // optional bytes msg = 10;
+  // optional bytes msg = 101;
   inline bool has_msg() const;
   inline void clear_msg();
-  static const int kMsgFieldNumber = 10;
+  static const int kMsgFieldNumber = 101;
   inline const ::std::string& msg() const;
   inline void set_msg(const ::std::string& value);
   inline void set_msg(const char* value);
@@ -309,46 +325,46 @@ class Task : public ::google::protobuf::Message {
   inline ::std::string* release_msg();
   inline void set_allocated_msg(::std::string* msg);
 
-  // optional .ManageNode mng_node = 11;
+  // optional .ManageNode mng_node = 102;
   inline bool has_mng_node() const;
   inline void clear_mng_node();
-  static const int kMngNodeFieldNumber = 11;
+  static const int kMngNodeFieldNumber = 102;
   inline const ::ManageNode& mng_node() const;
   inline ::ManageNode* mutable_mng_node();
   inline ::ManageNode* release_mng_node();
   inline void set_allocated_mng_node(::ManageNode* mng_node);
 
-  // optional .ManageApp mng_app = 12;
+  // optional .ManageApp mng_app = 103;
   inline bool has_mng_app() const;
   inline void clear_mng_app();
-  static const int kMngAppFieldNumber = 12;
+  static const int kMngAppFieldNumber = 103;
   inline const ::ManageApp& mng_app() const;
   inline ::ManageApp* mutable_mng_app();
   inline ::ManageApp* release_mng_app();
   inline void set_allocated_mng_app(::ManageApp* mng_app);
 
-  // optional .CallSharedPara shared_para = 101;
+  // optional .CallSharedPara shared_para = 201;
   inline bool has_shared_para() const;
   inline void clear_shared_para();
-  static const int kSharedParaFieldNumber = 101;
+  static const int kSharedParaFieldNumber = 201;
   inline const ::CallSharedPara& shared_para() const;
   inline ::CallSharedPara* mutable_shared_para();
   inline ::CallSharedPara* release_shared_para();
   inline void set_allocated_shared_para(::CallSharedPara* shared_para);
 
-  // optional .RiskMinCall risk = 199;
+  // optional .RiskMinCall risk = 301;
   inline bool has_risk() const;
   inline void clear_risk();
-  static const int kRiskFieldNumber = 199;
+  static const int kRiskFieldNumber = 301;
   inline const ::RiskMinCall& risk() const;
   inline ::RiskMinCall* mutable_risk();
   inline ::RiskMinCall* release_risk();
   inline void set_allocated_risk(::RiskMinCall* risk);
 
-  // optional .CallSketch sketch = 200;
+  // optional .CallSketch sketch = 302;
   inline bool has_sketch() const;
   inline void clear_sketch();
-  static const int kSketchFieldNumber = 200;
+  static const int kSketchFieldNumber = 302;
   inline const ::CallSketch& sketch() const;
   inline ::CallSketch* mutable_sketch();
   inline ::CallSketch* release_sketch();
@@ -370,6 +386,10 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_priority();
   inline void set_has_has_key();
   inline void clear_has_has_key();
+  inline void set_has_key_range();
+  inline void clear_has_key_range();
+  inline void set_has_key_signature();
+  inline void clear_has_key_signature();
   inline void set_has_msg();
   inline void clear_has_msg();
   inline void set_has_mng_node();
@@ -391,6 +411,9 @@ class Task : public ::google::protobuf::Message {
   bool request_;
   bool has_key_;
   ::google::protobuf::int32 wait_time_;
+  ::google::protobuf::int32 priority_;
+  ::google::protobuf::uint32 key_signature_;
+  ::PbRange* key_range_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
   ::std::string* msg_;
   ::ManageNode* mng_node_;
@@ -398,10 +421,9 @@ class Task : public ::google::protobuf::Message {
   ::CallSharedPara* shared_para_;
   ::RiskMinCall* risk_;
   ::CallSketch* sketch_;
-  ::google::protobuf::int32 priority_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(14 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -834,15 +856,6 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline ::CallSharedPara_Command cmd() const;
   inline void set_cmd(::CallSharedPara_Command value);
 
-  // required .PbRange key = 5;
-  inline bool has_key() const;
-  inline void clear_key();
-  static const int kKeyFieldNumber = 5;
-  inline const ::PbRange& key() const;
-  inline ::PbRange* mutable_key();
-  inline ::PbRange* release_key();
-  inline void set_allocated_key(::PbRange* key);
-
   // repeated .Timestamp backup = 6;
   inline int backup_size() const;
   inline void clear_backup();
@@ -859,17 +872,14 @@ class CallSharedPara : public ::google::protobuf::Message {
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
-  inline void set_has_key();
-  inline void clear_has_key();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PbRange* key_;
   ::google::protobuf::RepeatedPtrField< ::Timestamp > backup_;
   int cmd_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1326,7 +1336,67 @@ inline void Task::set_has_key(bool value) {
   has_key_ = value;
 }
 
-// repeated uint64 uncompressed_size = 8;
+// optional .PbRange key_range = 8;
+inline bool Task::has_key_range() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void Task::set_has_key_range() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void Task::clear_has_key_range() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void Task::clear_key_range() {
+  if (key_range_ != NULL) key_range_->::PbRange::Clear();
+  clear_has_key_range();
+}
+inline const ::PbRange& Task::key_range() const {
+  return key_range_ != NULL ? *key_range_ : *default_instance_->key_range_;
+}
+inline ::PbRange* Task::mutable_key_range() {
+  set_has_key_range();
+  if (key_range_ == NULL) key_range_ = new ::PbRange;
+  return key_range_;
+}
+inline ::PbRange* Task::release_key_range() {
+  clear_has_key_range();
+  ::PbRange* temp = key_range_;
+  key_range_ = NULL;
+  return temp;
+}
+inline void Task::set_allocated_key_range(::PbRange* key_range) {
+  delete key_range_;
+  key_range_ = key_range;
+  if (key_range) {
+    set_has_key_range();
+  } else {
+    clear_has_key_range();
+  }
+}
+
+// optional uint32 key_signature = 9;
+inline bool Task::has_key_signature() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Task::set_has_key_signature() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Task::clear_has_key_signature() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Task::clear_key_signature() {
+  key_signature_ = 0u;
+  clear_has_key_signature();
+}
+inline ::google::protobuf::uint32 Task::key_signature() const {
+  return key_signature_;
+}
+inline void Task::set_key_signature(::google::protobuf::uint32 value) {
+  set_has_key_signature();
+  key_signature_ = value;
+}
+
+// repeated uint64 uncompressed_size = 10;
 inline int Task::uncompressed_size_size() const {
   return uncompressed_size_.size();
 }
@@ -1351,15 +1421,15 @@ Task::mutable_uncompressed_size() {
   return &uncompressed_size_;
 }
 
-// optional bytes msg = 10;
+// optional bytes msg = 101;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1421,15 +1491,15 @@ inline void Task::set_allocated_msg(::std::string* msg) {
   }
 }
 
-// optional .ManageNode mng_node = 11;
+// optional .ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::ManageNode::Clear();
@@ -1459,15 +1529,15 @@ inline void Task::set_allocated_mng_node(::ManageNode* mng_node) {
   }
 }
 
-// optional .ManageApp mng_app = 12;
+// optional .ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::ManageApp::Clear();
@@ -1497,15 +1567,15 @@ inline void Task::set_allocated_mng_app(::ManageApp* mng_app) {
   }
 }
 
-// optional .CallSharedPara shared_para = 101;
+// optional .CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::CallSharedPara::Clear();
@@ -1535,15 +1605,15 @@ inline void Task::set_allocated_shared_para(::CallSharedPara* shared_para) {
   }
 }
 
-// optional .RiskMinCall risk = 199;
+// optional .RiskMinCall risk = 301;
 inline bool Task::has_risk() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_risk() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_risk() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_risk() {
   if (risk_ != NULL) risk_->::RiskMinCall::Clear();
@@ -1573,15 +1643,15 @@ inline void Task::set_allocated_risk(::RiskMinCall* risk) {
   }
 }
 
-// optional .CallSketch sketch = 200;
+// optional .CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_sketch() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_sketch() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_sketch() {
   if (sketch_ != NULL) sketch_->::CallSketch::Clear();
@@ -1849,44 +1919,6 @@ inline void CallSharedPara::set_cmd(::CallSharedPara_Command value) {
   assert(::CallSharedPara_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
-}
-
-// required .PbRange key = 5;
-inline bool CallSharedPara::has_key() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void CallSharedPara::set_has_key() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void CallSharedPara::clear_has_key() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void CallSharedPara::clear_key() {
-  if (key_ != NULL) key_->::PbRange::Clear();
-  clear_has_key();
-}
-inline const ::PbRange& CallSharedPara::key() const {
-  return key_ != NULL ? *key_ : *default_instance_->key_;
-}
-inline ::PbRange* CallSharedPara::mutable_key() {
-  set_has_key();
-  if (key_ == NULL) key_ = new ::PbRange;
-  return key_;
-}
-inline ::PbRange* CallSharedPara::release_key() {
-  clear_has_key();
-  ::PbRange* temp = key_;
-  key_ = NULL;
-  return temp;
-}
-inline void CallSharedPara::set_allocated_key(::PbRange* key) {
-  delete key_;
-  key_ = key;
-  if (key) {
-    set_has_key();
-  } else {
-    clear_has_key();
-  }
 }
 
 // repeated .Timestamp backup = 6;

@@ -57,8 +57,12 @@ class RNode {
   int submit(Message msg, Callback before, Callback after, bool no_wait);
 
   // cache the keys
-  Message cache(const Message& msg);
-  void clearCache();
+  // Message cache(const Message& msg);
+
+  Message cacheKeySender(const Message& msg);
+  Message cacheKeyRecver(const Message& msg);
+
+  void clearCache() { key_cache_.clear(); }
 
   void waitOutTask(int time);
   void waitInTask(int time);
@@ -96,6 +100,7 @@ class RNode {
   std::map<int, Message> pending_msgs_;
   std::map<int, Callback> cb_before_, cb_after_;
 
+  std::unordered_map<Range<Key>, std::pair<uint32_t, SArray<char>>> key_cache_;
 };
 
 } // namespace PS

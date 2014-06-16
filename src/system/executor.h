@@ -30,15 +30,8 @@ class Executor {
 
   // will be called by postoffice's receiving thread
   // or the thread call wk->submit
-  void accept(const Message& msg) {
-    Lock l(mu_);
-    recved_msgs_.push_back(msg);
+  void accept(const Message& msg);
 
-    // TODO sort it by priority
-    // if (msg.task.priority() > 0)
-      // recved_msgs_.push_front(msg);
-    // else
-  }
 
   // will be called by customer ctor,
   void run();

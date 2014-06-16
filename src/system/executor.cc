@@ -40,7 +40,7 @@ void Executor::replace(const Node& dead, const Node& live) {
       msg.recver = live_id;
       if (first) msg.task.set_wait_time(RNode::kInvalidTime);
       first = false;
-      ptr->sys_.queue(ptr->cache(msg));
+      ptr->sys_.queue(ptr->cacheKeySender(msg));
       // LL << my_node_.id() << ": resent " << msg;
     }
     LL << my_node_.id() << ": re-sent " << ptr->pending_msgs_.size()
@@ -235,6 +235,20 @@ void Executor::run() {
     usleep(10);
 //   std::this_thread::yield();
   }
+}
+
+void Executor::accept(const Message& msg) {
+  Lock l(mu_);
+
+  auto w = worker(msg.sender);
+  {
+    Lock l(w->mu_);
+    recved_msgs_.push_back(w->cacheKeyRecver(msg));
+  }
+  // TODO sort it by priority
+  // if (msg.task.priority() > 0)
+  // recved_msgs_.push_front(msg);
+  // else
 }
 
 // Executor::WorkerGroup& Executor::group(const NodeID& group_id) {

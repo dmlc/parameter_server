@@ -1,5 +1,6 @@
 #include "system/remote_node.h"
 #include "system/customer.h"
+#include "util/crc32c.h"
 
 namespace PS {
 
@@ -49,7 +50,7 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
       if (tk.type() != Task::TERMINATE_CONFIRM)
         w->pending_msgs_[t] = msgs[i];
       if (before) w->cb_before_[t] = before;
-      sys_.queue(w->cache(msgs[i]));
+      sys_.queue(w->cacheKeySender(msgs[i]));
     }
   // if (tk.shared_para().cmd() == CallSharedPara::PUSH_REPLICA ) {
   //   LL << msgs[i];
@@ -96,14 +97,53 @@ void RNode::finishInTask(int time) {
     w->in_task_.finish(time);
 }
 
-Message RNode::cache(const Message& msg) {
- // if (!FLAGS_key_cache || msg->key.size() == 0) return msg;
+// Message RNode::cache(const Message& msg) {
+//  if (!FLAGS_key_cache || msg.key.size() == 0) return msg;
 
-  // CHECK(msg.task.has_
-  return msg;
+//   // CHECK(msg.task.has_
+//   return msg;
+// }
+
+Message RNode::cacheKeySender(const Message& msg) {
+  if (!FLAGS_key_cache || !msg.task.has_key_range() || msg.key.size() == 0)
+    return msg;
+
+  Message ret = msg;
+  Range<Key> range(ret.task.key_range());
+  auto sig = crc32c::Value(ret.key.data(), ret.key.size());
+  auto& cache = key_cache_[range];
+  bool hit_cache = cache.first == sig && cache.second.size() == ret.key.size();
+
+  if (hit_cache) {
+    ret.key.reset(nullptr, 0);
+    ret.task.set_has_key(false);
+  } else {
+    cache.first = sig;
+    cache.second = ret.key;
+    ret.task.set_has_key(true);
+  }
+
+  ret.task.set_key_signature(sig);
+  return ret;
 }
 
-void RNode::clearCache() {
+Message RNode::cacheKeyRecver(const Message& msg) {
+  if (!FLAGS_key_cache || !msg.task.has_key_range()) return msg;
+
+  Message ret = msg;
+  Range<Key> range(ret.task.key_range());
+  auto sig = ret.task.key_signature();
+  auto& cache = key_cache_[range];
+
+  if (ret.task.has_key()) {
+    CHECK_EQ(crc32c::Value(ret.key.data(), ret.key.size()), sig);
+    cache.first = sig;
+    cache.second = ret.key;
+  } else {
+    CHECK_EQ(sig, cache.first);
+    ret.key = cache.second;
+  }
+  return ret;
 }
 
 } // namespace PS

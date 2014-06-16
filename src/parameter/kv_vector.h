@@ -210,7 +210,7 @@ class KVVector : public SharedParameter<K,V> {
   void recoverFrom(Message *msg) {
     // data
     auto arg = getCall(*msg);
-    Range<K> range(arg.key());
+    Range<K> range(msg->task.key_range());
     CHECK_EQ(range, myKeyRange());
     key_ = msg->key;
     val_ = msg->value[0];
@@ -273,7 +273,7 @@ template <typename K, typename V>
 void KVVector<K,V>::setValue(Message* msg) {
   Lock l(recved_val_mu_);
   SArray<K> recv_key(msg->key);
-  Range<K> key_range(msg->task.shared_para().key());
+  Range<K> key_range(msg->task.key_range());
 
   if (msg->value.size() == 0) {
     key_ = key_.setUnion(recv_key);
