@@ -239,45 +239,13 @@ void Executor::run() {
 
 void Executor::accept(const Message& msg) {
   Lock l(mu_);
-
   auto w = worker(msg.sender);
-  {
-    Lock l(w->mu_);
-    recved_msgs_.push_back(w->cacheKeyRecver(msg));
-  }
+  recved_msgs_.push_back(w->cacheKeyRecver(msg));
+
   // TODO sort it by priority
   // if (msg.task.priority() > 0)
   // recved_msgs_.push_front(msg);
   // else
 }
 
-// Executor::WorkerGroup& Executor::group(const NodeID& group_id) {
-//   if (Worker::validGroupID(group_id)) {
-//     if (group_id == Worker::kServerGroup)
-//       return servers_;
-//     else if (group_id == Worker::kWorkerGroup)
-//       return clients_;
-//     else
-//       return workers_;
-//   } else {
-//     auto it = nodes_.find(group_id);
-//     CHECK(it != nodes_.end()) << "unknow node " << group_id;
-//     return it->second;
-//   }
-// }
-
-// string Executor::dbname(const NodeID& id) {
-//   int c = 0;
-//   for (auto w : group(kWorkerGroup)) {
-//     if (w->id() == id) return "C" + to_string(c);
-//     ++ c;
-//   }
-
-//   int s = 0;
-//   for (auto w : group(kServerGroup)) {
-//     if (w->id() == id) return "S" + to_string(s);
-//     ++ s;
-//   }
-//   return "M";
-// }
 } // namespace PS

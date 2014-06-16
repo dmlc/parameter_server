@@ -111,9 +111,11 @@ Message RNode::cacheKeySender(const Message& msg) {
   Message ret = msg;
   Range<Key> range(ret.task.key_range());
   auto sig = crc32c::Value(ret.key.data(), ret.key.size());
-  auto& cache = key_cache_[range];
-  bool hit_cache = cache.first == sig && cache.second.size() == ret.key.size();
 
+  Lock l(key_cache_mu_);
+  auto& cache = key_cache_[range];
+
+  bool hit_cache = cache.first == sig && cache.second.size() == ret.key.size();
   if (hit_cache) {
     ret.key.reset(nullptr, 0);
     ret.task.set_has_key(false);
@@ -133,6 +135,8 @@ Message RNode::cacheKeyRecver(const Message& msg) {
   Message ret = msg;
   Range<Key> range(ret.task.key_range());
   auto sig = ret.task.key_signature();
+
+  Lock l(key_cache_mu_);
   auto& cache = key_cache_[range];
 
   if (ret.task.has_key()) {

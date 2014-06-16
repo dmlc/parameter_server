@@ -101,6 +101,7 @@ class RNode {
   std::map<int, Callback> cb_before_, cb_after_;
 
   std::unordered_map<Range<Key>, std::pair<uint32_t, SArray<char>>> key_cache_;
+  std::mutex key_cache_mu_;
 };
 
 } // namespace PS
