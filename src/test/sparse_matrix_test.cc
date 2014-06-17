@@ -22,10 +22,24 @@ class SparseMatrixTest : public ::testing::Test {
 //   // LL << info.DebugString();
 // }
 
+TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
+  std::vector<string> files;
+  for (int i = 0; i < 1; i++)
+    files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
+
+  auto data = readMatricesFromProto<double>(files);
+  auto Y = data[1];
+  // Y->writeToBinFile("../data/tmp");
+  // for (int i = 0; i < 10; ++i) {
+  //   Vec w = Vec::Random(X->cols());
+  //   EXPECT_LE( (*X * w - *Y * w).norm(), 1e-3);
+  // }
+}
+
 TEST_F(SparseMatrixTest, LoadFromRecordIO) {
   std::vector<string> files;
   for (int i = 0; i < 4; i++)
-    files.push_back("../data/rcv1_part_" + to_string(i));
+    files.push_back("../data/recordio/rcv1_part_" + to_string(i));
 
   auto data = readMatricesFromProto<double>(files);
   auto Y = data[1];

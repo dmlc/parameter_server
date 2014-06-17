@@ -124,9 +124,9 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
         if (g.value_size() > 0) {
           CHECK_EQ(g.value_size(), k);
           CHECK(!m.binary);
+          for (int j = 0; j < k; ++j)
+            m.value[m.value_pos++] = g.value(j);
         }
-        for (int j = 0; j < k; ++j)
-          m.value[m.value_pos++] = g.value(j);
         m.offset[m.offset_pos] = m.offset[m.offset_pos-1] + k;
         ++ m.offset_pos;
       }
