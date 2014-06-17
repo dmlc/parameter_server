@@ -1,6 +1,6 @@
 #pragma once
 #include "loss/loss.h"
-#include "proto/loss.pb.h"
+#include "proto/config.pb.h"
 #include "loss/logit_loss.h"
 
 namespace PS {

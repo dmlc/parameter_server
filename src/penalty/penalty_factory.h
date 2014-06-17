@@ -1,7 +1,7 @@
 #pragma once
 #include "penalty/penalty.h"
 #include "penalty/p_norm_penalty.h"
-#include "proto/penalty.pb.h"
+#include "proto/config.pb.h"
 
 namespace PS {
 

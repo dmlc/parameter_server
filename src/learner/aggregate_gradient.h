@@ -2,7 +2,7 @@
 #include "learner/optimization.h"
 #include "base/matrix.h"
 #include "base/shared_array_io.h"
-#include "proto/learner.pb.h"
+#include "proto/config.pb.h"
 #include "loss/loss_factory.h"
 #include "penalty/penalty_factory.h"
 namespace PS {

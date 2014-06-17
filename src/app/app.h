@@ -1,7 +1,7 @@
 #pragma once
 #include "system/customer.h"
 #include "system/postoffice.h"
-#include "proto/app.pb.h"
+#include "proto/config.pb.h"
 
 namespace PS {
 

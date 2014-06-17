@@ -1,0 +1,87 @@
+// configuration of data, objective function, and optimizaiton method
+import "proto/range.proto";
+
+message AppConfig {
+  enum AppType {
+    RISK_MINIMIZATION = 1;
+    SKETCH = 2;
+  }
+  optional AppType type = 1;
+  optional string app_name = 2;
+  repeated string parameter_name = 3;
+
+  optional DataConfig training = 10;
+
+  optional LossConfig loss = 20;
+  optional PenaltyConfig penalty = 21;
+
+  optional LearnerConfig learner = 30;
+
+  optional BlockIteratorConfig block_iterator = 40;
+
+
+  // optional GradDescConfig grad_desc = 21;
+  // optional BlockProxGradConfig block_prox_grad = 22;
+  // optional SketchConfig sketch = 31;
+}
+
+message DataConfig {
+  enum DataFormat {
+    BIN = 1;
+    PROTO = 2;
+  }
+  required DataFormat format = 1;
+  repeated string files = 2;
+  optional PbRange range = 3;  // valid for bin format
+}
+
+
+message BlockIteratorConfig {
+  // the number of example in a block. It is the minibatch size for
+  // minibatch-sgd. If <= 0, then use the whole data
+  required int64 example_block_size = 1 [default = -1];
+
+  // divide a feature group into feature_block_ratio x nnz_feature_per_instance
+  // blocks. If = 0, then use all features
+  required float feature_block_ratio = 2 [default = 0];
+
+  required int32 max_pass_of_data = 3 [default = 2];
+  // bounded-delay consistency
+  required int32 max_block_delay = 4 [default = 0];
+}
+
+message LossConfig {
+  enum Type {
+  SQUARE = 1;
+  LOGIT = 2;
+  HINGE = 3;
+  // SQUARE_SINGLE = 2;
+  // LOGIT_SINGLE = 4;
+  // HINGE_SINGLE = 6;
+  }
+  required Type type = 1;
+}
+
+message LearnerConfig {
+  enum Type {
+    GRADIENT_DESCENT = 1;
+    PROXIMAL_GRADIENT = 2;
+    LBFGS = 3;
+  }
+  required Type type = 1;
+  optional float learning_rate = 2 [default = 1];
+}
+
+
+message AggGradLearnerArg {
+  optional float learning_rate = 1 [default = 1];
+}
+
+message PenaltyConfig {
+  enum Type {
+    L1 = 1;
+    L2 = 2;
+  }
+  required Type type = 1;
+  required float coefficient = 2 [default = 0];
+}

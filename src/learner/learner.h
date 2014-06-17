@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include "proto/learner.pb.h"
+#include "proto/config.pb.h"
 
 namespace PS {
 
