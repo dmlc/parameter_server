@@ -13,7 +13,8 @@ void LinearBlockIterator::run() {
   for (auto& info : global_training_info_) {
     CHECK(info.has_nnz_per_row());
     CHECK(info.has_id());
-    float b = std::round(info.nnz_per_row() * cf.feature_block_ratio());
+    float b = std::round(
+        std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
     int n = std::max((int)b, 1);
     for (int i = 0; i < n; ++i) {
       blocks.push_back(
