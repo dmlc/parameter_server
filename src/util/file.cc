@@ -119,7 +119,7 @@ bool ReadFileToString(const std::string& file_name, std::string* output) {
 bool WriteStringToFile(const std::string& data, const std::string& file_name) {
   File* file = File::Open(file_name, "w");
   if (file == NULL) return false;
-  return (file->WriteString(data) == data.size());
+  return (file->WriteString(data) == data.size() && file->Close());
 }
 
 namespace {

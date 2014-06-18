@@ -4,7 +4,7 @@
 DEFINE_string(input, "../data/ps.txt", "input file name");
 DEFINE_string(output, "../data/ps", "output file name");
 
-DEFINE_uint64(format_detector, 1000,
+DEFINE_uint64(format_detector, 100000,
               "using the first #format_detector lines to detect the format");
 DEFINE_bool(compression, false, "compress each instance" );
 DEFINE_bool(verbose, true, "");
@@ -64,6 +64,12 @@ void Text2Pb::writeInfo() {
   info_.set_feature_end(fea_max);
 
   WriteProtoToASCIIFileOrDie(info_, FLAGS_output + ".info");
+
+  PServerInputInfo f;
+  // ReadFileToProtoOrDie(FLAGS_output + ".info", &f);
+  CHECK(ReadFileToProto(FLAGS_output + ".info", &f))
+      << " you may set a larger value to fix this problem, say -format_detector 100000";
+
 }
 
 bool Text2Pb::parseLabel(const string& label_str, float* label) {
@@ -292,6 +298,7 @@ bool Text2Pb::detectPServerInstance(const string& line) {
 
     int group_id;
     if (!strtoi32(item[0], &group_id)) return false;
+    // LL << group_id;
     auto& info = group_info_[group_id];
     info.set_group_id(group_id);
     info.set_feature_end(0);
@@ -321,7 +328,7 @@ bool Text2Pb::detectPServerInstance(const string& line) {
 void Text2Pb::processPServer(char *line) {
   string line_str(line);
   if (num_line_processed_ < FLAGS_format_detector) {
-    detectPServerInstance(line_str);
+    if (!detectPServerInstance(line_str)) LL << "detect format error: " << line_str;
     file_header_.push_back(line_str);
   } else {
     if (!file_header_.empty()) {

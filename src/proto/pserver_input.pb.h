@@ -168,10 +168,31 @@ class PServerInputInfo : public ::google::protobuf::Message {
   inline ::PServerInputInfo_LabelType label_type() const;
   inline void set_label_type(::PServerInputInfo_LabelType value);
 
-  // repeated .FeatureGroupInfo feature_group_info = 2;
+  // required uint64 num_examples = 2;
+  inline bool has_num_examples() const;
+  inline void clear_num_examples();
+  static const int kNumExamplesFieldNumber = 2;
+  inline ::google::protobuf::uint64 num_examples() const;
+  inline void set_num_examples(::google::protobuf::uint64 value);
+
+  // required uint64 feature_begin = 3;
+  inline bool has_feature_begin() const;
+  inline void clear_feature_begin();
+  static const int kFeatureBeginFieldNumber = 3;
+  inline ::google::protobuf::uint64 feature_begin() const;
+  inline void set_feature_begin(::google::protobuf::uint64 value);
+
+  // required uint64 feature_end = 4;
+  inline bool has_feature_end() const;
+  inline void clear_feature_end();
+  static const int kFeatureEndFieldNumber = 4;
+  inline ::google::protobuf::uint64 feature_end() const;
+  inline void set_feature_end(::google::protobuf::uint64 value);
+
+  // repeated .FeatureGroupInfo feature_group_info = 5;
   inline int feature_group_info_size() const;
   inline void clear_feature_group_info();
-  static const int kFeatureGroupInfoFieldNumber = 2;
+  static const int kFeatureGroupInfoFieldNumber = 5;
   inline const ::FeatureGroupInfo& feature_group_info(int index) const;
   inline ::FeatureGroupInfo* mutable_feature_group_info(int index);
   inline ::FeatureGroupInfo* add_feature_group_info();
@@ -179,27 +200,6 @@ class PServerInputInfo : public ::google::protobuf::Message {
       feature_group_info() const;
   inline ::google::protobuf::RepeatedPtrField< ::FeatureGroupInfo >*
       mutable_feature_group_info();
-
-  // required uint64 num_examples = 4;
-  inline bool has_num_examples() const;
-  inline void clear_num_examples();
-  static const int kNumExamplesFieldNumber = 4;
-  inline ::google::protobuf::uint64 num_examples() const;
-  inline void set_num_examples(::google::protobuf::uint64 value);
-
-  // required uint64 feature_begin = 5;
-  inline bool has_feature_begin() const;
-  inline void clear_feature_begin();
-  static const int kFeatureBeginFieldNumber = 5;
-  inline ::google::protobuf::uint64 feature_begin() const;
-  inline void set_feature_begin(::google::protobuf::uint64 value);
-
-  // required uint64 feature_end = 6;
-  inline bool has_feature_end() const;
-  inline void clear_feature_end();
-  static const int kFeatureEndFieldNumber = 6;
-  inline ::google::protobuf::uint64 feature_end() const;
-  inline void set_feature_end(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:PServerInputInfo)
  private:
@@ -214,10 +214,10 @@ class PServerInputInfo : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::FeatureGroupInfo > feature_group_info_;
   ::google::protobuf::uint64 num_examples_;
   ::google::protobuf::uint64 feature_begin_;
   ::google::protobuf::uint64 feature_end_;
+  ::google::protobuf::RepeatedPtrField< ::FeatureGroupInfo > feature_group_info_;
   int label_type_;
 
   mutable int _cached_size_;
@@ -620,7 +620,73 @@ inline void PServerInputInfo::set_label_type(::PServerInputInfo_LabelType value)
   label_type_ = value;
 }
 
-// repeated .FeatureGroupInfo feature_group_info = 2;
+// required uint64 num_examples = 2;
+inline bool PServerInputInfo::has_num_examples() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void PServerInputInfo::set_has_num_examples() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void PServerInputInfo::clear_has_num_examples() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void PServerInputInfo::clear_num_examples() {
+  num_examples_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_examples();
+}
+inline ::google::protobuf::uint64 PServerInputInfo::num_examples() const {
+  return num_examples_;
+}
+inline void PServerInputInfo::set_num_examples(::google::protobuf::uint64 value) {
+  set_has_num_examples();
+  num_examples_ = value;
+}
+
+// required uint64 feature_begin = 3;
+inline bool PServerInputInfo::has_feature_begin() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void PServerInputInfo::set_has_feature_begin() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void PServerInputInfo::clear_has_feature_begin() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void PServerInputInfo::clear_feature_begin() {
+  feature_begin_ = GOOGLE_ULONGLONG(0);
+  clear_has_feature_begin();
+}
+inline ::google::protobuf::uint64 PServerInputInfo::feature_begin() const {
+  return feature_begin_;
+}
+inline void PServerInputInfo::set_feature_begin(::google::protobuf::uint64 value) {
+  set_has_feature_begin();
+  feature_begin_ = value;
+}
+
+// required uint64 feature_end = 4;
+inline bool PServerInputInfo::has_feature_end() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void PServerInputInfo::set_has_feature_end() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void PServerInputInfo::clear_has_feature_end() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void PServerInputInfo::clear_feature_end() {
+  feature_end_ = GOOGLE_ULONGLONG(0);
+  clear_has_feature_end();
+}
+inline ::google::protobuf::uint64 PServerInputInfo::feature_end() const {
+  return feature_end_;
+}
+inline void PServerInputInfo::set_feature_end(::google::protobuf::uint64 value) {
+  set_has_feature_end();
+  feature_end_ = value;
+}
+
+// repeated .FeatureGroupInfo feature_group_info = 5;
 inline int PServerInputInfo::feature_group_info_size() const {
   return feature_group_info_.size();
 }
@@ -643,72 +709,6 @@ PServerInputInfo::feature_group_info() const {
 inline ::google::protobuf::RepeatedPtrField< ::FeatureGroupInfo >*
 PServerInputInfo::mutable_feature_group_info() {
   return &feature_group_info_;
-}
-
-// required uint64 num_examples = 4;
-inline bool PServerInputInfo::has_num_examples() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void PServerInputInfo::set_has_num_examples() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void PServerInputInfo::clear_has_num_examples() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void PServerInputInfo::clear_num_examples() {
-  num_examples_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_examples();
-}
-inline ::google::protobuf::uint64 PServerInputInfo::num_examples() const {
-  return num_examples_;
-}
-inline void PServerInputInfo::set_num_examples(::google::protobuf::uint64 value) {
-  set_has_num_examples();
-  num_examples_ = value;
-}
-
-// required uint64 feature_begin = 5;
-inline bool PServerInputInfo::has_feature_begin() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void PServerInputInfo::set_has_feature_begin() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void PServerInputInfo::clear_has_feature_begin() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void PServerInputInfo::clear_feature_begin() {
-  feature_begin_ = GOOGLE_ULONGLONG(0);
-  clear_has_feature_begin();
-}
-inline ::google::protobuf::uint64 PServerInputInfo::feature_begin() const {
-  return feature_begin_;
-}
-inline void PServerInputInfo::set_feature_begin(::google::protobuf::uint64 value) {
-  set_has_feature_begin();
-  feature_begin_ = value;
-}
-
-// required uint64 feature_end = 6;
-inline bool PServerInputInfo::has_feature_end() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void PServerInputInfo::set_has_feature_end() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void PServerInputInfo::clear_has_feature_end() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void PServerInputInfo::clear_feature_end() {
-  feature_end_ = GOOGLE_ULONGLONG(0);
-  clear_has_feature_end();
-}
-inline ::google::protobuf::uint64 PServerInputInfo::feature_end() const {
-  return feature_end_;
-}
-inline void PServerInputInfo::set_feature_end(::google::protobuf::uint64 value) {
-  set_has_feature_end();
-  feature_end_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -14,12 +14,10 @@ message PServerInputInfo {
     CONTINUOUS = 4;
   }
   required LabelType label_type = 1 [default = EMPTY];
-  repeated FeatureGroupInfo feature_group_info = 2;
-
-  // total number of examples
-  required uint64 num_examples = 4;
-  required uint64 feature_begin = 5;
-  required uint64 feature_end = 6;
+  required uint64 num_examples = 2;
+  required uint64 feature_begin = 3;
+  required uint64 feature_end = 4;
+  repeated FeatureGroupInfo feature_group_info = 5;
 }
 
 message FeatureGroupInfo {

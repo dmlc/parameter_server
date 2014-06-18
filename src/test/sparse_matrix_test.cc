@@ -24,7 +24,8 @@ class SparseMatrixTest : public ::testing::Test {
 
 TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
   std::vector<string> files;
-  for (int i = 0; i < 1; i++)
+  // for (int i = 0; i < 1; i++)
+  int i = 3;
     files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
 
   auto data = readMatricesFromProto<double>(files);
