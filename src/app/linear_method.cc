@@ -3,6 +3,7 @@
 #include "util/eigen3.h"
 #include "base/matrix_io.h"
 #include "proto/pserver_input.pb.h"
+#include "base/io.h"
 
 namespace PS {
 
@@ -33,7 +34,9 @@ void LinearMethod::startSystem() {
   std::vector<Range<Key>> server_range;
   std::vector<DataConfig> worker_training_;
 
-  auto data = app_cf_.training();
+  auto data = searchFiles(app_cf_.training());
+  LL << "training data " << data.DebugString();
+
   if (data.format() == DataConfig::BIN) {
     // format: Y, feature group 0, feature group 1, ...
     // assume those data are shared by all workers, the first one is the label,

@@ -27,7 +27,6 @@ GTEST =  -lgtest_main -lgtest
 
 PROTOS= $(wildcard proto/*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
-
 SRCS = $(PROTOS_CC) \
 	util/crc32c.cc \
 	util/MurmurHash3.cc \
@@ -59,7 +58,8 @@ DEPS = $(SRCS:.cc=.d)
 
 TESTS = \
 	sparse_matrix_test \
-	sparse_matrix_perf \
+	io_test \
+	# sparse_matrix_perf \
 	aggregated_gradient_test \
 	# grad_desc_test \
 	# strtonum_test

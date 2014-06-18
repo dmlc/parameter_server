@@ -16,4 +16,14 @@ split(const string &s, char delim, bool skip_empty = false) {
   return elems;
 }
 
+// TODO support bool skip_empty = false
+static std::string join(const std::vector<std::string> &elems, char delim) {
+  std::string str;
+  for (int i = 0; i < elems.size() - 1; ++i) {
+    str += elems[i] + delim;
+  }
+  str += elems.back();
+  return str;
+}
+
 } // namespace PS

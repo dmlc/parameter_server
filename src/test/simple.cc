@@ -1,6 +1,5 @@
 // some quick codes
 #include "util/common.h"
-#include "util/"
 TEST(str2num, xx) {
   string a = "12345";
 
