@@ -138,8 +138,8 @@ void LinearBlockIterator::updateModel(Message* msg) {
 
   // LL << sid() << " update " <<  gr << ", start " << msg->task.time();
   if (exec_.client()) {
-    CHECK(!local_range.empty());
-
+    // CHECK(!local_range.empty());
+    if (local_range.empty()) LL << global_range << " " << local_range;
     int id = msg->task.risk().feature_group_id();
     auto X = Xs_[id]->colBlock(local_range - Xs_col_offset_[id]);
 

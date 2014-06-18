@@ -243,8 +243,8 @@ SArray<V> SArray<V>::setUnion(const SArray<V>& other) {
 template <typename V>
 SizeR SArray<V>::findRange (
     const V& lower_bound, const V& upper_bound) const {
-  if (upper_bound <= lower_bound)
-    return SizeR(0,0);
+  // if (upper_bound <= lower_bound)
+  //   return SizeR(0,0);
   auto lb = std::lower_bound(begin(), end(), lower_bound);
   auto ub = std::lower_bound(begin(), end(), upper_bound);
   return SizeR(lb - begin(), ub - begin());

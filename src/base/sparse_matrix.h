@@ -145,11 +145,13 @@ MatrixPtr<V> SparseMatrix<I,V>::dotTimes(const MatrixPtr<V>& B) const {
 
 template<typename I, typename V>
 MatrixPtr<V> SparseMatrix<I,V>::colBlock(SizeR range) const {
-  CHECK(!range.empty());
+  // CHECK(!range.empty());
+  CHECK(range.valid());
   if (rowMajor()) {
     CHECK_EQ(range.size(), cols()) << "limited support yet";
     return MatrixPtr<V>(new SparseMatrix<I,V>(info_, offset_, index_, value_));
   } else {
+    if (range.empty()) LL << range;
     auto new_offset = offset_.segment(SizeR(range.begin(), range.end()+1));
     auto new_info = info_;
     range.to(new_info.mutable_col());
