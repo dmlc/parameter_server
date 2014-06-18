@@ -64,6 +64,7 @@ void Postoffice::reply(const Message& msg, const string& reply_msg) {
 
 void Postoffice::queue(const Message& msg) {
 
+  // if (msg.task.time() == 1450) LL << msg.shortDebugString();
   if (msg.valid) {
     sending_queue_.push(msg);
     // if (msg.sender == "S29") { //} && msg.recver == "U0") {

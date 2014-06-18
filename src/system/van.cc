@@ -3,7 +3,6 @@
 #include <zmq.h>
 #include "base/shared_array_io.h"
 
-// TODO data compression
 namespace PS {
 // #define _DEBUG_VAN_
 static string van_filter = "S0";
@@ -137,6 +136,7 @@ Status Van::send(const Message& msg) {
           "failed to send mailer to node " + (id) +
           zmq_strerror(errno));
   }
+
   // my_node_.id() == "S29" &&
   // if (msg.recver == "U0")
   //   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
@@ -144,7 +144,6 @@ Status Van::send(const Message& msg) {
   if (van_filter.empty() || van_filter==my_node_.id())
   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #endif
-
   return Status::OK();
 }
 
@@ -210,6 +209,9 @@ Status Van::recv(Message *msg) {
   if (van_filter.empty() || van_filter==my_node_.id())
   LL << my_node_.id() << "<<<: " << msg->shortDebugString();
 #endif
+
+  // if (msg->task.time() == 1442)
+  // LL << my_node_.id() << "<<<: " << msg->shortDebugString();
   return Status::OK();;
 }
 

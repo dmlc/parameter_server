@@ -6,7 +6,7 @@ void LinearBlockIterator::run() {
   LinearMethod::startSystem();
 
   int num_block = 0;
-  std::vector<std::pair<int, SizeR> > blocks;
+  std::vector<std::pair<int, Range<Key>>> blocks;
   std::vector<int> block_order;
   CHECK(app_cf_.has_block_iterator());
   auto cf = app_cf_.block_iterator();
@@ -17,8 +17,9 @@ void LinearBlockIterator::run() {
         std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
     int n = std::max((int)b, 1);
     for (int i = 0; i < n; ++i) {
-      blocks.push_back(
-          std::make_pair(info.id(), SizeR(info.col()).evenDivide(n, i)));
+      auto block = Range<Key>(info.col()).evenDivide(n, i);
+      if (block.empty()) continue;
+      blocks.push_back(std::make_pair(info.id(), block));
       block_order.push_back(num_block++);
     }
   }
