@@ -34,7 +34,8 @@ void LinearBlockIterator::run() {
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
     // std::random_shuffle(block_order.begin(), block_order.end());
 
-    for (int b : block_order)  {
+    // for (int b : block_order)  {
+    int b = iter;
       Task update;
       auto cmd = RiskMin::setCall(&update);
 
@@ -43,7 +44,7 @@ void LinearBlockIterator::run() {
       blocks[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(blocks[b].first);
       time = wk->submit(update);
-    }
+    // }
 
     Task eval;
     RiskMin::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
@@ -72,7 +73,9 @@ void LinearBlockIterator::run() {
 void LinearBlockIterator::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.client()) {
+    LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training());
+
     CHECK_GE(training_data.size(), 2);
     y_ = training_data[0];
     // localize (and tranpose if necessary) the local training data
@@ -128,6 +131,7 @@ RiskMinProgress LinearBlockIterator::evaluateProgress() {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
     prog.set_nnz_w(w_->nnz());
   }
+  LL << myNodeID() << ": objv " << prog.objv();
   return prog;
 }
 
@@ -140,7 +144,8 @@ void LinearBlockIterator::updateModel(Message* msg) {
   // LL << sid() << " update " <<  gr << ", start " << msg->task.time();
   if (exec_.client()) {
     // CHECK(!local_range.empty());
-    if (local_range.empty()) LL << global_range << " " << local_range;
+    // if (local_range.empty()) LL << global_range << " " << local_range;
+    LL << global_range;
     int id = msg->task.risk().feature_group_id();
     auto X = Xs_[id]->colBlock(local_range - Xs_col_offset_[id]);
 
@@ -151,6 +156,8 @@ void LinearBlockIterator::updateModel(Message* msg) {
     AggGradLearnerArg arg;
 
     learner_->compute({y_, X, Xw_.matrix()}, arg, local_grads);
+    LL << myNodeID() << " 1 " << local_grads[0].vec().sum() << " " <<
+        local_grads[0].size() << "; 2 " << local_grads[1].vec().sum();
 
     msg->finished = false;
     auto d = *msg;

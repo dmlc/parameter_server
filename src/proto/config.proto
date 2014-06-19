@@ -1,3 +1,4 @@
+package PS;
 // configuration of data, objective function, and optimizaiton method
 import "proto/range.proto";
 

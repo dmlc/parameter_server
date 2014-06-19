@@ -28,6 +28,8 @@
 #include "proto/range.pb.h"
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2fconfig_2eproto();
 void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -218,12 +220,12 @@ class AppConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional .AppConfig.AppType type = 1;
+  // optional .PS.AppConfig.AppType type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::AppConfig_AppType type() const;
-  inline void set_type(::AppConfig_AppType value);
+  inline ::PS::AppConfig_AppType type() const;
+  inline void set_type(::PS::AppConfig_AppType value);
 
   // optional string app_name = 2;
   inline bool has_app_name() const;
@@ -253,52 +255,52 @@ class AppConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parameter_name() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parameter_name();
 
-  // optional .DataConfig training = 10;
+  // optional .PS.DataConfig training = 10;
   inline bool has_training() const;
   inline void clear_training();
   static const int kTrainingFieldNumber = 10;
-  inline const ::DataConfig& training() const;
-  inline ::DataConfig* mutable_training();
-  inline ::DataConfig* release_training();
-  inline void set_allocated_training(::DataConfig* training);
+  inline const ::PS::DataConfig& training() const;
+  inline ::PS::DataConfig* mutable_training();
+  inline ::PS::DataConfig* release_training();
+  inline void set_allocated_training(::PS::DataConfig* training);
 
-  // optional .LossConfig loss = 20;
+  // optional .PS.LossConfig loss = 20;
   inline bool has_loss() const;
   inline void clear_loss();
   static const int kLossFieldNumber = 20;
-  inline const ::LossConfig& loss() const;
-  inline ::LossConfig* mutable_loss();
-  inline ::LossConfig* release_loss();
-  inline void set_allocated_loss(::LossConfig* loss);
+  inline const ::PS::LossConfig& loss() const;
+  inline ::PS::LossConfig* mutable_loss();
+  inline ::PS::LossConfig* release_loss();
+  inline void set_allocated_loss(::PS::LossConfig* loss);
 
-  // optional .PenaltyConfig penalty = 21;
+  // optional .PS.PenaltyConfig penalty = 21;
   inline bool has_penalty() const;
   inline void clear_penalty();
   static const int kPenaltyFieldNumber = 21;
-  inline const ::PenaltyConfig& penalty() const;
-  inline ::PenaltyConfig* mutable_penalty();
-  inline ::PenaltyConfig* release_penalty();
-  inline void set_allocated_penalty(::PenaltyConfig* penalty);
+  inline const ::PS::PenaltyConfig& penalty() const;
+  inline ::PS::PenaltyConfig* mutable_penalty();
+  inline ::PS::PenaltyConfig* release_penalty();
+  inline void set_allocated_penalty(::PS::PenaltyConfig* penalty);
 
-  // optional .LearnerConfig learner = 30;
+  // optional .PS.LearnerConfig learner = 30;
   inline bool has_learner() const;
   inline void clear_learner();
   static const int kLearnerFieldNumber = 30;
-  inline const ::LearnerConfig& learner() const;
-  inline ::LearnerConfig* mutable_learner();
-  inline ::LearnerConfig* release_learner();
-  inline void set_allocated_learner(::LearnerConfig* learner);
+  inline const ::PS::LearnerConfig& learner() const;
+  inline ::PS::LearnerConfig* mutable_learner();
+  inline ::PS::LearnerConfig* release_learner();
+  inline void set_allocated_learner(::PS::LearnerConfig* learner);
 
-  // optional .BlockIteratorConfig block_iterator = 40;
+  // optional .PS.BlockIteratorConfig block_iterator = 40;
   inline bool has_block_iterator() const;
   inline void clear_block_iterator();
   static const int kBlockIteratorFieldNumber = 40;
-  inline const ::BlockIteratorConfig& block_iterator() const;
-  inline ::BlockIteratorConfig* mutable_block_iterator();
-  inline ::BlockIteratorConfig* release_block_iterator();
-  inline void set_allocated_block_iterator(::BlockIteratorConfig* block_iterator);
+  inline const ::PS::BlockIteratorConfig& block_iterator() const;
+  inline ::PS::BlockIteratorConfig* mutable_block_iterator();
+  inline ::PS::BlockIteratorConfig* release_block_iterator();
+  inline void set_allocated_block_iterator(::PS::BlockIteratorConfig* block_iterator);
 
-  // @@protoc_insertion_point(class_scope:AppConfig)
+  // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -319,11 +321,11 @@ class AppConfig : public ::google::protobuf::Message {
 
   ::std::string* app_name_;
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
-  ::DataConfig* training_;
-  ::LossConfig* loss_;
-  ::PenaltyConfig* penalty_;
-  ::LearnerConfig* learner_;
-  ::BlockIteratorConfig* block_iterator_;
+  ::PS::DataConfig* training_;
+  ::PS::LossConfig* loss_;
+  ::PS::PenaltyConfig* penalty_;
+  ::PS::LearnerConfig* learner_;
+  ::PS::BlockIteratorConfig* block_iterator_;
   int type_;
 
   mutable int _cached_size_;
@@ -416,12 +418,12 @@ class DataConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .DataConfig.DataFormat format = 1;
+  // required .PS.DataConfig.DataFormat format = 1;
   inline bool has_format() const;
   inline void clear_format();
   static const int kFormatFieldNumber = 1;
-  inline ::DataConfig_DataFormat format() const;
-  inline void set_format(::DataConfig_DataFormat value);
+  inline ::PS::DataConfig_DataFormat format() const;
+  inline void set_format(::PS::DataConfig_DataFormat value);
 
   // repeated string files = 2;
   inline int files_size() const;
@@ -439,16 +441,16 @@ class DataConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& files() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_files();
 
-  // optional .PbRange range = 3;
+  // optional .PS.PbRange range = 3;
   inline bool has_range() const;
   inline void clear_range();
   static const int kRangeFieldNumber = 3;
-  inline const ::PbRange& range() const;
-  inline ::PbRange* mutable_range();
-  inline ::PbRange* release_range();
-  inline void set_allocated_range(::PbRange* range);
+  inline const ::PS::PbRange& range() const;
+  inline ::PS::PbRange* mutable_range();
+  inline ::PS::PbRange* release_range();
+  inline void set_allocated_range(::PS::PbRange* range);
 
-  // @@protoc_insertion_point(class_scope:DataConfig)
+  // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
   inline void set_has_format();
   inline void clear_has_format();
@@ -458,7 +460,7 @@ class DataConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::RepeatedPtrField< ::std::string> files_;
-  ::PbRange* range_;
+  ::PS::PbRange* range_;
   int format_;
 
   mutable int _cached_size_;
@@ -555,7 +557,7 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_block_delay() const;
   inline void set_max_block_delay(::google::protobuf::int32 value);
 
-  // @@protoc_insertion_point(class_scope:BlockIteratorConfig)
+  // @@protoc_insertion_point(class_scope:PS.BlockIteratorConfig)
  private:
   inline void set_has_example_block_size();
   inline void clear_has_example_block_size();
@@ -664,14 +666,14 @@ class LossConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .LossConfig.Type type = 1;
+  // required .PS.LossConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::LossConfig_Type type() const;
-  inline void set_type(::LossConfig_Type value);
+  inline ::PS::LossConfig_Type type() const;
+  inline void set_type(::PS::LossConfig_Type value);
 
-  // @@protoc_insertion_point(class_scope:LossConfig)
+  // @@protoc_insertion_point(class_scope:PS.LossConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -771,12 +773,12 @@ class LearnerConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .LearnerConfig.Type type = 1;
+  // required .PS.LearnerConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::LearnerConfig_Type type() const;
-  inline void set_type(::LearnerConfig_Type value);
+  inline ::PS::LearnerConfig_Type type() const;
+  inline void set_type(::PS::LearnerConfig_Type value);
 
   // optional float learning_rate = 2 [default = 1];
   inline bool has_learning_rate() const;
@@ -785,7 +787,7 @@ class LearnerConfig : public ::google::protobuf::Message {
   inline float learning_rate() const;
   inline void set_learning_rate(float value);
 
-  // @@protoc_insertion_point(class_scope:LearnerConfig)
+  // @@protoc_insertion_point(class_scope:PS.LearnerConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -870,7 +872,7 @@ class AggGradLearnerArg : public ::google::protobuf::Message {
   inline float learning_rate() const;
   inline void set_learning_rate(float value);
 
-  // @@protoc_insertion_point(class_scope:AggGradLearnerArg)
+  // @@protoc_insertion_point(class_scope:PS.AggGradLearnerArg)
  private:
   inline void set_has_learning_rate();
   inline void clear_has_learning_rate();
@@ -969,12 +971,12 @@ class PenaltyConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .PenaltyConfig.Type type = 1;
+  // required .PS.PenaltyConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::PenaltyConfig_Type type() const;
-  inline void set_type(::PenaltyConfig_Type value);
+  inline ::PS::PenaltyConfig_Type type() const;
+  inline void set_type(::PS::PenaltyConfig_Type value);
 
   // required float coefficient = 2 [default = 0];
   inline bool has_coefficient() const;
@@ -983,7 +985,7 @@ class PenaltyConfig : public ::google::protobuf::Message {
   inline float coefficient() const;
   inline void set_coefficient(float value);
 
-  // @@protoc_insertion_point(class_scope:PenaltyConfig)
+  // @@protoc_insertion_point(class_scope:PS.PenaltyConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -1012,7 +1014,7 @@ class PenaltyConfig : public ::google::protobuf::Message {
 
 // AppConfig
 
-// optional .AppConfig.AppType type = 1;
+// optional .PS.AppConfig.AppType type = 1;
 inline bool AppConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1026,11 +1028,11 @@ inline void AppConfig::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::AppConfig_AppType AppConfig::type() const {
-  return static_cast< ::AppConfig_AppType >(type_);
+inline ::PS::AppConfig_AppType AppConfig::type() const {
+  return static_cast< ::PS::AppConfig_AppType >(type_);
 }
-inline void AppConfig::set_type(::AppConfig_AppType value) {
-  assert(::AppConfig_AppType_IsValid(value));
+inline void AppConfig::set_type(::PS::AppConfig_AppType value) {
+  assert(::PS::AppConfig_AppType_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1149,7 +1151,7 @@ AppConfig::mutable_parameter_name() {
   return &parameter_name_;
 }
 
-// optional .DataConfig training = 10;
+// optional .PS.DataConfig training = 10;
 inline bool AppConfig::has_training() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1160,24 +1162,24 @@ inline void AppConfig::clear_has_training() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void AppConfig::clear_training() {
-  if (training_ != NULL) training_->::DataConfig::Clear();
+  if (training_ != NULL) training_->::PS::DataConfig::Clear();
   clear_has_training();
 }
-inline const ::DataConfig& AppConfig::training() const {
+inline const ::PS::DataConfig& AppConfig::training() const {
   return training_ != NULL ? *training_ : *default_instance_->training_;
 }
-inline ::DataConfig* AppConfig::mutable_training() {
+inline ::PS::DataConfig* AppConfig::mutable_training() {
   set_has_training();
-  if (training_ == NULL) training_ = new ::DataConfig;
+  if (training_ == NULL) training_ = new ::PS::DataConfig;
   return training_;
 }
-inline ::DataConfig* AppConfig::release_training() {
+inline ::PS::DataConfig* AppConfig::release_training() {
   clear_has_training();
-  ::DataConfig* temp = training_;
+  ::PS::DataConfig* temp = training_;
   training_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_training(::DataConfig* training) {
+inline void AppConfig::set_allocated_training(::PS::DataConfig* training) {
   delete training_;
   training_ = training;
   if (training) {
@@ -1187,7 +1189,7 @@ inline void AppConfig::set_allocated_training(::DataConfig* training) {
   }
 }
 
-// optional .LossConfig loss = 20;
+// optional .PS.LossConfig loss = 20;
 inline bool AppConfig::has_loss() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -1198,24 +1200,24 @@ inline void AppConfig::clear_has_loss() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void AppConfig::clear_loss() {
-  if (loss_ != NULL) loss_->::LossConfig::Clear();
+  if (loss_ != NULL) loss_->::PS::LossConfig::Clear();
   clear_has_loss();
 }
-inline const ::LossConfig& AppConfig::loss() const {
+inline const ::PS::LossConfig& AppConfig::loss() const {
   return loss_ != NULL ? *loss_ : *default_instance_->loss_;
 }
-inline ::LossConfig* AppConfig::mutable_loss() {
+inline ::PS::LossConfig* AppConfig::mutable_loss() {
   set_has_loss();
-  if (loss_ == NULL) loss_ = new ::LossConfig;
+  if (loss_ == NULL) loss_ = new ::PS::LossConfig;
   return loss_;
 }
-inline ::LossConfig* AppConfig::release_loss() {
+inline ::PS::LossConfig* AppConfig::release_loss() {
   clear_has_loss();
-  ::LossConfig* temp = loss_;
+  ::PS::LossConfig* temp = loss_;
   loss_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_loss(::LossConfig* loss) {
+inline void AppConfig::set_allocated_loss(::PS::LossConfig* loss) {
   delete loss_;
   loss_ = loss;
   if (loss) {
@@ -1225,7 +1227,7 @@ inline void AppConfig::set_allocated_loss(::LossConfig* loss) {
   }
 }
 
-// optional .PenaltyConfig penalty = 21;
+// optional .PS.PenaltyConfig penalty = 21;
 inline bool AppConfig::has_penalty() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
@@ -1236,24 +1238,24 @@ inline void AppConfig::clear_has_penalty() {
   _has_bits_[0] &= ~0x00000020u;
 }
 inline void AppConfig::clear_penalty() {
-  if (penalty_ != NULL) penalty_->::PenaltyConfig::Clear();
+  if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
   clear_has_penalty();
 }
-inline const ::PenaltyConfig& AppConfig::penalty() const {
+inline const ::PS::PenaltyConfig& AppConfig::penalty() const {
   return penalty_ != NULL ? *penalty_ : *default_instance_->penalty_;
 }
-inline ::PenaltyConfig* AppConfig::mutable_penalty() {
+inline ::PS::PenaltyConfig* AppConfig::mutable_penalty() {
   set_has_penalty();
-  if (penalty_ == NULL) penalty_ = new ::PenaltyConfig;
+  if (penalty_ == NULL) penalty_ = new ::PS::PenaltyConfig;
   return penalty_;
 }
-inline ::PenaltyConfig* AppConfig::release_penalty() {
+inline ::PS::PenaltyConfig* AppConfig::release_penalty() {
   clear_has_penalty();
-  ::PenaltyConfig* temp = penalty_;
+  ::PS::PenaltyConfig* temp = penalty_;
   penalty_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_penalty(::PenaltyConfig* penalty) {
+inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
   delete penalty_;
   penalty_ = penalty;
   if (penalty) {
@@ -1263,7 +1265,7 @@ inline void AppConfig::set_allocated_penalty(::PenaltyConfig* penalty) {
   }
 }
 
-// optional .LearnerConfig learner = 30;
+// optional .PS.LearnerConfig learner = 30;
 inline bool AppConfig::has_learner() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
@@ -1274,24 +1276,24 @@ inline void AppConfig::clear_has_learner() {
   _has_bits_[0] &= ~0x00000040u;
 }
 inline void AppConfig::clear_learner() {
-  if (learner_ != NULL) learner_->::LearnerConfig::Clear();
+  if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
   clear_has_learner();
 }
-inline const ::LearnerConfig& AppConfig::learner() const {
+inline const ::PS::LearnerConfig& AppConfig::learner() const {
   return learner_ != NULL ? *learner_ : *default_instance_->learner_;
 }
-inline ::LearnerConfig* AppConfig::mutable_learner() {
+inline ::PS::LearnerConfig* AppConfig::mutable_learner() {
   set_has_learner();
-  if (learner_ == NULL) learner_ = new ::LearnerConfig;
+  if (learner_ == NULL) learner_ = new ::PS::LearnerConfig;
   return learner_;
 }
-inline ::LearnerConfig* AppConfig::release_learner() {
+inline ::PS::LearnerConfig* AppConfig::release_learner() {
   clear_has_learner();
-  ::LearnerConfig* temp = learner_;
+  ::PS::LearnerConfig* temp = learner_;
   learner_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_learner(::LearnerConfig* learner) {
+inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
   delete learner_;
   learner_ = learner;
   if (learner) {
@@ -1301,7 +1303,7 @@ inline void AppConfig::set_allocated_learner(::LearnerConfig* learner) {
   }
 }
 
-// optional .BlockIteratorConfig block_iterator = 40;
+// optional .PS.BlockIteratorConfig block_iterator = 40;
 inline bool AppConfig::has_block_iterator() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
@@ -1312,24 +1314,24 @@ inline void AppConfig::clear_has_block_iterator() {
   _has_bits_[0] &= ~0x00000080u;
 }
 inline void AppConfig::clear_block_iterator() {
-  if (block_iterator_ != NULL) block_iterator_->::BlockIteratorConfig::Clear();
+  if (block_iterator_ != NULL) block_iterator_->::PS::BlockIteratorConfig::Clear();
   clear_has_block_iterator();
 }
-inline const ::BlockIteratorConfig& AppConfig::block_iterator() const {
+inline const ::PS::BlockIteratorConfig& AppConfig::block_iterator() const {
   return block_iterator_ != NULL ? *block_iterator_ : *default_instance_->block_iterator_;
 }
-inline ::BlockIteratorConfig* AppConfig::mutable_block_iterator() {
+inline ::PS::BlockIteratorConfig* AppConfig::mutable_block_iterator() {
   set_has_block_iterator();
-  if (block_iterator_ == NULL) block_iterator_ = new ::BlockIteratorConfig;
+  if (block_iterator_ == NULL) block_iterator_ = new ::PS::BlockIteratorConfig;
   return block_iterator_;
 }
-inline ::BlockIteratorConfig* AppConfig::release_block_iterator() {
+inline ::PS::BlockIteratorConfig* AppConfig::release_block_iterator() {
   clear_has_block_iterator();
-  ::BlockIteratorConfig* temp = block_iterator_;
+  ::PS::BlockIteratorConfig* temp = block_iterator_;
   block_iterator_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_block_iterator(::BlockIteratorConfig* block_iterator) {
+inline void AppConfig::set_allocated_block_iterator(::PS::BlockIteratorConfig* block_iterator) {
   delete block_iterator_;
   block_iterator_ = block_iterator;
   if (block_iterator) {
@@ -1343,7 +1345,7 @@ inline void AppConfig::set_allocated_block_iterator(::BlockIteratorConfig* block
 
 // DataConfig
 
-// required .DataConfig.DataFormat format = 1;
+// required .PS.DataConfig.DataFormat format = 1;
 inline bool DataConfig::has_format() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1357,11 +1359,11 @@ inline void DataConfig::clear_format() {
   format_ = 1;
   clear_has_format();
 }
-inline ::DataConfig_DataFormat DataConfig::format() const {
-  return static_cast< ::DataConfig_DataFormat >(format_);
+inline ::PS::DataConfig_DataFormat DataConfig::format() const {
+  return static_cast< ::PS::DataConfig_DataFormat >(format_);
 }
-inline void DataConfig::set_format(::DataConfig_DataFormat value) {
-  assert(::DataConfig_DataFormat_IsValid(value));
+inline void DataConfig::set_format(::PS::DataConfig_DataFormat value) {
+  assert(::PS::DataConfig_DataFormat_IsValid(value));
   set_has_format();
   format_ = value;
 }
@@ -1410,7 +1412,7 @@ DataConfig::mutable_files() {
   return &files_;
 }
 
-// optional .PbRange range = 3;
+// optional .PS.PbRange range = 3;
 inline bool DataConfig::has_range() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1421,24 +1423,24 @@ inline void DataConfig::clear_has_range() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void DataConfig::clear_range() {
-  if (range_ != NULL) range_->::PbRange::Clear();
+  if (range_ != NULL) range_->::PS::PbRange::Clear();
   clear_has_range();
 }
-inline const ::PbRange& DataConfig::range() const {
+inline const ::PS::PbRange& DataConfig::range() const {
   return range_ != NULL ? *range_ : *default_instance_->range_;
 }
-inline ::PbRange* DataConfig::mutable_range() {
+inline ::PS::PbRange* DataConfig::mutable_range() {
   set_has_range();
-  if (range_ == NULL) range_ = new ::PbRange;
+  if (range_ == NULL) range_ = new ::PS::PbRange;
   return range_;
 }
-inline ::PbRange* DataConfig::release_range() {
+inline ::PS::PbRange* DataConfig::release_range() {
   clear_has_range();
-  ::PbRange* temp = range_;
+  ::PS::PbRange* temp = range_;
   range_ = NULL;
   return temp;
 }
-inline void DataConfig::set_allocated_range(::PbRange* range) {
+inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
   delete range_;
   range_ = range;
   if (range) {
@@ -1544,7 +1546,7 @@ inline void BlockIteratorConfig::set_max_block_delay(::google::protobuf::int32 v
 
 // LossConfig
 
-// required .LossConfig.Type type = 1;
+// required .PS.LossConfig.Type type = 1;
 inline bool LossConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1558,11 +1560,11 @@ inline void LossConfig::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::LossConfig_Type LossConfig::type() const {
-  return static_cast< ::LossConfig_Type >(type_);
+inline ::PS::LossConfig_Type LossConfig::type() const {
+  return static_cast< ::PS::LossConfig_Type >(type_);
 }
-inline void LossConfig::set_type(::LossConfig_Type value) {
-  assert(::LossConfig_Type_IsValid(value));
+inline void LossConfig::set_type(::PS::LossConfig_Type value) {
+  assert(::PS::LossConfig_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1571,7 +1573,7 @@ inline void LossConfig::set_type(::LossConfig_Type value) {
 
 // LearnerConfig
 
-// required .LearnerConfig.Type type = 1;
+// required .PS.LearnerConfig.Type type = 1;
 inline bool LearnerConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1585,11 +1587,11 @@ inline void LearnerConfig::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::LearnerConfig_Type LearnerConfig::type() const {
-  return static_cast< ::LearnerConfig_Type >(type_);
+inline ::PS::LearnerConfig_Type LearnerConfig::type() const {
+  return static_cast< ::PS::LearnerConfig_Type >(type_);
 }
-inline void LearnerConfig::set_type(::LearnerConfig_Type value) {
-  assert(::LearnerConfig_Type_IsValid(value));
+inline void LearnerConfig::set_type(::PS::LearnerConfig_Type value) {
+  assert(::PS::LearnerConfig_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1646,7 +1648,7 @@ inline void AggGradLearnerArg::set_learning_rate(float value) {
 
 // PenaltyConfig
 
-// required .PenaltyConfig.Type type = 1;
+// required .PS.PenaltyConfig.Type type = 1;
 inline bool PenaltyConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1660,11 +1662,11 @@ inline void PenaltyConfig::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::PenaltyConfig_Type PenaltyConfig::type() const {
-  return static_cast< ::PenaltyConfig_Type >(type_);
+inline ::PS::PenaltyConfig_Type PenaltyConfig::type() const {
+  return static_cast< ::PS::PenaltyConfig_Type >(type_);
 }
-inline void PenaltyConfig::set_type(::PenaltyConfig_Type value) {
-  assert(::PenaltyConfig_Type_IsValid(value));
+inline void PenaltyConfig::set_type(::PS::PenaltyConfig_Type value) {
+  assert(::PS::PenaltyConfig_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1694,29 +1696,31 @@ inline void PenaltyConfig::set_coefficient(float value) {
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace PS
+
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::AppConfig_AppType>() {
-  return ::AppConfig_AppType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::AppConfig_AppType>() {
+  return ::PS::AppConfig_AppType_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::DataConfig_DataFormat>() {
-  return ::DataConfig_DataFormat_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataConfig_DataFormat>() {
+  return ::PS::DataConfig_DataFormat_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::LossConfig_Type>() {
-  return ::LossConfig_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LossConfig_Type>() {
+  return ::PS::LossConfig_Type_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::LearnerConfig_Type>() {
-  return ::LearnerConfig_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LearnerConfig_Type>() {
+  return ::PS::LearnerConfig_Type_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PenaltyConfig_Type>() {
-  return ::PenaltyConfig_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::PenaltyConfig_Type>() {
+  return ::PS::PenaltyConfig_Type_descriptor();
 }
 
 }  // namespace google

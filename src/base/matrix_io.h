@@ -6,7 +6,7 @@
 #include "base/shared_array_io.h"
 #include "util/recordio.h"
 #include "proto/config.pb.h"
-#include "proto/pserver_input.pb.h"
+#include "proto/instance.pb.h"
 #include "util/file.h"
 
 namespace PS {
@@ -23,10 +23,11 @@ struct FillSparseMatrix {
   bool binary;
 };
 
+// TODO check optional
 static FeatureGroupInfo mergeFeatureGroupInfo(
     const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
   CHECK_EQ(A.group_id(), B.group_id());
-  CHECK_EQ(A.feature_type(), B.feature_type());
+  CHECK_EQ(A.type(), B.type());
   auto C = A;
   C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
   C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
@@ -35,121 +36,121 @@ static FeatureGroupInfo mergeFeatureGroupInfo(
   return C;
 }
 
-static PServerInputInfo mergePServerInputInfo(
-    const PServerInputInfo& A, const PServerInputInfo& B) {
-  CHECK_EQ(A.label_type(), B.label_type());
-  PServerInputInfo C;
-  C.set_label_type(A.label_type());
-  C.set_num_examples(A.num_examples() + B.num_examples());
-  C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
-  C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
+// static PServerInputInfo mergePServerInputInfo(
+//     const PServerInputInfo& A, const PServerInputInfo& B) {
+//   CHECK_EQ(A.label_type(), B.label_type());
+//   PServerInputInfo C;
+//   C.set_label_type(A.label_type());
+//   C.set_num_examples(A.num_examples() + B.num_examples());
+//   C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
+//   C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
 
-  CHECK_EQ(A.feature_group_info_size(), B.feature_group_info_size());
-  for (int i = 0; i < A.feature_group_info_size(); ++i) {
-    *C.add_feature_group_info() = mergeFeatureGroupInfo(
-        A.feature_group_info(i), B.feature_group_info(i));
-  }
-  return C;
-}
+//   CHECK_EQ(A.feature_group_info_size(), B.feature_group_info_size());
+//   for (int i = 0; i < A.feature_group_info_size(); ++i) {
+//     *C.add_feature_group_info() = mergeFeatureGroupInfo(
+//         A.feature_group_info(i), B.feature_group_info(i));
+//   }
+//   return C;
+// }
 
-template<typename V>
-MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
-  MatrixInfo f;
-  if (g.feature_type() == FeatureGroupInfo::DENSE)
-    f.set_type(MatrixInfo::DENSE);
-  else if (g.feature_type() == FeatureGroupInfo::SPARSE)
-    f.set_type(MatrixInfo::SPARSE);
-  else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
-    f.set_type(MatrixInfo::SPARSE_BINARY);
-  f.set_row_major(true);
-  f.set_id(g.group_id());
-  f.mutable_row()->set_begin(0);
-  f.mutable_row()->set_end(g.num_examples());
-  f.mutable_col()->set_begin(g.feature_begin());
-  f.mutable_col()->set_end(g.feature_end());
-  f.set_nnz(g.num_entries());
-  f.set_sizeof_index(sizeof(uint64));
-  f.set_sizeof_value(sizeof(V));
-  f.set_nnz_per_row((double) f.nnz() / (double) g.num_examples());
-  return f;
-}
+// template<typename V>
+// MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
+//   MatrixInfo f;
+//   if (g.feature_type() == FeatureGroupInfo::DENSE)
+//     f.set_type(MatrixInfo::DENSE);
+//   else if (g.feature_type() == FeatureGroupInfo::SPARSE)
+//     f.set_type(MatrixInfo::SPARSE);
+//   else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
+//     f.set_type(MatrixInfo::SPARSE_BINARY);
+//   f.set_row_major(true);
+//   f.set_id(g.group_id());
+//   f.mutable_row()->set_begin(0);
+//   f.mutable_row()->set_end(g.num_examples());
+//   f.mutable_col()->set_begin(g.feature_begin());
+//   f.mutable_col()->set_end(g.feature_end());
+//   f.set_nnz(g.num_entries());
+//   f.set_sizeof_index(sizeof(uint64));
+//   f.set_sizeof_value(sizeof(V));
+//   f.set_nnz_per_row((double) f.nnz() / (double) g.num_examples());
+//   return f;
+// }
 
 // label, feature_group 1, feature_group 2, ...
 // TODO do not support dense feature group yet...
 template<typename V>
 MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
-  // load info
-  PServerInputInfo info;
-  for (int i = 0; i < files.size(); ++i) {
-    PServerInputInfo f; ReadFileToProtoOrDie(files[i]+".info", &f);
-    info = i == 0 ? f : mergePServerInputInfo(info, f);
-  }
-  // LL << info.DebugString();
+  // // load info
+  // PServerInputInfo info;
+  // for (int i = 0; i < files.size(); ++i) {
+  //   PServerInputInfo f; ReadFileToProtoOrDie(files[i]+".info", &f);
+  //   info = i == 0 ? f : mergePServerInputInfo(info, f);
+  // }
+  // // LL << info.DebugString();
 
-  std::map<int32, FeatureGroupInfo> group_info;
-  for (int i = 0; i < info.feature_group_info_size(); ++i)
-    group_info[info.feature_group_info(i).group_id()] = info.feature_group_info(i);
+  // std::map<int32, FeatureGroupInfo> group_info;
+  // for (int i = 0; i < info.feature_group_info_size(); ++i)
+  //   group_info[info.feature_group_info(i).group_id()] = info.feature_group_info(i);
 
-  // allocate data
-  SArray<V> label(info.num_examples());
-  uint64 label_pos = 0;
+  // // allocate data
+  // SArray<V> label(info.num_examples());
+  // uint64 label_pos = 0;
 
-  std::map<int32, FillSparseMatrix<V>> data;
-  for (auto& it : group_info) {
-    auto& m = data[it.first];
-    m.binary = it.second.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
-    m.offset.resize(info.num_examples()+1);
-    m.index.resize(it.second.num_entries());
-    if (!m.binary) m.value.resize(it.second.num_entries());
-    m.index_pos = 0;
-    m.value_pos = 0;
-    m.offset[0] = 0;
-    m.offset_pos = 1;
-  }
+  // std::map<int32, FillSparseMatrix<V>> data;
+  // for (auto& it : group_info) {
+  //   auto& m = data[it.first];
+  //   m.binary = it.second.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
+  //   m.offset.resize(info.num_examples()+1);
+  //   m.index.resize(it.second.num_entries());
+  //   if (!m.binary) m.value.resize(it.second.num_entries());
+  //   m.index_pos = 0;
+  //   m.value_pos = 0;
+  //   m.offset[0] = 0;
+  //   m.offset_pos = 1;
+  // }
 
-  // file data
-  for (auto f : files) {
-    File* in = File::OpenOrDie(f+".recordio", "r");
-    RecordReader reader(in);
-    PServerInput record;
-    while (reader.ReadProtocolMessage(&record)) {
-      label[label_pos++] = record.label();
-      int n = record.feature_group_size();
-      for (int i = 0; i < n; ++i) {
-        const auto& g = record.feature_group(i);
-        auto& m = data[g.group_id()];
-        int k = g.feature_id_size();
-        for (int j = 0; j < k; ++j)
-          m.index[m.index_pos++] = g.feature_id(j);
-        if (g.value_size() > 0) {
-          CHECK_EQ(g.value_size(), k);
-          CHECK(!m.binary);
-          for (int j = 0; j < k; ++j)
-            m.value[m.value_pos++] = g.value(j);
-        }
-        m.offset[m.offset_pos] = m.offset[m.offset_pos-1] + k;
-        ++ m.offset_pos;
-      }
-    }
-  }
+  // // file data
+  // for (auto f : files) {
+  //   File* in = File::OpenOrDie(f+".recordio", "r");
+  //   RecordReader reader(in);
+  //   PServerInput record;
+  //   while (reader.ReadProtocolMessage(&record)) {
+  //     label[label_pos++] = record.label();
+  //     int n = record.feature_group_size();
+  //     for (int i = 0; i < n; ++i) {
+  //       const auto& g = record.feature_group(i);
+  //       auto& m = data[g.group_id()];
+  //       int k = g.feature_id_size();
+  //       for (int j = 0; j < k; ++j)
+  //         m.index[m.index_pos++] = g.feature_id(j);
+  //       if (g.value_size() > 0) {
+  //         CHECK_EQ(g.value_size(), k);
+  //         CHECK(!m.binary);
+  //         for (int j = 0; j < k; ++j)
+  //           m.value[m.value_pos++] = g.value(j);
+  //       }
+  //       m.offset[m.offset_pos] = m.offset[m.offset_pos-1] + k;
+  //       ++ m.offset_pos;
+  //     }
+  //   }
+  // }
 
   // fill info
   MatrixPtrList<V> res;
-  MatrixInfo label_info;
-  string label_str = "type: DENSE row_major: true row { begin: 0 end: "
-                     + std::to_string(info.num_examples())
-                     + " } col { begin: 0 end: 1 } nnz: "
-                     + std::to_string(info.num_examples())
-                     + " sizeof_value: " + std::to_string(sizeof(V));
-  google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
-  res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
+  // MatrixInfo label_info;
+  // string label_str = "type: DENSE row_major: true row { begin: 0 end: "
+  //                    + std::to_string(info.num_examples())
+  //                    + " } col { begin: 0 end: 1 } nnz: "
+  //                    + std::to_string(info.num_examples())
+  //                    + " sizeof_value: " + std::to_string(sizeof(V));
+  // google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
+  // res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
-  for (auto& it : group_info) {
-    MatrixInfo f = readMatrixInfo<V>(it.second);
-    auto& d = data[f.id()];
-    res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(
-        f, d.offset, d.index, d.value)));
-  }
+  // for (auto& it : group_info) {
+  //   MatrixInfo f = readMatrixInfo<V>(it.second);
+  //   auto& d = data[f.id()];
+  //   res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(
+  //       f, d.offset, d.index, d.value)));
+  // }
   return res;
 }
 

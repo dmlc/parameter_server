@@ -2,7 +2,7 @@
 #include "base/range.h"
 #include "util/eigen3.h"
 #include "base/matrix_io.h"
-#include "proto/pserver_input.pb.h"
+#include "proto/instance.pb.h"
 #include "base/io.h"
 
 namespace PS {
@@ -35,7 +35,7 @@ void LinearMethod::startSystem() {
   std::vector<DataConfig> worker_training_;
 
   auto data = searchFiles(app_cf_.training());
-  LL << "training data " << data.DebugString();
+  // LL << "training data " << data.DebugString();
 
   if (data.format() == DataConfig::BIN) {
     // format: Y, feature group 0, feature group 1, ...
@@ -55,26 +55,26 @@ void LinearMethod::startSystem() {
     }
   } else if (data.format() == DataConfig::PROTO) {
     // assume multiple recordio files, each worker get several of them
-    // TODO allow * match
-    PServerInputInfo info;
-    for (int i = 0; i < data.files_size(); ++i) {
-      PServerInputInfo f;
-      ReadFileToProtoOrDie(data.files(i)+".info", &f);
-      info = i == 0 ? f : mergePServerInputInfo(info, f);
-    }
-    for (int i = 0; i < info.feature_group_info_size(); ++i) {
-      global_training_info_.push_back(
-          readMatrixInfo<double>(info.feature_group_info(i)));
-    }
-    global_training_feature_range_ =
-        Range<Key>(info.feature_begin(), info.feature_end());
-    for (int i = 0; i < num_worker; ++i) {
-      DataConfig dc; dc.set_format(DataConfig::PROTO);
-      auto os = Range<int>(0, data.files_size()).evenDivide(num_worker, i);
-      for (int j = os.begin(); j < os.end(); ++j)
-        dc.add_files(data.files(j));
-      worker_training_.push_back(dc);
-    }
+    // FIXME
+    // InstanceInfo info;
+    // for (int i = 0; i < data.files_size(); ++i) {
+    //   InstanceInfo f;
+    //   ReadFileToProtoOrDie(data.files(i)+".info", &f);
+    //   // info = i == 0 ? f : mergePServerInputInfo(info, f);
+    // }
+    // for (int i = 0; i < info.feature_group_info_size(); ++i) {
+    //   global_training_info_.push_back(
+    //       readMatrixInfo<double>(info.feature_group_info(i)));
+    // }
+    // global_training_feature_range_ =
+    //     Range<Key>(info.feature_begin(), info.feature_end());
+    // for (int i = 0; i < num_worker; ++i) {
+    //   DataConfig dc; dc.set_format(DataConfig::PROTO);
+    //   auto os = Range<int>(0, data.files_size()).evenDivide(num_worker, i);
+    //   for (int j = os.begin(); j < os.end(); ++j)
+    //     dc.add_files(data.files(j));
+    //   worker_training_.push_back(dc);
+    // }
   }
 
   // evenly divide the keys range for server nodes

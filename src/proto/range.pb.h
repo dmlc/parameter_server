@@ -26,6 +26,8 @@
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2frange_2eproto();
 void protobuf_AssignDesc_proto_2frange_2eproto();
@@ -103,7 +105,7 @@ class PbRange : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 end() const;
   inline void set_end(::google::protobuf::uint64 value);
 
-  // @@protoc_insertion_point(class_scope:PbRange)
+  // @@protoc_insertion_point(class_scope:PS.PbRange)
  private:
   inline void set_has_begin();
   inline void clear_has_begin();
@@ -178,6 +180,8 @@ inline void PbRange::set_end(::google::protobuf::uint64 value) {
 
 
 // @@protoc_insertion_point(namespace_scope)
+
+}  // namespace PS
 
 #ifndef SWIG
 namespace google {

@@ -5,7 +5,7 @@ namespace PS {
 // split a std::string using a character delimiter. if skip_empty == true,
 // split("one:two::three", ':'); will return 4 items
 
-static std::vector<std::string>
+inline std::vector<std::string>
 split(const string &s, char delim, bool skip_empty = false) {
   std::vector<string> elems;
   std::stringstream ss(s);
@@ -17,7 +17,7 @@ split(const string &s, char delim, bool skip_empty = false) {
 }
 
 // TODO support bool skip_empty = false
-static std::string join(const std::vector<std::string> &elems, char delim) {
+inline std::string join(const std::vector<std::string> &elems, char delim) {
   std::string str;
   for (int i = 0; i < elems.size() - 1; ++i) {
     str += elems[i] + delim;

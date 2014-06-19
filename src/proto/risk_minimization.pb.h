@@ -28,6 +28,8 @@
 #include "proto/range.pb.h"
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
 void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -146,7 +148,7 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< double >*
       mutable_busy_time();
 
-  // @@protoc_insertion_point(class_scope:RiskMinProgress)
+  // @@protoc_insertion_point(class_scope:PS.RiskMinProgress)
  private:
   inline void set_has_objv();
   inline void clear_has_objv();
@@ -254,21 +256,21 @@ class RiskMinCall : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .RiskMinCall.Command cmd = 1;
+  // required .PS.RiskMinCall.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::RiskMinCall_Command cmd() const;
-  inline void set_cmd(::RiskMinCall_Command value);
+  inline ::PS::RiskMinCall_Command cmd() const;
+  inline void set_cmd(::PS::RiskMinCall_Command value);
 
-  // optional .PbRange key = 2;
+  // optional .PS.PbRange key = 2;
   inline bool has_key() const;
   inline void clear_key();
   static const int kKeyFieldNumber = 2;
-  inline const ::PbRange& key() const;
-  inline ::PbRange* mutable_key();
-  inline ::PbRange* release_key();
-  inline void set_allocated_key(::PbRange* key);
+  inline const ::PS::PbRange& key() const;
+  inline ::PS::PbRange* mutable_key();
+  inline ::PS::PbRange* release_key();
+  inline void set_allocated_key(::PS::PbRange* key);
 
   // optional int32 feature_group_id = 3;
   inline bool has_feature_group_id() const;
@@ -277,7 +279,7 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 feature_group_id() const;
   inline void set_feature_group_id(::google::protobuf::int32 value);
 
-  // @@protoc_insertion_point(class_scope:RiskMinCall)
+  // @@protoc_insertion_point(class_scope:PS.RiskMinCall)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
@@ -288,7 +290,7 @@ class RiskMinCall : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PbRange* key_;
+  ::PS::PbRange* key_;
   int cmd_;
   ::google::protobuf::int32 feature_group_id_;
 
@@ -404,7 +406,7 @@ RiskMinProgress::mutable_busy_time() {
 
 // RiskMinCall
 
-// required .RiskMinCall.Command cmd = 1;
+// required .PS.RiskMinCall.Command cmd = 1;
 inline bool RiskMinCall::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -418,16 +420,16 @@ inline void RiskMinCall::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::RiskMinCall_Command RiskMinCall::cmd() const {
-  return static_cast< ::RiskMinCall_Command >(cmd_);
+inline ::PS::RiskMinCall_Command RiskMinCall::cmd() const {
+  return static_cast< ::PS::RiskMinCall_Command >(cmd_);
 }
-inline void RiskMinCall::set_cmd(::RiskMinCall_Command value) {
-  assert(::RiskMinCall_Command_IsValid(value));
+inline void RiskMinCall::set_cmd(::PS::RiskMinCall_Command value) {
+  assert(::PS::RiskMinCall_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
-// optional .PbRange key = 2;
+// optional .PS.PbRange key = 2;
 inline bool RiskMinCall::has_key() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -438,24 +440,24 @@ inline void RiskMinCall::clear_has_key() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void RiskMinCall::clear_key() {
-  if (key_ != NULL) key_->::PbRange::Clear();
+  if (key_ != NULL) key_->::PS::PbRange::Clear();
   clear_has_key();
 }
-inline const ::PbRange& RiskMinCall::key() const {
+inline const ::PS::PbRange& RiskMinCall::key() const {
   return key_ != NULL ? *key_ : *default_instance_->key_;
 }
-inline ::PbRange* RiskMinCall::mutable_key() {
+inline ::PS::PbRange* RiskMinCall::mutable_key() {
   set_has_key();
-  if (key_ == NULL) key_ = new ::PbRange;
+  if (key_ == NULL) key_ = new ::PS::PbRange;
   return key_;
 }
-inline ::PbRange* RiskMinCall::release_key() {
+inline ::PS::PbRange* RiskMinCall::release_key() {
   clear_has_key();
-  ::PbRange* temp = key_;
+  ::PS::PbRange* temp = key_;
   key_ = NULL;
   return temp;
 }
-inline void RiskMinCall::set_allocated_key(::PbRange* key) {
+inline void RiskMinCall::set_allocated_key(::PS::PbRange* key) {
   delete key_;
   key_ = key;
   if (key) {
@@ -490,13 +492,15 @@ inline void RiskMinCall::set_feature_group_id(::google::protobuf::int32 value) {
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace PS
+
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::RiskMinCall_Command>() {
-  return ::RiskMinCall_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::RiskMinCall_Command>() {
+  return ::PS::RiskMinCall_Command_descriptor();
 }
 
 }  // namespace google

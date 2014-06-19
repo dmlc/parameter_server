@@ -28,6 +28,8 @@
 #include "proto/range.pb.h"
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2fnode_2eproto();
 void protobuf_AssignDesc_proto_2fnode_2eproto();
@@ -142,12 +144,12 @@ class Node : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .Node.Role role = 1;
+  // required .PS.Node.Role role = 1;
   inline bool has_role() const;
   inline void clear_role();
   static const int kRoleFieldNumber = 1;
-  inline ::Node_Role role() const;
-  inline void set_role(::Node_Role value);
+  inline ::PS::Node_Role role() const;
+  inline void set_role(::PS::Node_Role value);
 
   // optional string id = 2;
   inline bool has_id() const;
@@ -180,16 +182,16 @@ class Node : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 port() const;
   inline void set_port(::google::protobuf::int32 value);
 
-  // optional .PbRange key = 11;
+  // optional .PS.PbRange key = 11;
   inline bool has_key() const;
   inline void clear_key();
   static const int kKeyFieldNumber = 11;
-  inline const ::PbRange& key() const;
-  inline ::PbRange* mutable_key();
-  inline ::PbRange* release_key();
-  inline void set_allocated_key(::PbRange* key);
+  inline const ::PS::PbRange& key() const;
+  inline ::PS::PbRange* mutable_key();
+  inline ::PS::PbRange* release_key();
+  inline void set_allocated_key(::PS::PbRange* key);
 
-  // @@protoc_insertion_point(class_scope:Node)
+  // @@protoc_insertion_point(class_scope:PS.Node)
  private:
   inline void set_has_role();
   inline void clear_has_role();
@@ -208,7 +210,7 @@ class Node : public ::google::protobuf::Message {
   int role_;
   ::google::protobuf::int32 port_;
   ::std::string* hostname_;
-  ::PbRange* key_;
+  ::PS::PbRange* key_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
@@ -227,7 +229,7 @@ class Node : public ::google::protobuf::Message {
 
 // Node
 
-// required .Node.Role role = 1;
+// required .PS.Node.Role role = 1;
 inline bool Node::has_role() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -241,11 +243,11 @@ inline void Node::clear_role() {
   role_ = 0;
   clear_has_role();
 }
-inline ::Node_Role Node::role() const {
-  return static_cast< ::Node_Role >(role_);
+inline ::PS::Node_Role Node::role() const {
+  return static_cast< ::PS::Node_Role >(role_);
 }
-inline void Node::set_role(::Node_Role value) {
-  assert(::Node_Role_IsValid(value));
+inline void Node::set_role(::PS::Node_Role value) {
+  assert(::PS::Node_Role_IsValid(value));
   set_has_role();
   role_ = value;
 }
@@ -412,7 +414,7 @@ inline void Node::set_port(::google::protobuf::int32 value) {
   port_ = value;
 }
 
-// optional .PbRange key = 11;
+// optional .PS.PbRange key = 11;
 inline bool Node::has_key() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -423,24 +425,24 @@ inline void Node::clear_has_key() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void Node::clear_key() {
-  if (key_ != NULL) key_->::PbRange::Clear();
+  if (key_ != NULL) key_->::PS::PbRange::Clear();
   clear_has_key();
 }
-inline const ::PbRange& Node::key() const {
+inline const ::PS::PbRange& Node::key() const {
   return key_ != NULL ? *key_ : *default_instance_->key_;
 }
-inline ::PbRange* Node::mutable_key() {
+inline ::PS::PbRange* Node::mutable_key() {
   set_has_key();
-  if (key_ == NULL) key_ = new ::PbRange;
+  if (key_ == NULL) key_ = new ::PS::PbRange;
   return key_;
 }
-inline ::PbRange* Node::release_key() {
+inline ::PS::PbRange* Node::release_key() {
   clear_has_key();
-  ::PbRange* temp = key_;
+  ::PS::PbRange* temp = key_;
   key_ = NULL;
   return temp;
 }
-inline void Node::set_allocated_key(::PbRange* key) {
+inline void Node::set_allocated_key(::PS::PbRange* key) {
   delete key_;
   key_ = key;
   if (key) {
@@ -453,13 +455,15 @@ inline void Node::set_allocated_key(::PbRange* key) {
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace PS
+
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::Node_Role>() {
-  return ::Node_Role_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::Node_Role>() {
+  return ::PS::Node_Role_descriptor();
 }
 
 }  // namespace google

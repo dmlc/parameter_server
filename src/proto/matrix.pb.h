@@ -28,6 +28,8 @@
 #include "proto/range.pb.h"
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2fmatrix_2eproto();
 void protobuf_AssignDesc_proto_2fmatrix_2eproto();
@@ -136,12 +138,12 @@ class MatrixInfo : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .MatrixInfo.Type type = 1;
+  // required .PS.MatrixInfo.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::MatrixInfo_Type type() const;
-  inline void set_type(::MatrixInfo_Type value);
+  inline ::PS::MatrixInfo_Type type() const;
+  inline void set_type(::PS::MatrixInfo_Type value);
 
   // required bool row_major = 2;
   inline bool has_row_major() const;
@@ -157,23 +159,23 @@ class MatrixInfo : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 id() const;
   inline void set_id(::google::protobuf::int32 value);
 
-  // required .PbRange row = 5;
+  // required .PS.PbRange row = 5;
   inline bool has_row() const;
   inline void clear_row();
   static const int kRowFieldNumber = 5;
-  inline const ::PbRange& row() const;
-  inline ::PbRange* mutable_row();
-  inline ::PbRange* release_row();
-  inline void set_allocated_row(::PbRange* row);
+  inline const ::PS::PbRange& row() const;
+  inline ::PS::PbRange* mutable_row();
+  inline ::PS::PbRange* release_row();
+  inline void set_allocated_row(::PS::PbRange* row);
 
-  // required .PbRange col = 6;
+  // required .PS.PbRange col = 6;
   inline bool has_col() const;
   inline void clear_col();
   static const int kColFieldNumber = 6;
-  inline const ::PbRange& col() const;
-  inline ::PbRange* mutable_col();
-  inline ::PbRange* release_col();
-  inline void set_allocated_col(::PbRange* col);
+  inline const ::PS::PbRange& col() const;
+  inline ::PS::PbRange* mutable_col();
+  inline ::PS::PbRange* release_col();
+  inline void set_allocated_col(::PS::PbRange* col);
 
   // optional uint64 nnz = 7;
   inline bool has_nnz() const;
@@ -210,7 +212,7 @@ class MatrixInfo : public ::google::protobuf::Message {
   inline float nnz_per_col() const;
   inline void set_nnz_per_col(float value);
 
-  // @@protoc_insertion_point(class_scope:MatrixInfo)
+  // @@protoc_insertion_point(class_scope:PS.MatrixInfo)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -237,8 +239,8 @@ class MatrixInfo : public ::google::protobuf::Message {
 
   int type_;
   bool row_major_;
-  ::PbRange* row_;
-  ::PbRange* col_;
+  ::PS::PbRange* row_;
+  ::PS::PbRange* col_;
   ::google::protobuf::int32 id_;
   ::google::protobuf::uint32 sizeof_index_;
   ::google::protobuf::uint64 nnz_;
@@ -263,7 +265,7 @@ class MatrixInfo : public ::google::protobuf::Message {
 
 // MatrixInfo
 
-// required .MatrixInfo.Type type = 1;
+// required .PS.MatrixInfo.Type type = 1;
 inline bool MatrixInfo::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -277,11 +279,11 @@ inline void MatrixInfo::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::MatrixInfo_Type MatrixInfo::type() const {
-  return static_cast< ::MatrixInfo_Type >(type_);
+inline ::PS::MatrixInfo_Type MatrixInfo::type() const {
+  return static_cast< ::PS::MatrixInfo_Type >(type_);
 }
-inline void MatrixInfo::set_type(::MatrixInfo_Type value) {
-  assert(::MatrixInfo_Type_IsValid(value));
+inline void MatrixInfo::set_type(::PS::MatrixInfo_Type value) {
+  assert(::PS::MatrixInfo_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -330,7 +332,7 @@ inline void MatrixInfo::set_id(::google::protobuf::int32 value) {
   id_ = value;
 }
 
-// required .PbRange row = 5;
+// required .PS.PbRange row = 5;
 inline bool MatrixInfo::has_row() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -341,24 +343,24 @@ inline void MatrixInfo::clear_has_row() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void MatrixInfo::clear_row() {
-  if (row_ != NULL) row_->::PbRange::Clear();
+  if (row_ != NULL) row_->::PS::PbRange::Clear();
   clear_has_row();
 }
-inline const ::PbRange& MatrixInfo::row() const {
+inline const ::PS::PbRange& MatrixInfo::row() const {
   return row_ != NULL ? *row_ : *default_instance_->row_;
 }
-inline ::PbRange* MatrixInfo::mutable_row() {
+inline ::PS::PbRange* MatrixInfo::mutable_row() {
   set_has_row();
-  if (row_ == NULL) row_ = new ::PbRange;
+  if (row_ == NULL) row_ = new ::PS::PbRange;
   return row_;
 }
-inline ::PbRange* MatrixInfo::release_row() {
+inline ::PS::PbRange* MatrixInfo::release_row() {
   clear_has_row();
-  ::PbRange* temp = row_;
+  ::PS::PbRange* temp = row_;
   row_ = NULL;
   return temp;
 }
-inline void MatrixInfo::set_allocated_row(::PbRange* row) {
+inline void MatrixInfo::set_allocated_row(::PS::PbRange* row) {
   delete row_;
   row_ = row;
   if (row) {
@@ -368,7 +370,7 @@ inline void MatrixInfo::set_allocated_row(::PbRange* row) {
   }
 }
 
-// required .PbRange col = 6;
+// required .PS.PbRange col = 6;
 inline bool MatrixInfo::has_col() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -379,24 +381,24 @@ inline void MatrixInfo::clear_has_col() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void MatrixInfo::clear_col() {
-  if (col_ != NULL) col_->::PbRange::Clear();
+  if (col_ != NULL) col_->::PS::PbRange::Clear();
   clear_has_col();
 }
-inline const ::PbRange& MatrixInfo::col() const {
+inline const ::PS::PbRange& MatrixInfo::col() const {
   return col_ != NULL ? *col_ : *default_instance_->col_;
 }
-inline ::PbRange* MatrixInfo::mutable_col() {
+inline ::PS::PbRange* MatrixInfo::mutable_col() {
   set_has_col();
-  if (col_ == NULL) col_ = new ::PbRange;
+  if (col_ == NULL) col_ = new ::PS::PbRange;
   return col_;
 }
-inline ::PbRange* MatrixInfo::release_col() {
+inline ::PS::PbRange* MatrixInfo::release_col() {
   clear_has_col();
-  ::PbRange* temp = col_;
+  ::PS::PbRange* temp = col_;
   col_ = NULL;
   return temp;
 }
-inline void MatrixInfo::set_allocated_col(::PbRange* col) {
+inline void MatrixInfo::set_allocated_col(::PS::PbRange* col) {
   delete col_;
   col_ = col;
   if (col) {
@@ -519,13 +521,15 @@ inline void MatrixInfo::set_nnz_per_col(float value) {
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace PS
+
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::MatrixInfo_Type>() {
-  return ::MatrixInfo_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::MatrixInfo_Type>() {
+  return ::PS::MatrixInfo_Type_descriptor();
 }
 
 }  // namespace google

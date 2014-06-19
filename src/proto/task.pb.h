@@ -31,6 +31,8 @@
 #include "proto/risk_minimization.pb.h"
 // @@protoc_insertion_point(includes)
 
+namespace PS {
+
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2ftask_2eproto();
 void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -231,12 +233,12 @@ class Task : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .Task.Type type = 1;
+  // required .PS.Task.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::Task_Type type() const;
-  inline void set_type(::Task_Type value);
+  inline ::PS::Task_Type type() const;
+  inline void set_type(::PS::Task_Type value);
 
   // required bool request = 2 [default = false];
   inline bool has_request() const;
@@ -285,14 +287,14 @@ class Task : public ::google::protobuf::Message {
   inline bool has_key() const;
   inline void set_has_key(bool value);
 
-  // optional .PbRange key_range = 8;
+  // optional .PS.PbRange key_range = 8;
   inline bool has_key_range() const;
   inline void clear_key_range();
   static const int kKeyRangeFieldNumber = 8;
-  inline const ::PbRange& key_range() const;
-  inline ::PbRange* mutable_key_range();
-  inline ::PbRange* release_key_range();
-  inline void set_allocated_key_range(::PbRange* key_range);
+  inline const ::PS::PbRange& key_range() const;
+  inline ::PS::PbRange* mutable_key_range();
+  inline ::PS::PbRange* release_key_range();
+  inline void set_allocated_key_range(::PS::PbRange* key_range);
 
   // optional uint32 key_signature = 9;
   inline bool has_key_signature() const;
@@ -325,52 +327,52 @@ class Task : public ::google::protobuf::Message {
   inline ::std::string* release_msg();
   inline void set_allocated_msg(::std::string* msg);
 
-  // optional .ManageNode mng_node = 102;
+  // optional .PS.ManageNode mng_node = 102;
   inline bool has_mng_node() const;
   inline void clear_mng_node();
   static const int kMngNodeFieldNumber = 102;
-  inline const ::ManageNode& mng_node() const;
-  inline ::ManageNode* mutable_mng_node();
-  inline ::ManageNode* release_mng_node();
-  inline void set_allocated_mng_node(::ManageNode* mng_node);
+  inline const ::PS::ManageNode& mng_node() const;
+  inline ::PS::ManageNode* mutable_mng_node();
+  inline ::PS::ManageNode* release_mng_node();
+  inline void set_allocated_mng_node(::PS::ManageNode* mng_node);
 
-  // optional .ManageApp mng_app = 103;
+  // optional .PS.ManageApp mng_app = 103;
   inline bool has_mng_app() const;
   inline void clear_mng_app();
   static const int kMngAppFieldNumber = 103;
-  inline const ::ManageApp& mng_app() const;
-  inline ::ManageApp* mutable_mng_app();
-  inline ::ManageApp* release_mng_app();
-  inline void set_allocated_mng_app(::ManageApp* mng_app);
+  inline const ::PS::ManageApp& mng_app() const;
+  inline ::PS::ManageApp* mutable_mng_app();
+  inline ::PS::ManageApp* release_mng_app();
+  inline void set_allocated_mng_app(::PS::ManageApp* mng_app);
 
-  // optional .CallSharedPara shared_para = 201;
+  // optional .PS.CallSharedPara shared_para = 201;
   inline bool has_shared_para() const;
   inline void clear_shared_para();
   static const int kSharedParaFieldNumber = 201;
-  inline const ::CallSharedPara& shared_para() const;
-  inline ::CallSharedPara* mutable_shared_para();
-  inline ::CallSharedPara* release_shared_para();
-  inline void set_allocated_shared_para(::CallSharedPara* shared_para);
+  inline const ::PS::CallSharedPara& shared_para() const;
+  inline ::PS::CallSharedPara* mutable_shared_para();
+  inline ::PS::CallSharedPara* release_shared_para();
+  inline void set_allocated_shared_para(::PS::CallSharedPara* shared_para);
 
-  // optional .RiskMinCall risk = 301;
+  // optional .PS.RiskMinCall risk = 301;
   inline bool has_risk() const;
   inline void clear_risk();
   static const int kRiskFieldNumber = 301;
-  inline const ::RiskMinCall& risk() const;
-  inline ::RiskMinCall* mutable_risk();
-  inline ::RiskMinCall* release_risk();
-  inline void set_allocated_risk(::RiskMinCall* risk);
+  inline const ::PS::RiskMinCall& risk() const;
+  inline ::PS::RiskMinCall* mutable_risk();
+  inline ::PS::RiskMinCall* release_risk();
+  inline void set_allocated_risk(::PS::RiskMinCall* risk);
 
-  // optional .CallSketch sketch = 302;
+  // optional .PS.CallSketch sketch = 302;
   inline bool has_sketch() const;
   inline void clear_sketch();
   static const int kSketchFieldNumber = 302;
-  inline const ::CallSketch& sketch() const;
-  inline ::CallSketch* mutable_sketch();
-  inline ::CallSketch* release_sketch();
-  inline void set_allocated_sketch(::CallSketch* sketch);
+  inline const ::PS::CallSketch& sketch() const;
+  inline ::PS::CallSketch* mutable_sketch();
+  inline ::PS::CallSketch* release_sketch();
+  inline void set_allocated_sketch(::PS::CallSketch* sketch);
 
-  // @@protoc_insertion_point(class_scope:Task)
+  // @@protoc_insertion_point(class_scope:PS.Task)
  private:
   inline void set_has_type();
   inline void clear_has_type();
@@ -413,14 +415,14 @@ class Task : public ::google::protobuf::Message {
   ::google::protobuf::int32 wait_time_;
   ::google::protobuf::int32 priority_;
   ::google::protobuf::uint32 key_signature_;
-  ::PbRange* key_range_;
+  ::PS::PbRange* key_range_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
   ::std::string* msg_;
-  ::ManageNode* mng_node_;
-  ::ManageApp* mng_app_;
-  ::CallSharedPara* shared_para_;
-  ::RiskMinCall* risk_;
-  ::CallSketch* sketch_;
+  ::PS::ManageNode* mng_node_;
+  ::PS::ManageApp* mng_app_;
+  ::PS::CallSharedPara* shared_para_;
+  ::PS::RiskMinCall* risk_;
+  ::PS::CallSketch* sketch_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
@@ -513,33 +515,33 @@ class ManageNode : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .ManageNode.Command cmd = 1;
+  // required .PS.ManageNode.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::ManageNode_Command cmd() const;
-  inline void set_cmd(::ManageNode_Command value);
+  inline ::PS::ManageNode_Command cmd() const;
+  inline void set_cmd(::PS::ManageNode_Command value);
 
-  // repeated .Node nodes = 2;
+  // repeated .PS.Node nodes = 2;
   inline int nodes_size() const;
   inline void clear_nodes();
   static const int kNodesFieldNumber = 2;
-  inline const ::Node& nodes(int index) const;
-  inline ::Node* mutable_nodes(int index);
-  inline ::Node* add_nodes();
-  inline const ::google::protobuf::RepeatedPtrField< ::Node >&
+  inline const ::PS::Node& nodes(int index) const;
+  inline ::PS::Node* mutable_nodes(int index);
+  inline ::PS::Node* add_nodes();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::Node >&
       nodes() const;
-  inline ::google::protobuf::RepeatedPtrField< ::Node >*
+  inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
       mutable_nodes();
 
-  // @@protoc_insertion_point(class_scope:ManageNode)
+  // @@protoc_insertion_point(class_scope:PS.ManageNode)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::Node > nodes_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Node > nodes_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -632,23 +634,23 @@ class ManageApp : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .ManageApp.Command cmd = 1;
+  // required .PS.ManageApp.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::ManageApp_Command cmd() const;
-  inline void set_cmd(::ManageApp_Command value);
+  inline ::PS::ManageApp_Command cmd() const;
+  inline void set_cmd(::PS::ManageApp_Command value);
 
-  // required .AppConfig app_config = 2;
+  // required .PS.AppConfig app_config = 2;
   inline bool has_app_config() const;
   inline void clear_app_config();
   static const int kAppConfigFieldNumber = 2;
-  inline const ::AppConfig& app_config() const;
-  inline ::AppConfig* mutable_app_config();
-  inline ::AppConfig* release_app_config();
-  inline void set_allocated_app_config(::AppConfig* app_config);
+  inline const ::PS::AppConfig& app_config() const;
+  inline ::PS::AppConfig* mutable_app_config();
+  inline ::PS::AppConfig* release_app_config();
+  inline void set_allocated_app_config(::PS::AppConfig* app_config);
 
-  // @@protoc_insertion_point(class_scope:ManageApp)
+  // @@protoc_insertion_point(class_scope:PS.ManageApp)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
@@ -657,7 +659,7 @@ class ManageApp : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::AppConfig* app_config_;
+  ::PS::AppConfig* app_config_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -745,7 +747,7 @@ class Timestamp : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 time() const;
   inline void set_time(::google::protobuf::int32 value);
 
-  // @@protoc_insertion_point(class_scope:Timestamp)
+  // @@protoc_insertion_point(class_scope:PS.Timestamp)
  private:
   inline void set_has_sender();
   inline void clear_has_sender();
@@ -849,33 +851,33 @@ class CallSharedPara : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .CallSharedPara.Command cmd = 1;
+  // required .PS.CallSharedPara.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::CallSharedPara_Command cmd() const;
-  inline void set_cmd(::CallSharedPara_Command value);
+  inline ::PS::CallSharedPara_Command cmd() const;
+  inline void set_cmd(::PS::CallSharedPara_Command value);
 
-  // repeated .Timestamp backup = 6;
+  // repeated .PS.Timestamp backup = 6;
   inline int backup_size() const;
   inline void clear_backup();
   static const int kBackupFieldNumber = 6;
-  inline const ::Timestamp& backup(int index) const;
-  inline ::Timestamp* mutable_backup(int index);
-  inline ::Timestamp* add_backup();
-  inline const ::google::protobuf::RepeatedPtrField< ::Timestamp >&
+  inline const ::PS::Timestamp& backup(int index) const;
+  inline ::PS::Timestamp* mutable_backup(int index);
+  inline ::PS::Timestamp* add_backup();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::Timestamp >&
       backup() const;
-  inline ::google::protobuf::RepeatedPtrField< ::Timestamp >*
+  inline ::google::protobuf::RepeatedPtrField< ::PS::Timestamp >*
       mutable_backup();
 
-  // @@protoc_insertion_point(class_scope:CallSharedPara)
+  // @@protoc_insertion_point(class_scope:PS.CallSharedPara)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::Timestamp > backup_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -971,23 +973,23 @@ class CallSketch : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .CallSketch.Command cmd = 1;
+  // required .PS.CallSketch.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::CallSketch_Command cmd() const;
-  inline void set_cmd(::CallSketch_Command value);
+  inline ::PS::CallSketch_Command cmd() const;
+  inline void set_cmd(::PS::CallSketch_Command value);
 
-  // optional .PbRange key = 2;
+  // optional .PS.PbRange key = 2;
   inline bool has_key() const;
   inline void clear_key();
   static const int kKeyFieldNumber = 2;
-  inline const ::PbRange& key() const;
-  inline ::PbRange* mutable_key();
-  inline ::PbRange* release_key();
-  inline void set_allocated_key(::PbRange* key);
+  inline const ::PS::PbRange& key() const;
+  inline ::PS::PbRange* mutable_key();
+  inline ::PS::PbRange* release_key();
+  inline void set_allocated_key(::PS::PbRange* key);
 
-  // @@protoc_insertion_point(class_scope:CallSketch)
+  // @@protoc_insertion_point(class_scope:PS.CallSketch)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
@@ -996,7 +998,7 @@ class CallSketch : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PbRange* key_;
+  ::PS::PbRange* key_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -1098,7 +1100,7 @@ class SketchResponse : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 key() const;
   inline void set_key(::google::protobuf::uint32 value);
 
-  // @@protoc_insertion_point(class_scope:SketchResponse)
+  // @@protoc_insertion_point(class_scope:PS.SketchResponse)
  private:
   inline void set_has_nodeid();
   inline void clear_has_nodeid();
@@ -1133,7 +1135,7 @@ class SketchResponse : public ::google::protobuf::Message {
 
 // Task
 
-// required .Task.Type type = 1;
+// required .PS.Task.Type type = 1;
 inline bool Task::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1147,11 +1149,11 @@ inline void Task::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::Task_Type Task::type() const {
-  return static_cast< ::Task_Type >(type_);
+inline ::PS::Task_Type Task::type() const {
+  return static_cast< ::PS::Task_Type >(type_);
 }
-inline void Task::set_type(::Task_Type value) {
-  assert(::Task_Type_IsValid(value));
+inline void Task::set_type(::PS::Task_Type value) {
+  assert(::PS::Task_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1336,7 +1338,7 @@ inline void Task::set_has_key(bool value) {
   has_key_ = value;
 }
 
-// optional .PbRange key_range = 8;
+// optional .PS.PbRange key_range = 8;
 inline bool Task::has_key_range() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
@@ -1347,24 +1349,24 @@ inline void Task::clear_has_key_range() {
   _has_bits_[0] &= ~0x00000080u;
 }
 inline void Task::clear_key_range() {
-  if (key_range_ != NULL) key_range_->::PbRange::Clear();
+  if (key_range_ != NULL) key_range_->::PS::PbRange::Clear();
   clear_has_key_range();
 }
-inline const ::PbRange& Task::key_range() const {
+inline const ::PS::PbRange& Task::key_range() const {
   return key_range_ != NULL ? *key_range_ : *default_instance_->key_range_;
 }
-inline ::PbRange* Task::mutable_key_range() {
+inline ::PS::PbRange* Task::mutable_key_range() {
   set_has_key_range();
-  if (key_range_ == NULL) key_range_ = new ::PbRange;
+  if (key_range_ == NULL) key_range_ = new ::PS::PbRange;
   return key_range_;
 }
-inline ::PbRange* Task::release_key_range() {
+inline ::PS::PbRange* Task::release_key_range() {
   clear_has_key_range();
-  ::PbRange* temp = key_range_;
+  ::PS::PbRange* temp = key_range_;
   key_range_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_key_range(::PbRange* key_range) {
+inline void Task::set_allocated_key_range(::PS::PbRange* key_range) {
   delete key_range_;
   key_range_ = key_range;
   if (key_range) {
@@ -1491,7 +1493,7 @@ inline void Task::set_allocated_msg(::std::string* msg) {
   }
 }
 
-// optional .ManageNode mng_node = 102;
+// optional .PS.ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
@@ -1502,24 +1504,24 @@ inline void Task::clear_has_mng_node() {
   _has_bits_[0] &= ~0x00000800u;
 }
 inline void Task::clear_mng_node() {
-  if (mng_node_ != NULL) mng_node_->::ManageNode::Clear();
+  if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
   clear_has_mng_node();
 }
-inline const ::ManageNode& Task::mng_node() const {
+inline const ::PS::ManageNode& Task::mng_node() const {
   return mng_node_ != NULL ? *mng_node_ : *default_instance_->mng_node_;
 }
-inline ::ManageNode* Task::mutable_mng_node() {
+inline ::PS::ManageNode* Task::mutable_mng_node() {
   set_has_mng_node();
-  if (mng_node_ == NULL) mng_node_ = new ::ManageNode;
+  if (mng_node_ == NULL) mng_node_ = new ::PS::ManageNode;
   return mng_node_;
 }
-inline ::ManageNode* Task::release_mng_node() {
+inline ::PS::ManageNode* Task::release_mng_node() {
   clear_has_mng_node();
-  ::ManageNode* temp = mng_node_;
+  ::PS::ManageNode* temp = mng_node_;
   mng_node_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_mng_node(::ManageNode* mng_node) {
+inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
   delete mng_node_;
   mng_node_ = mng_node;
   if (mng_node) {
@@ -1529,7 +1531,7 @@ inline void Task::set_allocated_mng_node(::ManageNode* mng_node) {
   }
 }
 
-// optional .ManageApp mng_app = 103;
+// optional .PS.ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
   return (_has_bits_[0] & 0x00001000u) != 0;
 }
@@ -1540,24 +1542,24 @@ inline void Task::clear_has_mng_app() {
   _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_mng_app() {
-  if (mng_app_ != NULL) mng_app_->::ManageApp::Clear();
+  if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
   clear_has_mng_app();
 }
-inline const ::ManageApp& Task::mng_app() const {
+inline const ::PS::ManageApp& Task::mng_app() const {
   return mng_app_ != NULL ? *mng_app_ : *default_instance_->mng_app_;
 }
-inline ::ManageApp* Task::mutable_mng_app() {
+inline ::PS::ManageApp* Task::mutable_mng_app() {
   set_has_mng_app();
-  if (mng_app_ == NULL) mng_app_ = new ::ManageApp;
+  if (mng_app_ == NULL) mng_app_ = new ::PS::ManageApp;
   return mng_app_;
 }
-inline ::ManageApp* Task::release_mng_app() {
+inline ::PS::ManageApp* Task::release_mng_app() {
   clear_has_mng_app();
-  ::ManageApp* temp = mng_app_;
+  ::PS::ManageApp* temp = mng_app_;
   mng_app_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_mng_app(::ManageApp* mng_app) {
+inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
   delete mng_app_;
   mng_app_ = mng_app;
   if (mng_app) {
@@ -1567,7 +1569,7 @@ inline void Task::set_allocated_mng_app(::ManageApp* mng_app) {
   }
 }
 
-// optional .CallSharedPara shared_para = 201;
+// optional .PS.CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
@@ -1578,24 +1580,24 @@ inline void Task::clear_has_shared_para() {
   _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_shared_para() {
-  if (shared_para_ != NULL) shared_para_->::CallSharedPara::Clear();
+  if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
   clear_has_shared_para();
 }
-inline const ::CallSharedPara& Task::shared_para() const {
+inline const ::PS::CallSharedPara& Task::shared_para() const {
   return shared_para_ != NULL ? *shared_para_ : *default_instance_->shared_para_;
 }
-inline ::CallSharedPara* Task::mutable_shared_para() {
+inline ::PS::CallSharedPara* Task::mutable_shared_para() {
   set_has_shared_para();
-  if (shared_para_ == NULL) shared_para_ = new ::CallSharedPara;
+  if (shared_para_ == NULL) shared_para_ = new ::PS::CallSharedPara;
   return shared_para_;
 }
-inline ::CallSharedPara* Task::release_shared_para() {
+inline ::PS::CallSharedPara* Task::release_shared_para() {
   clear_has_shared_para();
-  ::CallSharedPara* temp = shared_para_;
+  ::PS::CallSharedPara* temp = shared_para_;
   shared_para_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_shared_para(::CallSharedPara* shared_para) {
+inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
   delete shared_para_;
   shared_para_ = shared_para;
   if (shared_para) {
@@ -1605,7 +1607,7 @@ inline void Task::set_allocated_shared_para(::CallSharedPara* shared_para) {
   }
 }
 
-// optional .RiskMinCall risk = 301;
+// optional .PS.RiskMinCall risk = 301;
 inline bool Task::has_risk() const {
   return (_has_bits_[0] & 0x00004000u) != 0;
 }
@@ -1616,24 +1618,24 @@ inline void Task::clear_has_risk() {
   _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_risk() {
-  if (risk_ != NULL) risk_->::RiskMinCall::Clear();
+  if (risk_ != NULL) risk_->::PS::RiskMinCall::Clear();
   clear_has_risk();
 }
-inline const ::RiskMinCall& Task::risk() const {
+inline const ::PS::RiskMinCall& Task::risk() const {
   return risk_ != NULL ? *risk_ : *default_instance_->risk_;
 }
-inline ::RiskMinCall* Task::mutable_risk() {
+inline ::PS::RiskMinCall* Task::mutable_risk() {
   set_has_risk();
-  if (risk_ == NULL) risk_ = new ::RiskMinCall;
+  if (risk_ == NULL) risk_ = new ::PS::RiskMinCall;
   return risk_;
 }
-inline ::RiskMinCall* Task::release_risk() {
+inline ::PS::RiskMinCall* Task::release_risk() {
   clear_has_risk();
-  ::RiskMinCall* temp = risk_;
+  ::PS::RiskMinCall* temp = risk_;
   risk_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_risk(::RiskMinCall* risk) {
+inline void Task::set_allocated_risk(::PS::RiskMinCall* risk) {
   delete risk_;
   risk_ = risk;
   if (risk) {
@@ -1643,7 +1645,7 @@ inline void Task::set_allocated_risk(::RiskMinCall* risk) {
   }
 }
 
-// optional .CallSketch sketch = 302;
+// optional .PS.CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
   return (_has_bits_[0] & 0x00008000u) != 0;
 }
@@ -1654,24 +1656,24 @@ inline void Task::clear_has_sketch() {
   _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_sketch() {
-  if (sketch_ != NULL) sketch_->::CallSketch::Clear();
+  if (sketch_ != NULL) sketch_->::PS::CallSketch::Clear();
   clear_has_sketch();
 }
-inline const ::CallSketch& Task::sketch() const {
+inline const ::PS::CallSketch& Task::sketch() const {
   return sketch_ != NULL ? *sketch_ : *default_instance_->sketch_;
 }
-inline ::CallSketch* Task::mutable_sketch() {
+inline ::PS::CallSketch* Task::mutable_sketch() {
   set_has_sketch();
-  if (sketch_ == NULL) sketch_ = new ::CallSketch;
+  if (sketch_ == NULL) sketch_ = new ::PS::CallSketch;
   return sketch_;
 }
-inline ::CallSketch* Task::release_sketch() {
+inline ::PS::CallSketch* Task::release_sketch() {
   clear_has_sketch();
-  ::CallSketch* temp = sketch_;
+  ::PS::CallSketch* temp = sketch_;
   sketch_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_sketch(::CallSketch* sketch) {
+inline void Task::set_allocated_sketch(::PS::CallSketch* sketch) {
   delete sketch_;
   sketch_ = sketch;
   if (sketch) {
@@ -1685,7 +1687,7 @@ inline void Task::set_allocated_sketch(::CallSketch* sketch) {
 
 // ManageNode
 
-// required .ManageNode.Command cmd = 1;
+// required .PS.ManageNode.Command cmd = 1;
 inline bool ManageNode::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1699,36 +1701,36 @@ inline void ManageNode::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::ManageNode_Command ManageNode::cmd() const {
-  return static_cast< ::ManageNode_Command >(cmd_);
+inline ::PS::ManageNode_Command ManageNode::cmd() const {
+  return static_cast< ::PS::ManageNode_Command >(cmd_);
 }
-inline void ManageNode::set_cmd(::ManageNode_Command value) {
-  assert(::ManageNode_Command_IsValid(value));
+inline void ManageNode::set_cmd(::PS::ManageNode_Command value) {
+  assert(::PS::ManageNode_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
-// repeated .Node nodes = 2;
+// repeated .PS.Node nodes = 2;
 inline int ManageNode::nodes_size() const {
   return nodes_.size();
 }
 inline void ManageNode::clear_nodes() {
   nodes_.Clear();
 }
-inline const ::Node& ManageNode::nodes(int index) const {
+inline const ::PS::Node& ManageNode::nodes(int index) const {
   return nodes_.Get(index);
 }
-inline ::Node* ManageNode::mutable_nodes(int index) {
+inline ::PS::Node* ManageNode::mutable_nodes(int index) {
   return nodes_.Mutable(index);
 }
-inline ::Node* ManageNode::add_nodes() {
+inline ::PS::Node* ManageNode::add_nodes() {
   return nodes_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::Node >&
+inline const ::google::protobuf::RepeatedPtrField< ::PS::Node >&
 ManageNode::nodes() const {
   return nodes_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::Node >*
+inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
 ManageNode::mutable_nodes() {
   return &nodes_;
 }
@@ -1737,7 +1739,7 @@ ManageNode::mutable_nodes() {
 
 // ManageApp
 
-// required .ManageApp.Command cmd = 1;
+// required .PS.ManageApp.Command cmd = 1;
 inline bool ManageApp::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1751,16 +1753,16 @@ inline void ManageApp::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::ManageApp_Command ManageApp::cmd() const {
-  return static_cast< ::ManageApp_Command >(cmd_);
+inline ::PS::ManageApp_Command ManageApp::cmd() const {
+  return static_cast< ::PS::ManageApp_Command >(cmd_);
 }
-inline void ManageApp::set_cmd(::ManageApp_Command value) {
-  assert(::ManageApp_Command_IsValid(value));
+inline void ManageApp::set_cmd(::PS::ManageApp_Command value) {
+  assert(::PS::ManageApp_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
-// required .AppConfig app_config = 2;
+// required .PS.AppConfig app_config = 2;
 inline bool ManageApp::has_app_config() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1771,24 +1773,24 @@ inline void ManageApp::clear_has_app_config() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void ManageApp::clear_app_config() {
-  if (app_config_ != NULL) app_config_->::AppConfig::Clear();
+  if (app_config_ != NULL) app_config_->::PS::AppConfig::Clear();
   clear_has_app_config();
 }
-inline const ::AppConfig& ManageApp::app_config() const {
+inline const ::PS::AppConfig& ManageApp::app_config() const {
   return app_config_ != NULL ? *app_config_ : *default_instance_->app_config_;
 }
-inline ::AppConfig* ManageApp::mutable_app_config() {
+inline ::PS::AppConfig* ManageApp::mutable_app_config() {
   set_has_app_config();
-  if (app_config_ == NULL) app_config_ = new ::AppConfig;
+  if (app_config_ == NULL) app_config_ = new ::PS::AppConfig;
   return app_config_;
 }
-inline ::AppConfig* ManageApp::release_app_config() {
+inline ::PS::AppConfig* ManageApp::release_app_config() {
   clear_has_app_config();
-  ::AppConfig* temp = app_config_;
+  ::PS::AppConfig* temp = app_config_;
   app_config_ = NULL;
   return temp;
 }
-inline void ManageApp::set_allocated_app_config(::AppConfig* app_config) {
+inline void ManageApp::set_allocated_app_config(::PS::AppConfig* app_config) {
   delete app_config_;
   app_config_ = app_config;
   if (app_config) {
@@ -1898,7 +1900,7 @@ inline void Timestamp::set_time(::google::protobuf::int32 value) {
 
 // CallSharedPara
 
-// required .CallSharedPara.Command cmd = 1;
+// required .PS.CallSharedPara.Command cmd = 1;
 inline bool CallSharedPara::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1912,36 +1914,36 @@ inline void CallSharedPara::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::CallSharedPara_Command CallSharedPara::cmd() const {
-  return static_cast< ::CallSharedPara_Command >(cmd_);
+inline ::PS::CallSharedPara_Command CallSharedPara::cmd() const {
+  return static_cast< ::PS::CallSharedPara_Command >(cmd_);
 }
-inline void CallSharedPara::set_cmd(::CallSharedPara_Command value) {
-  assert(::CallSharedPara_Command_IsValid(value));
+inline void CallSharedPara::set_cmd(::PS::CallSharedPara_Command value) {
+  assert(::PS::CallSharedPara_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
-// repeated .Timestamp backup = 6;
+// repeated .PS.Timestamp backup = 6;
 inline int CallSharedPara::backup_size() const {
   return backup_.size();
 }
 inline void CallSharedPara::clear_backup() {
   backup_.Clear();
 }
-inline const ::Timestamp& CallSharedPara::backup(int index) const {
+inline const ::PS::Timestamp& CallSharedPara::backup(int index) const {
   return backup_.Get(index);
 }
-inline ::Timestamp* CallSharedPara::mutable_backup(int index) {
+inline ::PS::Timestamp* CallSharedPara::mutable_backup(int index) {
   return backup_.Mutable(index);
 }
-inline ::Timestamp* CallSharedPara::add_backup() {
+inline ::PS::Timestamp* CallSharedPara::add_backup() {
   return backup_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::Timestamp >&
+inline const ::google::protobuf::RepeatedPtrField< ::PS::Timestamp >&
 CallSharedPara::backup() const {
   return backup_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::Timestamp >*
+inline ::google::protobuf::RepeatedPtrField< ::PS::Timestamp >*
 CallSharedPara::mutable_backup() {
   return &backup_;
 }
@@ -1950,7 +1952,7 @@ CallSharedPara::mutable_backup() {
 
 // CallSketch
 
-// required .CallSketch.Command cmd = 1;
+// required .PS.CallSketch.Command cmd = 1;
 inline bool CallSketch::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1964,16 +1966,16 @@ inline void CallSketch::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::CallSketch_Command CallSketch::cmd() const {
-  return static_cast< ::CallSketch_Command >(cmd_);
+inline ::PS::CallSketch_Command CallSketch::cmd() const {
+  return static_cast< ::PS::CallSketch_Command >(cmd_);
 }
-inline void CallSketch::set_cmd(::CallSketch_Command value) {
-  assert(::CallSketch_Command_IsValid(value));
+inline void CallSketch::set_cmd(::PS::CallSketch_Command value) {
+  assert(::PS::CallSketch_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
-// optional .PbRange key = 2;
+// optional .PS.PbRange key = 2;
 inline bool CallSketch::has_key() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1984,24 +1986,24 @@ inline void CallSketch::clear_has_key() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void CallSketch::clear_key() {
-  if (key_ != NULL) key_->::PbRange::Clear();
+  if (key_ != NULL) key_->::PS::PbRange::Clear();
   clear_has_key();
 }
-inline const ::PbRange& CallSketch::key() const {
+inline const ::PS::PbRange& CallSketch::key() const {
   return key_ != NULL ? *key_ : *default_instance_->key_;
 }
-inline ::PbRange* CallSketch::mutable_key() {
+inline ::PS::PbRange* CallSketch::mutable_key() {
   set_has_key();
-  if (key_ == NULL) key_ = new ::PbRange;
+  if (key_ == NULL) key_ = new ::PS::PbRange;
   return key_;
 }
-inline ::PbRange* CallSketch::release_key() {
+inline ::PS::PbRange* CallSketch::release_key() {
   clear_has_key();
-  ::PbRange* temp = key_;
+  ::PS::PbRange* temp = key_;
   key_ = NULL;
   return temp;
 }
-inline void CallSketch::set_allocated_key(::PbRange* key) {
+inline void CallSketch::set_allocated_key(::PS::PbRange* key) {
   delete key_;
   key_ = key;
   if (key) {
@@ -2154,29 +2156,31 @@ inline void SketchResponse::set_key(::google::protobuf::uint32 value) {
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace PS
+
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::Task_Type>() {
-  return ::Task_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_Type>() {
+  return ::PS::Task_Type_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::ManageNode_Command>() {
-  return ::ManageNode_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageNode_Command>() {
+  return ::PS::ManageNode_Command_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::ManageApp_Command>() {
-  return ::ManageApp_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageApp_Command>() {
+  return ::PS::ManageApp_Command_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::CallSharedPara_Command>() {
-  return ::CallSharedPara_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::CallSharedPara_Command>() {
+  return ::PS::CallSharedPara_Command_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::CallSketch_Command>() {
-  return ::CallSketch_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::CallSketch_Command>() {
+  return ::PS::CallSketch_Command_descriptor();
 }
 
 }  // namespace google

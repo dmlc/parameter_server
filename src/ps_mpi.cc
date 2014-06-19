@@ -3,7 +3,7 @@
 #include "app/app.h"
 #include "util/local_machine.h"
 
-DEFINE_string(interface, "eth0", "network interface will use");
+DEFINE_string(interface, "lo0", "network interface will use");
 DEFINE_int32(port, 8000, "network port");
 
 namespace PS {
@@ -30,7 +30,7 @@ void Init() {
     id = "H";
   } else if (my_rank < nclient + 1) {
     my_node += "CLIENT";
-    id = "C" + std::to_string(my_rank - 1);
+    id = "W" + std::to_string(my_rank - 1);
   } else if (my_rank < nclient + nserver + 1) {
     my_node += "SERVER";
     id = "S" + std::to_string(my_rank - nclient - 1);

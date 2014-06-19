@@ -1,3 +1,4 @@
+package PS;
 import "proto/range.proto";
 
 message RiskMinProgress {
