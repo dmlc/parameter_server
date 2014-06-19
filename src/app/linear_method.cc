@@ -35,6 +35,7 @@ void LinearMethod::startSystem() {
   std::vector<DataConfig> worker_training_;
 
   auto data = searchFiles(app_cf_.training());
+  CHECK_GT(data.files_size(), 0);
   // LL << "training data " << data.DebugString();
 
   if (data.format() == DataConfig::BIN) {

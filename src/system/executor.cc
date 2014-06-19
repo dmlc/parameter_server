@@ -64,8 +64,13 @@ void Executor::init(const std::vector<Node>& nodes) {
   // sort the node in each group by its key range
   for (auto& it : node_groups_) {
     if (nodes_[it.first]->role() != Node::GROUP) continue;
-    std::sort(it.second.begin(), it.second.end(), [](RNodePtr a, RNodePtr b) {
-        return a->keyRange().begin() < b->keyRange().end();
+    // LL << it.second.size();
+    // for (auto x : it.second) LL << x->node_.DebugString();
+
+    std::sort(it.second.begin(), it.second.end(), [](const RNodePtr& a, const RNodePtr& b) {
+        // LL << a->node_.DebugString();
+        // LL << b->node_.DebugString();
+        return a->keyRange().begin() < b->keyRange().begin();
       });
   }
 
