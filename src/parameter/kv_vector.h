@@ -258,6 +258,7 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(Message* msg) {
+  // if (msg->key.empty()) return;
   CHECK_EQ(key_.size(), val_.size());
   SArray<K> recv_key(msg->key);
   size_t n = 0;
@@ -266,7 +267,6 @@ void KVVector<K,V>::getValue(Message* msg) {
   CHECK_EQ(aligned.second.size(), recv_key.size());
   CHECK_EQ(recv_key.size(), n);
   msg->value.push_back(SArray<char>(aligned.second));
-
 }
 
 template <typename K, typename V>
@@ -275,7 +275,7 @@ void KVVector<K,V>::setValue(Message* msg) {
   SArray<K> recv_key(msg->key);
   Range<K> key_range(msg->task.key_range());
 
-  if (msg->value.size() == 0) {
+  if (msg->value.empty() && !msg->key.empty()) {
     key_ = key_.setUnion(recv_key);
     // LL << key_.size();
     return;
@@ -318,7 +318,8 @@ std::vector<Message> KVVector<K,V>:: decomposeTemplate(const Message& msg, const
   for (int i = 0; i < n-1; ++i) {
     part.clearData();
     SizeR lr(pos[i], pos[i+1]);
-    part.valid = !lr.empty();
+    // FIXME
+    // part.valid = !lr.empty();
     if (part.valid) {
       part.key = key.segment(lr);
       for (auto& d : msg.value) {

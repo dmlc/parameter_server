@@ -32,7 +32,7 @@ void LinearBlockIterator::run() {
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    // std::random_shuffle(block_order.begin(), block_order.end());
+    std::random_shuffle(block_order.begin(), block_order.end());
 
     for (int b : block_order)  {
     // int b = iter;
@@ -148,17 +148,19 @@ void LinearBlockIterator::updateModel(Message* msg) {
         Lock l(mu_);
         busy_timer_.start();
 
-        auto data = w_->received(time);
-        CHECK_EQ(data.size(), 1);
-        CHECK_EQ(local_range, data[0].first);
-        auto new_w = data[0].second;
+        if (!local_range.empty()) {
+          auto data = w_->received(time);
 
-        auto delta = new_w.vec() - w_->segment(local_range).vec();
-        Xw_.vec() += *X * delta;
-        w_->segment(local_range).vec() = new_w.vec();
+          CHECK_EQ(data.size(), 1);
+          CHECK_EQ(local_range, data[0].first);
+          auto new_w = data[0].second;
+
+          auto delta = new_w.vec() - w_->segment(local_range).vec();
+          Xw_.vec() += *X * delta;
+          w_->segment(local_range).vec() = new_w.vec();
+        }
 
         busy_timer_.stop();
-
         taskpool(d.sender)->finishInTask(d.task.time());
         sys_.reply(d);
         // LL << sid() << " done " << d.task.time();

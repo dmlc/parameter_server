@@ -1,5 +1,6 @@
 # CC = g++
 CC = clang
+# CC = /opt/local/bin/g++-mp-4.8
 
 OPT = -O3 -ggdb
 # OPT = -O0 -ggdb

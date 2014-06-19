@@ -91,6 +91,10 @@ static AlignedArray<V> match(const SArray<K>& dst_key,
   // if (src_key_range == Range<K>::all())
   //   src_key_range = src_key.range();
   *matched = 0;
+  if (dst_key.empty() || src_key.empty()) {
+    return std::make_pair(SizeR(), SArray<V>());
+  }
+
   SizeR range = dst_key.findRange(src_key_range);
 
   SArray<V> value(range.size());

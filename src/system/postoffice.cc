@@ -1,4 +1,5 @@
 #include "system/postoffice.h"
+// #include <omp.h>
 #include "system/customer.h"
 #include "app/app.h"
 // #include "system/postmaster.h"
@@ -35,6 +36,8 @@ void Postoffice::run() {
   recving_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
 
+  // omp_set_dynamic(0);
+  // omp_set_num_threads(FLAGS_num_threads);
   if (myNode().role() == Node::SCHEDULER) {
     // run the application
     AppConfig config;

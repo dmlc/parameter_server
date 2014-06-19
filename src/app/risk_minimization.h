@@ -8,7 +8,7 @@ class RiskMin : public App {
  public:
   void process(Message* msg);
 
- protected:
+ // protected:
   virtual void prepareData(const Message& msg) = 0;
   virtual void updateModel(Message* msg) = 0;
   virtual RiskMinProgress evaluateProgress() = 0;
