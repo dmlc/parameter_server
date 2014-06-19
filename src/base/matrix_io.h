@@ -31,21 +31,22 @@ mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
   auto C = A;
   C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
   C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
-  if (A.has_num_entries() && B.has_num_entries())
-    C.set_num_entries(A.num_entries() + B.num_entries());
-  if (A.has_num_instances() && B.has_num_instances())
-    C.set_num_instances(A.num_instances() + B.num_instances());
+  C.set_num_entries(A.num_entries() + B.num_entries());
+  C.set_num_instances(A.num_instances() + B.num_instances());
   return C;
 }
 
 static InstanceInfo
 mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
+  // LL << A.DebugString();
+  // LL << B.DebugString();
   CHECK_EQ(A.label_type(), B.label_type());
   CHECK_EQ(A.feature_type(), B.feature_type());
 
-  InstanceInfo C;
-  C.set_label_type(A.label_type());
+  InstanceInfo C = A;
+  C.clear_feature_group_info();
   C.set_num_instances(A.num_instances() + B.num_instances());
+  C.set_num_entries(A.num_entries() + B.num_entries());
   C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
   C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
 
@@ -100,10 +101,7 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
   SArray<V> value;
   if (!binary) value.resize(info.num_entries());
 
-  uint64 offset_pos = 0;
-  uint64 index_pos = 0;
-  uint64 value_pos = 0;
-  uint64 label_pos = 0;
+  uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
 
   // file data
   for (auto f : files) {
@@ -117,11 +115,11 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
         index[index_pos++] = record.feature_id(i);
         if (!binary) value[value_pos++] = record.value(i);
       }
-      offset[offset_pos+1] = offset[offset_pos];
+      offset[offset_pos+1] = offset[offset_pos] + n;
       offset_pos ++;
     }
   }
-  CHECK_EQ(offset_pos, offset.size());
+  CHECK_EQ(offset_pos+1, offset.size());
   CHECK_EQ(index_pos, index.size());
   CHECK_EQ(value_pos, value.size());
 

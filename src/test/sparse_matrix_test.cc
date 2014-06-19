@@ -14,34 +14,15 @@ class SparseMatrixTest : public ::testing::Test {
   MatrixPtr<double> X;
 };
 
-// TEST(SparseMatrix, Info) {
-
-//   MatrixInfo info;
-//   info.set_type(MatrixInfo::SPARSE);
-//   info.mutable_row()->set_begin(100);
-//   // LL << info.DebugString();
+// use matlab/diff_*.m to check
+// TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
+//   std::vector<string> files;
+//   for (int i = 0; i < 4; i++)
+//     files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
+//   auto data = readMatricesFromProto<double>(files);
+//   data[0]->writeToBinFile("y");
+//   data[1]->writeToBinFile("x");
 // }
-
-TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
-  std::vector<string> files;
-  for (int i = 0; i < 4; i++)
-    files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
-
-  auto data = readMatricesFromProto<double>(files);
-
-  data[0]->writeToBinFile("y");
-  data[1]->writeToBinFile("x");
-
-  // auto X = data[1];
-  // LL << X->info().DebugString();
-
-
-  // Y->writeToBinFile("../data/tmp");
-  // for (int i = 0; i < 10; ++i) {
-  //   Vec w = Vec::Random(X->cols());
-  //   EXPECT_LE( (*X * w - *Y * w).norm(), 1e-3);
-  // }
-}
 
 TEST_F(SparseMatrixTest, LoadFromRecordIO) {
   std::vector<string> files;
@@ -50,7 +31,7 @@ TEST_F(SparseMatrixTest, LoadFromRecordIO) {
 
   auto data = readMatricesFromProto<double>(files);
   auto Y = data[1];
-  // Y->writeToBinFile("../data/tmp");
+  Y->writeToBinFile("tmp");
   for (int i = 0; i < 10; ++i) {
     Vec w = Vec::Random(X->cols());
     EXPECT_LE( (*X * w - *Y * w).norm(), 1e-3);

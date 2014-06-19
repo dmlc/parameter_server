@@ -15,7 +15,7 @@ static system_clock::time_point tic() {
   return system_clock::now();
 }
 
-// return the time since tic
+// return the time since tic, in second
 static double toc(system_clock::time_point start) {
   size_t ct = std::chrono::duration_cast<std::chrono::milliseconds>(
       system_clock::now() - start).count();
