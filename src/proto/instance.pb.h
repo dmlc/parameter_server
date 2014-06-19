@@ -169,12 +169,12 @@ class InstanceInfo : public ::google::protobuf::Message {
   inline ::PS::InstanceInfo_LabelType label_type() const;
   inline void set_label_type(::PS::InstanceInfo_LabelType value);
 
-  // required uint64 num_examples = 2;
-  inline bool has_num_examples() const;
-  inline void clear_num_examples();
-  static const int kNumExamplesFieldNumber = 2;
-  inline ::google::protobuf::uint64 num_examples() const;
-  inline void set_num_examples(::google::protobuf::uint64 value);
+  // required uint64 num_instances = 2;
+  inline bool has_num_instances() const;
+  inline void clear_num_instances();
+  static const int kNumInstancesFieldNumber = 2;
+  inline ::google::protobuf::uint64 num_instances() const;
+  inline void set_num_instances(::google::protobuf::uint64 value);
 
   // required uint64 num_entries = 3;
   inline bool has_num_entries() const;
@@ -190,14 +190,14 @@ class InstanceInfo : public ::google::protobuf::Message {
   inline ::PS::FeatureGroupInfo_Type feature_type() const;
   inline void set_feature_type(::PS::FeatureGroupInfo_Type value);
 
-  // optional uint64 feature_begin = 5 [default = 18446744073709551615];
+  // required uint64 feature_begin = 5 [default = 18446744073709551615];
   inline bool has_feature_begin() const;
   inline void clear_feature_begin();
   static const int kFeatureBeginFieldNumber = 5;
   inline ::google::protobuf::uint64 feature_begin() const;
   inline void set_feature_begin(::google::protobuf::uint64 value);
 
-  // optional uint64 feature_end = 6;
+  // required uint64 feature_end = 6;
   inline bool has_feature_end() const;
   inline void clear_feature_end();
   static const int kFeatureEndFieldNumber = 6;
@@ -220,8 +220,8 @@ class InstanceInfo : public ::google::protobuf::Message {
  private:
   inline void set_has_label_type();
   inline void clear_has_label_type();
-  inline void set_has_num_examples();
-  inline void clear_has_num_examples();
+  inline void set_has_num_instances();
+  inline void clear_has_num_instances();
   inline void set_has_num_entries();
   inline void clear_has_num_entries();
   inline void set_has_feature_type();
@@ -233,7 +233,7 @@ class InstanceInfo : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::uint64 num_examples_;
+  ::google::protobuf::uint64 num_instances_;
   int label_type_;
   int feature_type_;
   ::google::protobuf::uint64 num_entries_;
@@ -360,14 +360,14 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 feature_end() const;
   inline void set_feature_end(::google::protobuf::uint64 value);
 
-  // optional uint64 num_examples = 5;
-  inline bool has_num_examples() const;
-  inline void clear_num_examples();
-  static const int kNumExamplesFieldNumber = 5;
-  inline ::google::protobuf::uint64 num_examples() const;
-  inline void set_num_examples(::google::protobuf::uint64 value);
+  // required uint64 num_instances = 5;
+  inline bool has_num_instances() const;
+  inline void clear_num_instances();
+  static const int kNumInstancesFieldNumber = 5;
+  inline ::google::protobuf::uint64 num_instances() const;
+  inline void set_num_instances(::google::protobuf::uint64 value);
 
-  // optional uint64 num_entries = 6;
+  // required uint64 num_entries = 6;
   inline bool has_num_entries() const;
   inline void clear_num_entries();
   static const int kNumEntriesFieldNumber = 6;
@@ -384,8 +384,8 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
   inline void clear_has_feature_begin();
   inline void set_has_feature_end();
   inline void clear_has_feature_end();
-  inline void set_has_num_examples();
-  inline void clear_has_num_examples();
+  inline void set_has_num_instances();
+  inline void clear_has_num_instances();
   inline void set_has_num_entries();
   inline void clear_has_num_entries();
 
@@ -395,7 +395,7 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
   int type_;
   ::google::protobuf::uint64 feature_begin_;
   ::google::protobuf::uint64 feature_end_;
-  ::google::protobuf::uint64 num_examples_;
+  ::google::protobuf::uint64 num_instances_;
   ::google::protobuf::uint64 num_entries_;
 
   mutable int _cached_size_;
@@ -546,26 +546,26 @@ inline void InstanceInfo::set_label_type(::PS::InstanceInfo_LabelType value) {
   label_type_ = value;
 }
 
-// required uint64 num_examples = 2;
-inline bool InstanceInfo::has_num_examples() const {
+// required uint64 num_instances = 2;
+inline bool InstanceInfo::has_num_instances() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void InstanceInfo::set_has_num_examples() {
+inline void InstanceInfo::set_has_num_instances() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void InstanceInfo::clear_has_num_examples() {
+inline void InstanceInfo::clear_has_num_instances() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void InstanceInfo::clear_num_examples() {
-  num_examples_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_examples();
+inline void InstanceInfo::clear_num_instances() {
+  num_instances_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_instances();
 }
-inline ::google::protobuf::uint64 InstanceInfo::num_examples() const {
-  return num_examples_;
+inline ::google::protobuf::uint64 InstanceInfo::num_instances() const {
+  return num_instances_;
 }
-inline void InstanceInfo::set_num_examples(::google::protobuf::uint64 value) {
-  set_has_num_examples();
-  num_examples_ = value;
+inline void InstanceInfo::set_num_instances(::google::protobuf::uint64 value) {
+  set_has_num_instances();
+  num_instances_ = value;
 }
 
 // required uint64 num_entries = 3;
@@ -613,7 +613,7 @@ inline void InstanceInfo::set_feature_type(::PS::FeatureGroupInfo_Type value) {
   feature_type_ = value;
 }
 
-// optional uint64 feature_begin = 5 [default = 18446744073709551615];
+// required uint64 feature_begin = 5 [default = 18446744073709551615];
 inline bool InstanceInfo::has_feature_begin() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -635,7 +635,7 @@ inline void InstanceInfo::set_feature_begin(::google::protobuf::uint64 value) {
   feature_begin_ = value;
 }
 
-// optional uint64 feature_end = 6;
+// required uint64 feature_end = 6;
 inline bool InstanceInfo::has_feature_end() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
@@ -775,29 +775,29 @@ inline void FeatureGroupInfo::set_feature_end(::google::protobuf::uint64 value) 
   feature_end_ = value;
 }
 
-// optional uint64 num_examples = 5;
-inline bool FeatureGroupInfo::has_num_examples() const {
+// required uint64 num_instances = 5;
+inline bool FeatureGroupInfo::has_num_instances() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void FeatureGroupInfo::set_has_num_examples() {
+inline void FeatureGroupInfo::set_has_num_instances() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void FeatureGroupInfo::clear_has_num_examples() {
+inline void FeatureGroupInfo::clear_has_num_instances() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void FeatureGroupInfo::clear_num_examples() {
-  num_examples_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_examples();
+inline void FeatureGroupInfo::clear_num_instances() {
+  num_instances_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_instances();
 }
-inline ::google::protobuf::uint64 FeatureGroupInfo::num_examples() const {
-  return num_examples_;
+inline ::google::protobuf::uint64 FeatureGroupInfo::num_instances() const {
+  return num_instances_;
 }
-inline void FeatureGroupInfo::set_num_examples(::google::protobuf::uint64 value) {
-  set_has_num_examples();
-  num_examples_ = value;
+inline void FeatureGroupInfo::set_num_instances(::google::protobuf::uint64 value) {
+  set_has_num_instances();
+  num_instances_ = value;
 }
 
-// optional uint64 num_entries = 6;
+// required uint64 num_entries = 6;
 inline bool FeatureGroupInfo::has_num_entries() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }

@@ -15,12 +15,12 @@ message InstanceInfo {
     CONTINUOUS = 4;
   }
   required LabelType label_type = 1;
-  required uint64 num_examples = 2;
+  required uint64 num_instances = 2;
   required uint64 num_entries = 3;
 
   optional FeatureGroupInfo.Type feature_type = 4;
-  optional uint64 feature_begin = 5 [default = 0xFFFFFFFFFFFFFFFF];
-  optional uint64 feature_end = 6;
+  required uint64 feature_begin = 5 [default = 0xFFFFFFFFFFFFFFFF];
+  required uint64 feature_end = 6;
   repeated FeatureGroupInfo feature_group_info = 7;
 }
 
@@ -36,8 +36,8 @@ message FeatureGroupInfo {
   required uint64 feature_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
   required uint64 feature_end = 4;
 
-  optional uint64 num_examples = 5;
-  optional uint64 num_entries = 6;
+  required uint64 num_instances = 5;
+  required uint64 num_entries = 6;
 }
 
 message Instance {
