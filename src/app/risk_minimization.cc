@@ -67,7 +67,7 @@ void RiskMin::showProgress(int iter) {
     fprintf(stderr, "iter |   objv       |w|_0 | time: busy  total\n");
     fprintf(stderr, " ----+--------------------+----\n");
   }
-  fprintf(stderr, "%4d | %.5e %6lu | %4.2f+-%2.2f %4.2f\n",
+  fprintf(stderr, "%4d | %.5e %6lld | %4.2f+-%2.2f %4.2f\n",
           iter, prog.objv(), prog.nnz_w(), mean, var, ttl_t);
 }
 

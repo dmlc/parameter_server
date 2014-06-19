@@ -11,28 +11,21 @@
 
 namespace PS {
 
-template<typename V>
-struct FillSparseMatrix {
-  MatrixInfo info;
-  SArray<size_t> offset;
-  SArray<uint64> index;
-  SArray<V> value;
-  uint64 offset_pos;
-  uint64 index_pos;
-  uint64 value_pos;
-  bool binary;
-};
-
-// TODO check optional
 static FeatureGroupInfo
 mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
-  CHECK_EQ(A.group_id(), B.group_id());
-  CHECK_EQ(A.type(), B.type());
+  // be smart
   auto C = A;
+  if (A.group_id() == B.group_id()) {
+    CHECK_EQ(A.feature_type(), B.feature_type());
+    C.set_num_instances(A.num_instances() + B.num_instances());
+  } else {
+    C.set_num_instances(std::max(A.num_instances(), B.num_instances()));
+    C.set_group_id(-1);
+  }
+
   C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
   C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
   C.set_num_entries(A.num_entries() + B.num_entries());
-  C.set_num_instances(A.num_instances() + B.num_instances());
   return C;
 }
 
@@ -41,44 +34,40 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
   // LL << A.DebugString();
   // LL << B.DebugString();
   CHECK_EQ(A.label_type(), B.label_type());
-  CHECK_EQ(A.feature_type(), B.feature_type());
-
   InstanceInfo C = A;
-  C.clear_feature_group_info();
-  C.set_num_instances(A.num_instances() + B.num_instances());
-  C.set_num_entries(A.num_entries() + B.num_entries());
-  C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
-  C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
+  *C.mutable_all_group() = mergeFeatureGroupInfo(A.all_group(), B.all_group());
 
-  CHECK_EQ(A.feature_group_info_size(), B.feature_group_info_size());
-  for (int i = 0; i < A.feature_group_info_size(); ++i) {
-    *C.add_feature_group_info() = mergeFeatureGroupInfo(
-        A.feature_group_info(i), B.feature_group_info(i));
+  C.clear_individual_groups();
+  int n = A.individual_groups_size();
+  CHECK_EQ(n, B.individual_groups_size());
+  for (int i = 0; i < n; ++i) {
+    *C.add_individual_groups() =
+        mergeFeatureGroupInfo(A.individual_groups(i), B.individual_groups(i));
   }
   return C;
 }
 
-// template<typename V>
-// MatrixInfo readMatrixInfo(const InstanceInfo g) {
-//   MatrixInfo f;
-//   // if (g.feature_type() == FeatureGroupInfo::DENSE)
-//   //   f.set_type(MatrixInfo::DENSE);
-//   // else if (g.feature_type() == FeatureGroupInfo::SPARSE)
-//   //   f.set_type(MatrixInfo::SPARSE);
-//   // else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
-//   //   f.set_type(MatrixInfo::SPARSE_BINARY);
-//   // f.set_row_major(true);
-//   // f.set_id(g.group_id());
-//   // f.mutable_row()->set_begin(0);
-//   // f.mutable_row()->set_end(g.num_instances());
-//   // f.mutable_col()->set_begin(g.feature_begin());
-//   // f.mutable_col()->set_end(g.feature_end());
-//   // f.set_nnz(g.num_entries());
-//   // f.set_sizeof_index(sizeof(uint64));
-//   // f.set_sizeof_value(sizeof(V));
-//   // f.set_nnz_per_row((double) f.nnz() / (double) g.num_instances());
-//   return f;
-// }
+template<typename V>
+MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
+  MatrixInfo f;
+  if (g.feature_type() == FeatureGroupInfo::DENSE)
+    f.set_type(MatrixInfo::DENSE);
+  else if (g.feature_type() == FeatureGroupInfo::SPARSE)
+    f.set_type(MatrixInfo::SPARSE);
+  else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
+    f.set_type(MatrixInfo::SPARSE_BINARY);
+  f.set_row_major(true);
+  f.set_id(g.group_id());
+  f.mutable_row()->set_begin(0);
+  f.mutable_row()->set_end(g.num_instances());
+  f.mutable_col()->set_begin(g.feature_begin());
+  f.mutable_col()->set_end(g.feature_end());
+  f.set_nnz(g.num_entries());
+  f.set_sizeof_index(sizeof(uint64));
+  f.set_sizeof_value(sizeof(V));
+  f.set_nnz_per_row((double) g.num_entries() / (double) g.num_instances());
+  return f;
+}
 
 // label, feature_group 1, feature_group 2, ...
 // TODO do not support dense feature group yet...
@@ -93,13 +82,14 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
   // // LL << info.DebugString();
 
   // allocate data
-  bool binary = info.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
-  SArray<V> label(info.num_instances());
-  SArray<size_t> offset(info.num_instances()+1);
+  auto& all = info.all_group();
+  bool binary = all.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
+  SArray<V> label(all.num_instances());
+  SArray<size_t> offset(all.num_instances()+1);
   offset[0] = 0;
-  SArray<uint64> index(info.num_entries());
+  SArray<uint64> index(all.num_entries());
   SArray<V> value;
-  if (!binary) value.resize(info.num_entries());
+  if (!binary) value.resize(all.num_entries());
 
   uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
 
@@ -127,28 +117,14 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
   MatrixPtrList<V> res;
   MatrixInfo label_info;
   string label_str = "type: DENSE row_major: true row { begin: 0 end: "
-                     + std::to_string(info.num_instances())
+                     + std::to_string(info.all_group().num_instances())
                      + " } col { begin: 0 end: 1 } nnz: "
-                     + std::to_string(info.num_instances())
+                     + std::to_string(info.all_group().num_instances())
                      + " sizeof_value: " + std::to_string(sizeof(V));
   google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
   res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
-  MatrixInfo f;
-  if (info.feature_type() == FeatureGroupInfo::DENSE)
-    f.set_type(MatrixInfo::DENSE);
-  else if (info.feature_type() == FeatureGroupInfo::SPARSE)
-    f.set_type(MatrixInfo::SPARSE);
-  else if (info.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
-    f.set_type(MatrixInfo::SPARSE_BINARY);
-  f.set_row_major(true);
-  f.mutable_row()->set_begin(0);
-  f.mutable_row()->set_end(info.num_instances());
-  f.mutable_col()->set_begin(info.feature_begin());
-  f.mutable_col()->set_end(info.feature_end());
-  f.set_nnz(info.num_entries());
-  f.set_sizeof_index(sizeof(uint64));
-  f.set_sizeof_value(sizeof(V));
+  MatrixInfo f = readMatrixInfo<V>(info.all_group());
   res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 
   return res;

@@ -15,23 +15,18 @@ message InstanceInfo {
     CONTINUOUS = 4;
   }
   required LabelType label_type = 1;
-  required uint64 num_instances = 2;
-  required uint64 num_entries = 3;
-
-  optional FeatureGroupInfo.Type feature_type = 4;
-  required uint64 feature_begin = 5 [default = 0xFFFFFFFFFFFFFFFF];
-  required uint64 feature_end = 6;
-  repeated FeatureGroupInfo feature_group_info = 7;
+  required FeatureGroupInfo all_group = 2;
+  repeated FeatureGroupInfo individual_groups = 3;
 }
 
 message FeatureGroupInfo {
   required int32 group_id = 1;
-  enum Type {
+  enum FeatureType {
     DENSE = 1;
     SPARSE = 2;
     SPARSE_BINARY = 3;
   }
-  required Type type = 2;
+  required FeatureType feature_type = 2;
 
   required uint64 feature_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
   required uint64 feature_end = 4;

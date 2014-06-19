@@ -31,9 +31,9 @@ class LinearMethod : public RiskMin {
   shared_ptr<AggGradLearner<double>> learner_;
 
   // training data
-  MatrixPtr<double> y_;
+  MatrixPtr<double> y_, X_;
   SArray<double> Xw_;
-  std::map<int, MatrixPtr<double>> Xs_;
+  // std::map<int, MatrixPtr<double>> Xs_;
 
 };
 

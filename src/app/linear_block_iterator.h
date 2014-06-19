@@ -17,8 +17,7 @@ class LinearBlockIterator : public LinearMethod {
   void prepareData(const Message& msg);
   void updateModel(Message* msg);
  private:
-
-  std::map<int, size_t> Xs_col_offset_;
+  // Xw_ = X_ * w_
   SArray<double> Xw_;
   std::mutex mu_;
 };

@@ -40,7 +40,11 @@ void LinearMethod::startSystem() {
   if (data.format() == DataConfig::BIN) {
     // format: Y, feature group 0, feature group 1, ...
     // assume those data are shared by all workers, the first one is the label,
+    // and the second one is the training data
+
     // while each of the rest present one feature group.
+    // FIXME how to store the
+    // feature group info
     MatrixInfo info;
     for (int i = 1; i < data.files_size(); ++i) {
       ReadFileToProtoOrDie(data.files(i)+".info", &info);
@@ -55,32 +59,32 @@ void LinearMethod::startSystem() {
     }
   } else if (data.format() == DataConfig::PROTO) {
     // assume multiple recordio files, each worker get several of them
-    // FIXME
-    // InstanceInfo info;
-    // for (int i = 0; i < data.files_size(); ++i) {
-    //   InstanceInfo f;
-    //   ReadFileToProtoOrDie(data.files(i)+".info", &f);
-    //   // info = i == 0 ? f : mergePServerInputInfo(info, f);
-    // }
-    // for (int i = 0; i < info.feature_group_info_size(); ++i) {
-    //   global_training_info_.push_back(
-    //       readMatrixInfo<double>(info.feature_group_info(i)));
-    // }
-    // global_training_feature_range_ =
-    //     Range<Key>(info.feature_begin(), info.feature_end());
-    // for (int i = 0; i < num_worker; ++i) {
-    //   DataConfig dc; dc.set_format(DataConfig::PROTO);
-    //   auto os = Range<int>(0, data.files_size()).evenDivide(num_worker, i);
-    //   for (int j = os.begin(); j < os.end(); ++j)
-    //     dc.add_files(data.files(j));
-    //   worker_training_.push_back(dc);
-    // }
+    InstanceInfo info;
+    for (int i = 0; i < data.files_size(); ++i) {
+      InstanceInfo f;
+      ReadFileToProtoOrDie(data.files(i)+".info", &f);
+      info = i == 0 ? f : mergeInstanceInfo(info, f);
+    }
+    for (int i = 0; i < info.individual_groups_size(); ++i) {
+      global_training_info_.push_back(
+          readMatrixInfo<double>(info.individual_groups(i)));
+    }
+    global_training_feature_range_ =
+        Range<Key>(info.all_group().feature_begin(), info.all_group().feature_end());
+    for (int i = 0; i < num_worker; ++i) {
+      DataConfig dc; dc.set_format(DataConfig::PROTO);
+      auto os = Range<int>(0, data.files_size()).evenDivide(num_worker, i);
+      for (int j = os.begin(); j < os.end(); ++j)
+        dc.add_files(data.files(j));
+      worker_training_.push_back(dc);
+    }
   }
 
   // evenly divide the keys range for server nodes
-  for (int i = 0; i < num_servers; ++i)
+  for (int i = 0; i < num_servers; ++i) {
     server_range.push_back(
         global_training_feature_range_.evenDivide(num_servers, i));
+  }
 
   App::requestNodes();
   int s = 0;

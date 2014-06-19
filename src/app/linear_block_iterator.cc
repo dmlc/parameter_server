@@ -75,22 +75,11 @@ void LinearBlockIterator::prepareData(const Message& msg) {
   if (exec_.client()) {
     LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training());
-
-    CHECK_GE(training_data.size(), 2);
+    CHECK_EQ(training_data.size(), 2);
     y_ = training_data[0];
-    // localize (and tranpose if necessary) the local training data
-    for (int i = 1; i < training_data.size(); ++i) {
-      SArray<Key> global_key;
-      auto& X = training_data[i];
-      CHECK(X->info().has_id());
-      int id = X->info().id();
-      Xs_[id] = X->localize(&global_key);
-      if (app_cf_.block_iterator().feature_block_ratio() > 0) {
-        Xs_[id] = Xs_[id]->toColMajor();
-        // LL << "to col major";
-      }
-      Xs_col_offset_[id] = w_->key().size();
-      w_->key().append(global_key);
+    X_ = training_data[1]->localize(&(w_->key()));
+    if (app_cf_.block_iterator().feature_block_ratio() > 0) {
+      X_ = X_->toColMajor();
     }
     // sync keys and fetch initial value of w_
     SArrayList<double> empty;
@@ -103,18 +92,10 @@ void LinearBlockIterator::prepareData(const Message& msg) {
         promise.set_value();
       });
     promise.get_future().wait();
-    // init  X * w
-    Xw_.resize(y_->rows()); Xw_.setZero();
-    for (auto& it : Xs_) {
-      auto& X = it.second;
-      size_t os = Xs_col_offset_[it.first];
-      Xw_.vec() += *X * w_->segment(SizeR(0, X->cols())+os).vec();
-    }
+    Xw_.vec() = *X_ * w_->vec();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // init w by 0
-        // LL << t;
-        // LL << w_->key().size();
         w_->value().resize(w_->key().size());
         w_->value().setZero();
         // LL << "init w " << w_->value().size();
@@ -146,8 +127,8 @@ void LinearBlockIterator::updateModel(Message* msg) {
     // CHECK(!local_range.empty());
     // if (local_range.empty()) LL << global_range << " " << local_range;
     LL << global_range;
-    int id = msg->task.risk().feature_group_id();
-    auto X = Xs_[id]->colBlock(local_range - Xs_col_offset_[id]);
+    // int id = msg->task.risk().feature_group_id();
+    auto X = X_->colBlock(local_range);
 
     SArrayList<double> local_grads(2);
     local_grads[0].resize(local_range.size());

@@ -15,14 +15,14 @@ class SparseMatrixTest : public ::testing::Test {
 };
 
 // use matlab/diff_*.m to check
-// TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
-//   std::vector<string> files;
-//   for (int i = 0; i < 4; i++)
-//     files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
-//   auto data = readMatricesFromProto<double>(files);
-//   data[0]->writeToBinFile("y");
-//   data[1]->writeToBinFile("x");
-// }
+TEST_F(SparseMatrixTest, LoadFromRecordIOMultiGroup) {
+  std::vector<string> files;
+  for (int i = 0; i < 4; i++)
+    files.push_back("../data/recordio/ctr4m_part_" + to_string(i));
+  auto data = readMatricesFromProto<double>(files);
+  data[0]->writeToBinFile("y");
+  data[1]->writeToBinFile("x");
+}
 
 TEST_F(SparseMatrixTest, LoadFromRecordIO) {
   std::vector<string> files;
