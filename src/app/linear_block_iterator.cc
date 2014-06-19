@@ -34,8 +34,8 @@ void LinearBlockIterator::run() {
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
     // std::random_shuffle(block_order.begin(), block_order.end());
 
-    // for (int b : block_order)  {
-    int b = iter;
+    for (int b : block_order)  {
+    // int b = iter;
       Task update;
       auto cmd = RiskMin::setCall(&update);
 
@@ -44,7 +44,7 @@ void LinearBlockIterator::run() {
       blocks[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(blocks[b].first);
       time = wk->submit(update);
-    // }
+    }
 
     Task eval;
     RiskMin::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
@@ -73,11 +73,12 @@ void LinearBlockIterator::run() {
 void LinearBlockIterator::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.client()) {
-    LL << myNodeID() << " training data " << app_cf_.training().DebugString();
+    // LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training());
     CHECK_EQ(training_data.size(), 2);
     y_ = training_data[0];
     X_ = training_data[1]->localize(&(w_->key()));
+    CHECK_EQ(y_->rows(), X_->rows());
     if (app_cf_.block_iterator().feature_block_ratio() > 0) {
       X_ = X_->toColMajor();
     }
@@ -92,6 +93,7 @@ void LinearBlockIterator::prepareData(const Message& msg) {
         promise.set_value();
       });
     promise.get_future().wait();
+    Xw_.resize(X_->rows());
     Xw_.vec() = *X_ * w_->vec();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
@@ -112,7 +114,7 @@ RiskMinProgress LinearBlockIterator::evaluateProgress() {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
     prog.set_nnz_w(w_->nnz());
   }
-  LL << myNodeID() << ": objv " << prog.objv();
+  // LL << myNodeID() << ": objv " << prog.objv();
   return prog;
 }
 
@@ -126,7 +128,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
   if (exec_.client()) {
     // CHECK(!local_range.empty());
     // if (local_range.empty()) LL << global_range << " " << local_range;
-    LL << global_range;
+    // LL << global_range;
     // int id = msg->task.risk().feature_group_id();
     auto X = X_->colBlock(local_range);
 
@@ -137,8 +139,8 @@ void LinearBlockIterator::updateModel(Message* msg) {
     AggGradLearnerArg arg;
 
     learner_->compute({y_, X, Xw_.matrix()}, arg, local_grads);
-    LL << myNodeID() << " 1 " << local_grads[0].vec().sum() << " " <<
-        local_grads[0].size() << "; 2 " << local_grads[1].vec().sum();
+    // LL << myNodeID() << " 1 " << local_grads[0].vec().sum() << " " <<
+    //     local_grads[0].size() << "; 2 " << local_grads[1].vec().sum();
 
     msg->finished = false;
     auto d = *msg;
