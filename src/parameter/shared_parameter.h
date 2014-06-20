@@ -11,6 +11,7 @@ class SharedParameter : public Customer {
   // process a received message, will called by executor's thread
   void process(Message* msg);
 
+  //
   std::vector<Message> decompose(const Message& msg, const Keys& partition);
 
   typedef std::function<void()> Fn;

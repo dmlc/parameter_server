@@ -99,6 +99,7 @@ Status Van::send(const Message& msg) {
       task.add_uncompressed_size(msg.key.size());
     }
     for (auto& m : msg.value) {
+      if (m.empty()) continue;
       data.push_back(m.compressTo());
       task.add_uncompressed_size(m.size());
     }
@@ -109,7 +110,10 @@ Status Van::send(const Message& msg) {
     }
   } else {
     if (has_key) data.push_back(msg.key);
-    for (auto& m : msg.value) data.push_back(m);
+    for (auto& m : msg.value) {
+      if (m.empty()) continue;
+      data.push_back(m);
+    }
     for (int i = 0; i < data.size(); ++i) {
       send_uncompressed_ += data[i].size();
     }
@@ -144,6 +148,8 @@ Status Van::send(const Message& msg) {
   if (van_filter.empty() || van_filter==my_node_.id())
   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #endif
+  // if (msg.task.time() == 22)
+  // LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
   return Status::OK();
 }
 

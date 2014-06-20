@@ -96,7 +96,7 @@ class KVVector : public SharedParameter<K,V> {
   // aggregate the data from all clients, call update
   void roundTripForServer(
       int time,
-      const Range<K>& range = Range<K>::al(),
+      const Range<K>& range = Range<K>::all(),
       Fn update = Fn()) {
     auto wk = taskpool(kWorkerGroup);
     // none of my bussiness
@@ -302,12 +302,14 @@ void KVVector<K,V>::setValue(Message* msg) {
   }
 }
 
+// partition is a sorted key ranges
 template <typename K, typename V>
-std::vector<Message> KVVector<K,V>:: decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
-  // find the positition
-  std::vector<size_t> pos;
-  SArray<K> key(msg.key);
+std::vector<Message> KVVector<K,V>::
+decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
   size_t n = partition.size();
+  std::vector<size_t> pos(n, -1);
+
+  SArray<K> key(msg.key);
   pos.reserve(n);
   for (auto k : partition)
     pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
@@ -317,10 +319,18 @@ std::vector<Message> KVVector<K,V>:: decomposeTemplate(const Message& msg, const
   std::vector<Message> ret(n-1);
   for (int i = 0; i < n-1; ++i) {
     part.clearData();
-    SizeR lr(pos[i], pos[i+1]);
-    // FIXME
-    // part.valid = !lr.empty();
-    if (part.valid) {
+    if (Range<K>(partition[i], partition[i+1]).setIntersection(
+            Range<K>(msg.task.key_range())).empty()) {
+      // mark as do_not_send, because the remote node does not maintain this key range
+      part.valid = false;
+      // LL << myNodeID() << " " << part.shortDebugString() << " " << i;
+    } else {
+      part.valid = true;
+      if (pos[i] == -1)
+        pos[i] = std::lower_bound(key.begin(), key.end(), partition[i]) - key.begin();
+      if (pos[i+1] == -1)
+        pos[i+1] = std::lower_bound(key.begin(), key.end(), partition[i+1]) - key.begin();
+      SizeR lr(pos[i], pos[i+1]);
       part.key = key.segment(lr);
       for (auto& d : msg.value) {
         SArray<V> data(d);
