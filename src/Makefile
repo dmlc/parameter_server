@@ -72,7 +72,7 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(LIB)/libps.so $(addprefix $(BIN)/, ps_mpi text2bin $(TESTS)) # ps ps_local  $(BIN)/,txt2bin
+all: dir $(addprefix $(BIN)/, ps_mpi text2bin $(TESTS)) # ps ps_local  $(BIN)/,txt2bin
 
 dir:
 	mkdir -p $(LIB)
@@ -86,7 +86,7 @@ clean:
 %.d: %.cc %.h
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
 
-$(BIN)/%: test/%.cc $(LIB)/libps.so
+$(BIN)/%: test/%.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS)  -o $@
 
 # $(BIN)/%_perf: test/%_perf.cc $(LIB)/libps.so
@@ -100,8 +100,8 @@ $(BIN)/%: test/%.cc $(LIB)/libps.so
 # for mac, either use $(LDFLAGS) or -undefined dynamic_lookup when compling .so
 # to compile binary, using -Wl,-rpath=../lib to avoid set LD_LIBARARY_PATH on
 # linux, but it doesn't work on mac
-$(LIB)/libps.so: $(OBJS)
-	$(CC) -shared -undefined dynamic_lookup $(OBJS) -o $@
+# $(LIB)/libps.so: $(OBJS)
+# 	$(CC) -shared -undefined dynamic_lookup $(OBJS) -o $@
 
 # static link, works fine for both mac and linux.
 $(LIB)/libps.a: $(OBJS) #gtest
