@@ -105,12 +105,12 @@ class KVVector : public SharedParameter<K,V> {
       return;
     }
 
-    wk->waitInTask(time);
+    wk->waitIncomingTask(time);
     update(time);
     backup(kWorkerGroup, time+1, range);
 
     // time 1: mark it as finished so that all blocked pulls can be started
-    wk->finishInTask(time+1);
+    wk->finishIncomingTask(time+1);
   }
 
   // return the data received at time t, then *delete* it
@@ -136,7 +136,7 @@ class KVVector : public SharedParameter<K,V> {
     vc->set_sender(sender);
 
     time = sync(CallSharedPara::PUSH_REPLICA, kReplicaGroup, range, msg);
-    taskpool(kReplicaGroup)->waitOutTask(time);
+    taskpool(kReplicaGroup)->waitOutgoingTask(time);
 
     // also save the timestamp in local, in case if my replica node dead, he
     // will request theose timestampes
@@ -221,7 +221,7 @@ class KVVector : public SharedParameter<K,V> {
     // timestamp
     for (int i = 0; i < arg.backup_size(); ++i) {
       auto w = taskpool(arg.backup(i).sender());
-      w->finishInTask(arg.backup(i).time());
+      w->finishIncomingTask(arg.backup(i).time());
       // LL << "replay " << arg.backup(i).sender() << " time " << arg.backup(i).time();
     }
   }

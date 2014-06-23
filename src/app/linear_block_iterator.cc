@@ -57,7 +57,7 @@ void LinearBlockIterator::run() {
   // LOG(INFO) << "scheduler has submitted all tasks";
 
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    wk->waitOutTask(progress_time[iter]);
+    wk->waitOutgoingTask(progress_time[iter]);
     RiskMin::showProgress(iter);
     // if (iter == 0 && FLAGS_test_fault_tol) {
     //   Task recover;
@@ -161,7 +161,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
         }
 
         busy_timer_.stop();
-        taskpool(d.sender)->finishInTask(d.task.time());
+        taskpool(d.sender)->finishIncomingTask(d.task.time());
         sys_.reply(d);
         // LL << sid() << " done " << d.task.time();
       });

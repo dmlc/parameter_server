@@ -121,7 +121,7 @@ void LinearMethod::startSystem() {
     *(start.mutable_mng_app()->mutable_app_config()) = cf;
     CHECK_EQ(time, w->submit(start));
   }
-  taskpool(kActiveGroup)->waitOutTask(time);
+  taskpool(kActiveGroup)->waitOutgoingTask(time);
   fprintf(stderr, "system started...");
 
   // load data, build key mapping

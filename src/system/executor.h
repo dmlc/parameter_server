@@ -39,7 +39,7 @@ class Executor {
 
   void finish(const Message& msg) {
     int t = msg.task.time();
-    worker(msg.sender)->in_task_.finish(t);
+    worker(msg.sender)->incoming_task_.finish(t);
   }
 
   RNodePtr worker(const NodeID& k) {
@@ -87,9 +87,9 @@ class Executor {
 
   Customer& obj_;
 
-  // temperal buffer for receved messages
+  // Temporal buffer for received messages
   std::list<Message> recved_msgs_;
-  std::mutex mu_;
+  std::mutex recved_msg_mu_;
 
   // the message is going to be processed or is the last one be processed
   Message active_msg_;

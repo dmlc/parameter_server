@@ -168,7 +168,7 @@ void Executor::run() {
     while(!recved_msgs_.empty()) {
       bool do_process = false;
       {
-        Lock l(mu_);
+        Lock l(recved_msg_mu_);
         // pickup a message with dependency satisfied
         for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
           int wait_time = it->task.wait_time();
@@ -181,7 +181,7 @@ void Executor::run() {
           }
           if (!it->task.request() ||  // TODO rethink about it
               wait_time <= RNode::kInvalidTime ||
-              w->tryWaitInTask(wait_time)) {
+              w->tryWaitIncomingTask(wait_time)) {
             // if (it->task.type() != Task::REPLY &&
             //     worker(it->sender)->in_task_.hasFinished(it->task.time()))
             //   LL << it->debugString();
@@ -193,31 +193,35 @@ void Executor::run() {
         }
       }
       if (do_process) {
+        // process the picked message
         bool req = active_msg_.task.request();
         auto w = worker(active_msg_.sender);
         int t = active_msg_.task.time();
 
-        if (req) { w->in_task_.start(t); }
+        if (req) { w->incoming_task_.start(t); }
 
         if (active_msg_.task.type() == Task::REPLY)
           CHECK(!req) << "reply message should with request == false";
         else
+          // call user program to process this message
           obj_.process(&active_msg_);
 
         if (req) {
-          // if has been marked as finished, then set in_task_, otherwise, the
-          // user program need to set in_task_
+          // if has been marked as finished, then mark it on in_task_; otherwise, the
+          // user program need to set in_task_. see example in
+          // LinearBlockIterator::updateModel when calling w_->roundTripForWorker
           if (active_msg_.finished) {
-            w->in_task_.finish(t);
+            w->incoming_task_.finish(t);
             // reply an empty ack message if it has not been replied yet
             if (!active_msg_.replied) w->sys_.reply(active_msg_);
           }
         } else {
-          auto b = w->cb_before_.find(t);
-          if (b != w->cb_before_.end() && b->second) b->second();
+          auto b = w->msg_receive_handle_.find(t);
+          if (b != w->msg_receive_handle_.end() && b->second) b->second();
 
-          w->out_task_.finish(t);
+          w->outgoing_task_.finish(t);
 
+          // the original receiver, such as the server group (all_servers)
           NodeID o_recver;
           {
             Lock l(w->mu_);
@@ -230,9 +234,9 @@ void Executor::run() {
 
           auto o_w = worker(o_recver);
           // LL << obj_.sid() << " try wait t " << t << ": " << o_w->tryWaitOutTask(t);
-          if (o_w->tryWaitOutTask(t)) {
-            auto a = o_w->cb_after_.find(t);
-            if (a != o_w->cb_after_.end() && a->second) a->second();
+          if (o_w->tryWaitOutgoingTask(t)) {
+            auto a = o_w->msg_finish_handle_.find(t);
+            if (a != o_w->msg_finish_handle_.end() && a->second) a->second();
           }
         }
       }
@@ -243,7 +247,7 @@ void Executor::run() {
 }
 
 void Executor::accept(const Message& msg) {
-  Lock l(mu_);
+  Lock l(recved_msg_mu_);
   auto w = worker(msg.sender);
   recved_msgs_.push_back(w->cacheKeyRecver(msg));
 

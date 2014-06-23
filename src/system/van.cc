@@ -5,7 +5,7 @@
 
 namespace PS {
 // #define _DEBUG_VAN_
-static string van_filter = "S0";
+static string van_filter = "";
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_bool(compress_message, true, "");

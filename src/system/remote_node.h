@@ -64,14 +64,14 @@ class RNode {
 
   void clearCache() { key_cache_.clear(); }
 
-  void waitOutTask(int time);
-  void waitInTask(int time);
+  void waitOutgoingTask(int time);
+  void waitIncomingTask(int time);
 
-  bool tryWaitOutTask(int time);
-  bool tryWaitInTask(int time);
+  bool tryWaitOutgoingTask(int time);
+  bool tryWaitIncomingTask(int time);
 
-  void finishOutTask(int time);
-  void finishInTask(int time);
+  void finishOutgoingTask(int time);
+  void finishIncomingTask(int time);
 
   // // the received request tasks, need to execute them, and send back results (or ack)
   // TaskTracker& inTask() { return in_task_; }
@@ -92,13 +92,24 @@ class RNode {
 
   std::mutex mu_;
 
-  TaskTracker in_task_, out_task_;
+  TaskTracker incoming_task_, outgoing_task_;
 
-  // current time, will be incremented by 1 if
+  // current time
   int time_ = kInvalidTime;
+  std::mutex time_mu_;
 
+  // request messages that have been sent but not received replies yet
   std::map<int, Message> pending_msgs_;
-  std::map<int, Callback> cb_before_, cb_after_;
+
+  // will be called once a reply message have been received. If a worker send a
+  // message to k servers, then it will receive k reply messages. This callback
+  // will be call k times
+  std::map<int, Callback> msg_receive_handle_;
+
+  // will be called once a reply message have been finished. If a worker send a
+  // message to k servers. This callback will be called only once, after all k
+  // reply messages have been received.
+  std::map<int, Callback> msg_finish_handle_;
 
   std::unordered_map<Range<Key>, std::pair<uint32_t, SArray<char>>> key_cache_;
   std::mutex key_cache_mu_;

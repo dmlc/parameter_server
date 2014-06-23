@@ -12,26 +12,28 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
   tk.set_request(true);
   tk.set_customer(exec_.obj().name());
 
+  msg.original_recver = id();
   {
+    // set the message timestamp
     Lock l(mu_);
-    msg.original_recver = id();
     if (tk.has_time()) {
-      // if timestamp has been set, just trust it.
+      // if the timestamp has been set, just trust it.
       time_ = std::max(tk.time(), time_);
     } else {
       // choose a timestamp
       if (role() == Node::GROUP) {
         for (auto w : exec_.group(id())) {
-          Lock l(w->mu_);  // seems not necessary
+          // Lock l(w->time_mu_);
           time_ = std::max(w->time_, time_);
         }
       }
       tk.set_time(++time_);
     }
-    if (after) cb_after_[tk.time()] = after;
+    if (after) msg_finish_handle_[tk.time()] = after;
   }
+
   int t = tk.time();
-  out_task_.start(t);
+  outgoing_task_.start(t);
 
   // partition the message according the receiver node's key range
   auto key_partition = exec_.partition(id());
@@ -46,12 +48,12 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
       Lock l(w->mu_);
       msgs[i].recver = w->id();
       w->time_ = std::max(t, w->time_);
-      // do not pending it, it will not get replied
+      // do not pending it, it will not be replied
       if (tk.type() != Task::TERMINATE_CONFIRM)
         w->pending_msgs_[t] = msgs[i];
-      if (before) w->cb_before_[t] = before;
-      sys_.queue(w->cacheKeySender(msgs[i]));
+      if (before) w->msg_receive_handle_[t] = before;
     }
+    sys_.queue(w->cacheKeySender(msgs[i]));
   // if (tk.shared_para().cmd() == CallSharedPara::PUSH_REPLICA ) {
   //   LL << msgs[i];
   // }
@@ -59,42 +61,42 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
   }
   CHECK_EQ(i, msgs.size());
 
-  if (!no_wait) waitOutTask(t);
+  if (!no_wait) waitOutgoingTask(t);
 
   return t;
 }
 
-void RNode::waitOutTask(int time) {
+void RNode::waitOutgoingTask(int time) {
   for (auto& w : exec_.group(id()))
-    w->out_task_.wait(time);
+    w->outgoing_task_.wait(time);
 }
 
-bool RNode::tryWaitOutTask(int time) {
+bool RNode::tryWaitOutgoingTask(int time) {
   for (auto& w : exec_.group(id()))
-    if (!w->out_task_.tryWait(time))
+    if (!w->outgoing_task_.tryWait(time))
       return false;
   return true;
 }
 
-void RNode::finishOutTask(int time) {
+void RNode::finishOutgoingTask(int time) {
   for (auto& w : exec_.group(id()))
-    w->out_task_.finish(time);
+    w->outgoing_task_.finish(time);
 }
 
-void RNode::waitInTask(int time) {
+void RNode::waitIncomingTask(int time) {
   for (auto& w : exec_.group(id()))
-    w->in_task_.wait(time);
+    w->incoming_task_.wait(time);
 }
-bool RNode::tryWaitInTask(int time) {
+bool RNode::tryWaitIncomingTask(int time) {
   for (auto& w : exec_.group(id()))
-    if (!w->in_task_.tryWait(time))
+    if (!w->incoming_task_.tryWait(time))
       return false;
   return true;
 }
 
-void RNode::finishInTask(int time) {
+void RNode::finishIncomingTask(int time) {
   for (auto& w : exec_.group(id()))
-    w->in_task_.finish(time);
+    w->incoming_task_.finish(time);
 }
 
 // Message RNode::cache(const Message& msg) {
@@ -112,7 +114,7 @@ Message RNode::cacheKeySender(const Message& msg) {
   Range<Key> range(ret.task.key_range());
   auto sig = crc32c::Value(ret.key.data(), ret.key.size());
 
-  Lock l(key_cache_mu_);
+  // Lock l(key_cache_mu_);
   auto& cache = key_cache_[range];
 
   bool hit_cache = cache.first == sig && cache.second.size() == ret.key.size();
@@ -136,7 +138,7 @@ Message RNode::cacheKeyRecver(const Message& msg) {
   Range<Key> range(ret.task.key_range());
   auto sig = ret.task.key_signature();
 
-  Lock l(key_cache_mu_);
+  // Lock l(key_cache_mu_);
   auto& cache = key_cache_[range];
 
   if (ret.task.has_key()) {
