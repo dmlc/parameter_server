@@ -51,20 +51,26 @@ void LinearBlockIterator::run() {
     eval.set_wait_time(time - tau);
 
     time = wk->submit(eval, [this, iter](){ RiskMin::mergeProgress(iter); });
-    progress_time.push_back(time);
+    wk->waitOutgoingTask(time);
+
+    RiskMin::showProgress(iter);
+    if (all_prog_[iter].relative_objv() <= cf.epsilon()) {
+      break;
+    }
+    // progress_time.push_back(time);
   }
 
   // LOG(INFO) << "scheduler has submitted all tasks";
 
-  for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    wk->waitOutgoingTask(progress_time[iter]);
-    RiskMin::showProgress(iter);
-    // if (iter == 0 && FLAGS_test_fault_tol) {
-    //   Task recover;
-    //   recover.mutable_risk()->set_cmd(CallRiskMin::RECOVER);
-    //   App::testFaultTolerance(recover);
-    // }
-  }
+  // for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
+  //   wk->waitOutgoingTask(progress_time[iter]);
+  //   RiskMin::showProgress(iter);
+  //   // if (iter == 0 && FLAGS_test_fault_tol) {
+  //   //   Task recover;
+  //   //   recover.mutable_risk()->set_cmd(CallRiskMin::RECOVER);
+  //   //   App::testFaultTolerance(recover);
+  //   // }
+  // }
 
   // TODO save model
 

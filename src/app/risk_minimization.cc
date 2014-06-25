@@ -44,6 +44,7 @@ void RiskMin::mergeProgress(int iter) {
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
   p.set_total_time(total_timer_.get());
+  p.set_relative_objv(iter==0 ? 1 : all_prog_[iter-1].objv()/p.objv() - 1);
 }
 
 
@@ -64,11 +65,11 @@ void RiskMin::showProgress(int iter) {
   double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);
 
   if (iter == 0) {
-    fprintf(stderr, "iter |   objv       |w|_0 | time: busy  total\n");
-    fprintf(stderr, " ----+--------------------+----\n");
+    fprintf(stderr, " iter | objective    relative_obj  |w|_0 | time: app total\n");
+    fprintf(stderr, " ----+----------------------------------+---------------\n");
   }
-  fprintf(stderr, "%4d | %.5e %6lld | %4.2f+-%2.2f %4.2f\n",
-          iter, prog.objv(), prog.nnz_w(), mean, var, ttl_t);
+  fprintf(stderr, "%4d | %.5e  %.3e  %8lld | %4.2f+-%2.2f %4.2f\n",
+          iter, prog.objv(), prog.relative_objv(), prog.nnz_w(), mean, var, ttl_t);
 }
 
 } // namespace PS

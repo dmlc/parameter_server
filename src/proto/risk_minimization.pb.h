@@ -122,10 +122,17 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline double objv() const;
   inline void set_objv(double value);
 
-  // optional int64 nnz_w = 2;
+  // optional double relative_objv = 2;
+  inline bool has_relative_objv() const;
+  inline void clear_relative_objv();
+  static const int kRelativeObjvFieldNumber = 2;
+  inline double relative_objv() const;
+  inline void set_relative_objv(double value);
+
+  // optional int64 nnz_w = 5;
   inline bool has_nnz_w() const;
   inline void clear_nnz_w();
-  static const int kNnzWFieldNumber = 2;
+  static const int kNnzWFieldNumber = 5;
   inline ::google::protobuf::int64 nnz_w() const;
   inline void set_nnz_w(::google::protobuf::int64 value);
 
@@ -152,6 +159,8 @@ class RiskMinProgress : public ::google::protobuf::Message {
  private:
   inline void set_has_objv();
   inline void clear_has_objv();
+  inline void set_has_relative_objv();
+  inline void clear_has_relative_objv();
   inline void set_has_nnz_w();
   inline void clear_has_nnz_w();
   inline void set_has_total_time();
@@ -160,12 +169,13 @@ class RiskMinProgress : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   double objv_;
+  double relative_objv_;
   ::google::protobuf::int64 nnz_w_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -333,15 +343,37 @@ inline void RiskMinProgress::set_objv(double value) {
   objv_ = value;
 }
 
-// optional int64 nnz_w = 2;
-inline bool RiskMinProgress::has_nnz_w() const {
+// optional double relative_objv = 2;
+inline bool RiskMinProgress::has_relative_objv() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void RiskMinProgress::set_has_nnz_w() {
+inline void RiskMinProgress::set_has_relative_objv() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void RiskMinProgress::clear_has_nnz_w() {
+inline void RiskMinProgress::clear_has_relative_objv() {
   _has_bits_[0] &= ~0x00000002u;
+}
+inline void RiskMinProgress::clear_relative_objv() {
+  relative_objv_ = 0;
+  clear_has_relative_objv();
+}
+inline double RiskMinProgress::relative_objv() const {
+  return relative_objv_;
+}
+inline void RiskMinProgress::set_relative_objv(double value) {
+  set_has_relative_objv();
+  relative_objv_ = value;
+}
+
+// optional int64 nnz_w = 5;
+inline bool RiskMinProgress::has_nnz_w() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void RiskMinProgress::set_has_nnz_w() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void RiskMinProgress::clear_has_nnz_w() {
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void RiskMinProgress::clear_nnz_w() {
   nnz_w_ = GOOGLE_LONGLONG(0);
@@ -357,13 +389,13 @@ inline void RiskMinProgress::set_nnz_w(::google::protobuf::int64 value) {
 
 // optional double total_time = 10;
 inline bool RiskMinProgress::has_total_time() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void RiskMinProgress::set_has_total_time() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void RiskMinProgress::clear_has_total_time() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void RiskMinProgress::clear_total_time() {
   total_time_ = 0;

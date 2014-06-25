@@ -3,7 +3,8 @@ import "proto/range.proto";
 
 message RiskMinProgress {
   optional double objv = 1;
-  optional int64 nnz_w = 2;
+  optional double relative_objv = 2;
+  optional int64 nnz_w = 5;
 
   // performance
   optional double total_time = 10;

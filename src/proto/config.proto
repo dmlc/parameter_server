@@ -49,6 +49,9 @@ message BlockIteratorConfig {
   required int32 max_pass_of_data = 3 [default = 2];
   // bounded-delay consistency
   required int32 max_block_delay = 4 [default = 0];
+
+  // convergance critiria. stop if the relative objective <= epsilon
+  required double epsilon = 5;
 }
 
 message LossConfig {

@@ -557,6 +557,13 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_block_delay() const;
   inline void set_max_block_delay(::google::protobuf::int32 value);
 
+  // required double epsilon = 5;
+  inline bool has_epsilon() const;
+  inline void clear_epsilon();
+  static const int kEpsilonFieldNumber = 5;
+  inline double epsilon() const;
+  inline void set_epsilon(double value);
+
   // @@protoc_insertion_point(class_scope:PS.BlockIteratorConfig)
  private:
   inline void set_has_example_block_size();
@@ -567,16 +574,19 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline void clear_has_max_pass_of_data();
   inline void set_has_max_block_delay();
   inline void clear_has_max_block_delay();
+  inline void set_has_epsilon();
+  inline void clear_has_epsilon();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int64 example_block_size_;
   float feature_block_ratio_;
   ::google::protobuf::int32 max_pass_of_data_;
+  double epsilon_;
   ::google::protobuf::int32 max_block_delay_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1540,6 +1550,28 @@ inline ::google::protobuf::int32 BlockIteratorConfig::max_block_delay() const {
 inline void BlockIteratorConfig::set_max_block_delay(::google::protobuf::int32 value) {
   set_has_max_block_delay();
   max_block_delay_ = value;
+}
+
+// required double epsilon = 5;
+inline bool BlockIteratorConfig::has_epsilon() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void BlockIteratorConfig::set_has_epsilon() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void BlockIteratorConfig::clear_has_epsilon() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void BlockIteratorConfig::clear_epsilon() {
+  epsilon_ = 0;
+  clear_has_epsilon();
+}
+inline double BlockIteratorConfig::epsilon() const {
+  return epsilon_;
+}
+inline void BlockIteratorConfig::set_epsilon(double value) {
+  set_has_epsilon();
+  epsilon_ = value;
 }
 
 // -------------------------------------------------------------------
