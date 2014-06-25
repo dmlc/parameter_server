@@ -26,11 +26,11 @@ samples and features, 100 to 1000 machines. It is a joint project by
 ## How to Build
 
 Requirement:
-- compiler: gcc >= 4.7 (tested on 4.7.x, 4.8.x) or clang >= 3.4 (tested
-on 3.4). You can change the first two lines of [src/Makefile](src/Makefile) to switch
-between gcc and clang.
-- system: Should work on both Linux and Mac OS (tested on Ubuntu 12.10, 13.10, Max OS X 10.8 10.9)
-- depended libraries: The system depends on [zeromq](http://zeromq.org/),
+- compiler: gcc >= 4.8 (prefer 4.9 with better support for <regex>) or llvm >= 3.4 (tested
+on Apple LLVM version 5.1).
+- system: Should work on both Linux and Mac OS (tested on Ubuntu 12.10, 13.10,
+  RHEL 4U3, Max OS X 10.9)
+- depended libraries: [zeromq](http://zeromq.org/),
   [gflags](https://code.google.com/p/gflags/),
   [glogs](https://code.google.com/p/google-glog/),
   [gtest](https://code.google.com/p/googletest/),
