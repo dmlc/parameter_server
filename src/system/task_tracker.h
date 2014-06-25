@@ -15,7 +15,7 @@ class TaskTracker {
   // wait until task k has been finished
   void wait(int k) {
     ULock l(mu_);
-    cond_.wait(l, [this, k]{return (task_.count(k) && task_[k] == true); });
+    cond_.wait(l, [this, k]{ return (task_.count(k) && task_[k] == true); });
   }
 
   // non-blocking wait
@@ -30,7 +30,7 @@ class TaskTracker {
     if (!task_.count(k)) task_[k] = false;
   }
 
-  // whether of not task k has been finished
+  // whether or not task k has been finished
   bool hasFinished(int k) {
     Lock l(mu_);
     return (task_.count(k) && task_[k] == true);

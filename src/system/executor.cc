@@ -163,86 +163,104 @@ string Executor::lastRecvReply() {
   return active_msg_.task.msg();
 }
 
+// a naive implementation of DAG execution engine. It may has performance
+// problem, do profile later TODO.
 void Executor::run() {
   while (!done_) {
-    while(!recved_msgs_.empty()) {
-      bool do_process = false;
-      {
-        Lock l(recved_msg_mu_);
-        // pickup a message with dependency satisfied
-        for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
-          int wait_time = it->task.wait_time();
-          auto w = worker(it->sender);
-          if (!w) {
-            LL << my_node_.id() << ": " << it->sender
-               << " does not exist, ignore\n" << *it;
-            recved_msgs_.erase(it);
-            break;
-          }
-          if (!it->task.request() ||  // TODO rethink about it
-              wait_time <= RNode::kInvalidTime ||
-              w->tryWaitIncomingTask(wait_time)) {
-            // if (it->task.type() != Task::REPLY &&
-            //     worker(it->sender)->in_task_.hasFinished(it->task.time()))
-            //   LL << it->debugString();
-            do_process = true;
-            active_msg_ = *it;
-            recved_msgs_.erase(it);
-            break;
-          }
+    bool do_process = false;
+    {
+      std::unique_lock<std::mutex> lk(recved_msg_mu_);
+      // pickup a message with dependency satisfied
+      for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
+        int wait_time = it->task.wait_time();
+        auto w = worker(it->sender);
+        if (!w) {
+          LL << my_node_.id() << ": " << it->sender
+             << " does not exist, ignore\n" << *it;
+          recved_msgs_.erase(it);
+          break;
+        }
+        if (!it->task.request() ||  // TODO rethink about it
+            wait_time <= RNode::kInvalidTime ||
+            w->tryWaitIncomingTask(wait_time)) {
+          // if (it->task.type() != Task::REPLY &&
+          //     worker(it->sender)->in_task_.hasFinished(it->task.time()))
+          //   LL << it->debugString();
+          do_process = true;
+          active_msg_ = *it;
+          recved_msgs_.erase(it);
+          break;
         }
       }
-      if (do_process) {
-        // process the picked message
-        bool req = active_msg_.task.request();
-        auto w = worker(active_msg_.sender);
-        int t = active_msg_.task.time();
-
-        if (req) { w->incoming_task_.start(t); }
-
-        if (active_msg_.task.type() == Task::REPLY)
-          CHECK(!req) << "reply message should with request == false";
-        else
-          // call user program to process this message
-          obj_.process(&active_msg_);
-
-        if (req) {
-          // if has been marked as finished, then mark it on in_task_; otherwise, the
-          // user program need to set in_task_. see example in
-          // LinearBlockIterator::updateModel when calling w_->roundTripForWorker
-          if (active_msg_.finished) {
-            w->incoming_task_.finish(t);
-            // reply an empty ack message if it has not been replied yet
-            if (!active_msg_.replied) w->sys_.reply(active_msg_);
-          }
-        } else {
-          auto b = w->msg_receive_handle_.find(t);
-          if (b != w->msg_receive_handle_.end() && b->second) b->second();
-
-          w->outgoing_task_.finish(t);
-
-          // the original receiver, such as the server group (all_servers)
-          NodeID o_recver;
-          {
-            Lock l(w->mu_);
-            auto it = w->pending_msgs_.find(t);
-            CHECK(it != w->pending_msgs_.end())
-		    << " " << w->id() <<  " didn't find pending msg " << t << my_node_.id();
-            o_recver = it->second.original_recver;
-            w->pending_msgs_.erase(it);
-          }
-
-          auto o_w = worker(o_recver);
-          // LL << obj_.sid() << " try wait t " << t << ": " << o_w->tryWaitOutTask(t);
-          if (o_w->tryWaitOutgoingTask(t)) {
-            auto a = o_w->msg_finish_handle_.find(t);
-            if (a != o_w->msg_finish_handle_.end() && a->second) a->second();
-          }
-        }
+      if (!do_process) {
+        dag_cond_.wait(lk);
+        // if (dag_cond_.wait_for(lk, std::chrono::seconds(5)) == std::cv_status::timeout) {
+        //   LL << node().id() << " " << obj_.name() << ": timeout, recved #msg " << recved_msgs_.size();
+        // }
+        continue;
       }
     }
-    usleep(10);
-//   std::this_thread::yield();
+    // if (!do_process) continue;
+
+      // process the picked message
+      bool req = active_msg_.task.request();
+      auto w = worker(active_msg_.sender);
+      int t = active_msg_.task.time();
+
+      if (req) { w->incoming_task_.start(t); }
+
+      if (active_msg_.task.type() == Task::REPLY)
+        CHECK(!req) << "reply message should with request == false";
+      else
+        // call user program to process this message
+        obj_.process(&active_msg_);
+
+      if (req) {
+        // if has been marked as finished, then mark it on in_task_; otherwise, the
+        // user program need to set in_task_. see example in
+        // LinearBlockIterator::updateModel when calling w_->roundTripForWorker
+        if (active_msg_.finished) {
+          w->incoming_task_.finish(t);
+          notify();
+          // reply an empty ack message if it has not been replied yet
+          if (!active_msg_.replied) w->sys_.reply(active_msg_);
+        }
+      } else {
+        RNode::Callback h;
+        {
+          Lock lk(w->mu_);
+          auto b = w->msg_receive_handle_.find(t);
+          if (b != w->msg_receive_handle_.end()) h = b->second;
+        }
+        if (h) h();
+
+        w->outgoing_task_.finish(t);
+
+        // the original receiver, such as the server group (all_servers)
+        NodeID o_recver;
+        {
+          Lock l(w->mu_);
+          auto it = w->pending_msgs_.find(t);
+          CHECK(it != w->pending_msgs_.end())
+              << " " << w->id() <<  " didn't find pending msg " << t << my_node_.id();
+          o_recver = it->second.original_recver;
+          w->pending_msgs_.erase(it);
+        }
+
+        auto o_w = worker(o_recver);
+        // LL << obj_.sid() << " try wait t " << t << ": " << o_w->tryWaitOutTask(t);
+        if (o_w->tryWaitOutgoingTask(t)) {
+          RNode::Callback h;
+          {
+            Lock lk(o_w->mu_);
+            auto a = o_w->msg_finish_handle_.find(t);
+            if (a != o_w->msg_finish_handle_.end()) h = a->second;
+          }
+          if (h) h();
+          // if (t % 10 == 2 && !h && node().id() != "H") LL << node().id() << " " << t;
+        }
+      }
+    // }
   }
 }
 
@@ -250,6 +268,8 @@ void Executor::accept(const Message& msg) {
   Lock l(recved_msg_mu_);
   auto w = worker(msg.sender);
   recved_msgs_.push_back(w->cacheKeyRecver(msg));
+  // notify();
+  dag_cond_.notify_one();
 
   // TODO sort it by priority
   // if (msg.task.priority() > 0)

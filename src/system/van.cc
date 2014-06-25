@@ -5,7 +5,7 @@
 
 namespace PS {
 // #define _DEBUG_VAN_
-static string van_filter = "";
+// static string van_filter = "";
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_bool(compress_message, true, "");
@@ -13,13 +13,18 @@ DEFINE_bool(compress_message, true, "");
 void Van::init() {
   my_node_ = parseNode(FLAGS_my_node);
   context_ = zmq_ctx_new ();
-  zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
-  zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
+  // TODO is it useful?
+  // zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
+  // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
   // LL << "ZMQ_MAX_SOCKETS: " << zmq_ctx_get(context_, ZMQ_MAX_SOCKETS);
 
   CHECK(context_ != NULL) << "create 0mq context failed";
   bind();
   connect(my_node_);
+
+#ifdef _DEBUG_VAN_
+  debug_out_.open("van_"+my_node_.id());
+#endif
 }
 
 void Van::destroy() {
@@ -41,7 +46,7 @@ void Van::bind() {
 
 #ifdef _DEBUG_VAN_
   // if (van_filter.empty || van_filter==my_node_.id())
-  LL << my_node_.id() << ": binds address " << addr;
+  // LL << my_node_.id() << ": binds address " << addr;
 #endif
 }
 
@@ -61,8 +66,8 @@ Status Van::connect(Node const& node) {
   zmq_setsockopt (sender, ZMQ_IDENTITY, my_id.data(), my_id.size());
 
   // TODO is it useful?
-   uint64_t hwm = 5000000;
-   zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
+   // uint64_t hwm = 5000000;
+   // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
   // connect
   string addr = "tcp://" + address(node);
@@ -72,7 +77,7 @@ Status Van::connect(Node const& node) {
   senders_[id] = sender;
 
 #ifdef _DEBUG_VAN_
-  LL << my_node_.id() << ": connect to " << addr;
+  // LL << my_node_.id() << ": connect to " << addr;
 #endif
   return Status::OK();
 }
@@ -145,8 +150,7 @@ Status Van::send(const Message& msg) {
   // if (msg.recver == "U0")
   //   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #ifdef _DEBUG_VAN_
-  if (van_filter.empty() || van_filter==my_node_.id())
-  LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
+  debug_out_ << my_node_.id() << ">>>: " << msg.shortDebugString()<< std::endl;
 #endif
   // if (msg.task.time() == 22)
   // LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
@@ -210,10 +214,8 @@ Status Van::recv(Message *msg) {
   // if (msg->task.type() == Task::CALL_CUSTOMER && msg->task.has_vector() &&
   //     msg->task.vector().cmd() == CallVec::DUPLICATE)
     // LL << *msg;
-
 #ifdef _DEBUG_VAN_
-  if (van_filter.empty() || van_filter==my_node_.id())
-  LL << my_node_.id() << "<<<: " << msg->shortDebugString();
+  debug_out_ << my_node_.id() << "<<<: " << msg->shortDebugString() << std::endl;
 #endif
 
   // if (msg->task.time() == 1442)

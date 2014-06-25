@@ -97,6 +97,7 @@ bool RNode::tryWaitIncomingTask(int time) {
 void RNode::finishIncomingTask(int time) {
   for (auto& w : exec_.group(id()))
     w->incoming_task_.finish(time);
+  exec_.notify();
 }
 
 // Message RNode::cache(const Message& msg) {

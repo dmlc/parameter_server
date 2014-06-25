@@ -35,11 +35,13 @@ class Executor {
 
   // will be called by customer ctor,
   void run();
-  void stop() { done_ = true; }
+  void stop() { done_ = true; notify(); }
+
+  void notify() { Lock l(recved_msg_mu_); dag_cond_.notify_one(); }
 
   void finish(const Message& msg) {
     int t = msg.task.time();
-    worker(msg.sender)->incoming_task_.finish(t);
+    worker(msg.sender)->finishIncomingTask(t);
   }
 
   RNodePtr worker(const NodeID& k) {
@@ -90,6 +92,8 @@ class Executor {
   // Temporal buffer for received messages
   std::list<Message> recved_msgs_;
   std::mutex recved_msg_mu_;
+
+  std::condition_variable dag_cond_;
 
   // the message is going to be processed or is the last one be processed
   Message active_msg_;

@@ -1,5 +1,6 @@
-# CC = g++
-CC = clang
+CC = g++
+# CC = clang
+# CC = /opt/local/bin/g++-mp-4.8
 
 OPT = -O3 -ggdb
 # OPT = -O0 -ggdb
@@ -17,11 +18,11 @@ THIRD_LIB=$(THIRD)/lib
 #-Wconversion -fPIC
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
 INCPATH = -I. -I${THIRD_INC}
-CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
+CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fPIC # -fopenmp
 
 # $(LIB)/libps.a  -L${THIRD_PARTY_LIBRARY}
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
--lgflags -lpthread -lzmq -lprotobuf -lglog -lstdc++ -lm -lz -lsnappy
+-lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lstdc++
 
 GTEST =  -lgtest_main -lgtest
 

@@ -33,9 +33,7 @@ class Customer {
 
   Executor& exec() { return exec_; }
 
-  RNodePtr taskpool(const NodeID& k) {
-    return exec_.worker(k);
-  }
+  RNodePtr taskpool(const NodeID& k) { return exec_.worker(k); }
 
  protected:
   string name_;
@@ -46,4 +44,5 @@ class Customer {
  private:
   DISALLOW_COPY_AND_ASSIGN(Customer);
 };
+
 } // namespace PS

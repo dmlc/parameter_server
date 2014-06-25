@@ -56,7 +56,14 @@ DataConfig searchFiles(const DataConfig& config) {
     else
       CHECK_EQ(dir, path(config.files(i)))
           << " all files should in the same directory";
-    patterns.push_back(std::regex(filename(config.files(i))));
+    try {
+      std::regex re(filename(config.files(i)));
+      patterns.push_back(re);
+    } catch (const std::regex_error& e) {
+      CHECK(false) << filename(config.files(i))
+                   << " is not valid (supported) regex, regex_error caught: " << e.what()
+                   << ". you may try gcc4.9 or llvm5.1";
+    }
   }
 
   // remove file extensions and duplications

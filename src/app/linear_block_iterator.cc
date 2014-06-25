@@ -32,7 +32,7 @@ void LinearBlockIterator::run() {
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    std::random_shuffle(block_order.begin(), block_order.end());
+    // std::random_shuffle(block_order.begin(), block_order.end());
 
     for (int b : block_order)  {
     // int b = iter;
@@ -163,7 +163,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
         busy_timer_.stop();
         taskpool(d.sender)->finishIncomingTask(d.task.time());
         sys_.reply(d);
-        // LL << sid() << " done " << d.task.time();
+        // LL << myNodeID() << " done " << d.task.time();
       });
   } else {
 

@@ -66,6 +66,8 @@ class Van {
   size_t recv_head_ = 0;
   size_t recv_uncompressed_ = 0;
   size_t recv_compressed_ = 0;
+
+  std::ofstream debug_out_;
 };
 
 } // namespace PS
