@@ -72,50 +72,60 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
       local_grads[i].resize(local_range.size());
       local_grads[i].setZero();
     }
-    // local_grads[1].resize(local_range.size());
-
-
     {
       Lock lk(mu_);
+      busy_timer_.start();
+
       computeGradients(local_range, local_grads[0], local_grads[1]);
+
+      busy_timer_.stop();
     }
 
     msg->finished = false;
     auto d = *msg;
-    // w_->roundTripForWorker(time, global_range, local_grads, [this, X, local_range, d] (int time) {
-    //     // update dual variable
-    //     Lock l(mu_);
-    //     busy_timer_.start();
+    w_->roundTripForWorker(time, global_range, local_grads, [this, local_range, d] (int time) {
+        // update dual variable
+        Lock l(mu_);
+        busy_timer_.start();
 
-    //     if (!local_range.empty()) {
-    //       auto data = w_->received(time);
-
-    //       CHECK_EQ(data.size(), 1);
-    //       CHECK_EQ(local_range, data[0].first);
-    //       auto new_w = data[0].second;
-
-    //       auto delta = new_w.vec() - w_->segment(local_range).vec();
-    //       dual_.vec() += *X * delta;
-    //       w_->segment(local_range).vec() = new_w.vec();
-    //     }
-
-    //     busy_timer_.stop();
-    //     taskpool(d.sender)->finishIncomingTask(d.task.time());
-    //     sys_.reply(d);
-    //     // LL << myNodeID() << " done " << d.task.time();
-    //   });
-  } else {
-    // aggregate local gradients, then update model
-    w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-        SArrayList<double> aggregated_gradient;
-        for (auto& d : w_->received(time)) {
-          CHECK_EQ(local_range, d.first);
-          aggregated_gradient.push_back(d.second);
+        if (!local_range.empty()) {
+          auto data = w_->received(time);
+          CHECK_EQ(data.size(), 1);
+          CHECK_EQ(local_range, data[0].first);
+          auto new_w = data[0].second;
+          SArray<double> delta_w(new_w.size());
+          for (size_t i = 0; i < new_w.size(); ++i) {
+            size_t j = local_range.begin() + i;
+            if (new_w[i] == kInactiveValue) {
+              active_set_.clear(j);
+              new_w[i] = 0;
+            } else {
+              active_set_.set(j);
+            }
+            delta_w[i] = new_w[i] - w_->value()[j];
+            delta_[j] = std::min(
+                app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(delta_w[i]) + .1);
+            w_->value()[j] = new_w[i];
+          }
+          SizeR example_range(0, X_->rows());
+          updateDual(example_range, local_range, delta_w);
         }
-        AggGradLearnerArg arg;
-        arg.set_learning_rate(app_cf_.learner().learning_rate());
 
-        learner_->update(aggregated_gradient, arg, w_->segment(local_range));
+        busy_timer_.stop();
+        taskpool(d.sender)->finishIncomingTask(d.task.time());
+        sys_.reply(d);
+        // LL << myNodeID() << " done " << d.task.time();
+      });
+  } else {
+    // aggregate local gradients, then update model via soft-shrinkage
+    w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
+
+        auto data = w_->received(time);
+        CHECK_EQ(data.size(), 2);
+        CHECK_EQ(local_range, data[0].first);
+        CHECK_EQ(local_range, data[1].first);
+
+        updateWeight(local_range, data[0].second, data[1].second);
       });
   }
 }
@@ -177,5 +187,49 @@ void BlockCoordinateL1LR::updateDual(
     }
   }
 }
+
+void BlockCoordinateL1LR::updateWeight(
+    SizeR local_feature_range, const SArray<double>& G, const SArray<double>& U) {
+  CHECK_EQ(G.size(), local_feature_range.size());
+  CHECK_EQ(U.size(), local_feature_range.size());
+
+  double eta = app_cf_.learner().learning_rate();
+  double lambda = app_cf_.penalty().coefficient();
+
+  for (size_t i = 0; i < local_feature_range.size(); ++i) {
+    size_t k = i + local_feature_range.begin();
+    double g = G[i], u = U[i];
+    double g_pos = g + lambda, g_neg = g - lambda;
+    double w = w_->value()[k];
+    double d = - w, vio = 0;
+
+    if (w == 0) {
+      if (g_pos < 0) {
+        vio = - g_pos;
+      } else if (g_neg > 0) {
+        vio = g_neg;
+      } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
+        active_set_.clear(k);
+        w_->value()[k] = kInactiveValue;
+        continue;
+      }
+    }
+    KKT_filter_threshold_new_ = std::max(KKT_filter_threshold_new_, vio);
+
+    if (g_pos <= u * w) {
+      d = - g_pos / u;
+    } else if (g_neg >= u * w) {
+      d = - g_neg / u;
+    }
+
+    d = std::min(delta_[k], std::max(-delta_[k], d));
+
+    w_->value()[k] += d;
+    delta_[k] = std::min(
+        app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(d) + .1);
+  }
+
+}
+
 
 } // namespace PS
