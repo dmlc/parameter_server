@@ -7,13 +7,13 @@ namespace PS {
 class RiskMinimization : public App {
  public:
   void process(Message* msg);
+  void mergeProgress(int iter);
 
  protected:
   virtual void prepareData(const Message& msg) = 0;
   virtual void updateModel(Message* msg) = 0;
   virtual RiskMinProgress evaluateProgress() = 0;
 
-  void mergeProgress(int iter);
 
   void showTime(int iter);
   void showObjective(int iter);

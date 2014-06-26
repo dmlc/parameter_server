@@ -1,5 +1,7 @@
 CC = g++
-# CC = clang
+#CC = clang
+#MPICC = mpic++
+MPICC = ../third_party/bin/mpic++
 
 OPT = -O3 -ggdb
 # OPT = -O0 -ggdb
@@ -17,11 +19,16 @@ THIRD_LIB=$(THIRD)/lib
 #-Wconversion -fPIC
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
 INCPATH = -I. -I${THIRD_INC}
-CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fPIC # -fopenmp
+ifeq (${args}, static)
+    CFLAGS = -static -static-libgcc -static-libstdc++ -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
+else
+    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fPIC # -fopenmp
+endif
+
 
 # $(LIB)/libps.a  -L${THIRD_PARTY_LIBRARY}
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
--lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lstdc++
+-lmpi -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lstdc++
 
 GTEST =  -lgtest_main -lgtest
 
@@ -116,7 +123,7 @@ $(LIB)/libps.a: $(OBJS) #gtest
 # 	mpic++ $(CFLAGS) ps_local.cc $(LDFLAGS) -Wl,-rpath=../lib  -o $@
 
 $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
-	mpic++ $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
+	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
 
 $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
 	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
