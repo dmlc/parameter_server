@@ -49,6 +49,10 @@ class SparseMatrix : public Matrix<V> {
             index_.writeToFile(name+".index") &&
             (binary() || value_.writeToFile(name+".value")));
   }
+
+
+  SArray<I> index() const { return index_; }
+  SArray<size_t> offset() const { return offset_; }
  private:
   using Matrix<V>::info_;
   using Matrix<V>::value_;

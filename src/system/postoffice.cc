@@ -77,7 +77,7 @@ void Postoffice::queue(const Message& msg) {
     // }
   } else {
     // do not send, fake a reply mesage
-    LL << myNode().id() << " " << msg.shortDebugString();
+    // LL << myNode().id() << " " << msg.shortDebugString();
     Message re = replyTemplate(msg);
     re.task.set_type(Task::REPLY);
     re.task.set_time(msg.task.time());

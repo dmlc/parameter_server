@@ -2,13 +2,8 @@
 #include "base/matrix_io.h"
 namespace PS {
 
-void LinearBlockIterator::run() {
-  LinearMethod::startSystem();
-
-  // block partition
-  int num_block = 0;
-  std::vector<std::pair<int, Range<Key>>> blocks;
-  std::vector<int> block_order;
+LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
+  FeatureBlocks blocks;
   CHECK(app_cf_.has_block_iterator());
   auto cf = app_cf_.block_iterator();
   for (auto& info : global_training_info_) {
@@ -21,10 +16,19 @@ void LinearBlockIterator::run() {
       auto block = Range<Key>(info.col()).evenDivide(n, i);
       if (block.empty()) continue;
       blocks.push_back(std::make_pair(info.id(), block));
-      block_order.push_back(num_block++);
     }
   }
-  fprintf(stderr, "features are partitioned into %d blocks\n", num_block);
+  fprintf(stderr, "features are partitioned into %lu blocks\n", blocks.size());
+  return blocks;
+}
+
+void LinearBlockIterator::run() {
+  LinearMethod::startSystem();
+
+  FeatureBlocks blocks = partitionFeatures();
+  std::vector<int> block_order;
+  for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i++);
+  auto cf = app_cf_.block_iterator();
 
   // iterating
   auto wk = taskpool(kActiveGroup);
@@ -130,12 +134,13 @@ void LinearBlockIterator::updateModel(Message* msg) {
     SArrayList<double> local_grads(2);
     local_grads[0].resize(local_range.size());
     local_grads[1].resize(local_range.size());
-
     AggGradLearnerArg arg;
-
-    learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
-    // LL << myNodeID() << " 1 " << local_grads[0].vec().sum() << " " <<
-    //     local_grads[0].size() << "; 2 " << local_grads[1].vec().sum();
+    {
+      Lock l(mu_);
+      busy_timer_.start();
+      learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
+      busy_timer_.stop();
+    }
 
     msg->finished = false;
     auto d = *msg;

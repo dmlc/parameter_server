@@ -6,6 +6,10 @@ namespace PS {
 class Bitmap;
 typedef std::shared_ptr<Bitmap> BitmapPtr;
 
+#define BITCOUNT_(x) (((BX_(x)+(BX_(x)>>4)) & 0x0F0F0F0F) % 255)
+#define BX_(x) ((x) - (((x)>>1)&0x77777777)     \
+                - (((x)>>2)&0x33333333)         \
+                - (((x)>>3)&0x11111111))
 class Bitmap {
  public:
   Bitmap() { }
@@ -13,10 +17,10 @@ class Bitmap {
   ~Bitmap() { delete [] map_; }
 
   void resize(uint32 size, bool value = false) {
-    CHECK_EQ(size_, 0) << "didn't support yet...";
+    CHECK_EQ(size_, 0) << "TODO didn't support resize non-empty bitmap...";
     size_ = size;
     map_size_ = (size >> kBitmapShift) + 1;
-    map_ = new uint16[map_size];
+    map_ = new uint16[map_size_];
     fill(value);
   }
 
@@ -27,24 +31,24 @@ class Bitmap {
     map_[i>>kBitmapShift] &= ~((uint16) (1 << (i&kBitmapMask)));
   }
 
-  bool test(uint32 i) {
+  bool test(uint32 i) const {
     return static_cast<bool>((map_[i>>kBitmapShift] >> (i&kBitmapMask)) & 1);
   }
-  bool operator[] (uint32 i) {
+  bool operator[] (uint32 i) const {
     return test(i);
   }
 
   void fill(bool value) {
     if (value)
-      memset(map_.data(), 0xFF, map_size*sizeof(uint16));
+      memset(map_, 0xFF, map_size_*sizeof(uint16));
     else
-      memset(map_.data(), 0, map_size*sizeof(uint16));
+      memset(map_, 0, map_size_*sizeof(uint16));
   }
 
   // TODO flip all bits
   void flip() { }
 
-  uint32 size() { return size_; }
+  uint32 size() const { return size_; }
 
   // number of bit == true
   uint32 nnz() {
@@ -78,14 +82,9 @@ class Bitmap {
   const uint32 kBitmapShift = 4;
   const uint32 kBitmapMask = 0x0F;
 
-  static unsigned char LUT_[65536];
-  static bool init_nnz_ = false;
+  unsigned char LUT_[65536];
+  bool init_nnz_ = false;
 
-#define BITCOUNT_(x) (((BX_(x)+(BX_(x)>>4)) & 0x0F0F0F0F) % 255)
-#define BX_(x) ((x) - (((x)>>1)&0x77777777)     \
-                - (((x)>>2)&0x33333333)         \
-                - (((x)>>3)&0x11111111))
 };
-
 
 } // namespace PS

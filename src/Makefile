@@ -45,6 +45,7 @@ SRCS = $(PROTOS_CC) \
 	app/risk_minimization.cc \
 	app/linear_method.cc \
 	app/linear_block_iterator.cc \
+	app/block_coordinate_l1lr.cc
 
 	# app/sketch.cc \
 	system/message.cc \

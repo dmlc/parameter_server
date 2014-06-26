@@ -671,17 +671,27 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline bool kkt_filter() const;
   inline void set_kkt_filter(bool value);
 
+  // optional double delta_init_value = 2 [default = 1];
+  inline bool has_delta_init_value() const;
+  inline void clear_delta_init_value();
+  static const int kDeltaInitValueFieldNumber = 2;
+  inline double delta_init_value() const;
+  inline void set_delta_init_value(double value);
+
   // @@protoc_insertion_point(class_scope:PS.BlockCoordL1LRConfig)
  private:
   inline void set_has_kkt_filter();
   inline void clear_has_kkt_filter();
+  inline void set_has_delta_init_value();
+  inline void clear_has_delta_init_value();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  double delta_init_value_;
   bool kkt_filter_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1731,6 +1741,28 @@ inline bool BlockCoordL1LRConfig::kkt_filter() const {
 inline void BlockCoordL1LRConfig::set_kkt_filter(bool value) {
   set_has_kkt_filter();
   kkt_filter_ = value;
+}
+
+// optional double delta_init_value = 2 [default = 1];
+inline bool BlockCoordL1LRConfig::has_delta_init_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_delta_init_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void BlockCoordL1LRConfig::clear_has_delta_init_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void BlockCoordL1LRConfig::clear_delta_init_value() {
+  delta_init_value_ = 1;
+  clear_has_delta_init_value();
+}
+inline double BlockCoordL1LRConfig::delta_init_value() const {
+  return delta_init_value_;
+}
+inline void BlockCoordL1LRConfig::set_delta_init_value(double value) {
+  set_has_delta_init_value();
+  delta_init_value_ = value;
 }
 
 // -------------------------------------------------------------------

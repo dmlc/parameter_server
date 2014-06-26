@@ -10,12 +10,15 @@ class LinearBlockIterator : public LinearMethod {
   virtual void run();
 
  protected:
+  typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
 
-  RiskMinProgress evaluateProgress();
+
+  virtual RiskMinProgress evaluateProgress();
 
   virtual void prepareData(const Message& msg);
   virtual void updateModel(Message* msg);
 
+  FeatureBlocks partitionFeatures();
   // dual_ = X_ * w_ or dual_ = exp(X_*w_)
   SArray<double> dual_;
   std::mutex mu_;

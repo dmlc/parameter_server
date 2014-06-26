@@ -57,6 +57,8 @@ message BlockIteratorConfig {
 
 message BlockCoordL1LRConfig {
   required bool KKT_filter = 1;
+
+  optional double delta_init_value = 2 [default = 1];
 }
 
 message LossConfig {

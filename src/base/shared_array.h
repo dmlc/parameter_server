@@ -121,6 +121,13 @@ class SArray {
   }
 
   void setZero() { memset(data_, 0, size_*sizeof(V)); }
+  void setValue(V value) {
+    if (value == 0) {
+      setZero();
+    } else {
+      for (size_t i = 0; i < size_; ++i) data_[i] = value;
+    }
+  }
 
   void plus(const SArray<V>& other);
 
