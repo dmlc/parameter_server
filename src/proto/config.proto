@@ -56,7 +56,7 @@ message BlockIteratorConfig {
 }
 
 message BlockCoordL1LRConfig {
-  required bool KKT_filter = 1;
+  optional bool KKT_filter = 1 [default = true];
 
   optional double delta_init_value = 2 [default = 1];
   optional double delta_max_value = 3 [default = 5];

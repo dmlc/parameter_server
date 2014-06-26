@@ -2,9 +2,30 @@
 #include "base/sparse_matrix.h"
 namespace PS {
 
-void BlockCoordinateL1LR::showProgress(int iter) {
-
+void BlockCoordinateL1LR::showKKTFilter(int iter) {
+  if (iter == -3) {
+    fprintf(stderr, "|       KKT filter      ");
+  } else if (iter == -2) {
+    fprintf(stderr, "| threshold #active_set ");
+  } else if (iter == -1) {
+    fprintf(stderr, "+------------------------");
+  } else {
+    auto prog = global_progress_[iter];
+    fprintf(stderr, "%.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
+  }
 }
+
+void BlockCoordinateL1LR::showProgress(int iter) {
+  int s = iter == 0 ? -3 : iter;
+  for (int i = s; i <= iter; ++i) {
+    RiskMinimization::showObjective(i);
+    RiskMinimization::showNNZ(i);
+    showKKTFilter(i);
+    RiskMinimization::showTime(i);
+  }
+}
+
+
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
 void BlockCoordinateL1LR::run() {
   LinearMethod::startSystem();
@@ -13,6 +34,8 @@ void BlockCoordinateL1LR::run() {
   std::vector<int> block_order;
   for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i++);
   auto cf = app_cf_.block_iterator();
+  KKT_filter_threshold_ = 1e20;
+  bool reset_kkt_filter = false;
 
   // iterating
   auto wk = taskpool(kActiveGroup);
@@ -23,8 +46,10 @@ void BlockCoordinateL1LR::run() {
 
     for (int b : block_order)  {
       Task update;
-      auto cmd = RiskMinimization::setCall(&update);
       update.set_wait_time(time - tau);
+      auto cmd = RiskMinimization::setCall(&update);
+      cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
+      if (reset_kkt_filter) cmd->set_kkt_filter_reset(true);
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       blocks[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(blocks[b].first);
@@ -39,6 +64,10 @@ void BlockCoordinateL1LR::run() {
     wk->waitOutgoingTask(time);
 
     showProgress(iter);
+
+    double vio = global_progress_[iter].violation();
+    KKT_filter_threshold_ = vio;
+
     if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;
@@ -60,8 +89,6 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
 }
 
 void BlockCoordinateL1LR::updateModel(Message* msg) {
-
-  CHECK(false);
   auto time = msg->task.time() * 10;
   Range<Key> global_range(msg->task.risk().key());
   auto local_range = w_->localRange(global_range);

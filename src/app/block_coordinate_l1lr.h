@@ -25,12 +25,13 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
     auto prog = LinearBlockIterator::evaluateProgress();
     if (exec_.isServer()) {
       prog.set_violation(violation_);
+      prog.set_nnz_active_set(active_set_.nnz());
     }
     return prog;
   }
 
   void showProgress(int iter);
-
+  void showKKTFilter(int iter);
   constexpr static double kInactiveValue_ = 65536;
 
   double KKT_filter_threshold_;

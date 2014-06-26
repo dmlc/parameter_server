@@ -664,7 +664,7 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required bool KKT_filter = 1;
+  // optional bool KKT_filter = 1 [default = true];
   inline bool has_kkt_filter() const;
   inline void clear_kkt_filter();
   static const int kKKTFilterFieldNumber = 1;
@@ -1731,7 +1731,7 @@ inline void BlockIteratorConfig::set_epsilon(double value) {
 
 // BlockCoordL1LRConfig
 
-// required bool KKT_filter = 1;
+// optional bool KKT_filter = 1 [default = true];
 inline bool BlockCoordL1LRConfig::has_kkt_filter() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1742,7 +1742,7 @@ inline void BlockCoordL1LRConfig::clear_has_kkt_filter() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void BlockCoordL1LRConfig::clear_kkt_filter() {
-  kkt_filter_ = false;
+  kkt_filter_ = true;
   clear_has_kkt_filter();
 }
 inline bool BlockCoordL1LRConfig::kkt_filter() const {

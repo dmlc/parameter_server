@@ -129,12 +129,12 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline double relative_objv() const;
   inline void set_relative_objv(double value);
 
-  // optional int64 nnz_w = 5;
+  // optional uint64 nnz_w = 5;
   inline bool has_nnz_w() const;
   inline void clear_nnz_w();
   static const int kNnzWFieldNumber = 5;
-  inline ::google::protobuf::int64 nnz_w() const;
-  inline void set_nnz_w(::google::protobuf::int64 value);
+  inline ::google::protobuf::uint64 nnz_w() const;
+  inline void set_nnz_w(::google::protobuf::uint64 value);
 
   // optional double violation = 6;
   inline bool has_violation() const;
@@ -142,6 +142,13 @@ class RiskMinProgress : public ::google::protobuf::Message {
   static const int kViolationFieldNumber = 6;
   inline double violation() const;
   inline void set_violation(double value);
+
+  // optional uint64 nnz_active_set = 7;
+  inline bool has_nnz_active_set() const;
+  inline void clear_nnz_active_set();
+  static const int kNnzActiveSetFieldNumber = 7;
+  inline ::google::protobuf::uint64 nnz_active_set() const;
+  inline void set_nnz_active_set(::google::protobuf::uint64 value);
 
   // optional double total_time = 10;
   inline bool has_total_time() const;
@@ -172,6 +179,8 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline void clear_has_nnz_w();
   inline void set_has_violation();
   inline void clear_has_violation();
+  inline void set_has_nnz_active_set();
+  inline void clear_has_nnz_active_set();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
@@ -179,13 +188,14 @@ class RiskMinProgress : public ::google::protobuf::Message {
 
   double objv_;
   double relative_objv_;
-  ::google::protobuf::int64 nnz_w_;
+  ::google::protobuf::uint64 nnz_w_;
   double violation_;
+  ::google::protobuf::uint64 nnz_active_set_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -299,6 +309,20 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 feature_group_id() const;
   inline void set_feature_group_id(::google::protobuf::int32 value);
 
+  // optional double kkt_filter_threshold = 4;
+  inline bool has_kkt_filter_threshold() const;
+  inline void clear_kkt_filter_threshold();
+  static const int kKktFilterThresholdFieldNumber = 4;
+  inline double kkt_filter_threshold() const;
+  inline void set_kkt_filter_threshold(double value);
+
+  // optional bool kkt_filter_reset = 5;
+  inline bool has_kkt_filter_reset() const;
+  inline void clear_kkt_filter_reset();
+  static const int kKktFilterResetFieldNumber = 5;
+  inline bool kkt_filter_reset() const;
+  inline void set_kkt_filter_reset(bool value);
+
   // @@protoc_insertion_point(class_scope:PS.RiskMinCall)
  private:
   inline void set_has_cmd();
@@ -307,15 +331,21 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline void clear_has_key();
   inline void set_has_feature_group_id();
   inline void clear_has_feature_group_id();
+  inline void set_has_kkt_filter_threshold();
+  inline void clear_has_kkt_filter_threshold();
+  inline void set_has_kkt_filter_reset();
+  inline void clear_has_kkt_filter_reset();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::PS::PbRange* key_;
   int cmd_;
   ::google::protobuf::int32 feature_group_id_;
+  double kkt_filter_threshold_;
+  bool kkt_filter_reset_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -375,7 +405,7 @@ inline void RiskMinProgress::set_relative_objv(double value) {
   relative_objv_ = value;
 }
 
-// optional int64 nnz_w = 5;
+// optional uint64 nnz_w = 5;
 inline bool RiskMinProgress::has_nnz_w() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -386,13 +416,13 @@ inline void RiskMinProgress::clear_has_nnz_w() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void RiskMinProgress::clear_nnz_w() {
-  nnz_w_ = GOOGLE_LONGLONG(0);
+  nnz_w_ = GOOGLE_ULONGLONG(0);
   clear_has_nnz_w();
 }
-inline ::google::protobuf::int64 RiskMinProgress::nnz_w() const {
+inline ::google::protobuf::uint64 RiskMinProgress::nnz_w() const {
   return nnz_w_;
 }
-inline void RiskMinProgress::set_nnz_w(::google::protobuf::int64 value) {
+inline void RiskMinProgress::set_nnz_w(::google::protobuf::uint64 value) {
   set_has_nnz_w();
   nnz_w_ = value;
 }
@@ -419,15 +449,37 @@ inline void RiskMinProgress::set_violation(double value) {
   violation_ = value;
 }
 
-// optional double total_time = 10;
-inline bool RiskMinProgress::has_total_time() const {
+// optional uint64 nnz_active_set = 7;
+inline bool RiskMinProgress::has_nnz_active_set() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void RiskMinProgress::set_has_total_time() {
+inline void RiskMinProgress::set_has_nnz_active_set() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void RiskMinProgress::clear_has_total_time() {
+inline void RiskMinProgress::clear_has_nnz_active_set() {
   _has_bits_[0] &= ~0x00000010u;
+}
+inline void RiskMinProgress::clear_nnz_active_set() {
+  nnz_active_set_ = GOOGLE_ULONGLONG(0);
+  clear_has_nnz_active_set();
+}
+inline ::google::protobuf::uint64 RiskMinProgress::nnz_active_set() const {
+  return nnz_active_set_;
+}
+inline void RiskMinProgress::set_nnz_active_set(::google::protobuf::uint64 value) {
+  set_has_nnz_active_set();
+  nnz_active_set_ = value;
+}
+
+// optional double total_time = 10;
+inline bool RiskMinProgress::has_total_time() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void RiskMinProgress::set_has_total_time() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void RiskMinProgress::clear_has_total_time() {
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void RiskMinProgress::clear_total_time() {
   total_time_ = 0;
@@ -551,6 +603,50 @@ inline ::google::protobuf::int32 RiskMinCall::feature_group_id() const {
 inline void RiskMinCall::set_feature_group_id(::google::protobuf::int32 value) {
   set_has_feature_group_id();
   feature_group_id_ = value;
+}
+
+// optional double kkt_filter_threshold = 4;
+inline bool RiskMinCall::has_kkt_filter_threshold() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void RiskMinCall::set_has_kkt_filter_threshold() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void RiskMinCall::clear_has_kkt_filter_threshold() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void RiskMinCall::clear_kkt_filter_threshold() {
+  kkt_filter_threshold_ = 0;
+  clear_has_kkt_filter_threshold();
+}
+inline double RiskMinCall::kkt_filter_threshold() const {
+  return kkt_filter_threshold_;
+}
+inline void RiskMinCall::set_kkt_filter_threshold(double value) {
+  set_has_kkt_filter_threshold();
+  kkt_filter_threshold_ = value;
+}
+
+// optional bool kkt_filter_reset = 5;
+inline bool RiskMinCall::has_kkt_filter_reset() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void RiskMinCall::set_has_kkt_filter_reset() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void RiskMinCall::clear_has_kkt_filter_reset() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void RiskMinCall::clear_kkt_filter_reset() {
+  kkt_filter_reset_ = false;
+  clear_has_kkt_filter_reset();
+}
+inline bool RiskMinCall::kkt_filter_reset() const {
+  return kkt_filter_reset_;
+}
+inline void RiskMinCall::set_kkt_filter_reset(bool value) {
+  set_has_kkt_filter_reset();
+  kkt_filter_reset_ = value;
 }
 
 

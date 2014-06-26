@@ -4,8 +4,10 @@ import "proto/range.proto";
 message RiskMinProgress {
   optional double objv = 1;
   optional double relative_objv = 2;
-  optional int64 nnz_w = 5;
+  optional uint64 nnz_w = 5;
   optional double violation = 6;
+  optional uint64 nnz_active_set = 7;
+
   // performance
   optional double total_time = 10;
   repeated double busy_time = 11;
@@ -21,4 +23,9 @@ message RiskMinCall {
   required Command cmd = 1;
   optional PbRange key = 2;
   optional int32 feature_group_id = 3;
+
+  optional double kkt_filter_threshold = 4;
+  optional bool kkt_filter_reset = 5;
+
+
 }

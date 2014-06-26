@@ -8,14 +8,12 @@ class RiskMinimization : public App {
  public:
   void process(Message* msg);
 
- // protected:
+ protected:
   virtual void prepareData(const Message& msg) = 0;
   virtual void updateModel(Message* msg) = 0;
   virtual RiskMinProgress evaluateProgress() = 0;
 
   void mergeProgress(int iter);
-
-  // virtual void showProgress(int iter);
 
   void showTime(int iter);
   void showObjective(int iter);
