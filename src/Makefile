@@ -61,7 +61,7 @@ TESTS = \
 	sparse_matrix_test \
 	io_test \
 	# sparse_matrix_perf \
-	aggregated_gradient_test \
+	# aggregated_gradient_test \
 	# grad_desc_test \
 	# strtonum_test
 	#partition_test
@@ -72,7 +72,8 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps_mpi text2bin $(TESTS)) # ps ps_local  $(BIN)/,txt2bin
+all: dir $(addprefix $(BIN)/, ps_mpi text2bin) # ps ps_local
+test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:
 	mkdir -p $(LIB)
@@ -88,9 +89,6 @@ clean:
 
 $(BIN)/%: test/%.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS)  -o $@
-
-# $(BIN)/%_perf: test/%_perf.cc $(LIB)/libps.so
-# 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -Wl,-rpath=../lib -o $@
 
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<

@@ -41,10 +41,10 @@ class Executor {
 
   void finish(const Message& msg) {
     int t = msg.task.time();
-    worker(msg.sender)->finishIncomingTask(t);
+    rnode(msg.sender)->finishIncomingTask(t);
   }
 
-  RNodePtr worker(const NodeID& k) {
+  RNodePtr rnode(const NodeID& k) {
     Lock l(node_mu_);
     auto it = nodes_.find(k);
     if (it == nodes_.end()) {
@@ -70,13 +70,13 @@ class Executor {
   }
 
   Customer& obj() { return obj_; }
-  Node& node() { return my_node_; }
-  bool client() { return my_node_.role() == Node::CLIENT; }
-  bool server() { return my_node_.role() == Node::SERVER; }
+  Node& myNode() { return my_node_; }
+  bool isWorker() { return my_node_.role() == Node::CLIENT; }
+  bool isServer() { return my_node_.role() == Node::SERVER; }
 
   Message& activeMessage() { return active_msg_; }
   string lastRecvReply();
-  NodeID activeOriginalReceiver;
+  // NodeID activeOriginalReceiver;
 
   // return a more meaningful name for debug use
   // string dbname(const NodeID& uid);

@@ -173,7 +173,7 @@ void Executor::run() {
       // pickup a message with dependency satisfied
       for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
         int wait_time = it->task.wait_time();
-        auto w = worker(it->sender);
+        auto w = rnode(it->sender);
         if (!w) {
           LL << my_node_.id() << ": " << it->sender
              << " does not exist, ignore\n" << *it;
@@ -204,7 +204,7 @@ void Executor::run() {
 
       // process the picked message
       bool req = active_msg_.task.request();
-      auto w = worker(active_msg_.sender);
+      auto w = rnode(active_msg_.sender);
       int t = active_msg_.task.time();
 
       if (req) { w->incoming_task_.start(t); }
@@ -247,7 +247,7 @@ void Executor::run() {
           w->pending_msgs_.erase(it);
         }
 
-        auto o_w = worker(o_recver);
+        auto o_w = rnode(o_recver);
         // LL << obj_.sid() << " try wait t " << t << ": " << o_w->tryWaitOutTask(t);
         if (o_w->tryWaitOutgoingTask(t)) {
           RNode::Callback h;
@@ -266,7 +266,7 @@ void Executor::run() {
 
 void Executor::accept(const Message& msg) {
   Lock l(recved_msg_mu_);
-  auto w = worker(msg.sender);
+  auto w = rnode(msg.sender);
   recved_msgs_.push_back(w->cacheKeyRecver(msg));
   // notify();
   dag_cond_.notify_one();

@@ -4,7 +4,7 @@
 
 namespace PS {
 
-class RiskMin : public App {
+class RiskMinimization : public App {
  public:
   void process(Message* msg);
 
@@ -17,9 +17,6 @@ class RiskMin : public App {
   void showProgress(int iter);
 
  protected:
-  // progress of all iterations, only valid for the scheduler
-  std::map<int, RiskMinProgress> all_prog_;
-
   RiskMinCall getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
     CHECK(msg.task.has_risk());
@@ -31,10 +28,8 @@ class RiskMin : public App {
     return task->mutable_risk();
   }
 
- protected:
-  // local training data, format:
-  // label, feature_group 1, feature_group 2, ....
-  // MatrixPtrList<double> training_data_;
+  // progress of all iterations, only valid for the scheduler
+  std::map<int, RiskMinProgress> global_progress_;
 
   // only available at the scheduler
   std::vector<MatrixInfo> global_training_info_;
@@ -43,4 +38,7 @@ class RiskMin : public App {
 
 };
 
+  // local training data, format:
+  // label, feature_group 1, feature_group 2, ....
+  // MatrixPtrList<double> training_data_;
 } // namespace PS

@@ -13,7 +13,7 @@ namespace PS {
 
 // linear classification/regerssion
 
-class LinearMethod : public RiskMin {
+class LinearMethod : public RiskMinimization {
 
  public:
   void init();

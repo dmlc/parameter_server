@@ -7,18 +7,17 @@ namespace PS {
 class LinearBlockIterator : public LinearMethod {
 
  public:
-  void run();
+  virtual void run();
 
  protected:
 
   RiskMinProgress evaluateProgress();
-  void updateXw();
 
-  void prepareData(const Message& msg);
-  void updateModel(Message* msg);
- private:
-  // Xw_ = X_ * w_
-  SArray<double> Xw_;
+  virtual void prepareData(const Message& msg);
+  virtual void updateModel(Message* msg);
+
+  // dual_ = X_ * w_ or dual_ = exp(X_*w_)
+  SArray<double> dual_;
   std::mutex mu_;
 };
 

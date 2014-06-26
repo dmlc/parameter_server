@@ -43,7 +43,7 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
   // sent partitioned messages one-by-one
   int i = 0;
   for (auto w : exec_.group(id())) {
-    msgs[i].sender = exec_.node().id();
+    msgs[i].sender = exec_.myNode().id();
     {
       Lock l(w->mu_);
       msgs[i].recver = w->id();

@@ -20,6 +20,7 @@ message AppConfig {
 
   optional BlockIteratorConfig block_iterator = 40;
 
+  optional BlockCoordL1LRConfig block_coord_l1lr = 41;
 
   // optional GradDescConfig grad_desc = 21;
   // optional BlockProxGradConfig block_prox_grad = 22;
@@ -52,6 +53,10 @@ message BlockIteratorConfig {
 
   // convergance critiria. stop if the relative objective <= epsilon
   required double epsilon = 5;
+}
+
+message BlockCoordL1LRConfig {
+  required bool KKT_filter = 1;
 }
 
 message LossConfig {

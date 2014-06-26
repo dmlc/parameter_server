@@ -27,13 +27,13 @@ class Customer {
   const string& name() const { return name_; }
   string& name() { return name_; }
 
-  NodeID myNodeID() { return exec_.node().id(); }
+  NodeID myNodeID() { return exec_.myNode().id(); }
 
   const std::vector<string> child_customers() const { return child_customers_; }
 
   Executor& exec() { return exec_; }
 
-  RNodePtr taskpool(const NodeID& k) { return exec_.worker(k); }
+  RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
 
  protected:
   string name_;

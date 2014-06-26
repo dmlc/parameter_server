@@ -38,6 +38,7 @@ void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 class AppConfig;
 class DataConfig;
 class BlockIteratorConfig;
+class BlockCoordL1LRConfig;
 class LossConfig;
 class LearnerConfig;
 class AggGradLearnerArg;
@@ -300,6 +301,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::BlockIteratorConfig* release_block_iterator();
   inline void set_allocated_block_iterator(::PS::BlockIteratorConfig* block_iterator);
 
+  // optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
+  inline bool has_block_coord_l1lr() const;
+  inline void clear_block_coord_l1lr();
+  static const int kBlockCoordL1LrFieldNumber = 41;
+  inline const ::PS::BlockCoordL1LRConfig& block_coord_l1lr() const;
+  inline ::PS::BlockCoordL1LRConfig* mutable_block_coord_l1lr();
+  inline ::PS::BlockCoordL1LRConfig* release_block_coord_l1lr();
+  inline void set_allocated_block_coord_l1lr(::PS::BlockCoordL1LRConfig* block_coord_l1lr);
+
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
   inline void set_has_type();
@@ -316,6 +326,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_learner();
   inline void set_has_block_iterator();
   inline void clear_has_block_iterator();
+  inline void set_has_block_coord_l1lr();
+  inline void clear_has_block_coord_l1lr();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -326,10 +338,11 @@ class AppConfig : public ::google::protobuf::Message {
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearnerConfig* learner_;
   ::PS::BlockIteratorConfig* block_iterator_;
+  ::PS::BlockCoordL1LRConfig* block_coord_l1lr_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -594,6 +607,88 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static BlockIteratorConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class BlockCoordL1LRConfig : public ::google::protobuf::Message {
+ public:
+  BlockCoordL1LRConfig();
+  virtual ~BlockCoordL1LRConfig();
+
+  BlockCoordL1LRConfig(const BlockCoordL1LRConfig& from);
+
+  inline BlockCoordL1LRConfig& operator=(const BlockCoordL1LRConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const BlockCoordL1LRConfig& default_instance();
+
+  void Swap(BlockCoordL1LRConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  BlockCoordL1LRConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const BlockCoordL1LRConfig& from);
+  void MergeFrom(const BlockCoordL1LRConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required bool KKT_filter = 1;
+  inline bool has_kkt_filter() const;
+  inline void clear_kkt_filter();
+  static const int kKKTFilterFieldNumber = 1;
+  inline bool kkt_filter() const;
+  inline void set_kkt_filter(bool value);
+
+  // @@protoc_insertion_point(class_scope:PS.BlockCoordL1LRConfig)
+ private:
+  inline void set_has_kkt_filter();
+  inline void clear_has_kkt_filter();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  bool kkt_filter_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static BlockCoordL1LRConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1351,6 +1446,44 @@ inline void AppConfig::set_allocated_block_iterator(::PS::BlockIteratorConfig* b
   }
 }
 
+// optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
+inline bool AppConfig::has_block_coord_l1lr() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void AppConfig::set_has_block_coord_l1lr() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void AppConfig::clear_has_block_coord_l1lr() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void AppConfig::clear_block_coord_l1lr() {
+  if (block_coord_l1lr_ != NULL) block_coord_l1lr_->::PS::BlockCoordL1LRConfig::Clear();
+  clear_has_block_coord_l1lr();
+}
+inline const ::PS::BlockCoordL1LRConfig& AppConfig::block_coord_l1lr() const {
+  return block_coord_l1lr_ != NULL ? *block_coord_l1lr_ : *default_instance_->block_coord_l1lr_;
+}
+inline ::PS::BlockCoordL1LRConfig* AppConfig::mutable_block_coord_l1lr() {
+  set_has_block_coord_l1lr();
+  if (block_coord_l1lr_ == NULL) block_coord_l1lr_ = new ::PS::BlockCoordL1LRConfig;
+  return block_coord_l1lr_;
+}
+inline ::PS::BlockCoordL1LRConfig* AppConfig::release_block_coord_l1lr() {
+  clear_has_block_coord_l1lr();
+  ::PS::BlockCoordL1LRConfig* temp = block_coord_l1lr_;
+  block_coord_l1lr_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_block_coord_l1lr(::PS::BlockCoordL1LRConfig* block_coord_l1lr) {
+  delete block_coord_l1lr_;
+  block_coord_l1lr_ = block_coord_l1lr;
+  if (block_coord_l1lr) {
+    set_has_block_coord_l1lr();
+  } else {
+    clear_has_block_coord_l1lr();
+  }
+}
+
 // -------------------------------------------------------------------
 
 // DataConfig
@@ -1572,6 +1705,32 @@ inline double BlockIteratorConfig::epsilon() const {
 inline void BlockIteratorConfig::set_epsilon(double value) {
   set_has_epsilon();
   epsilon_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// BlockCoordL1LRConfig
+
+// required bool KKT_filter = 1;
+inline bool BlockCoordL1LRConfig::has_kkt_filter() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_kkt_filter() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void BlockCoordL1LRConfig::clear_has_kkt_filter() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void BlockCoordL1LRConfig::clear_kkt_filter() {
+  kkt_filter_ = false;
+  clear_has_kkt_filter();
+}
+inline bool BlockCoordL1LRConfig::kkt_filter() const {
+  return kkt_filter_;
+}
+inline void BlockCoordL1LRConfig::set_kkt_filter(bool value) {
+  set_has_kkt_filter();
+  kkt_filter_ = value;
 }
 
 // -------------------------------------------------------------------

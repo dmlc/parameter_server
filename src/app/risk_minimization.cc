@@ -5,7 +5,7 @@
 
 namespace PS {
 
-void RiskMin::process(Message* msg) {
+void RiskMinimization::process(Message* msg) {
   busy_timer_.start();
   typedef RiskMinCall Call;
   switch (getCall(*msg).cmd()) {
@@ -34,38 +34,38 @@ void RiskMin::process(Message* msg) {
 }
 
 
-void RiskMin::mergeProgress(int iter) {
+void RiskMinimization::mergeProgress(int iter) {
   RiskMinProgress recv;
   CHECK(recv.ParseFromString(exec_.lastRecvReply()));
-  auto& p = all_prog_[iter];
+  auto& p = global_progress_[iter];
 
   p.set_objv(p.objv() + recv.objv());
   p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
   p.set_total_time(total_timer_.get());
-  p.set_relative_objv(iter==0 ? 1 : all_prog_[iter-1].objv()/p.objv() - 1);
+  p.set_relative_objv(iter==0 ? 1 : global_progress_[iter-1].objv()/p.objv() - 1);
 }
 
 
-void RiskMin::showProgress(int iter) {
-  auto prog = all_prog_[iter];
+void RiskMinimization::showProgress(int iter) {
+  auto prog = global_progress_[iter];
   // LL << prog.DebugString();
 
   double ttl_t = prog.total_time();
-  if (iter > 0) ttl_t -= all_prog_[iter-1].total_time();
+  if (iter > 0) ttl_t -= global_progress_[iter-1].total_time();
 
   int n = prog.busy_time_size();
   Eigen::ArrayXd busy_t(n);
   for (int i = 0; i < n; ++i) {
     busy_t[i] = prog.busy_time(i);
-    if (iter > 0) busy_t[i] -= all_prog_[iter-1].busy_time(i);
+    if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
   }
   double mean = busy_t.sum() / n;
   double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);
 
   if (iter == 0) {
-    fprintf(stderr, " iter | objective    relative_obj  |w|_0 | time: app total\n");
+    fprintf(stderr, "iter | objective    relative_obj  |w|_0 | time: app total\n");
     fprintf(stderr, " ----+----------------------------------+---------------\n");
   }
   fprintf(stderr, "%4d | %.5e  %.3e  %8lld | %4.2f+-%2.2f %4.2f\n",

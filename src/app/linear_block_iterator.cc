@@ -5,6 +5,7 @@ namespace PS {
 void LinearBlockIterator::run() {
   LinearMethod::startSystem();
 
+  // block partition
   int num_block = 0;
   std::vector<std::pair<int, Range<Key>>> blocks;
   std::vector<int> block_order;
@@ -23,22 +24,18 @@ void LinearBlockIterator::run() {
       block_order.push_back(num_block++);
     }
   }
+  fprintf(stderr, "features are partitioned into %d blocks\n", num_block);
 
-  printf("features are partitioned into %d blocks\n", num_block);
-
-  std::vector<int> progress_time;
+  // iterating
   auto wk = taskpool(kActiveGroup);
-
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    // std::random_shuffle(block_order.begin(), block_order.end());
+    std::random_shuffle(block_order.begin(), block_order.end());
 
     for (int b : block_order)  {
-    // int b = iter;
       Task update;
-      auto cmd = RiskMin::setCall(&update);
-
+      auto cmd = RiskMinimization::setCall(&update);
       update.set_wait_time(time - tau);
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       blocks[b].second.to(cmd->mutable_key());
@@ -47,30 +44,23 @@ void LinearBlockIterator::run() {
     }
 
     Task eval;
-    RiskMin::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
+    RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
 
-    time = wk->submit(eval, [this, iter](){ RiskMin::mergeProgress(iter); });
+    time = wk->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
     wk->waitOutgoingTask(time);
 
-    RiskMin::showProgress(iter);
-    if (all_prog_[iter].relative_objv() <= cf.epsilon()) {
+    RiskMinimization::showProgress(iter);
+    if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
+      fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;
     }
-    // progress_time.push_back(time);
   }
 
-  // LOG(INFO) << "scheduler has submitted all tasks";
-
-  // for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-  //   wk->waitOutgoingTask(progress_time[iter]);
-  //   RiskMin::showProgress(iter);
-  //   // if (iter == 0 && FLAGS_test_fault_tol) {
-  //   //   Task recover;
-  //   //   recover.mutable_risk()->set_cmd(CallRiskMin::RECOVER);
-  //   //   App::testFaultTolerance(recover);
-  //   // }
-  // }
+  // test fault tolarance
+  //   Task recover;
+  //   recover.mutable_risk()->set_cmd(CallRiskMin::RECOVER);
+  //   App::testFaultTolerance(recover);
 
   // TODO save model
 
@@ -78,7 +68,7 @@ void LinearBlockIterator::run() {
 
 void LinearBlockIterator::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
-  if (exec_.client()) {
+  if (exec_.isWorker()) {
     // LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training());
     CHECK_EQ(training_data.size(), 2);
@@ -99,8 +89,8 @@ void LinearBlockIterator::prepareData(const Message& msg) {
         promise.set_value();
       });
     promise.get_future().wait();
-    Xw_.resize(X_->rows());
-    Xw_.vec() = *X_ * w_->vec();
+    dual_.resize(X_->rows());
+    dual_.vec() = *X_ * w_->vec();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // init w by 0
@@ -113,8 +103,8 @@ void LinearBlockIterator::prepareData(const Message& msg) {
 
 RiskMinProgress LinearBlockIterator::evaluateProgress() {
   RiskMinProgress prog;
-  if (exec_.client()) {
-    prog.set_objv(loss_->evaluate({y_, Xw_.matrix()}));
+  if (exec_.isWorker()) {
+    prog.set_objv(loss_->evaluate({y_, dual_.matrix()}));
     prog.add_busy_time(busy_timer_.get());
   } else {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
@@ -130,8 +120,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
   Range<Key> global_range(msg->task.risk().key());
   auto local_range = w_->localRange(global_range);
 
-  // LL << sid() << " update " <<  gr << ", start " << msg->task.time();
-  if (exec_.client()) {
+  if (exec_.isWorker()) {
     // CHECK(!local_range.empty());
     // if (local_range.empty()) LL << global_range << " " << local_range;
     // LL << global_range;
@@ -144,7 +133,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
 
     AggGradLearnerArg arg;
 
-    learner_->compute({y_, X, Xw_.matrix()}, arg, local_grads);
+    learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
     // LL << myNodeID() << " 1 " << local_grads[0].vec().sum() << " " <<
     //     local_grads[0].size() << "; 2 " << local_grads[1].vec().sum();
 
@@ -162,7 +151,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
           auto new_w = data[0].second;
 
           auto delta = new_w.vec() - w_->segment(local_range).vec();
-          Xw_.vec() += *X * delta;
+          dual_.vec() += *X * delta;
           w_->segment(local_range).vec() = new_w.vec();
         }
 
@@ -172,21 +161,18 @@ void LinearBlockIterator::updateModel(Message* msg) {
         // LL << myNodeID() << " done " << d.task.time();
       });
   } else {
-
+    // aggregate local gradients, then update model
     w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-        SArrayList<double> aggregated_grads;
-        auto data = w_->received(time);
-        for (auto& d : data) {
+        SArrayList<double> aggregated_gradient;
+        for (auto& d : w_->received(time)) {
           CHECK_EQ(local_range, d.first);
-          aggregated_grads.push_back(d.second);
+          aggregated_gradient.push_back(d.second);
         }
         AggGradLearnerArg arg;
         arg.set_learning_rate(app_cf_.learner().learning_rate());
 
-        learner_->update(aggregated_grads, arg, w_->segment(local_range));
-        // FIXME
+        learner_->update(aggregated_gradient, arg, w_->segment(local_range));
       });
-    // LL << sid() << " done " << msg->task.time();
   }
 
 }

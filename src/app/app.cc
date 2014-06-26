@@ -1,5 +1,6 @@
 #include "app/app.h"
 #include "app/linear_block_iterator.h"
+#include "app/block_coordinate_l1lr.h"
 
 // #include "app/grad_desc.h"
 // #include "app/block_prox_grad.h"
@@ -11,7 +12,9 @@ DEFINE_bool(test_fault_tol, false, "");
 
 AppPtr App::create(const AppConfig& config) {
   AppPtr ptr;
-  if (config.has_block_iterator()) {
+  if (config.has_block_coord_l1lr()) {
+    ptr = AppPtr(new BlockCoordinateL1LR());
+  } else if (config.has_block_iterator()) {
     ptr = AppPtr(new LinearBlockIterator());
   } else {
     CHECK(false) << "unknown app: " << config.DebugString();
@@ -22,13 +25,10 @@ AppPtr App::create(const AppConfig& config) {
 }
 
 void App::stop() {
-  // TODO also terminate unused node
   Task terminate;
   terminate.set_type(Task::TERMINATE);
   taskpool(kLiveGroup)->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
-  // worker(kActiveGroup)->submit(terminate);
-  // worker(kActiveGroup)->submit(terminate);
   usleep(800);
   LL << "system stopped";
 }
@@ -50,6 +50,7 @@ void App::requestNodes() {
 void App::testFaultTolerance(Task recover) {
   CHECK_GT(FLAGS_num_replicas, 0);
 
+  // TODO
   // // terminate s0
   // auto& s0 = nodes_["S0"];
   // auto ts0 = taskpool("S0");

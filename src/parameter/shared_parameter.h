@@ -96,7 +96,7 @@ class SharedParameter : public Customer {
   }
 
   Range<K> keyRange(const NodeID& id) {
-    return Range<K>(exec_.worker(id)->keyRange());
+    return Range<K>(exec_.rnode(id)->keyRange());
   }
 
   CallSharedPara getCall(const Message& msg) {
