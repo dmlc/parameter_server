@@ -14,7 +14,12 @@ class RiskMinimization : public App {
   virtual RiskMinProgress evaluateProgress() = 0;
 
   void mergeProgress(int iter);
-  void showProgress(int iter);
+
+  // virtual void showProgress(int iter);
+
+  void showTime(int iter);
+  void showObjective(int iter);
+  void showNNZ(int iter);
 
  protected:
   RiskMinCall getCall(const Message& msg) {

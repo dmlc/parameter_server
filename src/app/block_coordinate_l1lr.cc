@@ -2,6 +2,9 @@
 #include "base/sparse_matrix.h"
 namespace PS {
 
+void BlockCoordinateL1LR::showProgress(int iter) {
+
+}
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
 void BlockCoordinateL1LR::run() {
   LinearMethod::startSystem();
@@ -35,7 +38,7 @@ void BlockCoordinateL1LR::run() {
     time = wk->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
     wk->waitOutgoingTask(time);
 
-    RiskMinimization::showProgress(iter);
+    showProgress(iter);
     if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;
@@ -96,7 +99,7 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
           SArray<double> delta_w(new_w.size());
           for (size_t i = 0; i < new_w.size(); ++i) {
             size_t j = local_range.begin() + i;
-            if (new_w[i] == kInactiveValue) {
+            if (new_w[i] == kInactiveValue_) {
               active_set_.clear(j);
               new_w[i] = 0;
             } else {
@@ -198,7 +201,7 @@ void BlockCoordinateL1LR::updateWeight(
 
   for (size_t i = 0; i < local_feature_range.size(); ++i) {
     size_t k = i + local_feature_range.begin();
-    double g = G[i], u = U[i];
+    double g = G[i], u = U[i] / eta + 1e-10;
     double g_pos = g + lambda, g_neg = g - lambda;
     double w = w_->value()[k];
     double d = - w, vio = 0;
@@ -210,11 +213,11 @@ void BlockCoordinateL1LR::updateWeight(
         vio = g_neg;
       } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
         active_set_.clear(k);
-        w_->value()[k] = kInactiveValue;
+        w_->value()[k] = kInactiveValue_;
         continue;
       }
     }
-    KKT_filter_threshold_new_ = std::max(KKT_filter_threshold_new_, vio);
+    violation_ = std::max(violation_, vio);
 
     if (g_pos <= u * w) {
       d = - g_pos / u;

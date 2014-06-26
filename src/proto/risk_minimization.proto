@@ -5,7 +5,7 @@ message RiskMinProgress {
   optional double objv = 1;
   optional double relative_objv = 2;
   optional int64 nnz_w = 5;
-
+  optional double violation = 6;
   // performance
   optional double total_time = 10;
   repeated double busy_time = 11;

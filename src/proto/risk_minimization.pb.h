@@ -136,6 +136,13 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 nnz_w() const;
   inline void set_nnz_w(::google::protobuf::int64 value);
 
+  // optional double violation = 6;
+  inline bool has_violation() const;
+  inline void clear_violation();
+  static const int kViolationFieldNumber = 6;
+  inline double violation() const;
+  inline void set_violation(double value);
+
   // optional double total_time = 10;
   inline bool has_total_time() const;
   inline void clear_total_time();
@@ -163,6 +170,8 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline void clear_has_relative_objv();
   inline void set_has_nnz_w();
   inline void clear_has_nnz_w();
+  inline void set_has_violation();
+  inline void clear_has_violation();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
@@ -171,11 +180,12 @@ class RiskMinProgress : public ::google::protobuf::Message {
   double objv_;
   double relative_objv_;
   ::google::protobuf::int64 nnz_w_;
+  double violation_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -387,15 +397,37 @@ inline void RiskMinProgress::set_nnz_w(::google::protobuf::int64 value) {
   nnz_w_ = value;
 }
 
-// optional double total_time = 10;
-inline bool RiskMinProgress::has_total_time() const {
+// optional double violation = 6;
+inline bool RiskMinProgress::has_violation() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void RiskMinProgress::set_has_total_time() {
+inline void RiskMinProgress::set_has_violation() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void RiskMinProgress::clear_has_total_time() {
+inline void RiskMinProgress::clear_has_violation() {
   _has_bits_[0] &= ~0x00000008u;
+}
+inline void RiskMinProgress::clear_violation() {
+  violation_ = 0;
+  clear_has_violation();
+}
+inline double RiskMinProgress::violation() const {
+  return violation_;
+}
+inline void RiskMinProgress::set_violation(double value) {
+  set_has_violation();
+  violation_ = value;
+}
+
+// optional double total_time = 10;
+inline bool RiskMinProgress::has_total_time() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void RiskMinProgress::set_has_total_time() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void RiskMinProgress::clear_has_total_time() {
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void RiskMinProgress::clear_total_time() {
   total_time_ = 0;

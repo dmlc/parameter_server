@@ -21,10 +21,20 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
 
   void updateWeight(SizeR local_feature_range, const SArray<double>& G, const SArray<double>& U);
 
-  constexpr static double kInactiveValue = 65536;
+  RiskMinProgress evaluateProgress() {
+    auto prog = LinearBlockIterator::evaluateProgress();
+    if (exec_.isServer()) {
+      prog.set_violation(violation_);
+    }
+    return prog;
+  }
+
+  void showProgress(int iter);
+
+  constexpr static double kInactiveValue_ = 65536;
 
   double KKT_filter_threshold_;
-  double KKT_filter_threshold_new_;
+  double violation_;
 };
 
 } // namespace PS

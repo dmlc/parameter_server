@@ -18,6 +18,8 @@ class LinearBlockIterator : public LinearMethod {
   virtual void prepareData(const Message& msg);
   virtual void updateModel(Message* msg);
 
+  void showProgress(int iter);
+
   FeatureBlocks partitionFeatures();
   // dual_ = X_ * w_ or dual_ = exp(X_*w_)
   SArray<double> dual_;

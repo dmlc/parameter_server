@@ -2,6 +2,15 @@
 #include "base/matrix_io.h"
 namespace PS {
 
+void LinearBlockIterator::showProgress(int iter) {
+  int s = iter == 0 ? -3 : iter;
+  for (int i = s; i <= iter; ++i) {
+    RiskMinimization::showObjective(i);
+    RiskMinimization::showNNZ(i);
+    RiskMinimization::showTime(i);
+  }
+}
+
 LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
   FeatureBlocks blocks;
   CHECK(app_cf_.has_block_iterator());
@@ -54,7 +63,7 @@ void LinearBlockIterator::run() {
     time = wk->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
     wk->waitOutgoingTask(time);
 
-    RiskMinimization::showProgress(iter);
+    showProgress(iter);
     if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;

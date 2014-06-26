@@ -24,8 +24,8 @@ void RiskMinimization::process(Message* msg) {
       updateModel(msg);
       break;
     case Call::RECOVER:
-      // W_.recover();
       // FIXME
+      // W_.recover();
       break;
     default:
       CHECK(false) << "unknown cmd: " << getCall(*msg).cmd();
@@ -43,61 +43,85 @@ void RiskMinimization::mergeProgress(int iter) {
   p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
+  if (recv.has_violation()) p.set_violation(std::max(p.violation(), recv.violation()));
   p.set_total_time(total_timer_.get());
   p.set_relative_objv(iter==0 ? 1 : global_progress_[iter-1].objv()/p.objv() - 1);
 }
 
+void RiskMinimization::showTime(int iter) {
+  if (iter == -3) {
+    fprintf(stderr, "|    time (sec.)\n");
+  } else if (iter == -2) {
+    fprintf(stderr, "|(app:min max) total\n");
+  } else if (iter == -1) {
+    fprintf(stderr, "+-----------------\n");
+  } else {
+    auto prog = global_progress_[iter];
+    double ttl_t = prog.total_time();
+    if (iter > 0) ttl_t -= global_progress_[iter-1].total_time();
 
-void RiskMinimization::showProgress(int iter) {
-  auto prog = global_progress_[iter];
-  // LL << prog.DebugString();
-
-  double ttl_t = prog.total_time();
-  if (iter > 0) ttl_t -= global_progress_[iter-1].total_time();
-
-  int n = prog.busy_time_size();
-  Eigen::ArrayXd busy_t(n);
-  for (int i = 0; i < n; ++i) {
-    busy_t[i] = prog.busy_time(i);
-    if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
+    int n = prog.busy_time_size();
+    Eigen::ArrayXd busy_t(n);
+    for (int i = 0; i < n; ++i) {
+      busy_t[i] = prog.busy_time(i);
+      if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
+    }
+    // double mean = busy_t.sum() / n;
+    // double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);
+    fprintf(stderr, "|%6.1f%6.1f%6.1f\n", busy_t.minCoeff(), busy_t.maxCoeff(), ttl_t);
   }
-  double mean = busy_t.sum() / n;
-  double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);
-
-  if (iter == 0) {
-    fprintf(stderr, "iter | objective    relative_obj  |w|_0 | time: app total\n");
-    fprintf(stderr, " ----+----------------------------------+---------------\n");
-  }
-  fprintf(stderr, "%4d | %.5e  %.3e  %8lld | %4.2f+-%2.2f %4.2f\n",
-          iter, prog.objv(), prog.relative_objv(), prog.nnz_w(), mean, var, ttl_t);
 }
 
-} // namespace PS
 
-// void RiskMin::readLocalData() {
-//   CHECK(exec_.client());
-//   training_data_ = readMatrices<double>(app_cf_.training());
-// }
+void RiskMinimization::showObjective(int iter) {
+  if (iter == -3) {
+    fprintf(stderr, "     |       convergence      ");
+  } else if (iter == -2) {
+    fprintf(stderr, "iter |  objective    relative ");
+  } else if (iter == -1) {
+    fprintf(stderr, " ----+------------------------");
+  } else {
+    auto prog = global_progress_[iter];
+    fprintf(stderr, "%4d | %.5e  %.3e ", iter, prog.objv(), prog.relative_objv());
+  }
+}
 
-// void RiskMin::readGlobalDataInfo() {
-//   auto data = app_cf_.training();
-//   if (data.format() == DataConfig::BIN) {
-//     // format: Y, feature group 0, feature group 1, ...
-//     for (int i = 1; i < data.files_size(); ++i) {
-//       MatrixInfo info;
-//       ReadFileToProtoOrDie(data.files(i)+".info", &info);
-//       global_training_info_.push_back(info);
+void RiskMinimization::showNNZ(int iter) {
+  if (iter == -3) {
+    fprintf(stderr, "|  sparsity ");
+  } else if (iter == -2) {
+    fprintf(stderr, "|     |w|_0 ");
+  } else if (iter == -1) {
+    fprintf(stderr, "+-----------");
+  } else {
+    auto prog = global_progress_[iter];
+    fprintf(stderr, "|%10lld ", prog.nnz_w());
+  }
+}
 
-//       auto size = SizeR(info.row()).size();
-//       if (global_training_size_ == 0)
-//         global_training_size_ = size;
-//       else
-//         CHECK_EQ(global_training_size_, size);
 
-//       global_training_feature_range_  =
-//           global_training_feature_range_.setUnion(SizeR(info.col()));
-//     }
-//   } else {
-//     // TODO
+// void RiskMinimization::showProgress(int iter) {
+//   auto prog = global_progress_[iter];
+//   // LL << prog.DebugString();
+
+//   double ttl_t = prog.total_time();
+//   if (iter > 0) ttl_t -= global_progress_[iter-1].total_time();
+
+//   int n = prog.busy_time_size();
+//   Eigen::ArrayXd busy_t(n);
+//   for (int i = 0; i < n; ++i) {
+//     busy_t[i] = prog.busy_time(i);
+//     if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
 //   }
+//   double mean = busy_t.sum() / n;
+//   double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);
+
+//   if (iter == 0) {
+//     fprintf(stderr, "iter | objective    relative_obj  |w|_0 | time: app total\n");
+//     fprintf(stderr, " ----+----------------------------------+---------------\n");
+//   }
+//   fprintf(stderr, "%4d | %.5e  %.3e  %8lld | %4.2f+-%2.2f %4.2f\n",
+//           iter, prog.objv(), prog.relative_objv(), );
 // }
+
+} // namespace PS
