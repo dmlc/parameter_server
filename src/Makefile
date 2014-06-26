@@ -1,6 +1,5 @@
 CC = g++
 # CC = clang
-# CC = /opt/local/bin/g++-mp-4.8
 
 OPT = -O3 -ggdb
 # OPT = -O0 -ggdb
@@ -61,6 +60,7 @@ DEPS = $(SRCS:.cc=.d)
 TESTS = \
 	sparse_matrix_test \
 	io_test \
+	bitmap_test \
 	# sparse_matrix_perf \
 	# aggregated_gradient_test \
 	# grad_desc_test \
@@ -123,5 +123,5 @@ $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
 
 # -Wl,-rpath=$(LIB)
 
-test: $(TESTS)
-	for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done
+# test: $(TESTS)
+# 	for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done

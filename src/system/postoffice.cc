@@ -17,7 +17,8 @@ DEFINE_int32(num_unused, 0, "number of unused nodes");
 
 DEFINE_int32(num_replicas, 0, "number of replica");
 
-DEFINE_string(app, "../config/block_coord_l1lr.config", "the configuration file of app");
+// DEFINE_string(app, "../config/block_coord_l1lr.config", "the configuration file of app");
+DEFINE_string(app, "../config/block_prox_grad.config", "the configuration file of app");
 
 DEFINE_string(node_file, "./nodes", "node information");
 

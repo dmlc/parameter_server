@@ -4,14 +4,14 @@ namespace PS {
 
 void BlockCoordinateL1LR::showKKTFilter(int iter) {
   if (iter == -3) {
-    fprintf(stderr, "|       KKT filter      ");
+    fprintf(stderr, "|      KKT filter     ");
   } else if (iter == -2) {
-    fprintf(stderr, "| threshold #active_set ");
+    fprintf(stderr, "| threshold  #activet ");
   } else if (iter == -1) {
-    fprintf(stderr, "+------------------------");
+    fprintf(stderr, "+---------------------");
   } else {
     auto prog = global_progress_[iter];
-    fprintf(stderr, "%.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
+    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
   }
 }
 
@@ -84,6 +84,7 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
   }
 
   active_set_.resize(w_->size(), true);
+  LL << active_set_.nnz();
   delta_.resize(w_->size());
   delta_.setValue(app_cf_.block_coord_l1lr().delta_init_value());
 }
@@ -166,8 +167,10 @@ void BlockCoordinateL1LR::computeGradients(
   CHECK_EQ(U.size(), local_feature_range.size());
   CHECK(!X_->rowMajor());
 
-  auto X = std::static_pointer_cast<SparseMatrix<Key,double>>(X_->colBlock(local_feature_range));
+  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
+      X_->colBlock(local_feature_range));
   const auto& offset = X->offset();
+  const auto& index = X->index();
   bool binary = X->binary();
 
   // j: column id, i: row id
@@ -176,7 +179,8 @@ void BlockCoordinateL1LR::computeGradients(
     if (!active_set_.test(k) || offset[j] == offset[j+1]) continue;
     double g = 0, u = 0, d = delta_[k];
     for (size_t o = offset[j]; o < offset[j+1]; ++o) {
-      auto i = X->index()[o];
+      // auto i = X->index()[o];
+      auto i = index[o];
       double tau = 1 / ( 1 + dual_[i] );
       if (binary) {
         g -= tau;
@@ -199,7 +203,8 @@ void BlockCoordinateL1LR::updateDual(
   CHECK_EQ(w_delta.size(), local_feature_range.size());
   CHECK(!X_->rowMajor());
 
-  auto X = std::static_pointer_cast<SparseMatrix<Key,double>>(X_->colBlock(local_feature_range));
+  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
+      X_->colBlock(local_feature_range));
   const auto& y = y_->value();
   const auto& offset = X->offset();
   bool binary = X->binary();
