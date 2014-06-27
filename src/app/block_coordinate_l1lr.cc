@@ -19,7 +19,8 @@ void BlockCoordinateL1LR::run() {
   int tau = cf.max_block_delay();
   int iter = 0;
   for (; iter < cf.max_pass_of_data(); ++iter) {
-    std::random_shuffle(block_order.begin(), block_order.end());
+    if (cf.random_feature_block_order())
+      std::random_shuffle(block_order.begin(), block_order.end());
     for (int b : block_order)  {
       Task update;
       update.set_wait_time(time - tau);

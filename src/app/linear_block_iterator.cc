@@ -44,7 +44,8 @@ void LinearBlockIterator::run() {
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    std::random_shuffle(block_order.begin(), block_order.end());
+    if (cf.random_feature_block_order())
+      std::random_shuffle(block_order.begin(), block_order.end());
 
     for (int b : block_order)  {
       Task update;

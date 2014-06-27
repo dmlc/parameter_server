@@ -556,24 +556,31 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline float feature_block_ratio() const;
   inline void set_feature_block_ratio(float value);
 
-  // optional int32 max_pass_of_data = 3 [default = 10];
+  // optional bool random_feature_block_order = 3 [default = true];
+  inline bool has_random_feature_block_order() const;
+  inline void clear_random_feature_block_order();
+  static const int kRandomFeatureBlockOrderFieldNumber = 3;
+  inline bool random_feature_block_order() const;
+  inline void set_random_feature_block_order(bool value);
+
+  // optional int32 max_pass_of_data = 8 [default = 10];
   inline bool has_max_pass_of_data() const;
   inline void clear_max_pass_of_data();
-  static const int kMaxPassOfDataFieldNumber = 3;
+  static const int kMaxPassOfDataFieldNumber = 8;
   inline ::google::protobuf::int32 max_pass_of_data() const;
   inline void set_max_pass_of_data(::google::protobuf::int32 value);
 
-  // optional int32 max_block_delay = 4 [default = 0];
+  // optional int32 max_block_delay = 10 [default = 0];
   inline bool has_max_block_delay() const;
   inline void clear_max_block_delay();
-  static const int kMaxBlockDelayFieldNumber = 4;
+  static const int kMaxBlockDelayFieldNumber = 10;
   inline ::google::protobuf::int32 max_block_delay() const;
   inline void set_max_block_delay(::google::protobuf::int32 value);
 
-  // optional double epsilon = 5 [default = 0.0001];
+  // optional double epsilon = 11 [default = 0.0001];
   inline bool has_epsilon() const;
   inline void clear_epsilon();
-  static const int kEpsilonFieldNumber = 5;
+  static const int kEpsilonFieldNumber = 11;
   inline double epsilon() const;
   inline void set_epsilon(double value);
 
@@ -583,6 +590,8 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline void clear_has_example_block_size();
   inline void set_has_feature_block_ratio();
   inline void clear_has_feature_block_ratio();
+  inline void set_has_random_feature_block_order();
+  inline void clear_has_random_feature_block_order();
   inline void set_has_max_pass_of_data();
   inline void clear_has_max_pass_of_data();
   inline void set_has_max_block_delay();
@@ -594,12 +603,13 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::int64 example_block_size_;
   float feature_block_ratio_;
+  bool random_feature_block_order_;
   ::google::protobuf::int32 max_pass_of_data_;
-  double epsilon_;
   ::google::protobuf::int32 max_block_delay_;
+  double epsilon_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1671,15 +1681,37 @@ inline void BlockIteratorConfig::set_feature_block_ratio(float value) {
   feature_block_ratio_ = value;
 }
 
-// optional int32 max_pass_of_data = 3 [default = 10];
-inline bool BlockIteratorConfig::has_max_pass_of_data() const {
+// optional bool random_feature_block_order = 3 [default = true];
+inline bool BlockIteratorConfig::has_random_feature_block_order() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void BlockIteratorConfig::set_has_max_pass_of_data() {
+inline void BlockIteratorConfig::set_has_random_feature_block_order() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void BlockIteratorConfig::clear_has_max_pass_of_data() {
+inline void BlockIteratorConfig::clear_has_random_feature_block_order() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockIteratorConfig::clear_random_feature_block_order() {
+  random_feature_block_order_ = true;
+  clear_has_random_feature_block_order();
+}
+inline bool BlockIteratorConfig::random_feature_block_order() const {
+  return random_feature_block_order_;
+}
+inline void BlockIteratorConfig::set_random_feature_block_order(bool value) {
+  set_has_random_feature_block_order();
+  random_feature_block_order_ = value;
+}
+
+// optional int32 max_pass_of_data = 8 [default = 10];
+inline bool BlockIteratorConfig::has_max_pass_of_data() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void BlockIteratorConfig::set_has_max_pass_of_data() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void BlockIteratorConfig::clear_has_max_pass_of_data() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void BlockIteratorConfig::clear_max_pass_of_data() {
   max_pass_of_data_ = 10;
@@ -1693,15 +1725,15 @@ inline void BlockIteratorConfig::set_max_pass_of_data(::google::protobuf::int32 
   max_pass_of_data_ = value;
 }
 
-// optional int32 max_block_delay = 4 [default = 0];
+// optional int32 max_block_delay = 10 [default = 0];
 inline bool BlockIteratorConfig::has_max_block_delay() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void BlockIteratorConfig::set_has_max_block_delay() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void BlockIteratorConfig::clear_has_max_block_delay() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void BlockIteratorConfig::clear_max_block_delay() {
   max_block_delay_ = 0;
@@ -1715,15 +1747,15 @@ inline void BlockIteratorConfig::set_max_block_delay(::google::protobuf::int32 v
   max_block_delay_ = value;
 }
 
-// optional double epsilon = 5 [default = 0.0001];
+// optional double epsilon = 11 [default = 0.0001];
 inline bool BlockIteratorConfig::has_epsilon() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void BlockIteratorConfig::set_has_epsilon() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void BlockIteratorConfig::clear_has_epsilon() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void BlockIteratorConfig::clear_epsilon() {
   epsilon_ = 0.0001;

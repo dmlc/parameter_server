@@ -47,12 +47,16 @@ message BlockIteratorConfig {
   // blocks. If = 0, then use all features
   optional float feature_block_ratio = 2 [default = 4];
 
-  optional int32 max_pass_of_data = 3 [default = 10];
+  // use a random order to updating feature block, it improves the
+  // convergence. You may turn it off for debug use
+  optional bool random_feature_block_order = 3 [default = true];
+
+  optional int32 max_pass_of_data = 8 [default = 10];
   // bounded-delay consistency
-  optional int32 max_block_delay = 4 [default = 0];
+  optional int32 max_block_delay = 10 [default = 0];
 
   // convergance critiria. stop if the relative objective <= epsilon
-  optional double epsilon = 5 [default = 1e-4];
+  optional double epsilon = 11 [default = 1e-4];
 }
 
 message BlockCoordL1LRConfig {
