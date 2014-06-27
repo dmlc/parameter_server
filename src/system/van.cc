@@ -224,6 +224,7 @@ Status Van::recv(Message *msg) {
 }
 
 void Van::statistic() {
+  if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
   auto mb = [](size_t x) { return  (x * 10 / 1000000) / 10.0; };
   auto s = FLAGS_compress_message ? send_compressed_ : send_uncompressed_;
   auto r = FLAGS_compress_message ? recv_compressed_ : recv_uncompressed_;

@@ -56,10 +56,14 @@ message BlockIteratorConfig {
 }
 
 message BlockCoordL1LRConfig {
-  optional bool KKT_filter = 1 [default = true];
+  optional double delta_init_value = 1 [default = 1];
+  optional double delta_max_value = 2 [default = 5];
+  // optional bool KKT_filter = 1 [default = true];
 
-  optional double delta_init_value = 2 [default = 1];
-  optional double delta_max_value = 3 [default = 5];
+  // kkt_filter_threshold = max_gradient_violation / num_examples *
+  // kkt_filter_threshold_ratio. increasing this number reduces the effect of
+  // kkt filter.
+  optional double kkt_filter_threshold_ratio = 10 [default = 10];
 }
 
 message LossConfig {

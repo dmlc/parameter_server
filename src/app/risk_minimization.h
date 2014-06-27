@@ -36,7 +36,8 @@ class RiskMinimization : public App {
 
   // only available at the scheduler
   std::vector<MatrixInfo> global_training_info_;
-  // size_t global_training_size_ = 0;
+  size_t global_training_example_size_ = 0;
+
   Range<Key> global_training_feature_range_ = Range<Key>(-1, 0);
 
 };

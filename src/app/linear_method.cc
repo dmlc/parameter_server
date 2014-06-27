@@ -80,6 +80,11 @@ void LinearMethod::startSystem() {
       worker_training_.push_back(dc);
     }
   }
+  for (auto& info : global_training_info_)
+    global_training_example_size_ += info.row().end() - info.row().begin();
+
+  fprintf(stderr, "training data info: %lu examples with feature range %s\n",
+          global_training_example_size_, global_training_feature_range_.toString().data());
 
   // evenly divide the keys range for server nodes
   for (int i = 0; i < num_servers; ++i) {

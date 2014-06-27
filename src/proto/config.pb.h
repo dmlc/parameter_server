@@ -664,41 +664,41 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional bool KKT_filter = 1 [default = true];
-  inline bool has_kkt_filter() const;
-  inline void clear_kkt_filter();
-  static const int kKKTFilterFieldNumber = 1;
-  inline bool kkt_filter() const;
-  inline void set_kkt_filter(bool value);
-
-  // optional double delta_init_value = 2 [default = 1];
+  // optional double delta_init_value = 1 [default = 1];
   inline bool has_delta_init_value() const;
   inline void clear_delta_init_value();
-  static const int kDeltaInitValueFieldNumber = 2;
+  static const int kDeltaInitValueFieldNumber = 1;
   inline double delta_init_value() const;
   inline void set_delta_init_value(double value);
 
-  // optional double delta_max_value = 3 [default = 5];
+  // optional double delta_max_value = 2 [default = 5];
   inline bool has_delta_max_value() const;
   inline void clear_delta_max_value();
-  static const int kDeltaMaxValueFieldNumber = 3;
+  static const int kDeltaMaxValueFieldNumber = 2;
   inline double delta_max_value() const;
   inline void set_delta_max_value(double value);
 
+  // optional double kkt_filter_threshold_ratio = 10 [default = 10];
+  inline bool has_kkt_filter_threshold_ratio() const;
+  inline void clear_kkt_filter_threshold_ratio();
+  static const int kKktFilterThresholdRatioFieldNumber = 10;
+  inline double kkt_filter_threshold_ratio() const;
+  inline void set_kkt_filter_threshold_ratio(double value);
+
   // @@protoc_insertion_point(class_scope:PS.BlockCoordL1LRConfig)
  private:
-  inline void set_has_kkt_filter();
-  inline void clear_has_kkt_filter();
   inline void set_has_delta_init_value();
   inline void clear_has_delta_init_value();
   inline void set_has_delta_max_value();
   inline void clear_has_delta_max_value();
+  inline void set_has_kkt_filter_threshold_ratio();
+  inline void clear_has_kkt_filter_threshold_ratio();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   double delta_init_value_;
   double delta_max_value_;
-  bool kkt_filter_;
+  double kkt_filter_threshold_ratio_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
@@ -1731,37 +1731,15 @@ inline void BlockIteratorConfig::set_epsilon(double value) {
 
 // BlockCoordL1LRConfig
 
-// optional bool KKT_filter = 1 [default = true];
-inline bool BlockCoordL1LRConfig::has_kkt_filter() const {
+// optional double delta_init_value = 1 [default = 1];
+inline bool BlockCoordL1LRConfig::has_delta_init_value() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_kkt_filter() {
+inline void BlockCoordL1LRConfig::set_has_delta_init_value() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void BlockCoordL1LRConfig::clear_has_kkt_filter() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void BlockCoordL1LRConfig::clear_kkt_filter() {
-  kkt_filter_ = true;
-  clear_has_kkt_filter();
-}
-inline bool BlockCoordL1LRConfig::kkt_filter() const {
-  return kkt_filter_;
-}
-inline void BlockCoordL1LRConfig::set_kkt_filter(bool value) {
-  set_has_kkt_filter();
-  kkt_filter_ = value;
-}
-
-// optional double delta_init_value = 2 [default = 1];
-inline bool BlockCoordL1LRConfig::has_delta_init_value() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void BlockCoordL1LRConfig::set_has_delta_init_value() {
-  _has_bits_[0] |= 0x00000002u;
-}
 inline void BlockCoordL1LRConfig::clear_has_delta_init_value() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000001u;
 }
 inline void BlockCoordL1LRConfig::clear_delta_init_value() {
   delta_init_value_ = 1;
@@ -1775,15 +1753,15 @@ inline void BlockCoordL1LRConfig::set_delta_init_value(double value) {
   delta_init_value_ = value;
 }
 
-// optional double delta_max_value = 3 [default = 5];
+// optional double delta_max_value = 2 [default = 5];
 inline bool BlockCoordL1LRConfig::has_delta_max_value() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void BlockCoordL1LRConfig::set_has_delta_max_value() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void BlockCoordL1LRConfig::clear_has_delta_max_value() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void BlockCoordL1LRConfig::clear_delta_max_value() {
   delta_max_value_ = 5;
@@ -1795,6 +1773,28 @@ inline double BlockCoordL1LRConfig::delta_max_value() const {
 inline void BlockCoordL1LRConfig::set_delta_max_value(double value) {
   set_has_delta_max_value();
   delta_max_value_ = value;
+}
+
+// optional double kkt_filter_threshold_ratio = 10 [default = 10];
+inline bool BlockCoordL1LRConfig::has_kkt_filter_threshold_ratio() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void BlockCoordL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockCoordL1LRConfig::clear_kkt_filter_threshold_ratio() {
+  kkt_filter_threshold_ratio_ = 10;
+  clear_has_kkt_filter_threshold_ratio();
+}
+inline double BlockCoordL1LRConfig::kkt_filter_threshold_ratio() const {
+  return kkt_filter_threshold_ratio_;
+}
+inline void BlockCoordL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
+  set_has_kkt_filter_threshold_ratio();
+  kkt_filter_threshold_ratio_ = value;
 }
 
 // -------------------------------------------------------------------

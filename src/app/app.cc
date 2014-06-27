@@ -30,7 +30,7 @@ void App::stop() {
   taskpool(kLiveGroup)->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
   usleep(800);
-  LL << "system stopped";
+  fprintf(stderr, "system stopped\n");
 }
 
 void App::requestNodes() {

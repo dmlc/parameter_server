@@ -2,51 +2,6 @@
 #include "base/sparse_matrix.h"
 namespace PS {
 
-void BlockCoordinateL1LR::showKKTFilter(int iter) {
-  if (iter == -3) {
-    fprintf(stderr, "|      KKT filter     ");
-  } else if (iter == -2) {
-    fprintf(stderr, "| threshold  #activet ");
-  } else if (iter == -1) {
-    fprintf(stderr, "+---------------------");
-  } else {
-    auto prog = global_progress_[iter];
-    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
-  }
-}
-
-void BlockCoordinateL1LR::showProgress(int iter) {
-  int s = iter == 0 ? -3 : iter;
-  for (int i = s; i <= iter; ++i) {
-    RiskMinimization::showObjective(i);
-    RiskMinimization::showNNZ(i);
-    showKKTFilter(i);
-    RiskMinimization::showTime(i);
-  }
-}
-
-RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
-  RiskMinProgress prog;
-  if (exec_.isWorker()) {
-    prog.set_objv(log(1+1/dual_.array()).sum());
-    prog.add_busy_time(busy_timer_.get());
-  } else {
-    size_t nnz_w = 0;
-    double objv = 0;
-    for (size_t i = 0; i < w_->size(); ++i) {
-      auto w = w_->value()[i];
-      if (w == 0 || w == kInactiveValue_) continue;
-      ++ nnz_w;
-      objv += fabs(w);
-    }
-    prog.set_objv(objv * app_cf_.penalty().coefficient());
-    prog.set_nnz_w(nnz_w);
-    prog.set_violation(violation_);
-    prog.set_nnz_active_set(active_set_.nnz());
-  }
-  return prog;
-}
-
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
 void BlockCoordinateL1LR::run() {
   LinearMethod::startSystem();
@@ -68,8 +23,12 @@ void BlockCoordinateL1LR::run() {
       Task update;
       update.set_wait_time(time - tau);
       auto cmd = RiskMinimization::setCall(&update);
-      cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
-      if (reset_kkt_filter) cmd->set_kkt_filter_reset(true);
+      if (b == block_order[0]) {
+        cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
+      }
+      if (reset_kkt_filter) {
+        cmd->set_kkt_filter_reset(true);
+      }
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       blocks[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(blocks[b].first);
@@ -86,7 +45,8 @@ void BlockCoordinateL1LR::run() {
     showProgress(iter);
 
     double vio = global_progress_[iter].violation();
-    KKT_filter_threshold_ = vio;
+    KKT_filter_threshold_ = vio / (double)global_training_example_size_
+                            * app_cf_.block_coord_l1lr().kkt_filter_threshold_ratio();
 
     if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
@@ -95,6 +55,8 @@ void BlockCoordinateL1LR::run() {
   }
 
 }
+
+
 
 void BlockCoordinateL1LR::prepareData(const Message& msg) {
   LinearBlockIterator::prepareData(msg);
@@ -112,8 +74,10 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
 void BlockCoordinateL1LR::updateModel(Message* msg) {
   auto time = msg->task.time() * 10;
   auto call = msg->task.risk();
-  if (call.has_kkt_filter_threshold())
+  if (call.has_kkt_filter_threshold()) {
     KKT_filter_threshold_ = call.kkt_filter_threshold();
+    violation_ = 0;
+  }
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
   int num_threads = FLAGS_num_threads;
@@ -150,16 +114,17 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
           SArray<double> delta_w(new_w.size());
           for (size_t i = 0; i < new_w.size(); ++i) {
             size_t j = local_range.begin() + i;
-            if (new_w[i] == kInactiveValue_) {
+            double& old_w = w_->value()[j];
+            if (new_w[i] > kInactiveValue_ - 100) {
               active_set_.clear(j);
-              new_w[i] = 0;
+              old_w = new_w[i] = 0;
             } else {
               active_set_.set(j);
             }
-            delta_w[i] = new_w[i] - w_->value()[j];
+            delta_w[i] = new_w[i] - old_w;
             delta_[j] = std::min(
                 app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(delta_w[i]) + .1);
-            w_->value()[j] = new_w[i];
+            old_w = new_w[i];
           }
           SizeR example_range(0, X_->rows());
           updateDual(example_range, local_range, delta_w);
@@ -173,7 +138,6 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
   } else {
     // aggregate local gradients, then update model via soft-shrinkage
     w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-
         auto data = w_->received(time);
         CHECK_EQ(data.size(), 2);
         CHECK_EQ(local_range, data[0].first);
@@ -273,9 +237,9 @@ void BlockCoordinateL1LR::updateWeight(
       } else if (g_neg > 0) {
         vio = g_neg;
       } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
-        // active_set_.clear(k);
-        // w = kInactiveValue_;
-        // continue;
+        active_set_.clear(k);
+        w = kInactiveValue_;
+        continue;
       }
     }
     violation_ = std::max(violation_, vio);
@@ -299,5 +263,50 @@ void BlockCoordinateL1LR::updateWeight(
   // LL << delta_;
 }
 
+
+void BlockCoordinateL1LR::showKKTFilter(int iter) {
+  if (iter == -3) {
+    fprintf(stderr, "|      KKT filter     ");
+  } else if (iter == -2) {
+    fprintf(stderr, "| threshold  #activet ");
+  } else if (iter == -1) {
+    fprintf(stderr, "+---------------------");
+  } else {
+    auto prog = global_progress_[iter];
+    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
+  }
+}
+
+void BlockCoordinateL1LR::showProgress(int iter) {
+  int s = iter == 0 ? -3 : iter;
+  for (int i = s; i <= iter; ++i) {
+    RiskMinimization::showObjective(i);
+    RiskMinimization::showNNZ(i);
+    showKKTFilter(i);
+    RiskMinimization::showTime(i);
+  }
+}
+
+RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
+  RiskMinProgress prog;
+  if (exec_.isWorker()) {
+    prog.set_objv(log(1+1/dual_.array()).sum());
+    prog.add_busy_time(busy_timer_.get());
+  } else {
+    size_t nnz_w = 0;
+    double objv = 0;
+    for (size_t i = 0; i < w_->size(); ++i) {
+      auto w = w_->value()[i];
+      if (w == 0 || w > kInactiveValue_ - 100) continue;
+      ++ nnz_w;
+      objv += fabs(w);
+    }
+    prog.set_objv(objv * app_cf_.penalty().coefficient());
+    prog.set_nnz_w(nnz_w);
+    prog.set_violation(violation_);
+    prog.set_nnz_active_set(active_set_.nnz());
+  }
+  return prog;
+}
 
 } // namespace PS
