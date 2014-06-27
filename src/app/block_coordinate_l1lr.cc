@@ -17,7 +17,8 @@ void BlockCoordinateL1LR::run() {
   auto wk = taskpool(kActiveGroup);
   int time = wk->time();
   int tau = cf.max_block_delay();
-  for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
+  int iter = 0;
+  for (; iter < cf.max_pass_of_data(); ++iter) {
     std::random_shuffle(block_order.begin(), block_order.end());
     for (int b : block_order)  {
       Task update;
@@ -54,6 +55,9 @@ void BlockCoordinateL1LR::run() {
     }
   }
 
+  if (iter == cf.max_pass_of_data()) {
+    fprintf(stderr, "reached maximal # of data pass: %d\n", cf.max_pass_of_data());
+  }
 }
 
 
@@ -67,8 +71,10 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
 
   active_set_.resize(w_->size(), true);
 
+  l1lr_cf_ = app_cf_.block_coord_l1lr();
+
   delta_.resize(w_->size());
-  delta_.setValue(app_cf_.block_coord_l1lr().delta_init_value());
+  delta_.setValue(l1lr_cf_.delta_init_value());
 }
 
 void BlockCoordinateL1LR::updateModel(Message* msg) {
@@ -81,8 +87,10 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
   int num_threads = FLAGS_num_threads;
+  CHECK_GT(num_threads, 0);
 
   if (exec_.isWorker()) {
+    busy_timer_.start();
 
     // compute local gradients
     SArrayList<double> local_grads(2);
@@ -92,16 +100,29 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
     }
     {
       Lock lk(mu_);
-      busy_timer_.start();
-
-      computeGradients(local_range, local_grads[0], local_grads[1]);
-
-      busy_timer_.stop();
+      if (l1lr_cf_.enable_multi_thread()) {
+        ThreadPool pool(num_threads);
+        int npart = num_threads * 1;
+        for (int i = 0; i < npart; ++i) {
+          auto range = local_range.evenDivide(npart, i);
+          if (range.empty()) continue;
+          auto grad_r = range - local_range.begin();
+          pool.Add([this, range, grad_r, &local_grads, i, npart]() {
+              computeGradients(range, local_grads[0].segment(grad_r), local_grads[1].segment(grad_r));
+            });
+        }
+        pool.StartWorkers();
+      } else {
+        computeGradients(local_range, local_grads[0], local_grads[1]);
+      }
     }
+
+    busy_timer_.stop();
 
     msg->finished = false;
     auto d = *msg;
-    w_->roundTripForWorker(time, global_range, local_grads, [this, local_range, d] (int time) {
+    w_->roundTripForWorker(time, global_range, local_grads,
+                           [this, local_range, d, num_threads] (int time) {
         // update dual variable
         Lock l(mu_);
         busy_timer_.start();
@@ -110,24 +131,40 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
           auto data = w_->received(time);
           CHECK_EQ(data.size(), 1);
           CHECK_EQ(local_range, data[0].first);
-          auto new_w = data[0].second;
-          SArray<double> delta_w(new_w.size());
-          for (size_t i = 0; i < new_w.size(); ++i) {
+          auto new_weight = data[0].second;
+          SArray<double> delta_w(new_weight.size());
+          for (size_t i = 0; i < new_weight.size(); ++i) {
             size_t j = local_range.begin() + i;
             double& old_w = w_->value()[j];
-            if (new_w[i] > kInactiveValue_ - 100) {
+            double& new_w = new_weight[i];
+            if (new_w != new_w) {
               active_set_.clear(j);
-              old_w = new_w[i] = 0;
+              old_w = new_w = 0;
             } else {
               active_set_.set(j);
             }
-            delta_w[i] = new_w[i] - old_w;
+            delta_w[i] = new_w - old_w;
             delta_[j] = std::min(
-                app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(delta_w[i]) + .1);
-            old_w = new_w[i];
+                l1lr_cf_.delta_max_value(), 2 * fabs(delta_w[i]) + .1);
+            old_w = new_w;
           }
-          SizeR example_range(0, X_->rows());
-          updateDual(example_range, local_range, delta_w);
+          {
+            SizeR example_range(0, X_->rows());
+            if (l1lr_cf_.enable_multi_thread()) {
+              ThreadPool pool(num_threads);
+              int npart = num_threads;
+              for (int i = 0; i < npart; ++i) {
+                auto range = example_range.evenDivide(npart, i);
+                if (range.empty()) continue;
+                pool.Add([this, range, local_range,  &delta_w]() {
+                    updateDual(range, local_range, delta_w);
+                  });
+              }
+              pool.StartWorkers();
+            } else {
+              updateDual(example_range, local_range, delta_w);
+            }
+          }
         }
 
         busy_timer_.stop();
@@ -253,8 +290,7 @@ void BlockCoordinateL1LR::updateWeight(
     d = std::min(delta_[k], std::max(-delta_[k], d));
 
     w += d;
-    delta_[k] = std::min(
-        app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(d) + .1);
+    delta_[k] = std::min(l1lr_cf_.delta_max_value(), 2 * fabs(d) + .1);
   }
 
   // LL << G;
@@ -297,7 +333,7 @@ RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
     double objv = 0;
     for (size_t i = 0; i < w_->size(); ++i) {
       auto w = w_->value()[i];
-      if (w == 0 || w > kInactiveValue_ - 100) continue;
+      if (w == 0 || w != w) continue;
       ++ nnz_w;
       objv += fabs(w);
     }

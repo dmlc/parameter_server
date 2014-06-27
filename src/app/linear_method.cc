@@ -12,17 +12,20 @@ void LinearMethod::init() {
   w_->name() = app_cf_.parameter_name(0);
   sys_.yp().add(std::static_pointer_cast<Customer>(w_));
 
-  CHECK(app_cf_.has_learner());
-  learner_ = std::static_pointer_cast<AggGradLearner<double>>(
-      LearnerFactory<double>::create(app_cf_.learner()));
+  bool has_learner = app_cf_.has_learner();
+  if (has_learner) {
+    learner_ = std::static_pointer_cast<AggGradLearner<double>>(
+        LearnerFactory<double>::create(app_cf_.learner()));
+  }
 
-  CHECK(app_cf_.has_loss());
-  loss_ = LossFactory<double>::create(app_cf_.loss());
-  learner_->setLoss(loss_);
+  if (app_cf_.has_loss()) {
+    loss_ = LossFactory<double>::create(app_cf_.loss());
+    if (has_learner) learner_->setLoss(loss_);
+  }
 
   if (app_cf_.has_penalty()) {
     penalty_ = PenaltyFactory<double>::create(app_cf_.penalty());
-    learner_->setPenalty(penalty_);
+    if (has_learner) learner_->setPenalty(penalty_);
   }
 }
 

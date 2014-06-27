@@ -1,7 +1,7 @@
 #pragma once
+#include <float.h>
 #include "app/linear_block_iterator.h"
 #include "base/bitmap.h"
-
 namespace PS {
 
 // optimizated for sparse logisitic regression
@@ -25,10 +25,15 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
 
   void showProgress(int iter);
   void showKKTFilter(int iter);
-  constexpr static double kInactiveValue_ = 65536;
+
+  // snappy has good compression rate on 0xffff..ff
+  const double kInactiveValue_ = *((double*)&kuint64max);
 
   double KKT_filter_threshold_;
   double violation_;
+
+  BlockCoordL1LRConfig l1lr_cf_;
+
 };
 
 } // namespace PS

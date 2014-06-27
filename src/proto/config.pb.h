@@ -542,35 +542,35 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required int64 example_block_size = 1 [default = -1];
+  // optional int64 example_block_size = 1 [default = -1];
   inline bool has_example_block_size() const;
   inline void clear_example_block_size();
   static const int kExampleBlockSizeFieldNumber = 1;
   inline ::google::protobuf::int64 example_block_size() const;
   inline void set_example_block_size(::google::protobuf::int64 value);
 
-  // required float feature_block_ratio = 2 [default = 0];
+  // optional float feature_block_ratio = 2 [default = 4];
   inline bool has_feature_block_ratio() const;
   inline void clear_feature_block_ratio();
   static const int kFeatureBlockRatioFieldNumber = 2;
   inline float feature_block_ratio() const;
   inline void set_feature_block_ratio(float value);
 
-  // required int32 max_pass_of_data = 3 [default = 2];
+  // optional int32 max_pass_of_data = 3 [default = 10];
   inline bool has_max_pass_of_data() const;
   inline void clear_max_pass_of_data();
   static const int kMaxPassOfDataFieldNumber = 3;
   inline ::google::protobuf::int32 max_pass_of_data() const;
   inline void set_max_pass_of_data(::google::protobuf::int32 value);
 
-  // required int32 max_block_delay = 4 [default = 0];
+  // optional int32 max_block_delay = 4 [default = 0];
   inline bool has_max_block_delay() const;
   inline void clear_max_block_delay();
   static const int kMaxBlockDelayFieldNumber = 4;
   inline ::google::protobuf::int32 max_block_delay() const;
   inline void set_max_block_delay(::google::protobuf::int32 value);
 
-  // required double epsilon = 5;
+  // optional double epsilon = 5 [default = 0.0001];
   inline bool has_epsilon() const;
   inline void clear_epsilon();
   static const int kEpsilonFieldNumber = 5;
@@ -678,6 +678,13 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double delta_max_value() const;
   inline void set_delta_max_value(double value);
 
+  // optional bool enable_multi_thread = 4 [default = false];
+  inline bool has_enable_multi_thread() const;
+  inline void clear_enable_multi_thread();
+  static const int kEnableMultiThreadFieldNumber = 4;
+  inline bool enable_multi_thread() const;
+  inline void set_enable_multi_thread(bool value);
+
   // optional double kkt_filter_threshold_ratio = 10 [default = 10];
   inline bool has_kkt_filter_threshold_ratio() const;
   inline void clear_kkt_filter_threshold_ratio();
@@ -691,6 +698,8 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline void clear_has_delta_init_value();
   inline void set_has_delta_max_value();
   inline void clear_has_delta_max_value();
+  inline void set_has_enable_multi_thread();
+  inline void clear_has_enable_multi_thread();
   inline void set_has_kkt_filter_threshold_ratio();
   inline void clear_has_kkt_filter_threshold_ratio();
 
@@ -699,9 +708,10 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   double delta_init_value_;
   double delta_max_value_;
   double kkt_filter_threshold_ratio_;
+  bool enable_multi_thread_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1617,7 +1627,7 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
 
 // BlockIteratorConfig
 
-// required int64 example_block_size = 1 [default = -1];
+// optional int64 example_block_size = 1 [default = -1];
 inline bool BlockIteratorConfig::has_example_block_size() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1639,7 +1649,7 @@ inline void BlockIteratorConfig::set_example_block_size(::google::protobuf::int6
   example_block_size_ = value;
 }
 
-// required float feature_block_ratio = 2 [default = 0];
+// optional float feature_block_ratio = 2 [default = 4];
 inline bool BlockIteratorConfig::has_feature_block_ratio() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1650,7 +1660,7 @@ inline void BlockIteratorConfig::clear_has_feature_block_ratio() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void BlockIteratorConfig::clear_feature_block_ratio() {
-  feature_block_ratio_ = 0;
+  feature_block_ratio_ = 4;
   clear_has_feature_block_ratio();
 }
 inline float BlockIteratorConfig::feature_block_ratio() const {
@@ -1661,7 +1671,7 @@ inline void BlockIteratorConfig::set_feature_block_ratio(float value) {
   feature_block_ratio_ = value;
 }
 
-// required int32 max_pass_of_data = 3 [default = 2];
+// optional int32 max_pass_of_data = 3 [default = 10];
 inline bool BlockIteratorConfig::has_max_pass_of_data() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1672,7 +1682,7 @@ inline void BlockIteratorConfig::clear_has_max_pass_of_data() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void BlockIteratorConfig::clear_max_pass_of_data() {
-  max_pass_of_data_ = 2;
+  max_pass_of_data_ = 10;
   clear_has_max_pass_of_data();
 }
 inline ::google::protobuf::int32 BlockIteratorConfig::max_pass_of_data() const {
@@ -1683,7 +1693,7 @@ inline void BlockIteratorConfig::set_max_pass_of_data(::google::protobuf::int32 
   max_pass_of_data_ = value;
 }
 
-// required int32 max_block_delay = 4 [default = 0];
+// optional int32 max_block_delay = 4 [default = 0];
 inline bool BlockIteratorConfig::has_max_block_delay() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1705,7 +1715,7 @@ inline void BlockIteratorConfig::set_max_block_delay(::google::protobuf::int32 v
   max_block_delay_ = value;
 }
 
-// required double epsilon = 5;
+// optional double epsilon = 5 [default = 0.0001];
 inline bool BlockIteratorConfig::has_epsilon() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -1716,7 +1726,7 @@ inline void BlockIteratorConfig::clear_has_epsilon() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void BlockIteratorConfig::clear_epsilon() {
-  epsilon_ = 0;
+  epsilon_ = 0.0001;
   clear_has_epsilon();
 }
 inline double BlockIteratorConfig::epsilon() const {
@@ -1775,15 +1785,37 @@ inline void BlockCoordL1LRConfig::set_delta_max_value(double value) {
   delta_max_value_ = value;
 }
 
-// optional double kkt_filter_threshold_ratio = 10 [default = 10];
-inline bool BlockCoordL1LRConfig::has_kkt_filter_threshold_ratio() const {
+// optional bool enable_multi_thread = 4 [default = false];
+inline bool BlockCoordL1LRConfig::has_enable_multi_thread() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_kkt_filter_threshold_ratio() {
+inline void BlockCoordL1LRConfig::set_has_enable_multi_thread() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void BlockCoordL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
+inline void BlockCoordL1LRConfig::clear_has_enable_multi_thread() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockCoordL1LRConfig::clear_enable_multi_thread() {
+  enable_multi_thread_ = false;
+  clear_has_enable_multi_thread();
+}
+inline bool BlockCoordL1LRConfig::enable_multi_thread() const {
+  return enable_multi_thread_;
+}
+inline void BlockCoordL1LRConfig::set_enable_multi_thread(bool value) {
+  set_has_enable_multi_thread();
+  enable_multi_thread_ = value;
+}
+
+// optional double kkt_filter_threshold_ratio = 10 [default = 10];
+inline bool BlockCoordL1LRConfig::has_kkt_filter_threshold_ratio() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void BlockCoordL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void BlockCoordL1LRConfig::clear_kkt_filter_threshold_ratio() {
   kkt_filter_threshold_ratio_ = 10;
