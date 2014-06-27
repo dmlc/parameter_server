@@ -121,5 +121,5 @@ git clone git@github.com:mli/parameter_server_third_party.git third_party
 git clone git@github.com:mli/parameter_server_data.git data
 third_party/install.sh
 cd src && make -j8
-mpirun -np 5 ./ps_mpi -interface lo0 -num_workers 2 -num_servers 2 -app ../config/block_prox_grad.config
+mpirun -np 5 ./ps_mpi -num_workers 2 -num_servers 2
 ```

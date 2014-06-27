@@ -222,7 +222,7 @@ void BlockCoordinateL1LR::computeGradients(
         double v = *(value++);
         g -= y[i] * tau * v;
         u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
-        // u += tau * (1-tau) * v * v;;
+        // u += tau * (1-tau) * v * v;
       }
     }
     G[j] = g; U[j] = u;
@@ -241,7 +241,7 @@ void BlockCoordinateL1LR::updateDual(
   double* y = y_->value().data();
   size_t* offset = X->offset().data();
   uint32* index = X->index().data() + offset[0];
-  double* value = X->value().data() + offset[0];
+  double* value = X->value().data();
   bool binary = X->binary();
 
   // j: column id, i: row id
@@ -251,14 +251,13 @@ void BlockCoordinateL1LR::updateDual(
     double wd = w_delta[j];
     if (wd == 0 || !active_set_.test(k)) {
       index += n;
-      if (binary) value += n;
       continue;
     }
     // TODO unroll the loop
-    for (size_t o = 0; o < n; ++o) {
+    for (size_t o = offset[j]; o < offset[j+1]; ++o) {
       auto i = *(index++);
       if (!local_example_range.contains(i)) continue;
-      dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * *(value++));
+      dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * value[o]);
     }
   }
 }
