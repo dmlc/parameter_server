@@ -191,36 +191,41 @@ void BlockCoordinateL1LR::computeGradients(
   CHECK_EQ(U.size(), local_feature_range.size());
   CHECK(!X_->rowMajor());
 
-  const auto& y = y_->value();
+  const double* y = y_->value().data();
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
       X_->colBlock(local_feature_range));
-  const auto& offset = X->offset();
-  // const auto& index = X->index();
+  const size_t* offset = X->offset().data();
+  uint32* index = X->index().data() + offset[0];
+  double* value = X->value().data() + offset[0];
   bool binary = X->binary();
 
   // j: column id, i: row id
-  for (size_t j = 0; j < offset.size()-1; ++j) {
-    size_t k  = j + local_feature_range.begin();
-    if (!active_set_.test(k) || offset[j] == offset[j+1]) continue;
+  for (size_t j = 0; j < X->cols(); ++j) {
+    size_t k = j + local_feature_range.begin();
+    size_t n = offset[j+1] - offset[j];
+    if (!active_set_.test(k)) {
+      index += n;
+      if (!binary) value += n;
+      continue;
+    }
     double g = 0, u = 0;
     double d = binary ? exp(delta_[k]) : delta_[k];
-    for (size_t o = offset[j]; o < offset[j+1]; ++o) {
-      auto i = X->index()[o];
-      // auto i = index[o];
+    // TODO unroll loop
+    for (size_t o = 0; o < n; ++o) {
+      auto i = *(index ++);
       double tau = 1 / ( 1 + dual_[i] );
       if (binary) {
         g -= y[i] * tau;
         u += std::min(tau*(1-tau)*d, .25);
-        // u += tau*(1-tau);
+        // u += tau * (1-tau);
       } else {
-        double v = X->value()[o];
+        double v = *(value++);
         g -= y[i] * tau * v;
         u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
-        // u += tau*(1-tau) * v * v;;
+        // u += tau * (1-tau) * v * v;;
       }
     }
-    G[j] = g;
-    U[j] = u;
+    G[j] = g; U[j] = u;
   }
 }
 
@@ -233,24 +238,29 @@ void BlockCoordinateL1LR::updateDual(
 
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
       X_->colBlock(local_feature_range));
-  const auto& y = y_->value();
-  const auto& offset = X->offset();
+  double* y = y_->value().data();
+  size_t* offset = X->offset().data();
+  uint32* index = X->index().data() + offset[0];
+  double* value = X->value().data() + offset[0];
   bool binary = X->binary();
 
   // j: column id, i: row id
-  for (size_t j = 0; j < offset.size()-1; ++j) {
+  for (size_t j = 0; j < X->cols(); ++j) {
     size_t k  = j + local_feature_range.begin();
-    if (!active_set_.test(k) || offset[j] == offset[j+1]) continue;
+    size_t n = offset[j+1] - offset[j];
     double wd = w_delta[j];
-    if (wd == 0) continue;
-    for (size_t o = offset[j]; o < offset[j+1]; ++o) {
-      auto i = X->index()[o];
+    if (wd == 0 || !active_set_.test(k)) {
+      index += n;
+      if (binary) value += n;
+      continue;
+    }
+    // TODO unroll the loop
+    for (size_t o = 0; o < n; ++o) {
+      auto i = *(index++);
       if (!local_example_range.contains(i)) continue;
-      dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * X->value()[o]);
+      dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * *(value++));
     }
   }
-
-  // LL << dual_;
 }
 
 void BlockCoordinateL1LR::updateWeight(
@@ -292,11 +302,6 @@ void BlockCoordinateL1LR::updateWeight(
     w += d;
     delta_[k] = std::min(l1lr_cf_.delta_max_value(), 2 * fabs(d) + .1);
   }
-
-  // LL << G;
-  // LL << U;
-  // LL << w_->value();
-  // LL << delta_;
 }
 
 

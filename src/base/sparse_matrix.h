@@ -53,12 +53,13 @@ class SparseMatrix : public Matrix<V> {
 
   SArray<I> index() const { return index_; }
   SArray<size_t> offset() const { return offset_; }
- private:
-  using Matrix<V>::info_;
-  using Matrix<V>::value_;
+
   using Matrix<V>::rows;
   using Matrix<V>::cols;
   using Matrix<V>::nnz;
+ private:
+  using Matrix<V>::info_;
+  using Matrix<V>::value_;
   using Matrix<V>::rowMajor;
   using Matrix<V>::empty;
   using Matrix<V>::innerSize;
