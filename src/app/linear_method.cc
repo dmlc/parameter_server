@@ -83,8 +83,8 @@ void LinearMethod::startSystem() {
       worker_training_.push_back(dc);
     }
   }
-  for (auto& info : global_training_info_)
-    global_training_example_size_ += info.row().end() - info.row().begin();
+  global_training_example_size_ += global_training_info_[0].row().end() -
+                                   global_training_info_[0].row().begin();
 
   fprintf(stderr, "training data info: %lu examples with feature range %s\n",
           global_training_example_size_, global_training_feature_range_.toString().data());
