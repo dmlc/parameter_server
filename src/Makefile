@@ -42,7 +42,6 @@ SRCS = $(PROTOS_CC) \
 	util/recordio.cc \
 	util/threadpool.cc \
 	system/van.cc \
-	system/customer.cc \
 	system/postoffice.cc \
 	system/yellow_pages.cc \
 	system/remote_node.cc \
@@ -55,6 +54,7 @@ SRCS = $(PROTOS_CC) \
 
 	# app/sketch.cc \
 	system/message.cc \
+	system/customer.cc \
 
 	# app/linear.cc
 

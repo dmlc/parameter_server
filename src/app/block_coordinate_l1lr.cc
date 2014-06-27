@@ -18,7 +18,7 @@ void BlockCoordinateL1LR::run() {
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    // std::random_shuffle(block_order.begin(), block_order.end());
+    std::random_shuffle(block_order.begin(), block_order.end());
     for (int b : block_order)  {
       Task update;
       update.set_wait_time(time - tau);
@@ -173,13 +173,13 @@ void BlockCoordinateL1LR::computeGradients(
       double tau = 1 / ( 1 + dual_[i] );
       if (binary) {
         g -= y[i] * tau;
-        // u += std::min(tau*(1-tau)*d, .25);
-        u += tau*(1-tau);
+        u += std::min(tau*(1-tau)*d, .25);
+        // u += tau*(1-tau);
       } else {
         double v = X->value()[o];
         g -= y[i] * tau * v;
-        // u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
-        u += tau*(1-tau) * v * v;;
+        u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
+        // u += tau*(1-tau) * v * v;;
       }
     }
     G[j] = g;

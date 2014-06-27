@@ -48,25 +48,23 @@ class Postoffice {
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
   Postoffice() { }
 
+  void manage_app(const Task& pt);
+  void send();
+
   std::mutex mutex_;
 
   bool done_ = false;
 
-  YellowPages yp_;
 
   void recv();
 
-  // TODO fault tolerance
-  void send();
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
-  // std::thread *sending_;
-  // std::thread *recving_;
 
   threadsafe_queue<Message> sending_queue_;
 
-  void manage_app(const Task& pt);
-
+  // yp_ should stay behind sending_queue_ so it will be destroied earlier
+  YellowPages yp_;
 };
 
 } // namespace PS

@@ -11,8 +11,14 @@ namespace PS {
 // string name
 class Customer {
  public:
-  Customer();
-  ~Customer();
+  Customer() : sys_(Postoffice::instance()), exec_(*this) {
+    exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
+  }
+
+  void stop() {
+    exec_.stop();
+    exec_thread_->join();
+  }
 
   // process a message received from a remote node
   virtual void process(Message* msg) = 0;
@@ -34,6 +40,7 @@ class Customer {
   Executor& exec() { return exec_; }
 
   RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
+
 
  protected:
   string name_;

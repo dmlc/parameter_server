@@ -2,11 +2,7 @@
 
 #include "util/common.h"
 #include "proto/node.pb.h"
-
 #include "system/van.h"
-// #include "system/node_group.h"
-// #include "system/workload.h"
-// #include "proto/metadata.pb.h"
 
 namespace PS {
 
@@ -17,6 +13,8 @@ class NodeGroup;
 class YellowPages {
  public:
   YellowPages() { }
+  ~YellowPages();
+
   void init() { van_.init(); }
 
   void add(shared_ptr<Customer> customer);

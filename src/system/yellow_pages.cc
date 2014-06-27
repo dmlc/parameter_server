@@ -16,4 +16,8 @@ shared_ptr<Customer> YellowPages::customer(const string& name) {
   return it->second;
 }
 
+YellowPages::~YellowPages() {
+  for (auto& it : customers_) it.second->stop();
+}
+
 } // namespace PS

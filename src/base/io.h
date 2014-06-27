@@ -46,7 +46,7 @@ string removeExtension(const string& file) {
 
 DataConfig searchFiles(const DataConfig& config) {
   int n = config.files_size();
-  CHECK_GE(n, 1);
+  CHECK_GE(n, 1) << "empty files: " << config.DebugString();
 
   string dir;
   std::vector<std::regex> patterns;

@@ -71,8 +71,12 @@ int main(int argc, char *argv[]) {
 
   CHECK(!MPI_Init(&argc, &argv));
 
-  PS::Init();
-  PS::Postoffice::instance().run();
+  try {
+    PS::Init();
+    PS::Postoffice::instance().run();
+  } catch (std::exception& e) {
+    LL << e.what();
+  }
 
 
   // LL << "ok";
