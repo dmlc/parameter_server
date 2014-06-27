@@ -25,6 +25,27 @@ void BlockCoordinateL1LR::showProgress(int iter) {
   }
 }
 
+RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
+  RiskMinProgress prog;
+  if (exec_.isWorker()) {
+    prog.set_objv(log(1+1/dual_.array()).sum());
+    prog.add_busy_time(busy_timer_.get());
+  } else {
+    size_t nnz_w = 0;
+    double objv = 0;
+    for (size_t i = 0; i < w_->size(); ++i) {
+      auto w = w_->value()[i];
+      if (w == 0 || w == kInactiveValue_) continue;
+      ++ nnz_w;
+      objv += fabs(w);
+    }
+    prog.set_objv(objv * app_cf_.penalty().coefficient());
+    prog.set_nnz_w(nnz_w);
+    prog.set_violation(violation_);
+    prog.set_nnz_active_set(active_set_.nnz());
+  }
+  return prog;
+}
 
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
 void BlockCoordinateL1LR::run() {
@@ -32,7 +53,7 @@ void BlockCoordinateL1LR::run() {
   auto blocks = LinearBlockIterator::partitionFeatures();
 
   std::vector<int> block_order;
-  for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i++);
+  for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i);
   auto cf = app_cf_.block_iterator();
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
@@ -42,8 +63,7 @@ void BlockCoordinateL1LR::run() {
   int time = wk->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    std::random_shuffle(block_order.begin(), block_order.end());
-
+    // std::random_shuffle(block_order.begin(), block_order.end());
     for (int b : block_order)  {
       Task update;
       update.set_wait_time(time - tau);
@@ -84,14 +104,17 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
   }
 
   active_set_.resize(w_->size(), true);
-  LL << active_set_.nnz();
+
   delta_.resize(w_->size());
   delta_.setValue(app_cf_.block_coord_l1lr().delta_init_value());
 }
 
 void BlockCoordinateL1LR::updateModel(Message* msg) {
   auto time = msg->task.time() * 10;
-  Range<Key> global_range(msg->task.risk().key());
+  auto call = msg->task.risk();
+  if (call.has_kkt_filter_threshold())
+    KKT_filter_threshold_ = call.kkt_filter_threshold();
+  Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
   int num_threads = FLAGS_num_threads;
 
@@ -167,28 +190,32 @@ void BlockCoordinateL1LR::computeGradients(
   CHECK_EQ(U.size(), local_feature_range.size());
   CHECK(!X_->rowMajor());
 
+  const auto& y = y_->value();
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
       X_->colBlock(local_feature_range));
   const auto& offset = X->offset();
-  const auto& index = X->index();
+  // const auto& index = X->index();
   bool binary = X->binary();
 
   // j: column id, i: row id
   for (size_t j = 0; j < offset.size()-1; ++j) {
     size_t k  = j + local_feature_range.begin();
     if (!active_set_.test(k) || offset[j] == offset[j+1]) continue;
-    double g = 0, u = 0, d = delta_[k];
+    double g = 0, u = 0;
+    double d = binary ? exp(delta_[k]) : delta_[k];
     for (size_t o = offset[j]; o < offset[j+1]; ++o) {
-      // auto i = X->index()[o];
-      auto i = index[o];
+      auto i = X->index()[o];
+      // auto i = index[o];
       double tau = 1 / ( 1 + dual_[i] );
       if (binary) {
-        g -= tau;
-        u += std::min(tau*(1-tau)*exp(d), .25);
+        g -= y[i] * tau;
+        // u += std::min(tau*(1-tau)*d, .25);
+        u += tau*(1-tau);
       } else {
         double v = X->value()[o];
-        g -= tau * v;
-        u += std::min(tau*(1-tau)*exp(fabs(d*v)), .25) * v * v;
+        g -= y[i] * tau * v;
+        // u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
+        u += tau*(1-tau) * v * v;;
       }
     }
     G[j] = g;
@@ -214,13 +241,15 @@ void BlockCoordinateL1LR::updateDual(
     size_t k  = j + local_feature_range.begin();
     if (!active_set_.test(k) || offset[j] == offset[j+1]) continue;
     double wd = w_delta[j];
-
+    if (wd == 0) continue;
     for (size_t o = offset[j]; o < offset[j+1]; ++o) {
       auto i = X->index()[o];
       if (!local_example_range.contains(i)) continue;
       dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * X->value()[o]);
     }
   }
+
+  // LL << dual_;
 }
 
 void BlockCoordinateL1LR::updateWeight(
@@ -235,7 +264,7 @@ void BlockCoordinateL1LR::updateWeight(
     size_t k = i + local_feature_range.begin();
     double g = G[i], u = U[i] / eta + 1e-10;
     double g_pos = g + lambda, g_neg = g - lambda;
-    double w = w_->value()[k];
+    double& w = w_->value()[k];
     double d = - w, vio = 0;
 
     if (w == 0) {
@@ -244,9 +273,9 @@ void BlockCoordinateL1LR::updateWeight(
       } else if (g_neg > 0) {
         vio = g_neg;
       } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
-        active_set_.clear(k);
-        w_->value()[k] = kInactiveValue_;
-        continue;
+        // active_set_.clear(k);
+        // w = kInactiveValue_;
+        // continue;
       }
     }
     violation_ = std::max(violation_, vio);
@@ -259,11 +288,15 @@ void BlockCoordinateL1LR::updateWeight(
 
     d = std::min(delta_[k], std::max(-delta_[k], d));
 
-    w_->value()[k] += d;
+    w += d;
     delta_[k] = std::min(
         app_cf_.block_coord_l1lr().delta_max_value(), 2 * fabs(d) + .1);
   }
 
+  // LL << G;
+  // LL << U;
+  // LL << w_->value();
+  // LL << delta_;
 }
 
 

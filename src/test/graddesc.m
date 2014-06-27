@@ -9,10 +9,11 @@ grad = @(y,x,w) x'*(-y./(1+exp(y.*(x*w))));
 
 hessian = @(y,x,w) (x.^2)'*(exp(y.*(x*w))./(1+exp(y.*(x*w))).^2);
 
+
 objv = @(y,x,w) sum(log(1+exp(-y.*(x*w))));
 pred = @(x,w) 1./(1+exp((x*w)));
 
-max_iter = 5;
+max_iter = 1;
 eta = 1;
 
 w = zeros(size(X,2), 1);

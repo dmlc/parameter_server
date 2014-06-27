@@ -21,14 +21,7 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
 
   void updateWeight(SizeR local_feature_range, const SArray<double>& G, const SArray<double>& U);
 
-  RiskMinProgress evaluateProgress() {
-    auto prog = LinearBlockIterator::evaluateProgress();
-    if (exec_.isServer()) {
-      prog.set_violation(violation_);
-      prog.set_nnz_active_set(active_set_.nnz());
-    }
-    return prog;
-  }
+  RiskMinProgress evaluateProgress();
 
   void showProgress(int iter);
   void showKKTFilter(int iter);

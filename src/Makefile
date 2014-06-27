@@ -1,7 +1,7 @@
 CC = g++
 #CC = clang
-#MPICC = mpic++
-MPICC = ../third_party/bin/mpic++
+MPICC = mpic++
+# MPICC = ../third_party/bin/mpic++
 
 OPT = -O3 -ggdb
 # OPT = -O0 -ggdb
@@ -28,8 +28,8 @@ endif
 
 # $(LIB)/libps.a  -L${THIRD_PARTY_LIBRARY}
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
--lmpi -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lstdc++
-
+-lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lstdc++
+# -lmpi
 GTEST =  -lgtest_main -lgtest
 
 PROTOS= $(wildcard proto/*.proto)

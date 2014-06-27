@@ -36,7 +36,7 @@ void LinearBlockIterator::run() {
 
   FeatureBlocks blocks = partitionFeatures();
   std::vector<int> block_order;
-  for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i++);
+  for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i);
   auto cf = app_cf_.block_iterator();
 
   // iterating
@@ -186,6 +186,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
         arg.set_learning_rate(app_cf_.learner().learning_rate());
 
         learner_->update(aggregated_gradient, arg, w_->segment(local_range));
+
       });
   }
 
