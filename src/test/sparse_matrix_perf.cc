@@ -77,6 +77,7 @@ TEST_F(SparseMatrixPerf, AlterStorage) {
 }
 
 TEST_F(SparseMatrixPerf, Localize) {
+  return;
   SArray<Key> key;
   Vec w, res, key_sum;
   Key sum;
