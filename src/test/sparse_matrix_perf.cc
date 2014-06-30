@@ -3,13 +3,15 @@
 
 using namespace PS;
 
+typedef SparseMatrix<int32, double> SM;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vec;
 
 
 class SparseMatrixPerf : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    X = readMatrixFromBin<double>("/home/muli/work/data/bin/ctr4mpv1");
+    X = readMatrixFromBin<double>("../../data/bin/ctr4mpv1");
+    // X = readMatrixFromBin<double>("../data/bin/rcv1_X");
     time.resize(num_threads+1);
   }
   MatrixPtr<double> X;
@@ -75,16 +77,17 @@ TEST_F(SparseMatrixPerf, AlterStorage) {
 }
 
 TEST_F(SparseMatrixPerf, Localize) {
-
   SArray<Key> key;
   Vec w, res, key_sum;
   Key sum;
   // warm up
   {
+    Timer t; t.start();
     auto Y = X->localize(&key);
     w = Vec::Random(Y->cols());
     res = *Y * w;
     sum = key.vec().sum();
+    LL << "single thread: " << t.get();
   }
 
   for (int i = 1; i <= num_threads; ++i) {
@@ -93,6 +96,38 @@ TEST_F(SparseMatrixPerf, Localize) {
     {
       ScopedTimer t(time.data() + i);
       Y = X->localize(&key);
+    }
+    FLAGS_num_threads = 4;
+    EXPECT_LE( (*Y * w - res).norm(), 1e-6);
+    EXPECT_EQ(sum, key.vec().sum());
+    if (i > 1) {
+      std::cerr << i << " threads, speedup of localize "
+                << time[1] / time[i]<< std::endl;
+    }
+  }
+}
+
+TEST_F(SparseMatrixPerf, LocalizeBigKey) {
+
+  SArray<Key> key;
+  Vec w, res, key_sum;
+  Key sum;
+  // warm up
+  {
+    Timer t; t.start();
+    auto Y = std::static_pointer_cast<SM>(X)->localizeBigKey(&key);
+    w = Vec::Random(Y->cols());
+    res = *Y * w;
+    sum = key.vec().sum();
+    LL << "single thread: " << t.get();
+  }
+
+  for (int i = 1; i <= num_threads; ++i) {
+    FLAGS_num_threads = i;
+    MatrixPtr<double> Y;
+    {
+      ScopedTimer t(time.data() + i);
+      Y = std::static_pointer_cast<SM>(X)->localizeBigKey(&key);
     }
     FLAGS_num_threads = 4;
     EXPECT_LE( (*Y * w - res).norm(), 1e-6);

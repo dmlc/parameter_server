@@ -311,24 +311,32 @@ template<typename I, typename V>
 MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
   int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
 
+  Timer t1;
+  t1.start();
   auto range = rowMajor() ? Range<I>(info_.col()) : Range<I>(info_.row());
 
-  std::vector<std::map<I, uint32>> map(num_threads); // global to local map
+  // std::vector<std::map<I, uint32>> map(num_threads); // global to local map
+  std::vector<std::unordered_set<I>> uniq_keys(num_threads);
   // find unique keys
   {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
       auto thread_range = range.evenDivide(num_threads, i);
-      pool.Add([this, i, thread_range, &map](){
-          auto& m = map[i];
-          for (I k : index_) if (thread_range.contains(k)) m[k] = -1;
+      pool.Add([this, i, thread_range, &uniq_keys](){
+          auto& uk = uniq_keys[i];
+          for (I k : index_) if (thread_range.contains(k)) uk.insert(k);
         });
     }
     pool.StartWorkers();
   }
+  LL << t1.get();
+
+  Timer t2;
+  t2.start();
 
   std::vector<I> nnz(num_threads+1);
-  nnz[0] = 0; for (int i = 0; i < num_threads; ++i) nnz[i+1] += nnz[i] + map[i].size();
+  nnz[0] = 0;
+  for (int i = 0; i < num_threads; ++i) nnz[i+1] += nnz[i] + uniq_keys[i].size();
 
   key_map->resize(nnz[num_threads]);
   SArray<uint32> new_index (index_.size());
@@ -336,23 +344,33 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
       auto thread_range = range.evenDivide(num_threads, i);
-      pool.Add([this, i, thread_range, key_map, &nnz, &map, &new_index]() {
+      pool.Add([this, i, thread_range, key_map, &nnz, &uniq_keys, &new_index]() {
+          // order the unique global keys
+          auto& uk = uniq_keys[i];
+          std::vector<I> ordered_keys(uk.size());
+          size_t j = 0;
+          for (auto it = uk.begin(); it != uk.end(); ++it) ordered_keys[j++] = *it;
+          std::sort(ordered_keys.begin(), ordered_keys.end());
+
           // construct the key map
           uint32 local_key = nnz[i];
-          auto& m = map[i];
-          for (auto& it : m) {
-            it.second = local_key;
-            (*key_map)[local_key++] = static_cast<Key>(it.first);
+          std::unordered_map<I, uint32> map;
+          for (uint32 i = 0; i < ordered_keys.size(); ++i) {
+            auto key = ordered_keys[i];
+            map[key] = local_key;
+            (*key_map)[local_key++] = static_cast<Key>(key);
           }
+
           // remap index
           for (size_t j = 0; j < index_.size(); ++j) {
             I k = index_[j];
-            if (thread_range.contains(k)) new_index[j] = m[k];
+            if (thread_range.contains(k)) new_index[j] = map[k];
           }
         });
     }
     pool.StartWorkers();
   }
+  LL << t2.get();
 
   auto info = info_;
   SizeR local(0, key_map->size());

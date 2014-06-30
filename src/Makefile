@@ -64,8 +64,8 @@ TESTS = \
 	sparse_matrix_test \
 	io_test \
 	bitmap_test \
-	# sparse_matrix_perf \
-	double_test \
+	sparse_matrix_perf \
+	# double_test \
 	# aggregated_gradient_test \
 	# grad_desc_test \
 	# strtonum_test
