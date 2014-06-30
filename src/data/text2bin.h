@@ -30,6 +30,9 @@ namespace PS {
 // label feature_id:weight feature_id:weight feature_id:weight ...
 //
 // vw: TODO
+//
+// adfea:
+// line_id 1 click fea_id:group_id fea_id:group_id ...
 
 class Text2Bin {
  public:
@@ -39,6 +42,7 @@ class Text2Bin {
 
   void processPServer(char *line);
   void processLibSvm(char *line);
+  void processAdFea(char *line);
 
   // TODO
   void processVW(char *line) { }
@@ -46,6 +50,8 @@ class Text2Bin {
   bool pserver() { return text_format_ == "pserver"; }
   bool libsvm() { return text_format_ == "libsvm"; }
   bool vw() { return text_format_ == "vw"; }
+  bool adfea() { return text_format_ == "adfea"; }
+
 
   size_t num_lines_written() { return num_line_written_; }
   size_t num_lines_skipped() { return num_line_processed_ - num_line_written_; }

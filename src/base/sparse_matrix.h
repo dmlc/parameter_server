@@ -39,7 +39,9 @@ class SparseMatrix : public Matrix<V> {
 
   MatrixPtr<V> alterStorage() const;
 
-  MatrixPtr<V> localize(SArray<uint64>* key_map) const;
+  MatrixPtr<V> localize(SArray<Key>* key_map) const;
+
+  MatrixPtr<V> localizeBigKey(SArray<Key>* key_map) const;
 
   // debug string
   string debugString() const;
@@ -289,6 +291,63 @@ MatrixPtr<V> SparseMatrix<I,V>::localize(SArray<Key>* key_map) const {
           for (size_t j = 0; j < index_.size(); ++j) {
             I k = index_[j];
             if (range.contains(k)) new_index[j] = map[k];
+          }
+        });
+    }
+    pool.StartWorkers();
+  }
+
+  auto info = info_;
+  SizeR local(0, key_map->size());
+  if (rowMajor())
+    local.to(info.mutable_col());
+  else
+    local.to(info.mutable_row());
+
+  return MatrixPtr<V>(new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
+}
+
+template<typename I, typename V>
+MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
+  int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
+
+  auto range = rowMajor() ? Range<I>(info_.col()) : Range<I>(info_.row());
+
+  std::vector<std::map<I, uint32>> map(num_threads); // global to local map
+  // find unique keys
+  {
+    ThreadPool pool(num_threads);
+    for (int i = 0; i < num_threads; ++i) {
+      auto thread_range = range.evenDivide(num_threads, i);
+      pool.Add([this, i, thread_range, &map](){
+          auto& m = map[i];
+          for (I k : index_) if (thread_range.contains(k)) m[k] = -1;
+        });
+    }
+    pool.StartWorkers();
+  }
+
+  std::vector<I> nnz(num_threads+1);
+  nnz[0] = 0; for (int i = 0; i < num_threads; ++i) nnz[i+1] += nnz[i] + map[i].size();
+
+  key_map->resize(nnz[num_threads]);
+  SArray<uint32> new_index (index_.size());
+  {
+    ThreadPool pool(num_threads);
+    for (int i = 0; i < num_threads; ++i) {
+      auto thread_range = range.evenDivide(num_threads, i);
+      pool.Add([this, i, thread_range, key_map, &nnz, &map, &new_index]() {
+          // construct the key map
+          uint32 local_key = nnz[i];
+          auto& m = map[i];
+          for (auto& it : m) {
+            it.second = local_key;
+            (*key_map)[local_key++] = static_cast<Key>(it.first);
+          }
+          // remap index
+          for (size_t j = 0; j < index_.size(); ++j) {
+            I k = index_[j];
+            if (thread_range.contains(k)) new_index[j] = m[k];
           }
         });
     }

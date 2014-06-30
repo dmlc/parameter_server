@@ -61,7 +61,7 @@ DEPS = $(SRCS:.cc=.d)
 
 TESTS = \
 	auc_test \
-	# sparse_matrix_test \
+	sparse_matrix_test \
 	io_test \
 	bitmap_test \
 	# sparse_matrix_perf \

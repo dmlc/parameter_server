@@ -25,21 +25,24 @@ void Text2Bin::init() {
   std::transform(text_format_.begin(), text_format_.end(),
                  text_format_.begin(), ::tolower);
 
+  if (adfea()) {
+    info_.mutable_all_group()->set_feature_type(FeatureGroupInfo::SPARSE_BINARY);
+    info_.set_label_type(InstanceInfo::BINARY);
+  } else if (libsvm()) {
+    info_.mutable_all_group()->set_feature_type(FeatureGroupInfo::SPARSE);
+    // TODO parse label...
+  }
 }
 
 void Text2Bin::finalize() {
   if (!file_header_.empty()) {
     if (pserver()) {
       for (auto& l : file_header_) num_line_written_ += parsePServerInstance(l);
-    } else {
-      // TODO
-      CHECK(false);
     }
     file_header_.clear();
   }
 
   writeInfo();
-
 }
 
 void Text2Bin::writeInfo() {
@@ -111,6 +114,39 @@ bool Text2Bin::detectLabel(const string& label_str, float* label) {
 }
 
 void Text2Bin::processLibSvm(char *line) {
+}
+
+void Text2Bin::processAdFea(char *line) {
+  ++ num_line_processed_;
+  Instance instance;
+  std::vector<uint64> feas;
+  char* tk = strtok (line, " :");
+  uint64 fea_id = 0;
+  for (int i = 0; tk != NULL; tk = strtok (NULL, " :"), ++i) {
+    if (i <= 1) continue;
+    uint64 num;
+    if (!strtou64(tk, &num)) return;
+    if (i == 2) {
+      instance.set_label(num);
+    } else if (i % 2 == 1) {
+      fea_id = num;
+    } else {
+      fea_id = (fea_id >> 10) | (num << 54);
+      feas.push_back(fea_id);
+
+      auto& ginfo = group_info_[num];
+      ginfo.set_feature_begin(std::min((uint64)ginfo.feature_begin(), fea_id));
+      ginfo.set_feature_end(std::max((uint64)ginfo.feature_end(), fea_id + 1));
+      ginfo.set_num_entries(ginfo.num_entries() + 1);
+    }
+  }
+
+  std::sort(feas.begin(), feas.end());
+  for (auto& f : feas) instance.add_feature_id(f);
+
+  CHECK(record_writer_->WriteProtocolMessage(instance));
+
+  ++ num_line_written_;
 }
 
 bool Text2Bin::parsePServerInstance(const string& line) {
@@ -269,6 +305,8 @@ int main(int argc, char *argv[]) {
     reader.set_line_callback([&convertor] (char *line) { convertor.processLibSvm(line); });
   else if (convertor.vw())
     reader.set_line_callback([&convertor] (char *line) { convertor.processVW(line); });
+  else if (convertor.adfea())
+    reader.set_line_callback([&convertor] (char *line) { convertor.processAdFea(line); });
   else
     CHECK(false) << "unknow text format " << FLAGS_text_format;
 
