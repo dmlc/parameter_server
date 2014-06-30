@@ -1,6 +1,7 @@
 #pragma once
 #include "app/app.h"
 #include "base/matrix.h"
+#include "base/auc.h"
 
 namespace PS {
 
@@ -40,6 +41,7 @@ class RiskMinimization : public App {
 
   Range<Key> global_training_feature_range_ = Range<Key>(-1, 0);
 
+  AUC training_auc_;
 };
 
   // local training data, format:

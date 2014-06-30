@@ -13,8 +13,8 @@ hessian = @(y,x,w) (x.^2)'*(exp(y.*(x*w))./(1+exp(y.*(x*w))).^2);
 objv = @(y,x,w) sum(log(1+exp(-y.*(x*w))));
 pred = @(x,w) 1./(1+exp((x*w)));
 
-max_iter = 1;
-eta = 1;
+max_iter = 20;
+eta = .8;
 
 w = zeros(size(X,2), 1);
 % w = rand(p,1);
@@ -34,7 +34,7 @@ for s = 1 : max_iter
   % [sum(grad(y1,x1,w)), sum(grad(y2,x2,w))]
   % [nm(x1, w), nm(x2, w)]
   g = grad(Y, X, w);
-  sum(abs(g))
+  % sum(abs(g));
   % g(1:10)'
   % w(1:10)'
   h = hessian(Y,X,w);

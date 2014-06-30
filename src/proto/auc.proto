@@ -1,0 +1,9 @@
+package PS;
+
+message AUCData {
+  repeated int64 tp_key = 1;
+  repeated uint64 tp_count = 2;
+
+  repeated int64 fp_key = 3;
+  repeated uint64 fp_count = 4;
+}

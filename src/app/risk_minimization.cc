@@ -47,6 +47,7 @@ void RiskMinimization::mergeProgress(int iter) {
   p.set_relative_objv(iter==0 ? 1 : global_progress_[iter-1].objv()/p.objv() - 1);
   p.set_violation(std::max(p.violation(), recv.violation()));
   p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
+  if (recv.has_training_auc_data()) training_auc_.merge(recv.training_auc_data());
 }
 
 void RiskMinimization::showTime(int iter) {
@@ -76,14 +77,19 @@ void RiskMinimization::showTime(int iter) {
 
 void RiskMinimization::showObjective(int iter) {
   if (iter == -3) {
-    fprintf(stderr, "     |       convergence      ");
+    fprintf(stderr, "     |           training             ");
   } else if (iter == -2) {
-    fprintf(stderr, "iter |  objective    relative ");
+    fprintf(stderr, "iter |  objective    relative    auc  ");
   } else if (iter == -1) {
-    fprintf(stderr, " ----+------------------------");
+    fprintf(stderr, " ----+--------------------------------");
   } else {
     auto prog = global_progress_[iter];
-    fprintf(stderr, "%4d | %.5e  %.3e ", iter, prog.objv(), prog.relative_objv());
+    if (!prog.has_training_auc()) {
+      prog.set_training_auc(training_auc_.evaluate());
+      training_auc_.clear();
+    }
+    fprintf(stderr, "%4d | %.5e  %.3e  %.4f ",
+            iter, prog.objv(), prog.relative_objv(), prog.training_auc());
   }
 }
 

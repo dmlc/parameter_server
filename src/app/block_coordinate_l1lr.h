@@ -2,6 +2,7 @@
 #include <float.h>
 #include "app/linear_block_iterator.h"
 #include "base/bitmap.h"
+
 namespace PS {
 
 // optimizated for sparse logisitic regression
@@ -33,7 +34,6 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
   double violation_;
 
   BlockCoordL1LRConfig l1lr_cf_;
-
 };
 
 } // namespace PS

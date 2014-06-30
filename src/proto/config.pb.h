@@ -702,6 +702,13 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double kkt_filter_threshold_ratio() const;
   inline void set_kkt_filter_threshold_ratio(double value);
 
+  // optional int64 auc_goodness = 12 [default = 1000];
+  inline bool has_auc_goodness() const;
+  inline void clear_auc_goodness();
+  static const int kAucGoodnessFieldNumber = 12;
+  inline ::google::protobuf::int64 auc_goodness() const;
+  inline void set_auc_goodness(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:PS.BlockCoordL1LRConfig)
  private:
   inline void set_has_delta_init_value();
@@ -712,16 +719,19 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline void clear_has_enable_multi_thread();
   inline void set_has_kkt_filter_threshold_ratio();
   inline void clear_has_kkt_filter_threshold_ratio();
+  inline void set_has_auc_goodness();
+  inline void clear_has_auc_goodness();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   double delta_init_value_;
   double delta_max_value_;
   double kkt_filter_threshold_ratio_;
+  ::google::protobuf::int64 auc_goodness_;
   bool enable_multi_thread_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1859,6 +1869,28 @@ inline double BlockCoordL1LRConfig::kkt_filter_threshold_ratio() const {
 inline void BlockCoordL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
   set_has_kkt_filter_threshold_ratio();
   kkt_filter_threshold_ratio_ = value;
+}
+
+// optional int64 auc_goodness = 12 [default = 1000];
+inline bool BlockCoordL1LRConfig::has_auc_goodness() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_auc_goodness() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void BlockCoordL1LRConfig::clear_has_auc_goodness() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void BlockCoordL1LRConfig::clear_auc_goodness() {
+  auc_goodness_ = GOOGLE_LONGLONG(1000);
+  clear_has_auc_goodness();
+}
+inline ::google::protobuf::int64 BlockCoordL1LRConfig::auc_goodness() const {
+  return auc_goodness_;
+}
+inline void BlockCoordL1LRConfig::set_auc_goodness(::google::protobuf::int64 value) {
+  set_has_auc_goodness();
+  auc_goodness_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -60,6 +60,7 @@ DEPS = $(SRCS:.cc=.d)
 
 
 TESTS = \
+	auc_test \
 	# sparse_matrix_test \
 	io_test \
 	bitmap_test \
@@ -83,7 +84,7 @@ dir:
 	mkdir -p $(LIB)
 	mkdir -p $(BIN)
 clean:
-	rm -rf */*.o */*.d $(BIN) $(LIB)
+	rm -rf */*.o */*.d proto/*.cc $(BIN) $(LIB)
 
 %.o: %.cc %.h
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -38,6 +38,7 @@ class SparseMatrix : public Matrix<V> {
   MatrixPtr<V> rowBlock(SizeR range) const;
 
   MatrixPtr<V> alterStorage() const;
+
   MatrixPtr<V> localize(SArray<uint64>* key_map) const;
 
   // debug string

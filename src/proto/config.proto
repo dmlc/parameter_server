@@ -72,6 +72,7 @@ message BlockCoordL1LRConfig {
   // kkt filter.
   optional double kkt_filter_threshold_ratio = 10 [default = 10];
 
+  optional int64 auc_goodness = 12 [default = 1000];
 }
 
 message LossConfig {

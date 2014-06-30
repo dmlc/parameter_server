@@ -1,5 +1,6 @@
 package PS;
 import "proto/range.proto";
+import "proto/auc.proto";
 
 message RiskMinProgress {
   optional double objv = 1;
@@ -7,6 +8,8 @@ message RiskMinProgress {
   optional uint64 nnz_w = 5;
   optional double violation = 6;
   optional uint64 nnz_active_set = 7;
+  optional double training_auc = 8;
+  optional AUCData training_auc_data = 9;
 
   // performance
   optional double total_time = 10;

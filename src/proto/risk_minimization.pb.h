@@ -26,6 +26,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
+#include "proto/auc.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -150,6 +151,22 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 nnz_active_set() const;
   inline void set_nnz_active_set(::google::protobuf::uint64 value);
 
+  // optional double training_auc = 8;
+  inline bool has_training_auc() const;
+  inline void clear_training_auc();
+  static const int kTrainingAucFieldNumber = 8;
+  inline double training_auc() const;
+  inline void set_training_auc(double value);
+
+  // optional .PS.AUCData training_auc_data = 9;
+  inline bool has_training_auc_data() const;
+  inline void clear_training_auc_data();
+  static const int kTrainingAucDataFieldNumber = 9;
+  inline const ::PS::AUCData& training_auc_data() const;
+  inline ::PS::AUCData* mutable_training_auc_data();
+  inline ::PS::AUCData* release_training_auc_data();
+  inline void set_allocated_training_auc_data(::PS::AUCData* training_auc_data);
+
   // optional double total_time = 10;
   inline bool has_total_time() const;
   inline void clear_total_time();
@@ -181,6 +198,10 @@ class RiskMinProgress : public ::google::protobuf::Message {
   inline void clear_has_violation();
   inline void set_has_nnz_active_set();
   inline void clear_has_nnz_active_set();
+  inline void set_has_training_auc();
+  inline void clear_has_training_auc();
+  inline void set_has_training_auc_data();
+  inline void clear_has_training_auc_data();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
@@ -191,11 +212,13 @@ class RiskMinProgress : public ::google::protobuf::Message {
   ::google::protobuf::uint64 nnz_w_;
   double violation_;
   ::google::protobuf::uint64 nnz_active_set_;
+  double training_auc_;
+  ::PS::AUCData* training_auc_data_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -471,15 +494,75 @@ inline void RiskMinProgress::set_nnz_active_set(::google::protobuf::uint64 value
   nnz_active_set_ = value;
 }
 
-// optional double total_time = 10;
-inline bool RiskMinProgress::has_total_time() const {
+// optional double training_auc = 8;
+inline bool RiskMinProgress::has_training_auc() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void RiskMinProgress::set_has_total_time() {
+inline void RiskMinProgress::set_has_training_auc() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void RiskMinProgress::clear_has_total_time() {
+inline void RiskMinProgress::clear_has_training_auc() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void RiskMinProgress::clear_training_auc() {
+  training_auc_ = 0;
+  clear_has_training_auc();
+}
+inline double RiskMinProgress::training_auc() const {
+  return training_auc_;
+}
+inline void RiskMinProgress::set_training_auc(double value) {
+  set_has_training_auc();
+  training_auc_ = value;
+}
+
+// optional .PS.AUCData training_auc_data = 9;
+inline bool RiskMinProgress::has_training_auc_data() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void RiskMinProgress::set_has_training_auc_data() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void RiskMinProgress::clear_has_training_auc_data() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void RiskMinProgress::clear_training_auc_data() {
+  if (training_auc_data_ != NULL) training_auc_data_->::PS::AUCData::Clear();
+  clear_has_training_auc_data();
+}
+inline const ::PS::AUCData& RiskMinProgress::training_auc_data() const {
+  return training_auc_data_ != NULL ? *training_auc_data_ : *default_instance_->training_auc_data_;
+}
+inline ::PS::AUCData* RiskMinProgress::mutable_training_auc_data() {
+  set_has_training_auc_data();
+  if (training_auc_data_ == NULL) training_auc_data_ = new ::PS::AUCData;
+  return training_auc_data_;
+}
+inline ::PS::AUCData* RiskMinProgress::release_training_auc_data() {
+  clear_has_training_auc_data();
+  ::PS::AUCData* temp = training_auc_data_;
+  training_auc_data_ = NULL;
+  return temp;
+}
+inline void RiskMinProgress::set_allocated_training_auc_data(::PS::AUCData* training_auc_data) {
+  delete training_auc_data_;
+  training_auc_data_ = training_auc_data;
+  if (training_auc_data) {
+    set_has_training_auc_data();
+  } else {
+    clear_has_training_auc_data();
+  }
+}
+
+// optional double total_time = 10;
+inline bool RiskMinProgress::has_total_time() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void RiskMinProgress::set_has_total_time() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void RiskMinProgress::clear_has_total_time() {
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void RiskMinProgress::clear_total_time() {
   total_time_ = 0;

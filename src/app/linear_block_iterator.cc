@@ -53,7 +53,7 @@ void LinearBlockIterator::run() {
       update.set_wait_time(time - tau);
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       blocks[b].second.to(cmd->mutable_key());
-      cmd->set_feature_group_id(blocks[b].first);
+      // cmd->set_feature_group_id(blocks[b].first);
       time = wk->submit(update);
     }
 
@@ -183,6 +183,7 @@ void LinearBlockIterator::updateModel(Message* msg) {
           CHECK_EQ(local_range, d.first);
           aggregated_gradient.push_back(d.second);
         }
+
         AggGradLearnerArg arg;
         arg.set_learning_rate(app_cf_.learner().learning_rate());
 

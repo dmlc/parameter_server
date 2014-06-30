@@ -76,6 +76,8 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
 
   delta_.resize(w_->size());
   delta_.setValue(l1lr_cf_.delta_init_value());
+
+  training_auc_.setGoodness(l1lr_cf_.auc_goodness());
 }
 
 void BlockCoordinateL1LR::updateModel(Message* msg) {
@@ -333,6 +335,10 @@ RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
   if (exec_.isWorker()) {
     prog.set_objv(log(1+1/dual_.array()).sum());
     prog.add_busy_time(busy_timer_.get());
+    SArray<double> predict(dual_.size());
+    // = X * w
+    predict.array() = y_->value().array() * log(dual_.array());
+    training_auc_.compute(y_->value(), predict, prog.mutable_training_auc_data());
   } else {
     size_t nnz_w = 0;
     double objv = 0;
