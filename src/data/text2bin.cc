@@ -1,6 +1,7 @@
 #include "data/text2bin.h"
 #include "util/resource_usage.h"
 #include "base/matrix_io.h"
+#include <bitset>
 
 // TODO if input is emtpy, use std::in
 DEFINE_string(input, "../data/ps.txt", "input file name");
@@ -131,7 +132,10 @@ void Text2Bin::processAdFea(char *line) {
     } else if (i % 2 == 1) {
       fea_id = num;
     } else {
-      fea_id = (fea_id >> 10) | (num << 54);
+      uint64 group_id = (num << 62) | ((num & 0x3C) << 56) | ((num & 0x3C0) << 48);
+      // uint64 group_id = num << 54;
+      fea_id = (fea_id >> 10) | group_id;
+
       feas.push_back(fea_id);
 
       auto& ginfo = group_info_[num];

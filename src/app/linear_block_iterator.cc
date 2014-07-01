@@ -86,11 +86,14 @@ void LinearBlockIterator::prepareData(const Message& msg) {
     // LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training());
     CHECK_EQ(training_data.size(), 2);
+    LL << myNodeID() << " load training data";
     y_ = training_data[0];
     X_ = training_data[1]->localize(&(w_->key()));
+    LL << myNodeID() << " convert global fea_id into local ones";
     CHECK_EQ(y_->rows(), X_->rows());
     if (app_cf_.block_iterator().feature_block_ratio() > 0) {
       X_ = X_->toColMajor();
+      LL << myNodeID() << " to col major";
     }
     // sync keys and fetch initial value of w_
     SArrayList<double> empty;
@@ -103,14 +106,15 @@ void LinearBlockIterator::prepareData(const Message& msg) {
         promise.set_value();
       });
     promise.get_future().wait();
+    LL << myNodeID() << " received w";
     dual_.resize(X_->rows());
     dual_.vec() = *X_ * w_->vec();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
+        LL << myNodeID() << " received keys";
         // init w by 0
         w_->value().resize(w_->key().size());
         w_->value().setZero();
-        // LL << "init w " << w_->value().size();
       });
   }
 }

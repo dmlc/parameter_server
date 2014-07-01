@@ -315,36 +315,42 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
 template<typename I, typename V>
 MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
   int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
+  // use a large constant, e.g. 6, here. because dense_hash_set/map may have
+  // serious performace issues after inserting too many keys
+  int npart = num_threads * 6;
+  // int npart = 20;
 
   auto range = rowMajor() ? Range<I>(info_.col()) : Range<I>(info_.row());
 
-  // std::vector<std::unordered_set<I>> uniq_keys(num_threads);
-  std::vector<google::dense_hash_set<I>> uniq_keys(num_threads);
+  // std::vector<std::unordered_set<I>> uniq_keys(npart);
+  std::vector<google::dense_hash_set<I>> uniq_keys(npart);
 
   // find unique keys
   {
     ThreadPool pool(num_threads);
-    for (int i = 0; i < num_threads; ++i) {
-      auto thread_range = range.evenDivide(num_threads, i);
+    for (int i = 0; i < npart; ++i) {
+      auto thread_range = range.evenDivide(npart, i);
       pool.Add([this, i, thread_range, &uniq_keys](){
           auto& uk = uniq_keys[i];
           uk.set_empty_key(-1);
-          for (I k : index_) if (thread_range.contains(k)) uk.insert(k);
+          // size_t n = 0;
+          for (I k : index_) if (thread_range.contains(k)) {uk.insert(k);}
+          // LL << n << " " << thread_range;
         });
     }
     pool.StartWorkers();
   }
 
-  std::vector<I> nnz(num_threads+1);
+  std::vector<I> nnz(npart+1);
   nnz[0] = 0;
-  for (int i = 0; i < num_threads; ++i) nnz[i+1] += nnz[i] + uniq_keys[i].size();
+  for (int i = 0; i < npart; ++i) nnz[i+1] += nnz[i] + uniq_keys[i].size();
 
-  key_map->resize(nnz[num_threads]);
+  key_map->resize(nnz[npart]);
   SArray<uint32> new_index (index_.size());
   {
     ThreadPool pool(num_threads);
-    for (int i = 0; i < num_threads; ++i) {
-      auto thread_range = range.evenDivide(num_threads, i);
+    for (int i = 0; i < npart; ++i) {
+      auto thread_range = range.evenDivide(npart, i);
       pool.Add([this, i, thread_range, key_map, &nnz, &uniq_keys, &new_index]() {
           // order the unique global keys
           auto& uk = uniq_keys[i];
@@ -352,6 +358,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
           size_t j = 0;
           for (auto it = uk.begin(); it != uk.end(); ++it) ordered_keys[j++] = *it;
           std::sort(ordered_keys.begin(), ordered_keys.end());
+          uk.clear();
 
           // construct the key map
           uint32 local_key = nnz[i];

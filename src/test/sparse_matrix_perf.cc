@@ -114,13 +114,16 @@ TEST_F(SparseMatrixPerf, LocalizeBigKey) {
   Vec w, res, key_sum;
   Key sum;
   // warm up
+
+  auto data = readMatricesFromProto<double>(std::vector<std::string>(1,"../data/recordio/adfea/part-02000"));
+  auto Z = std::static_pointer_cast<SparseMatrix<uint64, double> >(data[1]);
   {
     Timer t; t.start();
-    auto Y = std::static_pointer_cast<SM>(X)->localizeBigKey(&key);
+    auto Y = Z->localizeBigKey(&key);
     w = Vec::Random(Y->cols());
     res = *Y * w;
     sum = key.vec().sum();
-    LL << "single thread: " << t.get();
+    LL << FLAGS_num_threads << " threads: " << t.get();
   }
 
   for (int i = 1; i <= num_threads; ++i) {
@@ -128,7 +131,7 @@ TEST_F(SparseMatrixPerf, LocalizeBigKey) {
     MatrixPtr<double> Y;
     {
       ScopedTimer t(time.data() + i);
-      Y = std::static_pointer_cast<SM>(X)->localizeBigKey(&key);
+      Y = Z->localizeBigKey(&key);
     }
     FLAGS_num_threads = 4;
     EXPECT_LE( (*Y * w - res).norm(), 1e-6);
