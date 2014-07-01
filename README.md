@@ -48,6 +48,11 @@ cd src && make -j8
 The `-j` option specifies how many threads are used to
 build the projects, you may change it to a more proper value.
 
+If you want to static link all library, use:                                                                                     
+```                                                                                                                               
+make -j8 args=static                                                                                                              
+```
+
 ## Input Data
 
 The system can read both raw binary data and protobuf data. It
