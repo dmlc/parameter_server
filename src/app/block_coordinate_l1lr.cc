@@ -178,6 +178,7 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
   } else {
     // aggregate local gradients, then update model via soft-shrinkage
     w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
+        if (local_range.empty()) return;
         auto data = w_->received(time);
         CHECK_EQ(data.size(), 2);
         CHECK_EQ(local_range, data[0].first);

@@ -41,9 +41,14 @@ class SparseMatrix : public Matrix<V> {
 
   MatrixPtr<V> alterStorage() const;
 
-  MatrixPtr<V> localize(SArray<Key>* key_map) const;
+  MatrixPtr<V> localize(SArray<Key>* key_map) const {
+    I max_key = rowMajor() ? info_.col().end() : info_.row().end();
+    return (max_key > (I)kuint32max ?
+            localizeBigKey(key_map) : localizeSmallKey(key_map));
+  }
 
   MatrixPtr<V> localizeBigKey(SArray<Key>* key_map) const;
+  MatrixPtr<V> localizeSmallKey(SArray<Key>* key_map) const;
 
   // debug string
   string debugString() const;
@@ -245,14 +250,12 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
 }
 
 template<typename I, typename V>
-MatrixPtr<V> SparseMatrix<I,V>::localize(SArray<Key>* key_map) const {
+MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
   int num_threads = FLAGS_num_threads;
   CHECK_GT(num_threads, 0);
 
   I inner_end = rowMajor() ? info_.col().end() : info_.row().end();
   I bucket = (inner_end-1) / num_threads + 1;
-
-  CHECK_LT(innerSize(), (size_t)kuint32max) << "TODO: use a hash_map implementation";
 
   std::vector<uint32> map(bucket*num_threads); // global to local map
 
