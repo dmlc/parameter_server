@@ -11,7 +11,7 @@ DEFINE_uint64(format_detector, 100,
               "using the first #format_detector lines to detect the format");
 DEFINE_bool(compression, false, "compress each instance" );
 DEFINE_bool(verbose, true, "");
-DEFINE_string(text_format, "pserver", "pserver, libsvm, or vw");
+DEFINE_string(text_format, "pserver", "pserver, libsvm, vw or adfea");
 DEFINE_string(bin_format, "protobuf", "protobuf, or binary");
 
 namespace PS {
@@ -31,7 +31,7 @@ void Text2Bin::init() {
     info_.set_label_type(InstanceInfo::BINARY);
   } else if (libsvm()) {
     info_.mutable_all_group()->set_feature_type(FeatureGroupInfo::SPARSE);
-    // TODO parse label...
+    info_.set_label_type(InstanceInfo::BINARY);
   }
 }
 
@@ -112,9 +112,6 @@ bool Text2Bin::detectLabel(const string& label_str, float* label) {
     }
   }
   return true;
-}
-
-void Text2Bin::processLibSvm(char *line) {
 }
 
 void Text2Bin::processAdFea(char *line) {
@@ -285,6 +282,54 @@ void Text2Bin::processPServer(char *line) {
   ++ num_line_processed_;
 }
 
+void Text2Bin::processLibSvm(char *buff) {
+  ++ num_line_processed_;
+  Instance instance;
+
+  char * pch = strtok (buff, " \t\r\n");
+  int cnt = 0;
+  uint64 idx, last_idx=0;
+  float label, val;
+
+  std::vector<uint64> feas;
+  std::vector<float> vals;
+
+  while (pch != NULL) {
+    if (cnt == 0) {
+      if (!strtofloat(pch, &label)) return;
+      instance.set_label(label);
+      if (floor(label) != label) {
+        info_.set_label_type(InstanceInfo::CONTINUOUS);
+      } else if (label != 1 && label != -1) { 
+        info_.set_label_type(InstanceInfo::MULTICLASS);
+      }
+    } else {
+      char *it;
+      for (it = pch; *it != ':' && *it != 0; it ++);
+      if (*it == 0) return;
+      *it = 0;
+
+      if (!strtou64(pch, &idx)) return;
+      if (!strtofloat(it+1, &val)) return;
+      if (last_idx > idx) return;
+      last_idx = idx;
+
+      auto& ginfo = group_info_[1];
+      ginfo.set_feature_begin(std::min((uint64)ginfo.feature_begin(), idx));
+      ginfo.set_feature_end(std::max((uint64)ginfo.feature_end(), idx + 1));
+      ginfo.set_num_entries(ginfo.num_entries() + 1);
+
+      instance.add_feature_id(idx);
+      instance.add_value(val);
+    }
+    pch = strtok (NULL, " \t\r\n");
+    cnt ++; 
+  }
+
+  CHECK(record_writer_->WriteProtocolMessage(instance));
+  ++ num_line_written_;
+}
+
 } // namespace PS
 
 int main(int argc, char *argv[]) {
@@ -321,9 +366,9 @@ int main(int argc, char *argv[]) {
 
   if (FLAGS_verbose) {
     std::cout << "written " << convertor.num_lines_written() << " instances into " << FLAGS_output
-              << ".recordio, with speed "
-              << convertor.num_lines_written() / t.get()  << " per second, "
-              << " skipped " << convertor.num_lines_skipped() << std::endl;
+      << ".recordio, with speed "
+      << convertor.num_lines_written() / t.get()  << " per second, "
+      << " skipped " << convertor.num_lines_skipped() << std::endl;
   }
   return 0;
 }
