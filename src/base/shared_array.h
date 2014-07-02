@@ -58,10 +58,8 @@ class SArray {
   // current_size entries (without value initialization)
   void resize(size_t n);
 
-  // slice a [start, start+length) segment, zero-copy
-  SArray<V> segment(size_t start, size_t length) const;
   // slice a [range.begin(), range.end()) segment, zero-copy
-  SArray<V> segment(Range<size_t> range) const;
+  SArray<V> segment(const Range<size_t>& range) const;
 
   // assume array values are ordered, return *this \cap other. for example:
   //   SArray<int> a{1,2,3,5,6,7,8}, b{3,4,7,10}, c{3,7};
@@ -72,10 +70,6 @@ class SArray {
   //   SArray<int> a{3,5,8,10}, b{5,9,10,11}, c{3,5,8,9,10,11};
   // then a.setUnion(b) == c
   SArray<V> setUnion(const SArray<V>& other) const;
-
-  // assume array values are ordered. return the position range of the segment
-  // whose entry values are within [lower_bound, upper_bound)
-  SizeR findRange (const V& lower_bound, const V& upper_bound) const;
 
   // assume array values are ordered. return the position range of the segment
   // whose entry values are within [bound.begin(), bound.end())
