@@ -297,7 +297,7 @@ void KVVector<K,V>::setValue(Message* msg) {
       recved_val_[t].push_back(aligned);
     } else {
       CHECK_EQ(aligned.first, recved_val_[t][i].first);
-      recved_val_[t][i].second.plus(aligned.second);
+      recved_val_[t][i].second.array() += aligned.second.array();
     }
   }
 }

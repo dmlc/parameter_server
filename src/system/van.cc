@@ -1,7 +1,7 @@
 #include "system/van.h"
 #include <string.h>
 #include <zmq.h>
-#include "base/shared_array_io.h"
+#include "base/shared_array_inl.h"
 
 namespace PS {
 // #define _DEBUG_VAN_
@@ -196,7 +196,8 @@ Status Van::recv(Message *msg) {
         recv_uncompressed_ += data.size();
       } else {
         // data are not compressed
-        data = SArray<char>(buf, buf+size);
+        // data = SArray<char>(buf, buf+size);
+        data.copyFrom(buf, size);
 
         recv_uncompressed_ += size;
       }
