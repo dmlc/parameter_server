@@ -142,9 +142,9 @@ MatrixPtr<V> readMatrixFromBin(SizeR outer_range, const std::string& file) {
   ReadFileToProtoOrDie(file+".info", &info);
   if (outer_range == SizeR::all()) {
     if (info.row_major())
-      outer_range.from(info.row());
+      outer_range.copyFrom(info.row());
     else
-      outer_range.from(info.col());
+      outer_range.copyFrom(info.col());
   }
   CHECK(!outer_range.empty());
   CHECK_EQ(sizeof(V), info.sizeof_value());
@@ -213,7 +213,7 @@ MatrixPtrList<V> readMatrices(const DataConfig& config) {
   for (int i = 0; i < config.files_size(); ++i) files.push_back(config.files(i));
   if (config.format() == DataConfig::BIN) {
     SizeR outer_range = SizeR::all();
-    if (config.has_range()) outer_range.from(config.range());
+    if (config.has_range()) outer_range.copyFrom(config.range());
     return readMatricesFromBin<V>(outer_range, files);
   } else if (config.format() == DataConfig::PROTO) {
     return readMatricesFromProto<V>(files);

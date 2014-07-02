@@ -1,41 +1,34 @@
 #pragma once
-#include "util/common.h"
 #include "proto/range.pb.h"
+
 namespace PS {
 
 template<class T> class Range;
 typedef Range<size_t> SizeR;
 
-// a range between [start, end)
+// a range between [begin_, end_)
 template<class T>
 class Range {
  public:
-  // static Range Invalid() { return Range(0,0); }
   static Range all() { return Range(0,-1); }
   Range() : begin_(0), end_(0) { }
+
   template<typename V>
   Range(const Range<V>& other) { set(other.begin(), other.end()); }
 
-  // Range(T start, T end) : begin_(start), end_(end) { }
   template<typename V, typename W>
-  Range(V start, W end) :
-      begin_(static_cast<T>(start)), end_(static_cast<T>(end)) { }
+  Range(V begin, W end) { set(begin, end); }
 
-  Range(const PbRange& pb) { from(pb); }
+  Range(const PbRange& pb) { copyFrom(pb); }
 
-  template <typename V> void operator=(const Range<V>& rhs) {
-    set(rhs.begin(), rhs.end());
-  }
+  template <typename V>
+  void operator=(const Range<V>& rhs) { set(rhs.begin(), rhs.end()); }
 
   // construct from a protobuf range
-  void from(const PbRange& pb) { set(pb.begin(), pb.end()); }
+  void copyFrom(const PbRange& pb) { set(pb.begin(), pb.end()); }
+
   // fill a protobuf range
   void to(PbRange* pb) const { pb->set_begin(begin_); pb->set_end(end_); }
-
-  T begin() const { return begin_; }
-  T end() const { return end_; }
-  T& begin() { return begin_; }
-  T& end() { return end_; }
 
   template <typename V, typename W>
   void set(V start, W end) {
@@ -43,15 +36,16 @@ class Range {
     end_ = static_cast<T>(end);
   }
 
-  // return true if *this is contained by v
-  // bool In(const T& v) { return (start_ >= v && v >= end_); }
-  // bool SubsetEq(const Range<T> v) {
-  //   return (begin_ >= v.begin_ && v.end_ >= end_);
-  // }
-  // bool operator<  (const Range& rhs) const;
-  // bool operator<= (const Range& rhs) const;
-  // bool operator>  (const Range& rhs) const;
-  // bool operator>= (const Range& rhs) const;
+  T begin() const { return begin_; }
+  T& begin() { return begin_; }
+  T end() const { return end_; }
+  T& end() { return end_; }
+
+  size_t size() const { return (size_t)(end_ - begin_); }
+
+  bool valid() const { return end_ >= begin_; }
+  bool empty() const { return begin_ >= end_; }
+
   bool operator== (const Range& rhs) const {
     return (begin_ == rhs.begin_ && end_ == rhs.end_);
   }
@@ -74,12 +68,7 @@ class Range {
 
   // divide this range evenly into n ones, and return the i-th
   Range evenDivide(size_t n, size_t i) const;
-  // do even divide if the segment if larger than min_seg, otherwise, all
-  // segment will be zero except the 0-th
-  bool valid() const { return end_ >= begin_; }
-  bool empty() const { return begin_ >= end_; }
 
-  size_t size() const { return (size_t)(end_ - begin_); }
   string toString() const {
     return ("["+std::to_string(begin_)+","+std::to_string(end_)+")");
   }
