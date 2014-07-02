@@ -8,65 +8,80 @@
 
 #include "util/file.h"
 
+// TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
 
-File::File(FILE* const f_des, const std::string& name) : f_(f_des), name_(name) {}
+File* File::open(const std::string& name, const char* const flag) {
+  File* f;
+  if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
+    gzFile des = gzopen(name.data(), flag);
+    if (des == NULL) {
+      LOG(ERROR) << "cannot open " << name;
+      return NULL;
+    }
+    f = new File(NULL, des, name);
+  } else {
+    FILE*  des = fopen(name.data(), flag);
+    if (des == NULL) {
+      LOG(ERROR) << "cannot open " << name;
+      return NULL;
+    }
+    f = new File(des, NULL, name);
+  }
+  return f;
+}
 
-bool File::Delete(const char* const name) { return remove(name) == 0; }
+File* File::openOrDie(const std::string& name, const char* const flag) {
+  File* f = File::open(name, flag);
+  CHECK(f != NULL && f->open());
+  return f;
+}
 
-bool File::Exists(const char* const name) { return access(name, F_OK) == 0; }
-
-size_t File::Size() {
+size_t File::size() {
   struct stat f_stat;
   stat(name_.c_str(), &f_stat);
   return f_stat.st_size;
 }
 
-bool File::Flush() { return fflush(f_) == 0; }
+// bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
 
 bool File::Close() {
-  if (fclose(f_) == 0) {
-    f_ = NULL;
-    return true;
-  } else {
-    return false;
+  if (gz_f_) {
+    if (gzclose(gz_f_) == Z_OK) {
+      gz_f_ = NULL;
+      return true;
+    } else {
+      return false;
+    }
   }
-}
-
-void File::ReadOrDie(void* const buf, size_t size) {
-  CHECK_EQ(fread(buf, 1, size, f_), size);
+  if (f_) {
+    if (fclose(f_) == 0) {
+      f_ = NULL;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return true;
 }
 
 size_t File::Read(void* const buf, size_t size) {
-  return fread(buf, 1, size, f_);
+  return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
 }
 
-void File::WriteOrDie(const void* const buf, size_t size) {
-  CHECK_EQ(fwrite(buf, 1, size, f_), size);
-}
 size_t File::Write(const void* const buf, size_t size) {
-  return fwrite(buf, 1, size, f_);
+  return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
 }
 
-File* File::OpenOrDie(const char* const name, const char* const flag) {
-  FILE* const f_des = fopen(name, flag);
-  CHECK(f_des != NULL);
-  File* const f = new File(f_des, name);
-  return f;
-}
-
-File* File::Open(const char* const name, const char* const flag) {
-  FILE* const f_des = fopen(name, flag);
-  if (f_des == NULL) {
-    LOG(ERROR) << "cannot open " << name;
-    return NULL;
-  }
-  File* const f = new File(f_des, name);
-  return f;
-}
 
 char* File::ReadLine(char* const output, uint64 max_length) {
-  return fgets(output, max_length, f_);
+  return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
+}
+
+bool File::seek(size_t position) {
+  return (is_gz_ ?
+          gzseek(gz_f_, position, SEEK_SET) == position :
+          fseek(f_, position, SEEK_SET) == 0);
 }
 
 int64 File::ReadToString(std::string* const output, uint64 max_length) {
@@ -98,26 +113,22 @@ size_t File::WriteString(const std::string& line) {
   return Write(line.c_str(), line.size());
 }
 
-bool File::WriteLine(const std::string& line) {
-  if (Write(line.c_str(), line.size()) != line.size()) return false;
-  return Write("\n", 1) == 1;
-}
+// bool File::WriteLine(const std::string& line) {
+//   if (Write(line.c_str(), line.size()) != line.size()) return false;
+//   return Write("\n", 1) == 1;
+// }
 
-std::string File::filename() const { return name_; }
-
-bool File::Open() const { return f_ != NULL; }
-
-///////////////////
+/////////////////////////////////////////
 
 bool ReadFileToString(const std::string& file_name, std::string* output) {
-  File* file = File::Open(file_name, "r");
+  File* file = File::open(file_name, "r");
   if (file == NULL) return false;
-  size_t size = file->Size();
-  return (size == file->ReadToString(output, size));
+  size_t size = file->size();
+  return (size <= file->ReadToString(output, size*100));
 }
 
 bool WriteStringToFile(const std::string& data, const std::string& file_name) {
-  File* file = File::Open(file_name, "w");
+  File* file = File::open(file_name, "w");
   if (file == NULL) return false;
   return (file->WriteString(data) == data.size() && file->Close());
 }

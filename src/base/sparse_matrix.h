@@ -10,16 +10,12 @@
 #include "base/shared_array.h"
 #include "base/range.h"
 
-// #include "eigen3/Eigen/src/Core/Ref.h"
-// #include "proto/matrix.pb.h"
-
 namespace PS {
 
 // sparse matrix with Yale format
 template<typename I, typename V>
 class SparseMatrix : public Matrix<V> {
  public:
-  // SparseMatrix() { }
   SparseMatrix(
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
       : Matrix<V>(info, value), offset_(offset), index_(index) { }

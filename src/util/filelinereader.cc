@@ -11,7 +11,7 @@ namespace PS {
 
 void FileLineReader::Reload() {
   const int kMaxLineLength = 60 * 1024;
-  File* const data_file = File::Open(filename_, "r");
+  File* const data_file = File::open(filename_, "r");
   if (data_file == NULL) {
     loaded_successfully_ = false;
     return;

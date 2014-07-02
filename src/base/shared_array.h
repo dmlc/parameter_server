@@ -122,8 +122,8 @@ class SArray {
   void uncompressFrom(const char* src, size_t src_size);
 
   // read values from a binary file
-  bool readFromFile(const string& file_name) {
-    return readFromFile(SizeR::all(), file_name);
+  bool readFromFile(const string& file_name, size_t size) {
+    return readFromFile(SizeR(0, size), file_name);
   }
   // read the segment [range.begin(), range.end()) from the binary file
   bool readFromFile(SizeR range, const string& file_name);

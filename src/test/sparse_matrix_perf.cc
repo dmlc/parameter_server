@@ -87,7 +87,7 @@ TEST_F(SparseMatrixPerf, Localize) {
     auto Y = X->localize(&key);
     w = Vec::Random(Y->cols());
     res = *Y * w;
-    sum = key.vec().sum();
+    sum = key.eigenVector().sum();
     LL << "single thread: " << t.get();
   }
 
@@ -100,7 +100,7 @@ TEST_F(SparseMatrixPerf, Localize) {
     }
     FLAGS_num_threads = 4;
     EXPECT_LE( (*Y * w - res).norm(), 1e-6);
-    EXPECT_EQ(sum, key.vec().sum());
+    EXPECT_EQ(sum, key.eigenVector().sum());
     if (i > 1) {
       std::cerr << i << " threads, speedup of localize "
                 << time[1] / time[i]<< std::endl;
@@ -122,7 +122,7 @@ TEST_F(SparseMatrixPerf, LocalizeBigKey) {
     auto Y = Z->localizeBigKey(&key);
     w = Vec::Random(Y->cols());
     res = *Y * w;
-    sum = key.vec().sum();
+    sum = key.eigenVector().sum();
     LL << FLAGS_num_threads << " threads: " << t.get();
   }
 
@@ -135,7 +135,7 @@ TEST_F(SparseMatrixPerf, LocalizeBigKey) {
     }
     FLAGS_num_threads = 4;
     EXPECT_LE( (*Y * w - res).norm(), 1e-6);
-    EXPECT_EQ(sum, key.vec().sum());
+    EXPECT_EQ(sum, key.eigenVector().sum());
     if (i > 1) {
       std::cerr << i << " threads, speedup of localize "
                 << time[1] / time[i]<< std::endl;

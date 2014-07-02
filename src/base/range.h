@@ -69,7 +69,7 @@ class Range {
   // divide this range evenly into n ones, and return the i-th
   Range evenDivide(size_t n, size_t i) const;
 
-  string toString() const {
+  std::string toString() const {
     return ("["+std::to_string(begin_)+","+std::to_string(end_)+")");
   }
  private:

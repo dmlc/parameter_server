@@ -65,13 +65,13 @@ TESTS = \
 	io_test \
 	bitmap_test \
 	sparse_matrix_perf \
+	shared_array_test \
 	# double_test \
 	# aggregated_gradient_test \
 	# grad_desc_test \
 	# strtonum_test
 	#partition_test
 	# van_test \
-	# shared_array_test \
 	# customer_test \
 	# vectors_test \
         sparse_matrix_multi_thread_perf \

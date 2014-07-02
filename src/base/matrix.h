@@ -8,8 +8,7 @@
 
 namespace PS {
 
-// multi-threaded memory efficient matrix class, but with limited operations
-// supported.
+// multi-threaded memory efficient matrix class
 template<typename V> class Matrix;
 template<typename V> using MatrixPtr = std::shared_ptr<Matrix<V>>;
 template<typename V> using MatrixPtrList = std::vector<MatrixPtr<V>>;
@@ -81,6 +80,7 @@ class Matrix {
   bool empty() const { return (rows() == 0 && cols() == 0); }
 
   SArray<V> value() const { return value_; }
+
   void tranposeInfo() {
     auto info = info_;
     info_.set_row_major(!info.row_major());

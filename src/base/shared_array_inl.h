@@ -125,19 +125,10 @@ void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
 
 template <typename V>
 bool SArray<V>::readFromFile(SizeR range, const string& file_name) {
-  File* file = File::Open(file_name, "r");
-  size_t size = file->Size();
-  if (size % sizeof(V) != 0) {
-    LL << file_name << " size: " << size
-       << " cannot divided by sizeof(V): " << sizeof(V);
-    return false;
-  }
-  if (range == SizeR::all()) range = SizeR(0, size/sizeof(V));
+  File* file = File::open(file_name, "r");
   CHECK(!range.empty());
-  CHECK_LE(range.end()*sizeof(V), size);
-
   resize(range.size());
-  file->seek(range.begin() * sizeof(V));
+  if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
   size_t length = range.size() * sizeof(V);
   return (file->Read(ptr_.get(), length) == length);
 }
@@ -161,7 +152,7 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
   CHECK(!range.empty());
   CHECK_LE(range.end(), size_);
 
-  File* file = File::Open(file_name, "w");
+  File* file = File::open(file_name, "w");
   size_t length = range.size() * sizeof(V);
   return (file->Write(ptr_.get(), length) == length);
 }

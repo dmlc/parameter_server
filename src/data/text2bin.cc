@@ -18,7 +18,7 @@ namespace PS {
 // TODO support binary formart
 void Text2Bin::init() {
   string record_name = FLAGS_output + ".recordio";
-  record_file_ = File::OpenOrDie(record_name, "w");
+  record_file_ = File::openOrDie(record_name, "w");
   record_writer_ = unique_ptr<RecordWriter>(new RecordWriter(record_file_));
   record_writer_->set_use_compression(FLAGS_compression);
 

@@ -6,8 +6,9 @@ using namespace PS;
 class AUCTEST : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    y.readFromFile("../data/true_label");
-    predict_y.readFromFile("../data/predict_label");
+    CHECK(false);
+    // y.readFromFile("../data/true_label");
+    // predict_y.readFromFile("../data/predict_label");
   }
   SArray<double> y, predict_y;
 };

@@ -95,7 +95,7 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
 
   // file data
   for (auto f : files) {
-    File* in = File::OpenOrDie(f+".recordio", "r");
+    File* in = File::openOrDie(f+".recordio", "r");
     RecordReader reader(in);
     Instance record;
     while (reader.ReadProtocolMessage(&record)) {

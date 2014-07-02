@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include "zlib.h"
 #include "util/integral_types.h"
 #include "glog/logging.h"
 
@@ -17,24 +18,18 @@ class File {
  public:
   // Opens file "name" with flags specified by "flag".
   // Flags are defined by fopen(), that is "r", "r+", "w", "w+". "a", and "a+".
-  static File* Open(const char* const name, const char* const flag);
-  static File* Open(const std::string& name, const char* const flag) {
-    return Open(name.c_str(), flag);
-  }
+  static File* open(const std::string& name, const char* const flag);
 
   // Opens file "name" with flags specified by "flag"
   // If open failed, program will exit.
-  static File* OpenOrDie(const char* const name, const char* const flag);
-  static File* OpenOrDie(const std::string& name, const char* const flag) {
-    return OpenOrDie(name.c_str(), flag);
-  }
+  static File* openOrDie(const std::string& name, const char* const flag);
 
   // Reads "size" bytes to buff from file, buff should be pre-allocated.
   size_t Read(void* const buff, size_t size);
 
   // Reads "size" bytes to buff from file, buff should be pre-allocated.
   // If read failed, program will exit.
-  void ReadOrDie(void* const buff, size_t size);
+  // void ReadOrDie(void* const buff, size_t size);
 
   // Reads a line from file to a std::string.
   // Each line must be no more than max_length bytes
@@ -49,57 +44,56 @@ class File {
 
   // Writes "size" bytes of buff to file, buff should be pre-allocated.
   // If write failed, program will exit.
-  void WriteOrDie(const void* const buff, size_t size);
+  // void WriteOrDie(const void* const buff, size_t size);
 
   // Writes a std::string to file.
   size_t WriteString(const std::string& line);
 
-  // Writes a std::string to file and append a "\n".
-  bool WriteLine(const std::string& line);
+  // // Writes a std::string to file and append a "\n".
+  // bool WriteLine(const std::string& line);
 
   // Closes the file.
   bool Close();
 
   // Flushes buffer.
-  bool Flush();
+  // bool Flush();
 
   // Returns file size.
-  size_t Size();
+  size_t size();
 
-  // current file position
-  size_t position() {
-    return (size_t) ftell(f_);
-  }
+  // // current file position
+  // size_t position() {
+  //   return (size_t) ftell(f_);
+  // }
 
   // seek a position, starting from the head
-  bool seek(size_t position) {
-    return (fseek(f_, position, SEEK_SET) == 0);
-  }
+  bool seek(size_t position);
 
   // Returns the file name.
-  std::string filename() const;
+  std::string filename() const { return name_; }
 
   // Deletes a file.
-  static bool Delete(const char* const name);
+  static bool remove(const char* const name) { return remove(name) == 0; }
 
   // Tests if a file exists.
-  static bool Exists(const char* const name);
+  static bool exists(const char* const name) { return access(name, F_OK) == 0; }
 
-  bool Open() const;
-
-  // protobuf
-  bool WriteASCIIProto(const google::protobuf::Message& proto) {
-    std::string proto_string;
-    return google::protobuf::TextFormat::PrintToString(proto, &proto_string) &&
-        (WriteString(proto_string) == proto_string.size());
-  }
+  // check if it is open
+  bool open() const { return (is_gz_ ? gz_f_ != NULL : f_ != NULL); }
 
  private:
-  File(FILE* const descriptor, const std::string& name);
+  File(FILE* f_des, gzFile gz_des, const std::string& name)
+      : f_(f_des), gz_f_(gz_des), name_(name) {
+    is_gz_ = gz_des != NULL;
+  }
 
-  FILE* f_;
+  FILE* f_ = NULL;
+  gzFile gz_f_ = NULL;
+
   const std::string name_;
+  bool is_gz_ = false;
 };
+
 
 bool ReadFileToString(const std::string& file_name, std::string* output);
 bool WriteStringToFile(const std::string& data, const std::string& file_name);
