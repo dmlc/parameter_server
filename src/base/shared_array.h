@@ -103,11 +103,11 @@ class SArray {
 
   // return an Eigen3 vector, zero-copy
   typedef Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1> > EVecMap;
-  EVecMap vec() const { return EVecMap(data(), size()); }
+  EVecMap eigenVector() const { return EVecMap(data(), size()); }
 
   // return an Eigen3 array, zero-copy
   typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, 1> > EArrayMap;
-  EArrayMap array() const { return EArrayMap(data(), size()); }
+  EArrayMap eigenArray() const { return EArrayMap(data(), size()); }
 
   // convert to a dense matrix, zero-copy
   shared_ptr<Matrix<V>> matrix(size_t rows = -1, size_t cols = -1);

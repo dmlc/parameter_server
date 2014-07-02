@@ -194,7 +194,7 @@ class KVVector : public SharedParameter<K,V> {
           it->second.key, recved_key, recved_val.data(), recved_key.range(), &n);
       CHECK_EQ(n, recved_key.size()) << "my key: " << it->second.key
                                      << "\n received key " << recved_key;
-      it->second.value.segment(aligned.first).vec() = aligned.second.vec();
+      it->second.value.segment(aligned.first).eigenVector() = aligned.second.eigenVector();
     }
 
     // LL << myNodeID() << " backup for " << msg->sender << " W: "
@@ -297,7 +297,7 @@ void KVVector<K,V>::setValue(Message* msg) {
       recved_val_[t].push_back(aligned);
     } else {
       CHECK_EQ(aligned.first, recved_val_[t][i].first);
-      recved_val_[t][i].second.array() += aligned.second.array();
+      recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
     }
   }
 }

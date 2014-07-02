@@ -67,7 +67,7 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
   LinearBlockIterator::prepareData(msg);
   if (exec_.isWorker()) {
     // dual_ = exp(y.*(X_*w_))
-    dual_.array() = exp(y_->value().array() * dual_.array());
+    dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
   }
 
   active_set_.resize(w_->size(), true);
@@ -334,11 +334,11 @@ void BlockCoordinateL1LR::showProgress(int iter) {
 RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
   RiskMinProgress prog;
   if (exec_.isWorker()) {
-    prog.set_objv(log(1+1/dual_.array()).sum());
+    prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.get());
     SArray<double> predict(dual_.size());
     // = X * w
-    predict.array() = y_->value().array() * log(dual_.array());
+    predict.eigenArray() = y_->value().eigenArray() * log(dual_.eigenArray());
     training_auc_.compute(y_->value(), predict, prog.mutable_training_auc_data());
   } else {
     size_t nnz_w = 0;

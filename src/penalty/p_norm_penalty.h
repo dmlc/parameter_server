@@ -15,7 +15,7 @@ class PNormPenalty : public Penalty<T> {
   bool smooth() { return p_ > 1; }
 
   T evaluate(const MatrixPtr<T>& model) {
-    auto w = model->value().array();
+    auto w = model->value().eigenArray();
     return lambda_ * pow(w.abs(), p_).sum();
   }
 

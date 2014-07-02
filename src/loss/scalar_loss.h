@@ -32,7 +32,7 @@ class ScalarLoss : public Loss<T> {
     SArray<T> Xw(data[1]->value());
     CHECK_EQ(y.size(), Xw.size());
 
-    return evaluate(y.array(), Xw.array());
+    return evaluate(y.eigenArray(), Xw.eigenArray());
   }
 
   // compute the gradients
@@ -54,7 +54,7 @@ class ScalarLoss : public Loss<T> {
     if (gradient.size() != 0) CHECK_EQ(gradient.size(), X->cols());
     if (diag_hessian.size() != 0) CHECK_EQ(diag_hessian.size(), X->cols());
 
-    compute(y.array(), X, Xw.array(), gradient.array(), diag_hessian.array());
+    compute(y.eigenArray(), X, Xw.eigenArray(), gradient.eigenArray(), diag_hessian.eigenArray());
   }
 
   // convenient wrapper using shared array

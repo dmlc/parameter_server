@@ -108,7 +108,7 @@ void LinearBlockIterator::prepareData(const Message& msg) {
     promise.get_future().wait();
     // LL << myNodeID() << " received w";
     dual_.resize(X_->rows());
-    dual_.vec() = *X_ * w_->vec();
+    dual_.eigenVector() = *X_ * w_->value().eigenVector();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // LL << myNodeID() << " received keys";
@@ -169,9 +169,9 @@ void LinearBlockIterator::updateModel(Message* msg) {
           CHECK_EQ(local_range, data[0].first);
           auto new_w = data[0].second;
 
-          auto delta = new_w.vec() - w_->segment(local_range).vec();
-          dual_.vec() += *X * delta;
-          w_->segment(local_range).vec() = new_w.vec();
+          auto delta = new_w.eigenVector() - w_->segment(local_range).eigenVector();
+          dual_.eigenVector() += *X * delta;
+          w_->segment(local_range).eigenVector() = new_w.eigenVector();
         }
 
         busy_timer_.stop();

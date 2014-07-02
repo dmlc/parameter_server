@@ -20,7 +20,7 @@ class GradientDescent : public AggGradLearner<T> {
               const AggGradLearnerArg& arg,
               SArray<T> weight) {
     CHECK_EQ(gradients[0].size(), weight.size());
-    weight.vec() -= arg.learning_rate() * gradients[0].vec();
+    weight.eigenVector() -= arg.learning_rate() * gradients[0].eigenVector();
   }
 };
 

@@ -59,9 +59,9 @@ TEST(SArray, union) {
 TEST(SArray, range) {
   SArray<int> a{1,1,4,4,5,7,7,8,8,8,20}, b{1,1}, c{4,4,5,7,7,8,8,8}, d{};
 
-  // EXPECT_EQ(a.findRange(1, 4), b);
-  // EXPECT_EQ(a.findRange(2, 15), c);
-  // EXPECT_EQ(a.findRange(0, 100), a);
-  // EXPECT_EQ(a.findRange(100, 0), d);
-  // EXPECT_EQ(a.findRange(4, 4), d);
+  EXPECT_EQ(a.findRange(1, 4), b);
+  EXPECT_EQ(a.findRange(2, 15), c);
+  EXPECT_EQ(a.findRange(0, 100), a);
+  EXPECT_EQ(a.findRange(100, 0), d);
+  EXPECT_EQ(a.findRange(4, 4), d);
 }
