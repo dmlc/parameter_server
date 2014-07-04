@@ -110,11 +110,11 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
           auto range = local_range.evenDivide(npart, i);
           if (range.empty()) continue;
           auto grad_r = range - local_range.begin();
-          pool.Add([this, range, grad_r, &local_grads, i, npart]() {
+          pool.add([this, range, grad_r, &local_grads, i, npart]() {
               computeGradients(range, local_grads[0].segment(grad_r), local_grads[1].segment(grad_r));
             });
         }
-        pool.StartWorkers();
+        pool.startWorkers();
       } else {
         computeGradients(local_range, local_grads[0], local_grads[1]);
       }
@@ -159,11 +159,11 @@ void BlockCoordinateL1LR::updateModel(Message* msg) {
               for (int i = 0; i < npart; ++i) {
                 auto range = example_range.evenDivide(npart, i);
                 if (range.empty()) continue;
-                pool.Add([this, range, local_range,  &delta_w]() {
+                pool.add([this, range, local_range,  &delta_w]() {
                     updateDual(range, local_range, delta_w);
                   });
               }
-              pool.StartWorkers();
+              pool.startWorkers();
             } else {
               updateDual(example_range, local_range, delta_w);
             }

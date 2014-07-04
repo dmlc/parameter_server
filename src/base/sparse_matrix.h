@@ -78,32 +78,32 @@ class SparseMatrix : public Matrix<V> {
     if (rowMajor()) {
       for (size_t i = row_range.begin(); i < row_range.end(); ++i) {
         if (offset_[i] == offset_[i+1]) continue;
-        W val = 0;
+        W y_i = 0;
         if (binary()) {
           for (size_t j = offset_[i]; j < offset_[i+1]; ++j)
-            val += x[index_[j]];
+            y_i += x[index_[j]];
         } else {
           for (size_t j = offset_[i]; j < offset_[i+1]; ++j)
-            val += x[index_[j]] * value_[j];
+            y_i += x[index_[j]] * value_[j];
         }
-        y[i] = val;
+        y[i] = y_i;
       }
     } else {
       memset(y + row_range.begin(), 0, sizeof(W) * row_range.size());
       for (size_t i = 0; i < offset_.size() - 1; ++i) {
         if (offset_[i] == offset_[i+1]) continue;
-        W val = x[i];
+        W w_i = x[i];
         if (binary()) {
           for (size_t j = offset_[i]; j < offset_[i+1]; ++j) {
             auto k = index_[j];
             if (row_range.contains(k))
-              y[k] += val;
+              y[k] += w_i;
           }
         } else {
           for (size_t j = offset_[i]; j < offset_[i+1]; ++j) {
             auto k = index_[j];
             if (row_range.contains(k))
-              y[k] += val * value_[j];
+              y[k] += w_i * value_[j];
           }
         }
       }
@@ -113,19 +113,18 @@ class SparseMatrix : public Matrix<V> {
   // multi-thread,  both x and y are pre-allocated
   template <typename W>
   void templateTimes(const W* x, W* y) const {
-    SizeR range(0, rows());
+    SizeR row_range(0, rows());
     int num_threads = FLAGS_num_threads;
     CHECK_GT(num_threads, 0);
 
     ThreadPool pool(num_threads);
-    int npart = num_threads;
-    if (rowMajor()) npart *= 10;
-    for (int i = 0; i < npart; ++i) {
-      pool.Add([this, x, y, range, npart, i](){
-          rangeTimes(range.evenDivide(npart, i), x, y);
+    int num_tasks = rowMajor() ? num_threads * 10 : num_threads;
+    for (int i = 0; i < num_tasks; ++i) {
+      pool.add([this, x, y, row_range, num_tasks, i](){
+          rangeTimes(row_range.evenDivide(num_tasks, i), x, y);
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
 
  private:
@@ -204,11 +203,11 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
       SizeR range = SizeR(0, inner_n).evenDivide(num_threads, i);
-      pool.Add([this, range, &new_offset](){
+      pool.add([this, range, &new_offset](){
           for (I k : index_) if (range.contains(k)) ++ new_offset[k+1];
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
   for (size_t i = 0; i < inner_n; ++i) {
     new_offset[i+1] += new_offset[i];
@@ -221,7 +220,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
       SizeR range = SizeR(0, inner_n).evenDivide(num_threads, i);
-      pool.Add([this, range, &new_offset, &new_value, &new_index](){
+      pool.add([this, range, &new_offset, &new_value, &new_index](){
           for (size_t i = 0; i < outerSize(); ++i) {
             if (offset_[i] == offset_[i+1]) continue;
             for (size_t j = offset_[i]; j < offset_[i+1]; ++j) {
@@ -233,7 +232,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
           }
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
   for (size_t i = inner_n -1; i > 0; --i)
     new_offset[i] = new_offset[i-1];
@@ -260,7 +259,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
   {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
-      pool.Add([this, i, bucket, &map, &nnz](){
+      pool.add([this, i, bucket, &map, &nnz](){
           Range<I> range(bucket*i, bucket*(i+1));
           for (I k : index_) if (range.contains(k)) map[k] = -1;
           Key z = 0;
@@ -269,7 +268,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
           nnz[i+1] = z;
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
 
   nnz[0] = 0; for (int i = 0; i < num_threads; ++i) nnz[i+1] += nnz[i];
@@ -279,7 +278,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
   {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
-      pool.Add([this, i, bucket, key_map, &nnz, &map, &new_index]() {
+      pool.add([this, i, bucket, key_map, &nnz, &map, &new_index]() {
           // construct the key map
           uint32 local_key = nnz[i];
           Range<I> range(bucket*i, std::min(bucket*(i+1), (I)map.size()));
@@ -295,7 +294,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
           }
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
 
   auto info = info_;
@@ -326,7 +325,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
     ThreadPool pool(num_threads);
     for (int i = 0; i < npart; ++i) {
       auto thread_range = range.evenDivide(npart, i);
-      pool.Add([this, i, thread_range, &uniq_keys](){
+      pool.add([this, i, thread_range, &uniq_keys](){
           auto& uk = uniq_keys[i];
           uk.set_empty_key(-1);
           // size_t n = 0;
@@ -334,7 +333,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
           // LL << n << " " << thread_range;
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
 
   std::vector<I> nnz(npart+1);
@@ -347,7 +346,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
     ThreadPool pool(num_threads);
     for (int i = 0; i < npart; ++i) {
       auto thread_range = range.evenDivide(npart, i);
-      pool.Add([this, i, thread_range, key_map, &nnz, &uniq_keys, &new_index]() {
+      pool.add([this, i, thread_range, key_map, &nnz, &uniq_keys, &new_index]() {
           // order the unique global keys
           auto& uk = uniq_keys[i];
           std::vector<I> ordered_keys(uk.size());
@@ -375,7 +374,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
           }
         });
     }
-    pool.StartWorkers();
+    pool.startWorkers();
   }
 
   auto info = info_;

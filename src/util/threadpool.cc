@@ -10,7 +10,7 @@ ThreadPool::~ThreadPool() {
     cv_.notify_all();
     mu_.unlock();
 
-    StopOnFinalBarrier();
+    stopOnFinalBarrier();
 
     for (int i = 0; i < num_workers_; ++i)
       all_workers_[i].join();
@@ -19,21 +19,21 @@ ThreadPool::~ThreadPool() {
 
 void RunWorker(void* data) {
   ThreadPool* const thread_pool = reinterpret_cast<ThreadPool*>(data);
-  auto task = thread_pool->GetNextTask();
+  auto task = thread_pool->getNextTask();
   while (task) {
     task();
-    task = thread_pool->GetNextTask();
+    task = thread_pool->getNextTask();
   }
-  thread_pool->StopOnFinalBarrier();
+  thread_pool->stopOnFinalBarrier();
 }
 
-void ThreadPool::StartWorkers() {
+void ThreadPool::startWorkers() {
   started_ = true;
   for (int i = 0; i < num_workers_; ++i)
     all_workers_.push_back(std::move(std::thread(&RunWorker, this)));
 }
 
-typename ThreadPool::Task ThreadPool::GetNextTask() {
+typename ThreadPool::Task ThreadPool::getNextTask() {
   std::unique_lock<std::mutex> l(mu_);
   for (;;) {
     if (!tasks_.empty()) {
@@ -50,7 +50,7 @@ typename ThreadPool::Task ThreadPool::GetNextTask() {
   return Task();
 }
 
-void ThreadPool::Add(const Task& task) {
+void ThreadPool::add(const Task& task) {
   std::lock_guard<std::mutex> l(mu_);
   tasks_.push_back(task);
   if (started_) cv_.notify_all();

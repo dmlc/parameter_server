@@ -20,7 +20,7 @@ class SparseMatrixPerf : public ::testing::Test {
 };
 
 TEST_F(SparseMatrixPerf, Times) {
-  return;
+  // return;
   Vec a = Vec::Random(X->cols());
   Vec b = Vec::Random(X->rows());
 
@@ -46,6 +46,8 @@ TEST_F(SparseMatrixPerf, Times) {
     if (i > 1) {
       std::cerr << i << " threads, speedup of times: " << a_time[1] / a_time[i]
                 << ",\ttrans_times: " << b_time[1] / b_time[i] << std::endl;
+    } else {
+      std::cerr << "single threads: times: " << a_time[1] << ", trans_times " << b_time[1]<< std::endl;
     }
   }
 }
@@ -110,6 +112,7 @@ TEST_F(SparseMatrixPerf, Localize) {
 
 TEST_F(SparseMatrixPerf, LocalizeBigKey) {
 
+  return;
   SArray<Key> key;
   Vec w, res, key_sum;
   Key sum;
