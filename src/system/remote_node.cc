@@ -1,7 +1,7 @@
 #include "system/remote_node.h"
 #include "system/customer.h"
 #include "util/crc32c.h"
-
+#include "base/shared_array_inl.h"
 namespace PS {
 
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
