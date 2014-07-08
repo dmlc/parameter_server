@@ -15,16 +15,20 @@ LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
   FeatureBlocks blocks;
   CHECK(app_cf_.has_block_iterator());
   auto cf = app_cf_.block_iterator();
-  for (auto& info : global_training_info_) {
-    CHECK(info.has_nnz_per_row());
-    CHECK(info.has_id());
-    float b = std::round(
-        std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
-    int n = std::max((int)b, 1);
-    for (int i = 0; i < n; ++i) {
-      auto block = Range<Key>(info.col()).evenDivide(n, i);
-      if (block.empty()) continue;
-      blocks.push_back(std::make_pair(info.id(), block));
+  if (cf.feature_block_ratio() <= 0) {
+    blocks.push_back(std::make_pair(-1, global_training_feature_range_));
+  } else {
+    for (auto& info : global_training_info_) {
+      CHECK(info.has_nnz_per_row());
+      CHECK(info.has_id());
+      float b = std::round(
+          std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
+      int n = std::max((int)b, 1);
+      for (int i = 0; i < n; ++i) {
+        auto block = Range<Key>(info.col()).evenDivide(n, i);
+        if (block.empty()) continue;
+        blocks.push_back(std::make_pair(info.id(), block));
+      }
     }
   }
   fprintf(stderr, "features are partitioned into %lu blocks\n", blocks.size());
@@ -65,7 +69,7 @@ void LinearBlockIterator::run() {
     wk->waitOutgoingTask(time);
 
     showProgress(iter);
-    if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
+    if (fabs(global_progress_[iter].relative_objv()) <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;
     }

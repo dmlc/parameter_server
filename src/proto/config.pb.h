@@ -549,7 +549,7 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 example_block_size() const;
   inline void set_example_block_size(::google::protobuf::int64 value);
 
-  // optional float feature_block_ratio = 2 [default = 4];
+  // optional float feature_block_ratio = 2 [default = 0];
   inline bool has_feature_block_ratio() const;
   inline void clear_feature_block_ratio();
   static const int kFeatureBlockRatioFieldNumber = 2;
@@ -1669,7 +1669,7 @@ inline void BlockIteratorConfig::set_example_block_size(::google::protobuf::int6
   example_block_size_ = value;
 }
 
-// optional float feature_block_ratio = 2 [default = 4];
+// optional float feature_block_ratio = 2 [default = 0];
 inline bool BlockIteratorConfig::has_feature_block_ratio() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1680,7 +1680,7 @@ inline void BlockIteratorConfig::clear_has_feature_block_ratio() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void BlockIteratorConfig::clear_feature_block_ratio() {
-  feature_block_ratio_ = 4;
+  feature_block_ratio_ = 0;
   clear_has_feature_block_ratio();
 }
 inline float BlockIteratorConfig::feature_block_ratio() const {

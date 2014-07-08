@@ -45,7 +45,7 @@ message BlockIteratorConfig {
 
   // divide a feature group into feature_block_ratio x nnz_feature_per_instance
   // blocks. If = 0, then use all features
-  optional float feature_block_ratio = 2 [default = 4];
+  optional float feature_block_ratio = 2 [default = 0];
 
   // use a random order to updating feature block, it improves the
   // convergence. You may turn it off for debug use

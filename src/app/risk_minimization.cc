@@ -77,19 +77,19 @@ void RiskMinimization::showTime(int iter) {
 
 void RiskMinimization::showObjective(int iter) {
   if (iter == -3) {
-    fprintf(stderr, "     |           training             ");
+    fprintf(stderr, "     |        training        ");
   } else if (iter == -2) {
-    fprintf(stderr, "iter |  objective    relative    auc  ");
+    fprintf(stderr, "iter |  objective    relative ");
   } else if (iter == -1) {
-    fprintf(stderr, " ----+--------------------------------");
+    fprintf(stderr, " ----+------------------------");
   } else {
     auto prog = global_progress_[iter];
     if (!prog.has_training_auc()) {
       prog.set_training_auc(training_auc_.evaluate());
       training_auc_.clear();
     }
-    fprintf(stderr, "%4d | %.5e  %.3e  %.4f ",
-            iter, prog.objv(), prog.relative_objv(), prog.training_auc());
+    fprintf(stderr, "%4d | %.5e  %.3e ",
+            iter, prog.objv(), prog.relative_objv()); //o, prog.training_auc());
   }
 }
 
