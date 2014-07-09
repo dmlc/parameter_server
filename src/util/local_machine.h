@@ -30,8 +30,8 @@ class LocalMachine {
     void * tmpAddrPtr = NULL;
 
     getifaddrs(&ifAddrStruct);
-
     for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+      if (ifa->ifa_addr == NULL) continue;
       if (ifa ->ifa_addr->sa_family==AF_INET) {
         // is a valid IP4 Address
         tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
@@ -39,7 +39,8 @@ class LocalMachine {
         inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
         if (strncmp(ifa->ifa_name,
                     interface.c_str(),
-                    strlen(ifa->ifa_name)) == 0) {
+                    interface.size()) == 0) {
+                    // strlen(ifa->ifa_name)) == 0) {
           return std::string(addressBuffer);
         }
       }
