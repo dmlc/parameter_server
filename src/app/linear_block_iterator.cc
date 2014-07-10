@@ -11,8 +11,8 @@ void LinearBlockIterator::run() {
   auto cf = app_cf_.block_iterator();
 
   // iterating
-  auto wk = taskpool(kActiveGroup);
-  int time = wk->time();
+  auto pool = taskpool(kActiveGroup);
+  int time = pool->time();
   int tau = cf.max_block_delay();
   for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
     if (cf.random_feature_block_order())
@@ -20,20 +20,20 @@ void LinearBlockIterator::run() {
 
     for (int b : block_order)  {
       Task update;
-      auto cmd = RiskMinimization::setCall(&update);
       update.set_wait_time(time - tau);
+      auto cmd = RiskMinimization::setCall(&update);
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
+      // set the feature key range will be updated in this block
       blocks[b].second.to(cmd->mutable_key());
-      // cmd->set_feature_group_id(blocks[b].first);
-      time = wk->submit(update);
+      time = pool->submit(update);
     }
 
     Task eval;
     RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
 
-    time = wk->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
-    wk->waitOutgoingTask(time);
+    time = pool->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+    pool->waitOutgoingTask(time);
 
     showProgress(iter);
     if (fabs(global_progress_[iter].relative_objv()) <= cf.epsilon()) {
@@ -44,8 +44,8 @@ void LinearBlockIterator::run() {
 
   Task save_model;
   RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
-  time = wk->submit(save_model);
-  wk->waitOutgoingTask(time);
+  time = pool->submit(save_model);
+  pool->waitOutgoingTask(time);
 }
 
 void LinearBlockIterator::showProgress(int iter) {

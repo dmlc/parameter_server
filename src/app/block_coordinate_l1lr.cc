@@ -14,8 +14,8 @@ void BlockCoordinateL1LR::run() {
   bool reset_kkt_filter = false;
 
   // iterating
-  auto wk = taskpool(kActiveGroup);
-  int time = wk->time();
+  auto pool = taskpool(kActiveGroup);
+  int time = pool->time();
   int tau = cf.max_block_delay();
   int iter = 0;
   for (; iter < cf.max_pass_of_data(); ++iter) {
@@ -34,15 +34,15 @@ void BlockCoordinateL1LR::run() {
       cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       blocks[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(blocks[b].first);
-      time = wk->submit(update);
+      time = pool->submit(update);
     }
 
     Task eval;
     RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
 
-    time = wk->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
-    wk->waitOutgoingTask(time);
+    time = pool->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+    pool->waitOutgoingTask(time);
 
     showProgress(iter);
 
