@@ -21,6 +21,7 @@ class LinearMethod : public RiskMinimization {
  protected:
 
   void startSystem();
+  void saveModel(const Message& msg);
 
  protected:
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;

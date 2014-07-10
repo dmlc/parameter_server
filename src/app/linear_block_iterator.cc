@@ -2,39 +2,6 @@
 #include "base/matrix_io.h"
 namespace PS {
 
-void LinearBlockIterator::showProgress(int iter) {
-  int s = iter == 0 ? -3 : iter;
-  for (int i = s; i <= iter; ++i) {
-    RiskMinimization::showObjective(i);
-    RiskMinimization::showNNZ(i);
-    RiskMinimization::showTime(i);
-  }
-}
-
-LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
-  FeatureBlocks blocks;
-  CHECK(app_cf_.has_block_iterator());
-  auto cf = app_cf_.block_iterator();
-  if (cf.feature_block_ratio() <= 0) {
-    blocks.push_back(std::make_pair(-1, global_training_feature_range_));
-  } else {
-    for (auto& info : global_training_info_) {
-      CHECK(info.has_nnz_per_row());
-      CHECK(info.has_id());
-      float b = std::round(
-          std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
-      int n = std::max((int)b, 1);
-      for (int i = 0; i < n; ++i) {
-        auto block = Range<Key>(info.col()).evenDivide(n, i);
-        if (block.empty()) continue;
-        blocks.push_back(std::make_pair(info.id(), block));
-      }
-    }
-  }
-  fprintf(stderr, "features are partitioned into %lu blocks\n", blocks.size());
-  return blocks;
-}
-
 void LinearBlockIterator::run() {
   LinearMethod::startSystem();
 
@@ -75,14 +42,50 @@ void LinearBlockIterator::run() {
     }
   }
 
+  Task save_model;
+  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  time = wk->submit(save_model);
+  wk->waitOutgoingTask(time);
+}
+
+void LinearBlockIterator::showProgress(int iter) {
+  int s = iter == 0 ? -3 : iter;
+  for (int i = s; i <= iter; ++i) {
+    RiskMinimization::showObjective(i);
+    RiskMinimization::showNNZ(i);
+    RiskMinimization::showTime(i);
+  }
+}
+
+LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
+  FeatureBlocks blocks;
+  CHECK(app_cf_.has_block_iterator());
+  auto cf = app_cf_.block_iterator();
+  if (cf.feature_block_ratio() <= 0) {
+    blocks.push_back(std::make_pair(-1, global_training_feature_range_));
+  } else {
+    for (auto& info : global_training_info_) {
+      CHECK(info.has_nnz_per_row());
+      CHECK(info.has_id());
+      float b = std::round(
+          std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
+      int n = std::max((int)b, 1);
+      for (int i = 0; i < n; ++i) {
+        auto block = Range<Key>(info.col()).evenDivide(n, i);
+        if (block.empty()) continue;
+        blocks.push_back(std::make_pair(info.id(), block));
+      }
+    }
+  }
+  fprintf(stderr, "features are partitioned into %lu blocks\n", blocks.size());
+  return blocks;
+}
+
+
   // test fault tolarance
   //   Task recover;
   //   recover.mutable_risk()->set_cmd(CallRiskMin::RECOVER);
   //   App::testFaultTolerance(recover);
-
-  // TODO save model
-
-}
 
 void LinearBlockIterator::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;

@@ -23,6 +23,9 @@ void RiskMinimization::process(Message* msg) {
     case Call::UPDATE_MODEL:
       updateModel(msg);
       break;
+    case Call::SAVE_MODEL:
+      saveModel(*msg);
+      break;
     case Call::RECOVER:
       // FIXME
       // W_.recover();

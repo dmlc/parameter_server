@@ -43,7 +43,8 @@ enum RiskMinCall_Command {
   RiskMinCall_Command_PREPARE_DATA = 1,
   RiskMinCall_Command_UPDATE_MODEL = 2,
   RiskMinCall_Command_EVALUATE_PROGRESS = 3,
-  RiskMinCall_Command_RECOVER = 4
+  RiskMinCall_Command_SAVE_MODEL = 4,
+  RiskMinCall_Command_RECOVER = 5
 };
 bool RiskMinCall_Command_IsValid(int value);
 const RiskMinCall_Command RiskMinCall_Command_Command_MIN = RiskMinCall_Command_PREPARE_DATA;
@@ -285,6 +286,7 @@ class RiskMinCall : public ::google::protobuf::Message {
   static const Command PREPARE_DATA = RiskMinCall_Command_PREPARE_DATA;
   static const Command UPDATE_MODEL = RiskMinCall_Command_UPDATE_MODEL;
   static const Command EVALUATE_PROGRESS = RiskMinCall_Command_EVALUATE_PROGRESS;
+  static const Command SAVE_MODEL = RiskMinCall_Command_SAVE_MODEL;
   static const Command RECOVER = RiskMinCall_Command_RECOVER;
   static inline bool Command_IsValid(int value) {
     return RiskMinCall_Command_IsValid(value);

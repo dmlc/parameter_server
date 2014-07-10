@@ -140,5 +140,32 @@ void LinearMethod::startSystem() {
   fprintf(stderr, "loaded data... in %.3f sec\n", total_timer_.get());
 }
 
+void LinearMethod::saveModel(const Message& msg) {
+  // didn't use msg here. in future, one may pass the model_file by msg
+
+  if (!exec_.isServer()) return;
+  if (!app_cf_.has_model_output()) return;
+
+  auto output = app_cf_.model_output();
+  // if (output.files_size() != 1) {
+  //   LL << "you should use only a single file: " << output.DebugString();
+  //   return;
+  // }
+
+  CHECK_EQ(w_->key().size(), w_->value().size());
+
+  if (output.format() == DataConfig::TEXT) {
+    std::string file = w_->name() + "_" + exec_.myNode().id();
+    std::ofstream out(file);
+    CHECK(out.good());
+
+    for (size_t i = 0; i < w_->key().size(); ++i) {
+      if (w_->value()[i] != 0)
+        out << w_->key()[i] << "\t" << w_->value()[i] << "\n";
+    }
+  } else {
+    LL << "didn't implement yet";
+  }
+}
 
 } // namespace PS

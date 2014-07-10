@@ -12,6 +12,7 @@ message AppConfig {
   repeated string parameter_name = 3;
 
   optional DataConfig training = 10;
+  optional DataConfig model_output = 15;
 
   optional LossConfig loss = 20;
   optional PenaltyConfig penalty = 21;
@@ -31,10 +32,11 @@ message DataConfig {
   enum DataFormat {
     BIN = 1;
     PROTO = 2;
+    TEXT = 3;
   }
   required DataFormat format = 1;
   repeated string files = 2;
-  optional PbRange range = 3;  // valid for bin format
+  optional PbRange range = 3;  // only valid for the binary format
 }
 
 

@@ -65,11 +65,12 @@ inline bool AppConfig_AppType_Parse(
 }
 enum DataConfig_DataFormat {
   DataConfig_DataFormat_BIN = 1,
-  DataConfig_DataFormat_PROTO = 2
+  DataConfig_DataFormat_PROTO = 2,
+  DataConfig_DataFormat_TEXT = 3
 };
 bool DataConfig_DataFormat_IsValid(int value);
 const DataConfig_DataFormat DataConfig_DataFormat_DataFormat_MIN = DataConfig_DataFormat_BIN;
-const DataConfig_DataFormat DataConfig_DataFormat_DataFormat_MAX = DataConfig_DataFormat_PROTO;
+const DataConfig_DataFormat DataConfig_DataFormat_DataFormat_MAX = DataConfig_DataFormat_TEXT;
 const int DataConfig_DataFormat_DataFormat_ARRAYSIZE = DataConfig_DataFormat_DataFormat_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DataConfig_DataFormat_descriptor();
@@ -265,6 +266,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_training();
   inline void set_allocated_training(::PS::DataConfig* training);
 
+  // optional .PS.DataConfig model_output = 15;
+  inline bool has_model_output() const;
+  inline void clear_model_output();
+  static const int kModelOutputFieldNumber = 15;
+  inline const ::PS::DataConfig& model_output() const;
+  inline ::PS::DataConfig* mutable_model_output();
+  inline ::PS::DataConfig* release_model_output();
+  inline void set_allocated_model_output(::PS::DataConfig* model_output);
+
   // optional .PS.LossConfig loss = 20;
   inline bool has_loss() const;
   inline void clear_loss();
@@ -318,6 +328,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_app_name();
   inline void set_has_training();
   inline void clear_has_training();
+  inline void set_has_model_output();
+  inline void clear_has_model_output();
   inline void set_has_loss();
   inline void clear_has_loss();
   inline void set_has_penalty();
@@ -334,6 +346,7 @@ class AppConfig : public ::google::protobuf::Message {
   ::std::string* app_name_;
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
   ::PS::DataConfig* training_;
+  ::PS::DataConfig* model_output_;
   ::PS::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearnerConfig* learner_;
@@ -342,7 +355,7 @@ class AppConfig : public ::google::protobuf::Message {
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -408,6 +421,7 @@ class DataConfig : public ::google::protobuf::Message {
   typedef DataConfig_DataFormat DataFormat;
   static const DataFormat BIN = DataConfig_DataFormat_BIN;
   static const DataFormat PROTO = DataConfig_DataFormat_PROTO;
+  static const DataFormat TEXT = DataConfig_DataFormat_TEXT;
   static inline bool DataFormat_IsValid(int value) {
     return DataConfig_DataFormat_IsValid(value);
   }
@@ -1344,15 +1358,53 @@ inline void AppConfig::set_allocated_training(::PS::DataConfig* training) {
   }
 }
 
-// optional .PS.LossConfig loss = 20;
-inline bool AppConfig::has_loss() const {
+// optional .PS.DataConfig model_output = 15;
+inline bool AppConfig::has_model_output() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void AppConfig::set_has_loss() {
+inline void AppConfig::set_has_model_output() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void AppConfig::clear_has_loss() {
+inline void AppConfig::clear_has_model_output() {
   _has_bits_[0] &= ~0x00000010u;
+}
+inline void AppConfig::clear_model_output() {
+  if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
+  clear_has_model_output();
+}
+inline const ::PS::DataConfig& AppConfig::model_output() const {
+  return model_output_ != NULL ? *model_output_ : *default_instance_->model_output_;
+}
+inline ::PS::DataConfig* AppConfig::mutable_model_output() {
+  set_has_model_output();
+  if (model_output_ == NULL) model_output_ = new ::PS::DataConfig;
+  return model_output_;
+}
+inline ::PS::DataConfig* AppConfig::release_model_output() {
+  clear_has_model_output();
+  ::PS::DataConfig* temp = model_output_;
+  model_output_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_model_output(::PS::DataConfig* model_output) {
+  delete model_output_;
+  model_output_ = model_output;
+  if (model_output) {
+    set_has_model_output();
+  } else {
+    clear_has_model_output();
+  }
+}
+
+// optional .PS.LossConfig loss = 20;
+inline bool AppConfig::has_loss() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void AppConfig::set_has_loss() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void AppConfig::clear_has_loss() {
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void AppConfig::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LossConfig::Clear();
@@ -1384,13 +1436,13 @@ inline void AppConfig::set_allocated_loss(::PS::LossConfig* loss) {
 
 // optional .PS.PenaltyConfig penalty = 21;
 inline bool AppConfig::has_penalty() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void AppConfig::set_has_penalty() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void AppConfig::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void AppConfig::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
@@ -1422,13 +1474,13 @@ inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
 
 // optional .PS.LearnerConfig learner = 30;
 inline bool AppConfig::has_learner() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void AppConfig::set_has_learner() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void AppConfig::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void AppConfig::clear_learner() {
   if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
@@ -1460,13 +1512,13 @@ inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
 
 // optional .PS.BlockIteratorConfig block_iterator = 40;
 inline bool AppConfig::has_block_iterator() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void AppConfig::set_has_block_iterator() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void AppConfig::clear_has_block_iterator() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void AppConfig::clear_block_iterator() {
   if (block_iterator_ != NULL) block_iterator_->::PS::BlockIteratorConfig::Clear();
@@ -1498,13 +1550,13 @@ inline void AppConfig::set_allocated_block_iterator(::PS::BlockIteratorConfig* b
 
 // optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
 inline bool AppConfig::has_block_coord_l1lr() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void AppConfig::set_has_block_coord_l1lr() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void AppConfig::clear_has_block_coord_l1lr() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void AppConfig::clear_block_coord_l1lr() {
   if (block_coord_l1lr_ != NULL) block_coord_l1lr_->::PS::BlockCoordL1LRConfig::Clear();
