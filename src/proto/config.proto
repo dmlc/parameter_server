@@ -12,6 +12,7 @@ message AppConfig {
   repeated string parameter_name = 3;
 
   optional DataConfig training = 10;
+  optional ParameterInitConfig init_w = 13;
   optional DataConfig model_output = 15;
 
   optional LossConfig loss = 20;
@@ -39,6 +40,15 @@ message DataConfig {
   optional PbRange range = 3;  // only valid for the binary format
 }
 
+message ParameterInitConfig {
+  enum Type {
+    ZERO = 1;
+    RANDOM = 2;
+    FILE = 3;
+  }
+  optional Type type = 1 [default = ZERO];
+  optional double random_std = 2 [default = 1];
+}
 
 message BlockIteratorConfig {
   // the number of example in a block. It is the minibatch size for
@@ -59,6 +69,7 @@ message BlockIteratorConfig {
 
   // convergance critiria. stop if the relative objective <= epsilon
   optional double epsilon = 11 [default = 1e-4];
+
 }
 
 message BlockCoordL1LRConfig {
@@ -79,9 +90,10 @@ message BlockCoordL1LRConfig {
 
 message LossConfig {
   enum Type {
-  SQUARE = 1;
-  LOGIT = 2;
-  HINGE = 3;
+    SQUARE = 1;
+    LOGIT = 2;
+    HINGE = 3;
+    SQUARE_HINGE = 4;
   // SQUARE_SINGLE = 2;
   // LOGIT_SINGLE = 4;
   // HINGE_SINGLE = 6;

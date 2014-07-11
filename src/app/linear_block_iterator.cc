@@ -121,7 +121,16 @@ void LinearBlockIterator::prepareData(const Message& msg) {
         // LL << myNodeID() << " received keys";
         // init w by 0
         w_->value().resize(w_->key().size());
-        w_->value().setZero();
+        auto init = app_cf_.init_w();
+        if (init.type() == ParameterInitConfig::ZERO) {
+          w_->value().setZero();
+        } else if (init.type() == ParameterInitConfig::RANDOM) {
+          w_->value().eigenVector() =
+              Eigen::VectorXd::Random(w_->value().size()) * init.random_std();
+          LL << w_->value().eigenVector().squaredNorm();
+        } else {
+          LL << "TOOD";
+        }
       });
   }
 }

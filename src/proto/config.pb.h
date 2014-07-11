@@ -37,6 +37,7 @@ void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 
 class AppConfig;
 class DataConfig;
+class ParameterInitConfig;
 class BlockIteratorConfig;
 class BlockCoordL1LRConfig;
 class LossConfig;
@@ -83,14 +84,35 @@ inline bool DataConfig_DataFormat_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<DataConfig_DataFormat>(
     DataConfig_DataFormat_descriptor(), name, value);
 }
+enum ParameterInitConfig_Type {
+  ParameterInitConfig_Type_ZERO = 1,
+  ParameterInitConfig_Type_RANDOM = 2,
+  ParameterInitConfig_Type_FILE = 3
+};
+bool ParameterInitConfig_Type_IsValid(int value);
+const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MIN = ParameterInitConfig_Type_ZERO;
+const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MAX = ParameterInitConfig_Type_FILE;
+const int ParameterInitConfig_Type_Type_ARRAYSIZE = ParameterInitConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* ParameterInitConfig_Type_descriptor();
+inline const ::std::string& ParameterInitConfig_Type_Name(ParameterInitConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    ParameterInitConfig_Type_descriptor(), value);
+}
+inline bool ParameterInitConfig_Type_Parse(
+    const ::std::string& name, ParameterInitConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<ParameterInitConfig_Type>(
+    ParameterInitConfig_Type_descriptor(), name, value);
+}
 enum LossConfig_Type {
   LossConfig_Type_SQUARE = 1,
   LossConfig_Type_LOGIT = 2,
-  LossConfig_Type_HINGE = 3
+  LossConfig_Type_HINGE = 3,
+  LossConfig_Type_SQUARE_HINGE = 4
 };
 bool LossConfig_Type_IsValid(int value);
 const LossConfig_Type LossConfig_Type_Type_MIN = LossConfig_Type_SQUARE;
-const LossConfig_Type LossConfig_Type_Type_MAX = LossConfig_Type_HINGE;
+const LossConfig_Type LossConfig_Type_Type_MAX = LossConfig_Type_SQUARE_HINGE;
 const int LossConfig_Type_Type_ARRAYSIZE = LossConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* LossConfig_Type_descriptor();
@@ -266,6 +288,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_training();
   inline void set_allocated_training(::PS::DataConfig* training);
 
+  // optional .PS.ParameterInitConfig init_w = 13;
+  inline bool has_init_w() const;
+  inline void clear_init_w();
+  static const int kInitWFieldNumber = 13;
+  inline const ::PS::ParameterInitConfig& init_w() const;
+  inline ::PS::ParameterInitConfig* mutable_init_w();
+  inline ::PS::ParameterInitConfig* release_init_w();
+  inline void set_allocated_init_w(::PS::ParameterInitConfig* init_w);
+
   // optional .PS.DataConfig model_output = 15;
   inline bool has_model_output() const;
   inline void clear_model_output();
@@ -328,6 +359,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_app_name();
   inline void set_has_training();
   inline void clear_has_training();
+  inline void set_has_init_w();
+  inline void clear_has_init_w();
   inline void set_has_model_output();
   inline void clear_has_model_output();
   inline void set_has_loss();
@@ -346,6 +379,7 @@ class AppConfig : public ::google::protobuf::Message {
   ::std::string* app_name_;
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
   ::PS::DataConfig* training_;
+  ::PS::ParameterInitConfig* init_w_;
   ::PS::DataConfig* model_output_;
   ::PS::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
@@ -355,7 +389,7 @@ class AppConfig : public ::google::protobuf::Message {
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -499,6 +533,123 @@ class DataConfig : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static DataConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ParameterInitConfig : public ::google::protobuf::Message {
+ public:
+  ParameterInitConfig();
+  virtual ~ParameterInitConfig();
+
+  ParameterInitConfig(const ParameterInitConfig& from);
+
+  inline ParameterInitConfig& operator=(const ParameterInitConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ParameterInitConfig& default_instance();
+
+  void Swap(ParameterInitConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  ParameterInitConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ParameterInitConfig& from);
+  void MergeFrom(const ParameterInitConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef ParameterInitConfig_Type Type;
+  static const Type ZERO = ParameterInitConfig_Type_ZERO;
+  static const Type RANDOM = ParameterInitConfig_Type_RANDOM;
+  static const Type FILE = ParameterInitConfig_Type_FILE;
+  static inline bool Type_IsValid(int value) {
+    return ParameterInitConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    ParameterInitConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    ParameterInitConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    ParameterInitConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return ParameterInitConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return ParameterInitConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return ParameterInitConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // optional .PS.ParameterInitConfig.Type type = 1 [default = ZERO];
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::ParameterInitConfig_Type type() const;
+  inline void set_type(::PS::ParameterInitConfig_Type value);
+
+  // optional double random_std = 2 [default = 1];
+  inline bool has_random_std() const;
+  inline void clear_random_std();
+  static const int kRandomStdFieldNumber = 2;
+  inline double random_std() const;
+  inline void set_random_std(double value);
+
+  // @@protoc_insertion_point(class_scope:PS.ParameterInitConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_random_std();
+  inline void clear_has_random_std();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  double random_std_;
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static ParameterInitConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -812,6 +963,7 @@ class LossConfig : public ::google::protobuf::Message {
   static const Type SQUARE = LossConfig_Type_SQUARE;
   static const Type LOGIT = LossConfig_Type_LOGIT;
   static const Type HINGE = LossConfig_Type_HINGE;
+  static const Type SQUARE_HINGE = LossConfig_Type_SQUARE_HINGE;
   static inline bool Type_IsValid(int value) {
     return LossConfig_Type_IsValid(value);
   }
@@ -1358,15 +1510,53 @@ inline void AppConfig::set_allocated_training(::PS::DataConfig* training) {
   }
 }
 
-// optional .PS.DataConfig model_output = 15;
-inline bool AppConfig::has_model_output() const {
+// optional .PS.ParameterInitConfig init_w = 13;
+inline bool AppConfig::has_init_w() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void AppConfig::set_has_model_output() {
+inline void AppConfig::set_has_init_w() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void AppConfig::clear_has_model_output() {
+inline void AppConfig::clear_has_init_w() {
   _has_bits_[0] &= ~0x00000010u;
+}
+inline void AppConfig::clear_init_w() {
+  if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
+  clear_has_init_w();
+}
+inline const ::PS::ParameterInitConfig& AppConfig::init_w() const {
+  return init_w_ != NULL ? *init_w_ : *default_instance_->init_w_;
+}
+inline ::PS::ParameterInitConfig* AppConfig::mutable_init_w() {
+  set_has_init_w();
+  if (init_w_ == NULL) init_w_ = new ::PS::ParameterInitConfig;
+  return init_w_;
+}
+inline ::PS::ParameterInitConfig* AppConfig::release_init_w() {
+  clear_has_init_w();
+  ::PS::ParameterInitConfig* temp = init_w_;
+  init_w_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
+  delete init_w_;
+  init_w_ = init_w;
+  if (init_w) {
+    set_has_init_w();
+  } else {
+    clear_has_init_w();
+  }
+}
+
+// optional .PS.DataConfig model_output = 15;
+inline bool AppConfig::has_model_output() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void AppConfig::set_has_model_output() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void AppConfig::clear_has_model_output() {
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void AppConfig::clear_model_output() {
   if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
@@ -1398,13 +1588,13 @@ inline void AppConfig::set_allocated_model_output(::PS::DataConfig* model_output
 
 // optional .PS.LossConfig loss = 20;
 inline bool AppConfig::has_loss() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void AppConfig::set_has_loss() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void AppConfig::clear_has_loss() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void AppConfig::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LossConfig::Clear();
@@ -1436,13 +1626,13 @@ inline void AppConfig::set_allocated_loss(::PS::LossConfig* loss) {
 
 // optional .PS.PenaltyConfig penalty = 21;
 inline bool AppConfig::has_penalty() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void AppConfig::set_has_penalty() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void AppConfig::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void AppConfig::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
@@ -1474,13 +1664,13 @@ inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
 
 // optional .PS.LearnerConfig learner = 30;
 inline bool AppConfig::has_learner() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void AppConfig::set_has_learner() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void AppConfig::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void AppConfig::clear_learner() {
   if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
@@ -1512,13 +1702,13 @@ inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
 
 // optional .PS.BlockIteratorConfig block_iterator = 40;
 inline bool AppConfig::has_block_iterator() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void AppConfig::set_has_block_iterator() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void AppConfig::clear_has_block_iterator() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void AppConfig::clear_block_iterator() {
   if (block_iterator_ != NULL) block_iterator_->::PS::BlockIteratorConfig::Clear();
@@ -1550,13 +1740,13 @@ inline void AppConfig::set_allocated_block_iterator(::PS::BlockIteratorConfig* b
 
 // optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
 inline bool AppConfig::has_block_coord_l1lr() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void AppConfig::set_has_block_coord_l1lr() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void AppConfig::clear_has_block_coord_l1lr() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void AppConfig::clear_block_coord_l1lr() {
   if (block_coord_l1lr_ != NULL) block_coord_l1lr_->::PS::BlockCoordL1LRConfig::Clear();
@@ -1693,6 +1883,55 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
   } else {
     clear_has_range();
   }
+}
+
+// -------------------------------------------------------------------
+
+// ParameterInitConfig
+
+// optional .PS.ParameterInitConfig.Type type = 1 [default = ZERO];
+inline bool ParameterInitConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ParameterInitConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ParameterInitConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ParameterInitConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::ParameterInitConfig_Type ParameterInitConfig::type() const {
+  return static_cast< ::PS::ParameterInitConfig_Type >(type_);
+}
+inline void ParameterInitConfig::set_type(::PS::ParameterInitConfig_Type value) {
+  assert(::PS::ParameterInitConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional double random_std = 2 [default = 1];
+inline bool ParameterInitConfig::has_random_std() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ParameterInitConfig::set_has_random_std() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ParameterInitConfig::clear_has_random_std() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ParameterInitConfig::clear_random_std() {
+  random_std_ = 1;
+  clear_has_random_std();
+}
+inline double ParameterInitConfig::random_std() const {
+  return random_std_;
+}
+inline void ParameterInitConfig::set_random_std(double value) {
+  set_has_random_std();
+  random_std_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2112,6 +2351,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::AppConfig_AppType>() {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataConfig_DataFormat>() {
   return ::PS::DataConfig_DataFormat_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::ParameterInitConfig_Type>() {
+  return ::PS::ParameterInitConfig_Type_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::LossConfig_Type>() {
