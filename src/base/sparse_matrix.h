@@ -1,8 +1,11 @@
 #pragma once
 
 #include <thread>
+
+#if GOOGLE_HASH
 #include <sparsehash/dense_hash_set>
 #include <sparsehash/dense_hash_map>
+#endif
 
 #include "util/common.h"
 #include "util/threadpool.h"
@@ -317,8 +320,11 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
 
   auto range = rowMajor() ? Range<I>(info_.col()) : Range<I>(info_.row());
 
-  // std::vector<std::unordered_set<I>> uniq_keys(npart);
+#if GOOGLE_HASH
   std::vector<google::dense_hash_set<I>> uniq_keys(npart);
+#else
+  std::vector<std::unordered_set<I>> uniq_keys(npart);
+#endif
 
   // find unique keys
   {
@@ -327,7 +333,9 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
       auto thread_range = range.evenDivide(npart, i);
       pool.add([this, i, thread_range, &uniq_keys](){
           auto& uk = uniq_keys[i];
+#if GOOGLE_HASH
           uk.set_empty_key(-1);
+#endif
           // size_t n = 0;
           for (I k : index_) if (thread_range.contains(k)) {uk.insert(k);}
           // LL << n << " " << thread_range;
@@ -357,9 +365,12 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
 
           // construct the key map
           uint32 local_key = nnz[i];
-          // std::unordered_map<I, uint32> map;
+#if GOOGLE_HASH
           google::dense_hash_map<I, uint32> map;
           map.set_empty_key(-1);
+#else
+          std::unordered_map<I, uint32> map;
+#endif
 
           for (uint32 i = 0; i < ordered_keys.size(); ++i) {
             auto key = ordered_keys[i];

@@ -7,8 +7,14 @@ OPT = -O3 -ggdb
 BIN = ../bin
 LIB = ../lib
 
+ifndef THIRD
 THIRD=$(shell cd ..;pwd)/third_party
 # THIRD=/usr/local/
+endif
+
+ifndef GOOGLE_HASH
+GOOGLE_HASH=1
+endif
 
 THIRD_BIN=$(THIRD)/bin
 THIRD_INC=$(THIRD)/include
@@ -21,7 +27,7 @@ MPICC = $(THIRD_BIN)/mpic++
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
 INCPATH = -I. -I${THIRD_INC}
 
-ifeq (${args}, static)
+ifeq (${STATIC}, 1)
 # TODO a lot of warning on mac with llvm
     CFLAGS = -static -static-libgcc -static-libstdc++ -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
 else

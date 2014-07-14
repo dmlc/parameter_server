@@ -48,9 +48,9 @@ cd src && make -j8
 The `-j` option specifies how many threads are used to
 build the projects, you may change it to a more proper value.
 
-If you want to static link all library, use:                                                                                     
-```                                                                                                                               
-make -j8 args=static                                                                                                              
+If you want to static link all library, use:
+```
+make -j8 args=static
 ```
 
 ## Input Data
@@ -101,7 +101,7 @@ also started via `ssh` and resource manager such as `yarn` without mpi (In progr
 mpirun -np 4 ./ps_mpi -num_servers 1 -num_workers 2 -app ../config/rcv1_l1lr.config
 ```
 
-The augments:
+The arguments:
 - -np: the number of processes created by `mpirun`. It should >= num_workers +
 num_servers + 1 (the scheduler). Use `-hostfile hosts` to specify the machines.
 - -interface: the network interface, run `ifconfig` to find the available
@@ -112,7 +112,7 @@ num_servers + 1 (the scheduler). Use `-hostfile hosts` to specify the machines.
   model.
 - -app: the application configuration
 
-Use `./ps_mpi --help` to see more arguments.
+Use `./ps_mpi --help` to see more options.
 
 ## Wrap up
 
