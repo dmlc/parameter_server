@@ -1,4 +1,24 @@
-// #include "gtest/gtest.h"
+#include "gtest/gtest.h"
+#include <Eigen/Core>
+#include "util/common.h"
+#include "util/resource_usage.h"
+#include <omp.h>
+using namespace PS;
+TEST(EIGEN3, perf) {
+
+  int n = 3000;
+  Eigen::MatrixXd a = Eigen::MatrixXd::Random(n,n);
+  Eigen::MatrixXd b = Eigen::MatrixXd::Random(n,1);
+
+
+  auto tv = tic();
+  Eigen::MatrixXd c = a * b;
+  LL << toc(tv);
+
+  tv = tic();
+  Eigen::MatrixXd d = a * b;
+  LL << toc(tv);
+}
 // #include "util/eigen3.h"
 
 // TEST(EIGEN3, LOADXY) {

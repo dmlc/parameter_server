@@ -91,7 +91,7 @@ void LinearBlockIterator::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
     // LL << myNodeID() << " training data " << app_cf_.training().DebugString();
-    auto training_data = readMatrices<double>(app_cf_.training());
+    auto training_data = readMatrices<double>(app_cf_.training_data());
     CHECK_EQ(training_data.size(), 2);
     // LL << myNodeID() << " load training data";
     y_ = training_data[0];

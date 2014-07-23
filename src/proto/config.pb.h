@@ -279,23 +279,14 @@ class AppConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parameter_name() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parameter_name();
 
-  // optional .PS.DataConfig training = 10;
-  inline bool has_training() const;
-  inline void clear_training();
-  static const int kTrainingFieldNumber = 10;
-  inline const ::PS::DataConfig& training() const;
-  inline ::PS::DataConfig* mutable_training();
-  inline ::PS::DataConfig* release_training();
-  inline void set_allocated_training(::PS::DataConfig* training);
-
-  // optional .PS.ParameterInitConfig init_w = 13;
-  inline bool has_init_w() const;
-  inline void clear_init_w();
-  static const int kInitWFieldNumber = 13;
-  inline const ::PS::ParameterInitConfig& init_w() const;
-  inline ::PS::ParameterInitConfig* mutable_init_w();
-  inline ::PS::ParameterInitConfig* release_init_w();
-  inline void set_allocated_init_w(::PS::ParameterInitConfig* init_w);
+  // optional .PS.DataConfig training_data = 10;
+  inline bool has_training_data() const;
+  inline void clear_training_data();
+  static const int kTrainingDataFieldNumber = 10;
+  inline const ::PS::DataConfig& training_data() const;
+  inline ::PS::DataConfig* mutable_training_data();
+  inline ::PS::DataConfig* release_training_data();
+  inline void set_allocated_training_data(::PS::DataConfig* training_data);
 
   // optional .PS.DataConfig model_output = 15;
   inline bool has_model_output() const;
@@ -305,6 +296,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig* mutable_model_output();
   inline ::PS::DataConfig* release_model_output();
   inline void set_allocated_model_output(::PS::DataConfig* model_output);
+
+  // optional .PS.ParameterInitConfig init_w = 13;
+  inline bool has_init_w() const;
+  inline void clear_init_w();
+  static const int kInitWFieldNumber = 13;
+  inline const ::PS::ParameterInitConfig& init_w() const;
+  inline ::PS::ParameterInitConfig* mutable_init_w();
+  inline ::PS::ParameterInitConfig* release_init_w();
+  inline void set_allocated_init_w(::PS::ParameterInitConfig* init_w);
 
   // optional .PS.LossConfig loss = 20;
   inline bool has_loss() const;
@@ -357,12 +357,12 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_type();
   inline void set_has_app_name();
   inline void clear_has_app_name();
-  inline void set_has_training();
-  inline void clear_has_training();
-  inline void set_has_init_w();
-  inline void clear_has_init_w();
+  inline void set_has_training_data();
+  inline void clear_has_training_data();
   inline void set_has_model_output();
   inline void clear_has_model_output();
+  inline void set_has_init_w();
+  inline void clear_has_init_w();
   inline void set_has_loss();
   inline void clear_has_loss();
   inline void set_has_penalty();
@@ -378,9 +378,9 @@ class AppConfig : public ::google::protobuf::Message {
 
   ::std::string* app_name_;
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
-  ::PS::DataConfig* training_;
-  ::PS::ParameterInitConfig* init_w_;
+  ::PS::DataConfig* training_data_;
   ::PS::DataConfig* model_output_;
+  ::PS::ParameterInitConfig* init_w_;
   ::PS::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearnerConfig* learner_;
@@ -1472,91 +1472,53 @@ AppConfig::mutable_parameter_name() {
   return &parameter_name_;
 }
 
-// optional .PS.DataConfig training = 10;
-inline bool AppConfig::has_training() const {
+// optional .PS.DataConfig training_data = 10;
+inline bool AppConfig::has_training_data() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void AppConfig::set_has_training() {
+inline void AppConfig::set_has_training_data() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void AppConfig::clear_has_training() {
+inline void AppConfig::clear_has_training_data() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void AppConfig::clear_training() {
-  if (training_ != NULL) training_->::PS::DataConfig::Clear();
-  clear_has_training();
+inline void AppConfig::clear_training_data() {
+  if (training_data_ != NULL) training_data_->::PS::DataConfig::Clear();
+  clear_has_training_data();
 }
-inline const ::PS::DataConfig& AppConfig::training() const {
-  return training_ != NULL ? *training_ : *default_instance_->training_;
+inline const ::PS::DataConfig& AppConfig::training_data() const {
+  return training_data_ != NULL ? *training_data_ : *default_instance_->training_data_;
 }
-inline ::PS::DataConfig* AppConfig::mutable_training() {
-  set_has_training();
-  if (training_ == NULL) training_ = new ::PS::DataConfig;
-  return training_;
+inline ::PS::DataConfig* AppConfig::mutable_training_data() {
+  set_has_training_data();
+  if (training_data_ == NULL) training_data_ = new ::PS::DataConfig;
+  return training_data_;
 }
-inline ::PS::DataConfig* AppConfig::release_training() {
-  clear_has_training();
-  ::PS::DataConfig* temp = training_;
-  training_ = NULL;
+inline ::PS::DataConfig* AppConfig::release_training_data() {
+  clear_has_training_data();
+  ::PS::DataConfig* temp = training_data_;
+  training_data_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_training(::PS::DataConfig* training) {
-  delete training_;
-  training_ = training;
-  if (training) {
-    set_has_training();
+inline void AppConfig::set_allocated_training_data(::PS::DataConfig* training_data) {
+  delete training_data_;
+  training_data_ = training_data;
+  if (training_data) {
+    set_has_training_data();
   } else {
-    clear_has_training();
-  }
-}
-
-// optional .PS.ParameterInitConfig init_w = 13;
-inline bool AppConfig::has_init_w() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void AppConfig::set_has_init_w() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void AppConfig::clear_has_init_w() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void AppConfig::clear_init_w() {
-  if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
-  clear_has_init_w();
-}
-inline const ::PS::ParameterInitConfig& AppConfig::init_w() const {
-  return init_w_ != NULL ? *init_w_ : *default_instance_->init_w_;
-}
-inline ::PS::ParameterInitConfig* AppConfig::mutable_init_w() {
-  set_has_init_w();
-  if (init_w_ == NULL) init_w_ = new ::PS::ParameterInitConfig;
-  return init_w_;
-}
-inline ::PS::ParameterInitConfig* AppConfig::release_init_w() {
-  clear_has_init_w();
-  ::PS::ParameterInitConfig* temp = init_w_;
-  init_w_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
-  delete init_w_;
-  init_w_ = init_w;
-  if (init_w) {
-    set_has_init_w();
-  } else {
-    clear_has_init_w();
+    clear_has_training_data();
   }
 }
 
 // optional .PS.DataConfig model_output = 15;
 inline bool AppConfig::has_model_output() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void AppConfig::set_has_model_output() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void AppConfig::clear_has_model_output() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void AppConfig::clear_model_output() {
   if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
@@ -1583,6 +1545,44 @@ inline void AppConfig::set_allocated_model_output(::PS::DataConfig* model_output
     set_has_model_output();
   } else {
     clear_has_model_output();
+  }
+}
+
+// optional .PS.ParameterInitConfig init_w = 13;
+inline bool AppConfig::has_init_w() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void AppConfig::set_has_init_w() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void AppConfig::clear_has_init_w() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void AppConfig::clear_init_w() {
+  if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
+  clear_has_init_w();
+}
+inline const ::PS::ParameterInitConfig& AppConfig::init_w() const {
+  return init_w_ != NULL ? *init_w_ : *default_instance_->init_w_;
+}
+inline ::PS::ParameterInitConfig* AppConfig::mutable_init_w() {
+  set_has_init_w();
+  if (init_w_ == NULL) init_w_ = new ::PS::ParameterInitConfig;
+  return init_w_;
+}
+inline ::PS::ParameterInitConfig* AppConfig::release_init_w() {
+  clear_has_init_w();
+  ::PS::ParameterInitConfig* temp = init_w_;
+  init_w_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
+  delete init_w_;
+  init_w_ = init_w;
+  if (init_w) {
+    set_has_init_w();
+  } else {
+    clear_has_init_w();
   }
 }
 

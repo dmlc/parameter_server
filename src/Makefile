@@ -31,7 +31,7 @@ ifeq (${STATIC}, 1)
 # TODO a lot of warning on mac with llvm
     CFLAGS = -static -static-libgcc -static-libstdc++ -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
 else
-    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fPIC # -fopenmp
+    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) -fopenmp #-fPIC #
 endif
 
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
@@ -72,6 +72,7 @@ TESTS = \
 	bitmap_test \
 	sparse_matrix_perf \
 	shared_array_test \
+	eigen3_test \
 	# double_test \
 	# aggregated_gradient_test \
 	# grad_desc_test \

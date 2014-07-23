@@ -37,7 +37,7 @@ void LinearMethod::startSystem() {
   std::vector<Range<Key>> server_range;
   std::vector<DataConfig> worker_training_;
 
-  auto data = searchFiles(app_cf_.training());
+  auto data = searchFiles(app_cf_.training_data());
   CHECK_GT(data.files_size(), 0);
   // LL << "training data " << data.DebugString();
 
@@ -123,9 +123,9 @@ void LinearMethod::startSystem() {
   int time = 0, k = 0;
   start.mutable_mng_app()->set_cmd(ManageApp::ADD);
   for (auto& w : exec_.group(kActiveGroup)) {
-    auto cf = app_cf_; cf.clear_training();
+    auto cf = app_cf_; cf.clear_training_data();
     if (w->role() == Node::CLIENT)
-      *cf.mutable_training() = worker_training_[k++];
+      *cf.mutable_training_data() = worker_training_[k++];
     *(start.mutable_mng_app()->mutable_app_config()) = cf;
     CHECK_EQ(time, w->submit(start));
   }

@@ -11,9 +11,9 @@ message AppConfig {
   optional string app_name = 2;
   repeated string parameter_name = 3;
 
-  optional DataConfig training = 10;
-  optional ParameterInitConfig init_w = 13;
+  optional DataConfig training_data = 10;
   optional DataConfig model_output = 15;
+  optional ParameterInitConfig init_w = 13;
 
   optional LossConfig loss = 20;
   optional PenaltyConfig penalty = 21;
