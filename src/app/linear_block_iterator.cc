@@ -62,7 +62,7 @@ LinearBlockIterator::FeatureBlocks LinearBlockIterator::partitionFeatures() {
   CHECK(app_cf_.has_block_iterator());
   auto cf = app_cf_.block_iterator();
   if (cf.feature_block_ratio() <= 0) {
-    blocks.push_back(std::make_pair(-1, global_training_feature_range_));
+    blocks.push_back(std::make_pair(-1, global_feature_range_));
   } else {
     for (auto& info : global_training_info_) {
       CHECK(info.has_nnz_per_row());

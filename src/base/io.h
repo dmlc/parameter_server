@@ -6,6 +6,7 @@
 #include "util/common.h"
 #include "proto/config.pb.h"
 #include "util/split.h"
+#include "util/file.h"
 
 namespace PS {
 
@@ -61,8 +62,8 @@ DataConfig searchFiles(const DataConfig& config) {
       patterns.push_back(re);
     } catch (const std::regex_error& e) {
       CHECK(false) << filename(config.files(i))
-                   << " is not valid (supported) regex, regex_error caught: " << e.what()
-                   << ". you may try gcc4.9 or llvm5.1";
+                   << " is not valid (supported) regex, regex_error caught: "
+                   << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
   }
 
@@ -89,8 +90,54 @@ DataConfig searchFiles(const DataConfig& config) {
       ret.add_files(dir+"/"+f);
     }
   }
-
   return ret;
 }
 
+std::vector<DataConfig> assignDataToNodes(
+    const DataConfig& config, int num_nodes, InstanceInfo* info) {
+  CHECK_EQ(config.format(), DataConfig::PROTO) << "TODO, support more formats";
+  auto data = searchFiles(config);
+  CHECK_GT(data.files_size(), 0) << "search failed" << config.DebugString();
+  CHECK_GE(data.files_size(), num_nodes) << "too many nodes";
+
+  for (int i = 0; i < data.files_size(); ++i) {
+    InstanceInfo f;
+    ReadFileToProtoOrDie(data.files(i)+".info", &f);
+    *info = i == 0 ? f : mergeInstanceInfo(*info, f);
+  }
+
+  // evenly assign files to machines
+  std::vector<DataConfig> nodes_config;
+  for (int i = 0; i < num_nodes; ++i) {
+    DataConfig dc; dc.set_format(DataConfig::PROTO);
+    auto file_os = Range<int>(0, data.files_size()).evenDivide(num_nodes, i);
+    for (int j = file_os.begin(); j < file_os.end(); ++j)
+      dc.add_files(data.files(j));
+    nodes_config.push_back(dc);
+  }
+  return nodes_config;
+}
+
+
+  // if (data.format() == DataConfig::BIN) {
+  //   // format: Y, feature group 0, feature group 1, ...
+  //   // assume those data are shared by all workers, the first one is the label,
+  //   // and the second one is the training data
+
+  //   // while each of the rest present one feature group.
+  //   // FIXME how to store the
+  //   // feature group info
+  //   MatrixInfo info;
+  //   for (int i = 1; i < data.files_size(); ++i) {
+  //     ReadFileToProtoOrDie(data.files(i)+".info", &info);
+  //     global_training_info_.push_back(info);
+  //     global_training_feature_range_  =
+  //         global_training_feature_range_.setUnion(Range<Key>(info.col()));
+  //   }
+  //   SizeR global_data_range = SizeR(info.row());
+  //   for (int i = 0; i < num_worker; ++i) {
+  //     global_data_range.evenDivide(num_worker, i).to(data.mutable_range());
+  //     worker_training_.push_back(data);
+  //   }
+  // } else if (data.format() == DataConfig::PROTO) {
 } // namespace PS

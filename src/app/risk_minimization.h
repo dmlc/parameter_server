@@ -35,16 +35,13 @@ class RiskMinimization : public App {
   // progress of all iterations, only valid for the scheduler
   std::map<int, RiskMinProgress> global_progress_;
 
-  // only available at the scheduler
+  // data information, only available at the scheduler
   std::vector<MatrixInfo> global_training_info_;
   size_t global_training_example_size_ = 0;
 
-  Range<Key> global_training_feature_range_ = Range<Key>(-1, 0);
+  Range<Key> global_feature_range_;
 
   AUC training_auc_;
 };
 
-  // local training data, format:
-  // label, feature_group 1, feature_group 2, ....
-  // MatrixPtrList<double> training_data_;
 } // namespace PS

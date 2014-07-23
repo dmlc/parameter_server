@@ -32,90 +32,54 @@ void LinearMethod::init() {
 void LinearMethod::startSystem() {
   // load global data information
   int num_servers = FLAGS_num_servers;
-  int num_worker = FLAGS_num_workers;
+  int num_workers = FLAGS_num_workers;
+  InstanceInfo training_info, validation_info;
+  std::vector<DataConfig> divided_training, divided_validation;
 
-  std::vector<Range<Key>> server_range;
-  std::vector<DataConfig> worker_training_;
+  CHECK(app_cf_.has_training_data());
+  divided_training = assignDataToNodes(
+      app_cf_.training_data(), num_workers, &training_info);
 
-  auto data = searchFiles(app_cf_.training_data());
-  CHECK_GT(data.files_size(), 0);
-  // LL << "training data " << data.DebugString();
-
-  if (data.format() == DataConfig::BIN) {
-    // format: Y, feature group 0, feature group 1, ...
-    // assume those data are shared by all workers, the first one is the label,
-    // and the second one is the training data
-
-    // while each of the rest present one feature group.
-    // FIXME how to store the
-    // feature group info
-    MatrixInfo info;
-    for (int i = 1; i < data.files_size(); ++i) {
-      ReadFileToProtoOrDie(data.files(i)+".info", &info);
-      global_training_info_.push_back(info);
-      global_training_feature_range_  =
-          global_training_feature_range_.setUnion(Range<Key>(info.col()));
-    }
-    SizeR global_data_range = SizeR(info.row());
-    for (int i = 0; i < num_worker; ++i) {
-      global_data_range.evenDivide(num_worker, i).to(data.mutable_range());
-      worker_training_.push_back(data);
-    }
-  } else if (data.format() == DataConfig::PROTO) {
-    // assume multiple recordio files, each worker get several of them
-    InstanceInfo info;
-    for (int i = 0; i < data.files_size(); ++i) {
-      InstanceInfo f;
-      ReadFileToProtoOrDie(data.files(i)+".info", &f);
-      info = i == 0 ? f : mergeInstanceInfo(info, f);
-    }
-    for (int i = 0; i < info.individual_groups_size(); ++i) {
-      global_training_info_.push_back(
-          readMatrixInfo<double>(info.individual_groups(i)));
-    }
-    global_training_feature_range_ =
-        Range<Key>(info.all_group().feature_begin(), info.all_group().feature_end());
-    for (int i = 0; i < num_worker; ++i) {
-      DataConfig dc; dc.set_format(DataConfig::PROTO);
-      auto os = Range<int>(0, data.files_size()).evenDivide(num_worker, i);
-      for (int j = os.begin(); j < os.end(); ++j)
-        dc.add_files(data.files(j));
-      worker_training_.push_back(dc);
-    }
+  for (int i = 0; i < training_info.individual_groups_size(); ++i) {
+    global_training_info_.push_back(
+        readMatrixInfo<double>(training_info.individual_groups(i)));
   }
-  global_training_example_size_ += global_training_info_[0].row().end() -
-                                   global_training_info_[0].row().begin();
+  global_feature_range_ = Range<Key>(
+      training_info.all_group().feature_begin(),
+      training_info.all_group().feature_end());
 
+  global_training_example_size_ =
+      global_training_info_[0].row().end() -
+      global_training_info_[0].row().begin();
+
+  if (app_cf_.has_validation_data()) {
+    divided_validation = assignDataToNodes(
+        app_cf_.validation_data(), num_workers, &validation_info);
+
+    global_feature_range_ = global_feature_range_.setUnion(
+        Range<Key>(validation_info.all_group().feature_begin(),
+                   validation_info.all_group().feature_end()));
+  }
   fprintf(stderr, "training data info: %lu examples with feature range %s\n",
-          global_training_example_size_, global_training_feature_range_.toString().data());
+          global_training_example_size_, global_feature_range_.toString().data());
 
-  // evenly divide the keys range for server nodes
-  for (int i = 0; i < num_servers; ++i) {
-    server_range.push_back(
-        global_training_feature_range_.evenDivide(num_servers, i));
-  }
-
-  App::requestNodes();
-  int s = 0;
-  for (auto& it : nodes_) {
-    auto& d = it.second;
-    if (d.role() == Node::SERVER)
-      server_range[s++].to(d.mutable_key());
-    else
-      global_training_feature_range_.to(d.mutable_key());
-  }
-  CHECK_EQ(s, FLAGS_num_servers);
-
+  // initialize other nodes'
   Task start;
-  // must set the following two here, though often will set automatically by calling submit()
   start.set_request(true);
   start.set_customer(name());
   start.set_type(Task::MANAGE);
   start.mutable_mng_node()->set_cmd(ManageNode::INIT);
-  for (auto& it : nodes_)
-    *start.mutable_mng_node()->add_nodes() = it.second;
 
-  // LL << start.DebugString();
+  App::requestNodes();
+  int s = 0;
+  for (auto& it : nodes_) {
+    auto& node = it.second;
+    auto key = node.role() != Node::SERVER ? global_feature_range_ :
+               global_feature_range_.evenDivide(num_servers, s++);
+    key.to(node.mutable_key());
+    *start.mutable_mng_node()->add_nodes() = node;
+  }
+
   // let the scheduler connect all other nodes
   sys_.manage_node(start);
 
@@ -123,9 +87,14 @@ void LinearMethod::startSystem() {
   int time = 0, k = 0;
   start.mutable_mng_app()->set_cmd(ManageApp::ADD);
   for (auto& w : exec_.group(kActiveGroup)) {
-    auto cf = app_cf_; cf.clear_training_data();
-    if (w->role() == Node::CLIENT)
-      *cf.mutable_training_data() = worker_training_[k++];
+    auto cf = app_cf_;
+    cf.clear_training_data();
+    cf.clear_validation_data();
+    if (w->role() == Node::CLIENT) {
+      if (app_cf_.has_validation_data())
+        *cf.mutable_validation_data() = divided_validation[k];
+      *cf.mutable_training_data() = divided_training[k++];
+    }
     *(start.mutable_mng_app()->mutable_app_config()) = cf;
     CHECK_EQ(time, w->submit(start));
   }

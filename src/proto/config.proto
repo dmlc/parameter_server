@@ -12,8 +12,11 @@ message AppConfig {
   repeated string parameter_name = 3;
 
   optional DataConfig training_data = 10;
-  optional DataConfig model_output = 15;
+  optional DataConfig validation_data = 11;
+
   optional ParameterInitConfig init_w = 13;
+
+  optional DataConfig model_output = 15;
 
   optional LossConfig loss = 20;
   optional PenaltyConfig penalty = 21;
