@@ -354,20 +354,18 @@ void BlockCoordinateL1LR::computeEvaluationAUC(AUCData *data) {
   auto validation_data = readMatrices<double>(app_cf_.validation_data());
   CHECK_EQ(validation_data.size(), 2);
 
-  SArray<Key> keys;
   auto y = validation_data[0];
-  auto X = validation_data[1]->localize(&keys);
+  auto X = validation_data[1]->localize(&(w_->key()));
   CHECK_EQ(y->rows(), X->rows());
-  LL << "load data";
 
-  Message pull_msg; pull_msg.key = keys;
+  Message pull_msg; pull_msg.key = w_->key();
   int time = w_->sync(
       CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
   w_->taskpool(kServerGroup)->waitOutgoingTask(time);
 
   auto recv = w_->received(time);
   auto w = recv[0].second;
-  CHECK_EQ(keys.size(), w.size());
+  // CHECK_EQ.size(), w.size());
 
   AUC auc; auc.setGoodness(l1lr_cf_.auc_goodness());
   SArray<double> Xw(X->rows());
