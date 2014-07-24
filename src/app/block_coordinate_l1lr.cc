@@ -74,9 +74,9 @@ void BlockCoordinateL1LR::run() {
     fprintf(stderr, "evaluation auc: %f\n", validation_auc.evaluate());
   }
 
-  Task save_model;
-  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
-  pool->submitAndWait(save_model);
+  // Task save_model;
+  // RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  // pool->submitAndWait(save_model);
 }
 
 
@@ -354,24 +354,24 @@ void BlockCoordinateL1LR::computeEvaluationAUC(AUCData *data) {
   auto validation_data = readMatrices<double>(app_cf_.validation_data());
   CHECK_EQ(validation_data.size(), 2);
 
+  SArray<Key> keys;
   auto y = validation_data[0];
-  auto X = validation_data[1]->localize(&(w_->key()));
+  auto X = validation_data[1]->localize(&keys);
   CHECK_EQ(y->rows(), X->rows());
-  // sync keys and fetch initial value of w_
-  SArrayList<double> empty;
-  std::promise<void> promise;
-  w_->roundTripForWorker(-1, w_->key().range(), empty, [this, &promise](int t) {
-      auto data = w_->received(t);
-      CHECK_EQ(data.size(), 1);
-      CHECK_EQ(w_->key().size(), data[0].first.size());
-      w_->value() = data[0].second;
-      promise.set_value();
-    });
-  promise.get_future().wait();
+  LL << "load data";
+
+  Message pull_msg; pull_msg.key = keys;
+  int time = w_->sync(
+      CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
+  w_->taskpool(kServerGroup)->waitOutgoingTask(time);
+
+  auto recv = w_->received(time);
+  auto w = recv[0].second;
+  CHECK_EQ(keys.size(), w.size());
 
   AUC auc; auc.setGoodness(l1lr_cf_.auc_goodness());
   SArray<double> Xw(X->rows());
-  Xw.eigenVector() = *X * w_->value().eigenVector();
+  Xw.eigenVector() = *X * w.eigenVector();
   auc.compute(y->value(), Xw, data);
 }
 

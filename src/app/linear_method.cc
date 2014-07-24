@@ -55,7 +55,10 @@ void LinearMethod::startSystem() {
   if (app_cf_.has_validation_data()) {
     divided_validation = assignDataToNodes(
         app_cf_.validation_data(), num_workers, &validation_info);
-
+    for (int i = 0; i < validation_info.individual_groups_size(); ++i) {
+      global_validation_info_.push_back(
+          readMatrixInfo<double>(validation_info.individual_groups(i)));
+    }
     global_feature_range_ = global_feature_range_.setUnion(
         Range<Key>(validation_info.all_group().feature_begin(),
                    validation_info.all_group().feature_end()));
