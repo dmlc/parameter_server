@@ -8,13 +8,15 @@ namespace PS {
 class RiskMinimization : public App {
  public:
   void process(Message* msg);
-  void mergeProgress(int iter);
 
+  void mergeProgress(int iter);
+  void mergeAUC(AUC* auc);
  protected:
   virtual void prepareData(const Message& msg) = 0;
   virtual void updateModel(Message* msg) = 0;
   virtual RiskMinProgress evaluateProgress() = 0;
   virtual void saveModel(const Message& msg) = 0;
+  virtual void computeEvaluationAUC(AUCData *data) = 0;
 
   void showTime(int iter);
   void showObjective(int iter);
@@ -35,13 +37,6 @@ class RiskMinimization : public App {
   // progress of all iterations, only valid for the scheduler
   std::map<int, RiskMinProgress> global_progress_;
 
-  // data information, only available at the scheduler
-  std::vector<MatrixInfo> global_training_info_;
-  size_t global_training_example_size_ = 0;
-
-  Range<Key> global_feature_range_;
-
-  AUC training_auc_;
 };
 
 } // namespace PS

@@ -23,6 +23,7 @@ message RiskMinCall {
     EVALUATE_PROGRESS = 3;
     SAVE_MODEL = 4;
     RECOVER = 5;
+    COMPUTE_VALIDATION_AUC = 6;
   }
   required Command cmd = 1;
   optional PbRange key = 2;

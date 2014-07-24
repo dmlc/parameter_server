@@ -22,6 +22,7 @@ class BlockCoordinateL1LR : public LinearBlockIterator {
 
   void updateWeight(SizeR local_feature_range, const SArray<double>& G, const SArray<double>& U);
 
+  void computeEvaluationAUC(AUCData *data);
   RiskMinProgress evaluateProgress();
 
   void showProgress(int iter);

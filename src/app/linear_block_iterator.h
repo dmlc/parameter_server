@@ -12,7 +12,7 @@ class LinearBlockIterator : public LinearMethod {
  protected:
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
 
-
+  virtual void computeEvaluationAUC(AUCData *data) { }
   virtual RiskMinProgress evaluateProgress();
 
   virtual void prepareData(const Message& msg);

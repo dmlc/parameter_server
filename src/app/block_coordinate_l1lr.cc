@@ -1,5 +1,7 @@
 #include "app/block_coordinate_l1lr.h"
 #include "base/sparse_matrix.h"
+#include "base/matrix_io.h"
+
 namespace PS {
 
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
@@ -40,15 +42,16 @@ void BlockCoordinateL1LR::run() {
     Task eval;
     RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
-
-    time = pool->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
-    pool->waitOutgoingTask(time);
+    time = pool->submitAndWait(
+        eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+    // pool->waitOutgoingTask(time);
 
     showProgress(iter);
 
     double vio = global_progress_[iter].violation();
-    KKT_filter_threshold_ = vio / (double)global_training_example_size_
-                            * app_cf_.block_coord_l1lr().kkt_filter_threshold_ratio();
+    KKT_filter_threshold_
+        = vio / (double)global_training_example_size_
+        * app_cf_.block_coord_l1lr().kkt_filter_threshold_ratio();
 
     if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
@@ -59,6 +62,21 @@ void BlockCoordinateL1LR::run() {
   if (iter == cf.max_pass_of_data()) {
     fprintf(stderr, "reached maximal # of data pass: %d\n", cf.max_pass_of_data());
   }
+
+  if (app_cf_.has_validation_data()) {
+    fprintf(stderr, "evaluate with %lu validation examples\n",
+            global_validation_info_[0].row().end());
+    Task test;
+    AUC validation_auc;
+    RiskMinimization::setCall(&test)->set_cmd(RiskMinCall::COMPUTE_VALIDATION_AUC);
+    pool->submitAndWait(test, [this, &validation_auc](){
+        RiskMinimization::mergeAUC(&validation_auc); });
+    fprintf(stderr, "evaluation auc: %f\n", validation_auc.evaluate());
+  }
+
+  Task save_model;
+  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  pool->submitAndWait(save_model);
 }
 
 
@@ -77,7 +95,6 @@ void BlockCoordinateL1LR::prepareData(const Message& msg) {
   delta_.resize(w_->size());
   delta_.setValue(l1lr_cf_.delta_init_value());
 
-  training_auc_.setGoodness(l1lr_cf_.auc_goodness());
 }
 
 void BlockCoordinateL1LR::updateModel(Message* msg) {
@@ -331,15 +348,38 @@ void BlockCoordinateL1LR::showProgress(int iter) {
   }
 }
 
+void BlockCoordinateL1LR::computeEvaluationAUC(AUCData *data) {
+  if (!exec_.isWorker()) return;
+  CHECK(app_cf_.has_validation_data());
+  auto validation_data = readMatrices<double>(app_cf_.validation_data());
+  CHECK_EQ(validation_data.size(), 2);
+
+  auto y = validation_data[0];
+  auto X = validation_data[1]->localize(&(w_->key()));
+  CHECK_EQ(y->rows(), X->rows());
+  // sync keys and fetch initial value of w_
+  SArrayList<double> empty;
+  std::promise<void> promise;
+  w_->roundTripForWorker(-1, w_->key().range(), empty, [this, &promise](int t) {
+      auto data = w_->received(t);
+      CHECK_EQ(data.size(), 1);
+      CHECK_EQ(w_->key().size(), data[0].first.size());
+      w_->value() = data[0].second;
+      promise.set_value();
+    });
+  promise.get_future().wait();
+
+  AUC auc; auc.setGoodness(l1lr_cf_.auc_goodness());
+  SArray<double> Xw(X->rows());
+  Xw.eigenVector() = *X * w_->value().eigenVector();
+  auc.compute(y->value(), Xw, data);
+}
+
 RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
   RiskMinProgress prog;
   if (exec_.isWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.get());
-    SArray<double> predict(dual_.size());
-    // = X * w
-    predict.eigenArray() = y_->value().eigenArray() * log(dual_.eigenArray());
-    training_auc_.compute(y_->value(), predict, prog.mutable_training_auc_data());
   } else {
     size_t nnz_w = 0;
     double objv = 0;

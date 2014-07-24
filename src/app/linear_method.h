@@ -36,6 +36,12 @@ class LinearMethod : public RiskMinimization {
   SArray<double> Xw_;
   // std::map<int, MatrixPtr<double>> Xs_;
 
+  // data information, only available at the scheduler
+  std::vector<MatrixInfo> global_training_info_, global_validation_info_;
+  size_t global_training_example_size_ = 0;
+
+  Range<Key> global_feature_range_;
+
 };
 
 } // namespace PS
