@@ -1,14 +1,18 @@
 #include "gtest/gtest.h"
 #include "base/auc.h"
+#include "base/shared_array_inl.h"
 
 using namespace PS;
 
 class AUCTEST : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    CHECK(false);
+    // CHECK(false);
     // y.readFromFile("../data/true_label");
     // predict_y.readFromFile("../data/predict_label");
+    SizeR r(0,20242);
+    y.readFromFile(r, "./y_W0");
+    predict_y.readFromFile(r, "./Xw_W0");
   }
   SArray<double> y, predict_y;
 };
@@ -16,7 +20,7 @@ class AUCTEST : public ::testing::Test {
 
 TEST_F(AUCTEST, goodness) {
 
-  for (int i = 1; i < 400; i+=10) {
+  for (int i = 1; i < 400; i+=100) {
     AUC auc_worker;
     auc_worker.setGoodness(i*10);
     AUCData data;
@@ -28,19 +32,19 @@ TEST_F(AUCTEST, goodness) {
   }
 }
 
-TEST_F(AUCTEST, dist) {
+// TEST_F(AUCTEST, dist) {
 
-  for (int n = 2; n < 20; n+=3) {
-    AUC auc_root;
-    for (int i = 0; i < n; ++i) {
-      AUC auc_worker;
-      AUCData data;
-      auc_worker.setGoodness(100000);
-      auto range = SizeR(0, y.size()).evenDivide(n, i);
-      auc_worker.compute(y.segment(range), predict_y.segment(range), &data);
+//   for (int n = 2; n < 20; n+=3) {
+//     AUC auc_root;
+//     for (int i = 0; i < n; ++i) {
+//       AUC auc_worker;
+//       AUCData data;
+//       auc_worker.setGoodness(100000);
+//       auto range = SizeR(0, y.size()).evenDivide(n, i);
+//       auc_worker.compute(y.segment(range), predict_y.segment(range), &data);
 
-      auc_root.merge(data);
-    }
-    LL << auc_root.evaluate();
-  }
-}
+//       auc_root.merge(data);
+//     }
+//     LL << auc_root.evaluate();
+//   }
+// }

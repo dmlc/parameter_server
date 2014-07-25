@@ -128,12 +128,15 @@ void LinearMethod::saveModel(const Message& msg) {
 
   if (output.format() == DataConfig::TEXT) {
     std::string file = w_->name() + "_" + exec_.myNode().id();
+    fprintf(stderr, "%s writes model to %s\n",
+            exec_.myNode().id().data(), file.data());
     std::ofstream out(file);
     CHECK(out.good());
 
     for (size_t i = 0; i < w_->key().size(); ++i) {
-      if (w_->value()[i] != 0)
-        out << w_->key()[i] << "\t" << w_->value()[i] << "\n";
+      auto v = w_->value()[i];
+      if (v != 0 && !(v != v))
+        out << w_->key()[i] << "\t" << v << "\n";
     }
   } else {
     LL << "didn't implement yet";

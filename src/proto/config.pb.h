@@ -865,6 +865,13 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double delta_max_value() const;
   inline void set_delta_max_value(double value);
 
+  // optional double learning_rate = 3 [default = 1];
+  inline bool has_learning_rate() const;
+  inline void clear_learning_rate();
+  static const int kLearningRateFieldNumber = 3;
+  inline double learning_rate() const;
+  inline void set_learning_rate(double value);
+
   // optional bool enable_multi_thread = 4 [default = false];
   inline bool has_enable_multi_thread() const;
   inline void clear_enable_multi_thread();
@@ -879,7 +886,7 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double kkt_filter_threshold_ratio() const;
   inline void set_kkt_filter_threshold_ratio(double value);
 
-  // optional int64 auc_goodness = 12 [default = 1000];
+  // optional int64 auc_goodness = 12 [default = 100000];
   inline bool has_auc_goodness() const;
   inline void clear_auc_goodness();
   static const int kAucGoodnessFieldNumber = 12;
@@ -892,6 +899,8 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline void clear_has_delta_init_value();
   inline void set_has_delta_max_value();
   inline void clear_has_delta_max_value();
+  inline void set_has_learning_rate();
+  inline void clear_has_learning_rate();
   inline void set_has_enable_multi_thread();
   inline void clear_has_enable_multi_thread();
   inline void set_has_kkt_filter_threshold_ratio();
@@ -903,12 +912,13 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
 
   double delta_init_value_;
   double delta_max_value_;
+  double learning_rate_;
   double kkt_filter_threshold_ratio_;
   ::google::protobuf::int64 auc_goodness_;
   bool enable_multi_thread_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -2168,15 +2178,37 @@ inline void BlockCoordL1LRConfig::set_delta_max_value(double value) {
   delta_max_value_ = value;
 }
 
-// optional bool enable_multi_thread = 4 [default = false];
-inline bool BlockCoordL1LRConfig::has_enable_multi_thread() const {
+// optional double learning_rate = 3 [default = 1];
+inline bool BlockCoordL1LRConfig::has_learning_rate() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_enable_multi_thread() {
+inline void BlockCoordL1LRConfig::set_has_learning_rate() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void BlockCoordL1LRConfig::clear_has_enable_multi_thread() {
+inline void BlockCoordL1LRConfig::clear_has_learning_rate() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockCoordL1LRConfig::clear_learning_rate() {
+  learning_rate_ = 1;
+  clear_has_learning_rate();
+}
+inline double BlockCoordL1LRConfig::learning_rate() const {
+  return learning_rate_;
+}
+inline void BlockCoordL1LRConfig::set_learning_rate(double value) {
+  set_has_learning_rate();
+  learning_rate_ = value;
+}
+
+// optional bool enable_multi_thread = 4 [default = false];
+inline bool BlockCoordL1LRConfig::has_enable_multi_thread() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void BlockCoordL1LRConfig::set_has_enable_multi_thread() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void BlockCoordL1LRConfig::clear_has_enable_multi_thread() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void BlockCoordL1LRConfig::clear_enable_multi_thread() {
   enable_multi_thread_ = false;
@@ -2192,13 +2224,13 @@ inline void BlockCoordL1LRConfig::set_enable_multi_thread(bool value) {
 
 // optional double kkt_filter_threshold_ratio = 10 [default = 10];
 inline bool BlockCoordL1LRConfig::has_kkt_filter_threshold_ratio() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void BlockCoordL1LRConfig::set_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void BlockCoordL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void BlockCoordL1LRConfig::clear_kkt_filter_threshold_ratio() {
   kkt_filter_threshold_ratio_ = 10;
@@ -2212,18 +2244,18 @@ inline void BlockCoordL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
   kkt_filter_threshold_ratio_ = value;
 }
 
-// optional int64 auc_goodness = 12 [default = 1000];
+// optional int64 auc_goodness = 12 [default = 100000];
 inline bool BlockCoordL1LRConfig::has_auc_goodness() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void BlockCoordL1LRConfig::set_has_auc_goodness() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void BlockCoordL1LRConfig::clear_has_auc_goodness() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void BlockCoordL1LRConfig::clear_auc_goodness() {
-  auc_goodness_ = GOOGLE_LONGLONG(1000);
+  auc_goodness_ = GOOGLE_LONGLONG(100000);
   clear_has_auc_goodness();
 }
 inline ::google::protobuf::int64 BlockCoordL1LRConfig::auc_goodness() const {

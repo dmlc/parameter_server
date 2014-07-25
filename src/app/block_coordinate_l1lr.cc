@@ -53,7 +53,8 @@ void BlockCoordinateL1LR::run() {
         = vio / (double)global_training_example_size_
         * app_cf_.block_coord_l1lr().kkt_filter_threshold_ratio();
 
-    if (global_progress_[iter].relative_objv() <= cf.epsilon()) {
+    double rel = global_progress_[iter].relative_objv();
+    if (rel > 0 && rel <= cf.epsilon()) {
       fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
       break;
     }
@@ -74,9 +75,10 @@ void BlockCoordinateL1LR::run() {
     fprintf(stderr, "evaluation auc: %f\n", validation_auc.evaluate());
   }
 
-  // Task save_model;
-  // RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
-  // pool->submitAndWait(save_model);
+  LL << "save mode";
+  Task save_model;
+  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  pool->submitAndWait(save_model);
 }
 
 
@@ -288,7 +290,7 @@ void BlockCoordinateL1LR::updateWeight(
   CHECK_EQ(G.size(), local_feature_range.size());
   CHECK_EQ(U.size(), local_feature_range.size());
 
-  double eta = app_cf_.learner().learning_rate();
+  double eta = app_cf_.block_coord_l1lr().learning_rate();
   double lambda = app_cf_.penalty().coefficient();
 
   for (size_t i = 0; i < local_feature_range.size(); ++i) {
@@ -354,9 +356,9 @@ void BlockCoordinateL1LR::computeEvaluationAUC(AUCData *data) {
   auto validation_data = readMatrices<double>(app_cf_.validation_data());
   CHECK_EQ(validation_data.size(), 2);
 
-  auto y = validation_data[0];
+  auto y = validation_data[0]->value();
   auto X = validation_data[1]->localize(&(w_->key()));
-  CHECK_EQ(y->rows(), X->rows());
+  CHECK_EQ(y.size(), X->rows());
 
   Message pull_msg; pull_msg.key = w_->key();
   int time = w_->sync(
@@ -365,12 +367,18 @@ void BlockCoordinateL1LR::computeEvaluationAUC(AUCData *data) {
 
   auto recv = w_->received(time);
   auto w = recv[0].second;
+  for (int i = 0; i < w.size(); ++i) if (w[i] != w[i]) w[i] = 0;
+  // w.writeToFile("w");
   // CHECK_EQ.size(), w.size());
 
   AUC auc; auc.setGoodness(l1lr_cf_.auc_goodness());
   SArray<double> Xw(X->rows());
   Xw.eigenVector() = *X * w.eigenVector();
-  auc.compute(y->value(), Xw, data);
+  auc.compute(y, Xw, data);
+
+  // Xw.writeToFile("Xw_"+myNodeID());
+  // y.writeToFile("y_"+myNodeID());
+  // LL << auc.evaluate();
 }
 
 RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
