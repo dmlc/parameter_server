@@ -36,7 +36,7 @@ class RiskMinimization : public App {
 
   // progress of all iterations, only valid for the scheduler
   std::map<int, RiskMinProgress> global_progress_;
-
+  double init_sys_time_ = 0;
 };
 
 } // namespace PS

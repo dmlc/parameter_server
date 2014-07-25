@@ -380,6 +380,7 @@ RiskMinProgress BlockCoordinateL1LR::evaluateProgress() {
   if (exec_.isWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.get());
+    busy_timer_.reset();
   } else {
     size_t nnz_w = 0;
     double objv = 0;

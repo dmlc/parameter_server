@@ -109,7 +109,8 @@ void LinearMethod::startSystem() {
   prepare.set_type(Task::CALL_CUSTOMER);
   prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
   taskpool(kActiveGroup)->submitAndWait(prepare);
-  fprintf(stderr, "loaded data... in %.3f sec\n", total_timer_.get());
+  init_sys_time_ = total_timer_.get();
+  fprintf(stderr, "loaded data... in %.3f sec\n", init_sys_time_);
 }
 
 void LinearMethod::saveModel(const Message& msg) {

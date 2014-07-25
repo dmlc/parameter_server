@@ -6,7 +6,6 @@
 namespace PS {
 
 void RiskMinimization::process(Message* msg) {
-  busy_timer_.start();
   typedef RiskMinCall Call;
   switch (getCall(*msg).cmd()) {
     case Call::EVALUATE_PROGRESS: {
@@ -42,7 +41,6 @@ void RiskMinimization::process(Message* msg) {
     default:
       CHECK(false) << "unknown cmd: " << getCall(*msg).cmd();
   }
-  busy_timer_.stop();
 }
 
 
@@ -77,14 +75,14 @@ void RiskMinimization::showTime(int iter) {
     fprintf(stderr, "+-----------------\n");
   } else {
     auto prog = global_progress_[iter];
-    double ttl_t = prog.total_time();
-    if (iter > 0) ttl_t -= global_progress_[iter-1].total_time();
+    double ttl_t = prog.total_time() - (
+        iter > 0 ? global_progress_[iter-1].total_time() : init_sys_time_);
 
     int n = prog.busy_time_size();
     Eigen::ArrayXd busy_t(n);
     for (int i = 0; i < n; ++i) {
       busy_t[i] = prog.busy_time(i);
-      if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
+      // if (iter > 0) busy_t[i] -= global_progress_[iter-1].busy_time(i);
     }
     // double mean = busy_t.sum() / n;
     // double var = (busy_t - mean).matrix().norm() / std::sqrt((double)n);

@@ -140,6 +140,7 @@ RiskMinProgress LinearBlockIterator::evaluateProgress() {
   if (exec_.isWorker()) {
     prog.set_objv(loss_->evaluate({y_, dual_.matrix()}));
     prog.add_busy_time(busy_timer_.get());
+    busy_timer_.reset();
   } else {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
     prog.set_nnz_w(w_->nnz());
