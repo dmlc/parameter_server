@@ -7,8 +7,7 @@ namespace PS {
 // quite similar to LinearBlockIterator::run(), but diffs at the KKT filter
 void BlockCoordinateL1LR::run() {
   LinearMethod::startSystem();
-  auto blocks = LinearBlockIterator::partitionFeatures();
-
+  auto blocks = BlockSolver::partitionFeatures(app_cf_, global_training_info_);
   std::vector<int> block_order;
   for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i);
   auto cf = app_cf_.block_iterator();

@@ -1,12 +1,12 @@
 #pragma once
 #include <float.h>
-#include "app/linear_block_iterator.h"
+#include "linear_method/batch_solver.h"
 #include "base/bitmap.h"
 
 namespace PS {
 
 // optimizated for sparse logisitic regression
-class BlockCoordinateL1LR : public LinearBlockIterator {
+class BlockCoordinateL1LR : public BatchSolver {
  public:
   virtual void run();
  protected:

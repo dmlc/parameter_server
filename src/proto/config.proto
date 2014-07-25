@@ -101,9 +101,6 @@ message LossConfig {
     LOGIT = 2;
     HINGE = 3;
     SQUARE_HINGE = 4;
-  // SQUARE_SINGLE = 2;
-  // LOGIT_SINGLE = 4;
-  // HINGE_SINGLE = 6;
   }
   required Type type = 1;
 }
@@ -130,4 +127,12 @@ message PenaltyConfig {
   }
   required Type type = 1;
   required float coefficient = 2 [default = 0];
+}
+
+message LearningRateConfig {
+  enum Type {
+    CONSTANT = 1;
+  }
+  required Type type = 1;
+  optional double eta = 2 [default = 1];
 }

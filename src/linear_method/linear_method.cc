@@ -8,10 +8,6 @@
 namespace PS {
 
 void LinearMethod::init() {
-  w_ = KVVectorPtr(new KVVector<Key, double>());
-  w_->name() = app_cf_.parameter_name(0);
-  sys_.yp().add(std::static_pointer_cast<Customer>(w_));
-
   bool has_learner = app_cf_.has_learner();
   if (has_learner) {
     learner_ = std::static_pointer_cast<AggGradLearner<double>>(
@@ -102,9 +98,9 @@ void LinearMethod::startSystem() {
     CHECK_EQ(time, w->submit(start));
   }
   taskpool(kActiveGroup)->waitOutgoingTask(time);
-  fprintf(stderr, "system started...");
+  // fprintf(stderr, "system started...");
 
-  // load data, build key mapping
+  // load data
   Task prepare;
   prepare.set_type(Task::CALL_CUSTOMER);
   prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
@@ -113,35 +109,5 @@ void LinearMethod::startSystem() {
   fprintf(stderr, "loaded data... in %.3f sec\n", init_sys_time_);
 }
 
-void LinearMethod::saveModel(const Message& msg) {
-  // didn't use msg here. in future, one may pass the model_file by msg
-
-  if (!exec_.isServer()) return;
-  if (!app_cf_.has_model_output()) return;
-
-  auto output = app_cf_.model_output();
-  // if (output.files_size() != 1) {
-  //   LL << "you should use only a single file: " << output.DebugString();
-  //   return;
-  // }
-
-  CHECK_EQ(w_->key().size(), w_->value().size());
-
-  if (output.format() == DataConfig::TEXT) {
-    std::string file = w_->name() + "_" + exec_.myNode().id();
-    fprintf(stderr, "%s writes model to %s\n",
-            exec_.myNode().id().data(), file.data());
-    std::ofstream out(file);
-    CHECK(out.good());
-
-    for (size_t i = 0; i < w_->key().size(); ++i) {
-      auto v = w_->value()[i];
-      if (v != 0 && !(v != v))
-        out << w_->key()[i] << "\t" << v << "\n";
-    }
-  } else {
-    LL << "didn't implement yet";
-  }
-}
 
 } // namespace PS

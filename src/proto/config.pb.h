@@ -44,6 +44,7 @@ class LossConfig;
 class LearnerConfig;
 class AggGradLearnerArg;
 class PenaltyConfig;
+class LearningRateConfig;
 
 enum AppConfig_AppType {
   AppConfig_AppType_RISK_MINIMIZATION = 1,
@@ -163,6 +164,24 @@ inline bool PenaltyConfig_Type_Parse(
     const ::std::string& name, PenaltyConfig_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<PenaltyConfig_Type>(
     PenaltyConfig_Type_descriptor(), name, value);
+}
+enum LearningRateConfig_Type {
+  LearningRateConfig_Type_CONSTANT = 1
+};
+bool LearningRateConfig_Type_IsValid(int value);
+const LearningRateConfig_Type LearningRateConfig_Type_Type_MIN = LearningRateConfig_Type_CONSTANT;
+const LearningRateConfig_Type LearningRateConfig_Type_Type_MAX = LearningRateConfig_Type_CONSTANT;
+const int LearningRateConfig_Type_Type_ARRAYSIZE = LearningRateConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* LearningRateConfig_Type_descriptor();
+inline const ::std::string& LearningRateConfig_Type_Name(LearningRateConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    LearningRateConfig_Type_descriptor(), value);
+}
+inline bool LearningRateConfig_Type_Parse(
+    const ::std::string& name, LearningRateConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<LearningRateConfig_Type>(
+    LearningRateConfig_Type_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -1350,6 +1369,121 @@ class PenaltyConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static PenaltyConfig* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class LearningRateConfig : public ::google::protobuf::Message {
+ public:
+  LearningRateConfig();
+  virtual ~LearningRateConfig();
+
+  LearningRateConfig(const LearningRateConfig& from);
+
+  inline LearningRateConfig& operator=(const LearningRateConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const LearningRateConfig& default_instance();
+
+  void Swap(LearningRateConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  LearningRateConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const LearningRateConfig& from);
+  void MergeFrom(const LearningRateConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef LearningRateConfig_Type Type;
+  static const Type CONSTANT = LearningRateConfig_Type_CONSTANT;
+  static inline bool Type_IsValid(int value) {
+    return LearningRateConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    LearningRateConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    LearningRateConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    LearningRateConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return LearningRateConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return LearningRateConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return LearningRateConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.LearningRateConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::LearningRateConfig_Type type() const;
+  inline void set_type(::PS::LearningRateConfig_Type value);
+
+  // optional double eta = 2 [default = 1];
+  inline bool has_eta() const;
+  inline void clear_eta();
+  static const int kEtaFieldNumber = 2;
+  inline double eta() const;
+  inline void set_eta(double value);
+
+  // @@protoc_insertion_point(class_scope:PS.LearningRateConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_eta();
+  inline void clear_has_eta();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  double eta_;
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static LearningRateConfig* default_instance_;
+};
 // ===================================================================
 
 
@@ -2417,6 +2551,55 @@ inline void PenaltyConfig::set_coefficient(float value) {
   coefficient_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// LearningRateConfig
+
+// required .PS.LearningRateConfig.Type type = 1;
+inline bool LearningRateConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LearningRateConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LearningRateConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LearningRateConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::LearningRateConfig_Type LearningRateConfig::type() const {
+  return static_cast< ::PS::LearningRateConfig_Type >(type_);
+}
+inline void LearningRateConfig::set_type(::PS::LearningRateConfig_Type value) {
+  assert(::PS::LearningRateConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional double eta = 2 [default = 1];
+inline bool LearningRateConfig::has_eta() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LearningRateConfig::set_has_eta() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LearningRateConfig::clear_has_eta() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LearningRateConfig::clear_eta() {
+  eta_ = 1;
+  clear_has_eta();
+}
+inline double LearningRateConfig::eta() const {
+  return eta_;
+}
+inline void LearningRateConfig::set_eta(double value) {
+  set_has_eta();
+  eta_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -2449,6 +2632,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::LearnerConfig_Type>() {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::PenaltyConfig_Type>() {
   return ::PS::PenaltyConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LearningRateConfig_Type>() {
+  return ::PS::LearningRateConfig_Type_descriptor();
 }
 
 }  // namespace google

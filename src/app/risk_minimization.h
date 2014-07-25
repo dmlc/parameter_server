@@ -8,7 +8,6 @@ namespace PS {
 class RiskMinimization : public App {
  public:
   void process(Message* msg);
-
   void mergeProgress(int iter);
   void mergeAUC(AUC* auc);
  protected:

@@ -10,31 +10,24 @@
 // #include "penalty/p_norm_penalty.h"
 
 namespace PS {
+namespace LM {
 
 // linear classification/regerssion
 
 class LinearMethod : public RiskMinimization {
 
  public:
-  void init();
+  virtual void init();
 
  protected:
-
   void startSystem();
-  void saveModel(const Message& msg);
-
- protected:
-  typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
-  KVVectorPtr w_;
 
   LossPtr<double> loss_;
   PenaltyPtr<double> penalty_;
   shared_ptr<AggGradLearner<double>> learner_;
 
-  // training data
+  // training data, available at the workers
   MatrixPtr<double> y_, X_;
-  SArray<double> Xw_;
-  // std::map<int, MatrixPtr<double>> Xs_;
 
   // data information, only available at the scheduler
   std::vector<MatrixInfo> global_training_info_, global_validation_info_;
@@ -43,5 +36,7 @@ class LinearMethod : public RiskMinimization {
   Range<Key> global_feature_range_;
 
 };
+
+} // namespace LM
 
 } // namespace PS
