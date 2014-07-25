@@ -38,32 +38,32 @@ void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 class AppConfig;
 class DataConfig;
 class ParameterInitConfig;
-class BlockIteratorConfig;
-class BlockCoordL1LRConfig;
+class BlockSolverConfig;
+class BCDL1LRConfig;
 class LossConfig;
 class LearnerConfig;
-class AggGradLearnerArg;
 class PenaltyConfig;
 class LearningRateConfig;
+class AggGradLearnerArg;
 
-enum AppConfig_AppType {
-  AppConfig_AppType_RISK_MINIMIZATION = 1,
-  AppConfig_AppType_SKETCH = 2
+enum AppConfig_Type {
+  AppConfig_Type_RISK_MINIMIZATION = 1,
+  AppConfig_Type_SKETCH = 2
 };
-bool AppConfig_AppType_IsValid(int value);
-const AppConfig_AppType AppConfig_AppType_AppType_MIN = AppConfig_AppType_RISK_MINIMIZATION;
-const AppConfig_AppType AppConfig_AppType_AppType_MAX = AppConfig_AppType_SKETCH;
-const int AppConfig_AppType_AppType_ARRAYSIZE = AppConfig_AppType_AppType_MAX + 1;
+bool AppConfig_Type_IsValid(int value);
+const AppConfig_Type AppConfig_Type_Type_MIN = AppConfig_Type_RISK_MINIMIZATION;
+const AppConfig_Type AppConfig_Type_Type_MAX = AppConfig_Type_SKETCH;
+const int AppConfig_Type_Type_ARRAYSIZE = AppConfig_Type_Type_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* AppConfig_AppType_descriptor();
-inline const ::std::string& AppConfig_AppType_Name(AppConfig_AppType value) {
+const ::google::protobuf::EnumDescriptor* AppConfig_Type_descriptor();
+inline const ::std::string& AppConfig_Type_Name(AppConfig_Type value) {
   return ::google::protobuf::internal::NameOfEnum(
-    AppConfig_AppType_descriptor(), value);
+    AppConfig_Type_descriptor(), value);
 }
-inline bool AppConfig_AppType_Parse(
-    const ::std::string& name, AppConfig_AppType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<AppConfig_AppType>(
-    AppConfig_AppType_descriptor(), name, value);
+inline bool AppConfig_Type_Parse(
+    const ::std::string& name, AppConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<AppConfig_Type>(
+    AppConfig_Type_descriptor(), name, value);
 }
 enum DataConfig_DataFormat {
   DataConfig_DataFormat_BIN = 1,
@@ -237,38 +237,38 @@ class AppConfig : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef AppConfig_AppType AppType;
-  static const AppType RISK_MINIMIZATION = AppConfig_AppType_RISK_MINIMIZATION;
-  static const AppType SKETCH = AppConfig_AppType_SKETCH;
-  static inline bool AppType_IsValid(int value) {
-    return AppConfig_AppType_IsValid(value);
+  typedef AppConfig_Type Type;
+  static const Type RISK_MINIMIZATION = AppConfig_Type_RISK_MINIMIZATION;
+  static const Type SKETCH = AppConfig_Type_SKETCH;
+  static inline bool Type_IsValid(int value) {
+    return AppConfig_Type_IsValid(value);
   }
-  static const AppType AppType_MIN =
-    AppConfig_AppType_AppType_MIN;
-  static const AppType AppType_MAX =
-    AppConfig_AppType_AppType_MAX;
-  static const int AppType_ARRAYSIZE =
-    AppConfig_AppType_AppType_ARRAYSIZE;
+  static const Type Type_MIN =
+    AppConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    AppConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    AppConfig_Type_Type_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor*
-  AppType_descriptor() {
-    return AppConfig_AppType_descriptor();
+  Type_descriptor() {
+    return AppConfig_Type_descriptor();
   }
-  static inline const ::std::string& AppType_Name(AppType value) {
-    return AppConfig_AppType_Name(value);
+  static inline const ::std::string& Type_Name(Type value) {
+    return AppConfig_Type_Name(value);
   }
-  static inline bool AppType_Parse(const ::std::string& name,
-      AppType* value) {
-    return AppConfig_AppType_Parse(name, value);
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return AppConfig_Type_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
 
-  // optional .PS.AppConfig.AppType type = 1;
+  // optional .PS.AppConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
-  inline ::PS::AppConfig_AppType type() const;
-  inline void set_type(::PS::AppConfig_AppType value);
+  inline ::PS::AppConfig_Type type() const;
+  inline void set_type(::PS::AppConfig_Type value);
 
   // optional string app_name = 2;
   inline bool has_app_name() const;
@@ -361,23 +361,32 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::LearnerConfig* release_learner();
   inline void set_allocated_learner(::PS::LearnerConfig* learner);
 
-  // optional .PS.BlockIteratorConfig block_iterator = 40;
-  inline bool has_block_iterator() const;
-  inline void clear_block_iterator();
-  static const int kBlockIteratorFieldNumber = 40;
-  inline const ::PS::BlockIteratorConfig& block_iterator() const;
-  inline ::PS::BlockIteratorConfig* mutable_block_iterator();
-  inline ::PS::BlockIteratorConfig* release_block_iterator();
-  inline void set_allocated_block_iterator(::PS::BlockIteratorConfig* block_iterator);
+  // optional .PS.LearningRateConfig learning_rate = 31;
+  inline bool has_learning_rate() const;
+  inline void clear_learning_rate();
+  static const int kLearningRateFieldNumber = 31;
+  inline const ::PS::LearningRateConfig& learning_rate() const;
+  inline ::PS::LearningRateConfig* mutable_learning_rate();
+  inline ::PS::LearningRateConfig* release_learning_rate();
+  inline void set_allocated_learning_rate(::PS::LearningRateConfig* learning_rate);
 
-  // optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
-  inline bool has_block_coord_l1lr() const;
-  inline void clear_block_coord_l1lr();
-  static const int kBlockCoordL1LrFieldNumber = 41;
-  inline const ::PS::BlockCoordL1LRConfig& block_coord_l1lr() const;
-  inline ::PS::BlockCoordL1LRConfig* mutable_block_coord_l1lr();
-  inline ::PS::BlockCoordL1LRConfig* release_block_coord_l1lr();
-  inline void set_allocated_block_coord_l1lr(::PS::BlockCoordL1LRConfig* block_coord_l1lr);
+  // optional .PS.BlockSolverConfig block_solver = 40;
+  inline bool has_block_solver() const;
+  inline void clear_block_solver();
+  static const int kBlockSolverFieldNumber = 40;
+  inline const ::PS::BlockSolverConfig& block_solver() const;
+  inline ::PS::BlockSolverConfig* mutable_block_solver();
+  inline ::PS::BlockSolverConfig* release_block_solver();
+  inline void set_allocated_block_solver(::PS::BlockSolverConfig* block_solver);
+
+  // optional .PS.BCDL1LRConfig bcd_l1lr = 41;
+  inline bool has_bcd_l1lr() const;
+  inline void clear_bcd_l1lr();
+  static const int kBcdL1LrFieldNumber = 41;
+  inline const ::PS::BCDL1LRConfig& bcd_l1lr() const;
+  inline ::PS::BCDL1LRConfig* mutable_bcd_l1lr();
+  inline ::PS::BCDL1LRConfig* release_bcd_l1lr();
+  inline void set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr);
 
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
@@ -399,10 +408,12 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_penalty();
   inline void set_has_learner();
   inline void clear_has_learner();
-  inline void set_has_block_iterator();
-  inline void clear_has_block_iterator();
-  inline void set_has_block_coord_l1lr();
-  inline void clear_has_block_coord_l1lr();
+  inline void set_has_learning_rate();
+  inline void clear_has_learning_rate();
+  inline void set_has_block_solver();
+  inline void clear_has_block_solver();
+  inline void set_has_bcd_l1lr();
+  inline void clear_has_bcd_l1lr();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -415,12 +426,13 @@ class AppConfig : public ::google::protobuf::Message {
   ::PS::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearnerConfig* learner_;
-  ::PS::BlockIteratorConfig* block_iterator_;
-  ::PS::BlockCoordL1LRConfig* block_coord_l1lr_;
+  ::PS::LearningRateConfig* learning_rate_;
+  ::PS::BlockSolverConfig* block_solver_;
+  ::PS::BCDL1LRConfig* bcd_l1lr_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -684,14 +696,14 @@ class ParameterInitConfig : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class BlockIteratorConfig : public ::google::protobuf::Message {
+class BlockSolverConfig : public ::google::protobuf::Message {
  public:
-  BlockIteratorConfig();
-  virtual ~BlockIteratorConfig();
+  BlockSolverConfig();
+  virtual ~BlockSolverConfig();
 
-  BlockIteratorConfig(const BlockIteratorConfig& from);
+  BlockSolverConfig(const BlockSolverConfig& from);
 
-  inline BlockIteratorConfig& operator=(const BlockIteratorConfig& from) {
+  inline BlockSolverConfig& operator=(const BlockSolverConfig& from) {
     CopyFrom(from);
     return *this;
   }
@@ -705,17 +717,17 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const BlockIteratorConfig& default_instance();
+  static const BlockSolverConfig& default_instance();
 
-  void Swap(BlockIteratorConfig* other);
+  void Swap(BlockSolverConfig* other);
 
   // implements Message ----------------------------------------------
 
-  BlockIteratorConfig* New() const;
+  BlockSolverConfig* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const BlockIteratorConfig& from);
-  void MergeFrom(const BlockIteratorConfig& from);
+  void CopyFrom(const BlockSolverConfig& from);
+  void MergeFrom(const BlockSolverConfig& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -738,12 +750,12 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional int64 example_block_size = 1 [default = -1];
-  inline bool has_example_block_size() const;
-  inline void clear_example_block_size();
-  static const int kExampleBlockSizeFieldNumber = 1;
-  inline ::google::protobuf::int64 example_block_size() const;
-  inline void set_example_block_size(::google::protobuf::int64 value);
+  // optional int64 minibatch_size = 1 [default = 0];
+  inline bool has_minibatch_size() const;
+  inline void clear_minibatch_size();
+  static const int kMinibatchSizeFieldNumber = 1;
+  inline ::google::protobuf::int64 minibatch_size() const;
+  inline void set_minibatch_size(::google::protobuf::int64 value);
 
   // optional float feature_block_ratio = 2 [default = 0];
   inline bool has_feature_block_ratio() const;
@@ -780,10 +792,17 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline double epsilon() const;
   inline void set_epsilon(double value);
 
-  // @@protoc_insertion_point(class_scope:PS.BlockIteratorConfig)
+  // optional int64 auc_goodness = 12 [default = 100000];
+  inline bool has_auc_goodness() const;
+  inline void clear_auc_goodness();
+  static const int kAucGoodnessFieldNumber = 12;
+  inline ::google::protobuf::int64 auc_goodness() const;
+  inline void set_auc_goodness(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:PS.BlockSolverConfig)
  private:
-  inline void set_has_example_block_size();
-  inline void clear_has_example_block_size();
+  inline void set_has_minibatch_size();
+  inline void clear_has_minibatch_size();
   inline void set_has_feature_block_ratio();
   inline void clear_has_feature_block_ratio();
   inline void set_has_random_feature_block_order();
@@ -794,36 +813,39 @@ class BlockIteratorConfig : public ::google::protobuf::Message {
   inline void clear_has_max_block_delay();
   inline void set_has_epsilon();
   inline void clear_has_epsilon();
+  inline void set_has_auc_goodness();
+  inline void clear_has_auc_goodness();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::int64 example_block_size_;
+  ::google::protobuf::int64 minibatch_size_;
   float feature_block_ratio_;
   bool random_feature_block_order_;
   ::google::protobuf::int32 max_pass_of_data_;
   ::google::protobuf::int32 max_block_delay_;
   double epsilon_;
+  ::google::protobuf::int64 auc_goodness_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
   friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 
   void InitAsDefaultInstance();
-  static BlockIteratorConfig* default_instance_;
+  static BlockSolverConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
-class BlockCoordL1LRConfig : public ::google::protobuf::Message {
+class BCDL1LRConfig : public ::google::protobuf::Message {
  public:
-  BlockCoordL1LRConfig();
-  virtual ~BlockCoordL1LRConfig();
+  BCDL1LRConfig();
+  virtual ~BCDL1LRConfig();
 
-  BlockCoordL1LRConfig(const BlockCoordL1LRConfig& from);
+  BCDL1LRConfig(const BCDL1LRConfig& from);
 
-  inline BlockCoordL1LRConfig& operator=(const BlockCoordL1LRConfig& from) {
+  inline BCDL1LRConfig& operator=(const BCDL1LRConfig& from) {
     CopyFrom(from);
     return *this;
   }
@@ -837,17 +859,17 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const BlockCoordL1LRConfig& default_instance();
+  static const BCDL1LRConfig& default_instance();
 
-  void Swap(BlockCoordL1LRConfig* other);
+  void Swap(BCDL1LRConfig* other);
 
   // implements Message ----------------------------------------------
 
-  BlockCoordL1LRConfig* New() const;
+  BCDL1LRConfig* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const BlockCoordL1LRConfig& from);
-  void MergeFrom(const BlockCoordL1LRConfig& from);
+  void CopyFrom(const BCDL1LRConfig& from);
+  void MergeFrom(const BCDL1LRConfig& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -884,20 +906,6 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double delta_max_value() const;
   inline void set_delta_max_value(double value);
 
-  // optional double learning_rate = 3 [default = 1];
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 3;
-  inline double learning_rate() const;
-  inline void set_learning_rate(double value);
-
-  // optional bool enable_multi_thread = 4 [default = false];
-  inline bool has_enable_multi_thread() const;
-  inline void clear_enable_multi_thread();
-  static const int kEnableMultiThreadFieldNumber = 4;
-  inline bool enable_multi_thread() const;
-  inline void set_enable_multi_thread(bool value);
-
   // optional double kkt_filter_threshold_ratio = 10 [default = 10];
   inline bool has_kkt_filter_threshold_ratio() const;
   inline void clear_kkt_filter_threshold_ratio();
@@ -905,46 +913,30 @@ class BlockCoordL1LRConfig : public ::google::protobuf::Message {
   inline double kkt_filter_threshold_ratio() const;
   inline void set_kkt_filter_threshold_ratio(double value);
 
-  // optional int64 auc_goodness = 12 [default = 100000];
-  inline bool has_auc_goodness() const;
-  inline void clear_auc_goodness();
-  static const int kAucGoodnessFieldNumber = 12;
-  inline ::google::protobuf::int64 auc_goodness() const;
-  inline void set_auc_goodness(::google::protobuf::int64 value);
-
-  // @@protoc_insertion_point(class_scope:PS.BlockCoordL1LRConfig)
+  // @@protoc_insertion_point(class_scope:PS.BCDL1LRConfig)
  private:
   inline void set_has_delta_init_value();
   inline void clear_has_delta_init_value();
   inline void set_has_delta_max_value();
   inline void clear_has_delta_max_value();
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
-  inline void set_has_enable_multi_thread();
-  inline void clear_has_enable_multi_thread();
   inline void set_has_kkt_filter_threshold_ratio();
   inline void clear_has_kkt_filter_threshold_ratio();
-  inline void set_has_auc_goodness();
-  inline void clear_has_auc_goodness();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   double delta_init_value_;
   double delta_max_value_;
-  double learning_rate_;
   double kkt_filter_threshold_ratio_;
-  ::google::protobuf::int64 auc_goodness_;
-  bool enable_multi_thread_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
   friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 
   void InitAsDefaultInstance();
-  static BlockCoordL1LRConfig* default_instance_;
+  static BCDL1LRConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1142,106 +1134,14 @@ class LearnerConfig : public ::google::protobuf::Message {
   inline ::PS::LearnerConfig_Type type() const;
   inline void set_type(::PS::LearnerConfig_Type value);
 
-  // optional float learning_rate = 2 [default = 1];
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 2;
-  inline float learning_rate() const;
-  inline void set_learning_rate(float value);
-
   // @@protoc_insertion_point(class_scope:PS.LearnerConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   int type_;
-  float learning_rate_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
-  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
-  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
-
-  void InitAsDefaultInstance();
-  static LearnerConfig* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class AggGradLearnerArg : public ::google::protobuf::Message {
- public:
-  AggGradLearnerArg();
-  virtual ~AggGradLearnerArg();
-
-  AggGradLearnerArg(const AggGradLearnerArg& from);
-
-  inline AggGradLearnerArg& operator=(const AggGradLearnerArg& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const AggGradLearnerArg& default_instance();
-
-  void Swap(AggGradLearnerArg* other);
-
-  // implements Message ----------------------------------------------
-
-  AggGradLearnerArg* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const AggGradLearnerArg& from);
-  void MergeFrom(const AggGradLearnerArg& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional float learning_rate = 1 [default = 1];
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 1;
-  inline float learning_rate() const;
-  inline void set_learning_rate(float value);
-
-  // @@protoc_insertion_point(class_scope:PS.AggGradLearnerArg)
- private:
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  float learning_rate_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
@@ -1251,7 +1151,7 @@ class AggGradLearnerArg : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 
   void InitAsDefaultInstance();
-  static AggGradLearnerArg* default_instance_;
+  static LearnerConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1484,6 +1384,88 @@ class LearningRateConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static LearningRateConfig* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class AggGradLearnerArg : public ::google::protobuf::Message {
+ public:
+  AggGradLearnerArg();
+  virtual ~AggGradLearnerArg();
+
+  AggGradLearnerArg(const AggGradLearnerArg& from);
+
+  inline AggGradLearnerArg& operator=(const AggGradLearnerArg& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AggGradLearnerArg& default_instance();
+
+  void Swap(AggGradLearnerArg* other);
+
+  // implements Message ----------------------------------------------
+
+  AggGradLearnerArg* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const AggGradLearnerArg& from);
+  void MergeFrom(const AggGradLearnerArg& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional double learning_rate = 1;
+  inline bool has_learning_rate() const;
+  inline void clear_learning_rate();
+  static const int kLearningRateFieldNumber = 1;
+  inline double learning_rate() const;
+  inline void set_learning_rate(double value);
+
+  // @@protoc_insertion_point(class_scope:PS.AggGradLearnerArg)
+ private:
+  inline void set_has_learning_rate();
+  inline void clear_has_learning_rate();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  double learning_rate_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static AggGradLearnerArg* default_instance_;
+};
 // ===================================================================
 
 
@@ -1491,7 +1473,7 @@ class LearningRateConfig : public ::google::protobuf::Message {
 
 // AppConfig
 
-// optional .PS.AppConfig.AppType type = 1;
+// optional .PS.AppConfig.Type type = 1;
 inline bool AppConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1505,11 +1487,11 @@ inline void AppConfig::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::PS::AppConfig_AppType AppConfig::type() const {
-  return static_cast< ::PS::AppConfig_AppType >(type_);
+inline ::PS::AppConfig_Type AppConfig::type() const {
+  return static_cast< ::PS::AppConfig_Type >(type_);
 }
-inline void AppConfig::set_type(::PS::AppConfig_AppType value) {
-  assert(::PS::AppConfig_AppType_IsValid(value));
+inline void AppConfig::set_type(::PS::AppConfig_Type value) {
+  assert(::PS::AppConfig_Type_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1894,79 +1876,117 @@ inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
   }
 }
 
-// optional .PS.BlockIteratorConfig block_iterator = 40;
-inline bool AppConfig::has_block_iterator() const {
+// optional .PS.LearningRateConfig learning_rate = 31;
+inline bool AppConfig::has_learning_rate() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void AppConfig::set_has_block_iterator() {
+inline void AppConfig::set_has_learning_rate() {
   _has_bits_[0] |= 0x00000400u;
 }
-inline void AppConfig::clear_has_block_iterator() {
+inline void AppConfig::clear_has_learning_rate() {
   _has_bits_[0] &= ~0x00000400u;
 }
-inline void AppConfig::clear_block_iterator() {
-  if (block_iterator_ != NULL) block_iterator_->::PS::BlockIteratorConfig::Clear();
-  clear_has_block_iterator();
+inline void AppConfig::clear_learning_rate() {
+  if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
+  clear_has_learning_rate();
 }
-inline const ::PS::BlockIteratorConfig& AppConfig::block_iterator() const {
-  return block_iterator_ != NULL ? *block_iterator_ : *default_instance_->block_iterator_;
+inline const ::PS::LearningRateConfig& AppConfig::learning_rate() const {
+  return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
 }
-inline ::PS::BlockIteratorConfig* AppConfig::mutable_block_iterator() {
-  set_has_block_iterator();
-  if (block_iterator_ == NULL) block_iterator_ = new ::PS::BlockIteratorConfig;
-  return block_iterator_;
+inline ::PS::LearningRateConfig* AppConfig::mutable_learning_rate() {
+  set_has_learning_rate();
+  if (learning_rate_ == NULL) learning_rate_ = new ::PS::LearningRateConfig;
+  return learning_rate_;
 }
-inline ::PS::BlockIteratorConfig* AppConfig::release_block_iterator() {
-  clear_has_block_iterator();
-  ::PS::BlockIteratorConfig* temp = block_iterator_;
-  block_iterator_ = NULL;
+inline ::PS::LearningRateConfig* AppConfig::release_learning_rate() {
+  clear_has_learning_rate();
+  ::PS::LearningRateConfig* temp = learning_rate_;
+  learning_rate_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_block_iterator(::PS::BlockIteratorConfig* block_iterator) {
-  delete block_iterator_;
-  block_iterator_ = block_iterator;
-  if (block_iterator) {
-    set_has_block_iterator();
+inline void AppConfig::set_allocated_learning_rate(::PS::LearningRateConfig* learning_rate) {
+  delete learning_rate_;
+  learning_rate_ = learning_rate;
+  if (learning_rate) {
+    set_has_learning_rate();
   } else {
-    clear_has_block_iterator();
+    clear_has_learning_rate();
   }
 }
 
-// optional .PS.BlockCoordL1LRConfig block_coord_l1lr = 41;
-inline bool AppConfig::has_block_coord_l1lr() const {
+// optional .PS.BlockSolverConfig block_solver = 40;
+inline bool AppConfig::has_block_solver() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
-inline void AppConfig::set_has_block_coord_l1lr() {
+inline void AppConfig::set_has_block_solver() {
   _has_bits_[0] |= 0x00000800u;
 }
-inline void AppConfig::clear_has_block_coord_l1lr() {
+inline void AppConfig::clear_has_block_solver() {
   _has_bits_[0] &= ~0x00000800u;
 }
-inline void AppConfig::clear_block_coord_l1lr() {
-  if (block_coord_l1lr_ != NULL) block_coord_l1lr_->::PS::BlockCoordL1LRConfig::Clear();
-  clear_has_block_coord_l1lr();
+inline void AppConfig::clear_block_solver() {
+  if (block_solver_ != NULL) block_solver_->::PS::BlockSolverConfig::Clear();
+  clear_has_block_solver();
 }
-inline const ::PS::BlockCoordL1LRConfig& AppConfig::block_coord_l1lr() const {
-  return block_coord_l1lr_ != NULL ? *block_coord_l1lr_ : *default_instance_->block_coord_l1lr_;
+inline const ::PS::BlockSolverConfig& AppConfig::block_solver() const {
+  return block_solver_ != NULL ? *block_solver_ : *default_instance_->block_solver_;
 }
-inline ::PS::BlockCoordL1LRConfig* AppConfig::mutable_block_coord_l1lr() {
-  set_has_block_coord_l1lr();
-  if (block_coord_l1lr_ == NULL) block_coord_l1lr_ = new ::PS::BlockCoordL1LRConfig;
-  return block_coord_l1lr_;
+inline ::PS::BlockSolverConfig* AppConfig::mutable_block_solver() {
+  set_has_block_solver();
+  if (block_solver_ == NULL) block_solver_ = new ::PS::BlockSolverConfig;
+  return block_solver_;
 }
-inline ::PS::BlockCoordL1LRConfig* AppConfig::release_block_coord_l1lr() {
-  clear_has_block_coord_l1lr();
-  ::PS::BlockCoordL1LRConfig* temp = block_coord_l1lr_;
-  block_coord_l1lr_ = NULL;
+inline ::PS::BlockSolverConfig* AppConfig::release_block_solver() {
+  clear_has_block_solver();
+  ::PS::BlockSolverConfig* temp = block_solver_;
+  block_solver_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_block_coord_l1lr(::PS::BlockCoordL1LRConfig* block_coord_l1lr) {
-  delete block_coord_l1lr_;
-  block_coord_l1lr_ = block_coord_l1lr;
-  if (block_coord_l1lr) {
-    set_has_block_coord_l1lr();
+inline void AppConfig::set_allocated_block_solver(::PS::BlockSolverConfig* block_solver) {
+  delete block_solver_;
+  block_solver_ = block_solver;
+  if (block_solver) {
+    set_has_block_solver();
   } else {
-    clear_has_block_coord_l1lr();
+    clear_has_block_solver();
+  }
+}
+
+// optional .PS.BCDL1LRConfig bcd_l1lr = 41;
+inline bool AppConfig::has_bcd_l1lr() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void AppConfig::set_has_bcd_l1lr() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void AppConfig::clear_has_bcd_l1lr() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void AppConfig::clear_bcd_l1lr() {
+  if (bcd_l1lr_ != NULL) bcd_l1lr_->::PS::BCDL1LRConfig::Clear();
+  clear_has_bcd_l1lr();
+}
+inline const ::PS::BCDL1LRConfig& AppConfig::bcd_l1lr() const {
+  return bcd_l1lr_ != NULL ? *bcd_l1lr_ : *default_instance_->bcd_l1lr_;
+}
+inline ::PS::BCDL1LRConfig* AppConfig::mutable_bcd_l1lr() {
+  set_has_bcd_l1lr();
+  if (bcd_l1lr_ == NULL) bcd_l1lr_ = new ::PS::BCDL1LRConfig;
+  return bcd_l1lr_;
+}
+inline ::PS::BCDL1LRConfig* AppConfig::release_bcd_l1lr() {
+  clear_has_bcd_l1lr();
+  ::PS::BCDL1LRConfig* temp = bcd_l1lr_;
+  bcd_l1lr_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr) {
+  delete bcd_l1lr_;
+  bcd_l1lr_ = bcd_l1lr;
+  if (bcd_l1lr) {
+    set_has_bcd_l1lr();
+  } else {
+    clear_has_bcd_l1lr();
   }
 }
 
@@ -2130,274 +2150,230 @@ inline void ParameterInitConfig::set_random_std(double value) {
 
 // -------------------------------------------------------------------
 
-// BlockIteratorConfig
+// BlockSolverConfig
 
-// optional int64 example_block_size = 1 [default = -1];
-inline bool BlockIteratorConfig::has_example_block_size() const {
+// optional int64 minibatch_size = 1 [default = 0];
+inline bool BlockSolverConfig::has_minibatch_size() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void BlockIteratorConfig::set_has_example_block_size() {
+inline void BlockSolverConfig::set_has_minibatch_size() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void BlockIteratorConfig::clear_has_example_block_size() {
+inline void BlockSolverConfig::clear_has_minibatch_size() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void BlockIteratorConfig::clear_example_block_size() {
-  example_block_size_ = GOOGLE_LONGLONG(-1);
-  clear_has_example_block_size();
+inline void BlockSolverConfig::clear_minibatch_size() {
+  minibatch_size_ = GOOGLE_LONGLONG(0);
+  clear_has_minibatch_size();
 }
-inline ::google::protobuf::int64 BlockIteratorConfig::example_block_size() const {
-  return example_block_size_;
+inline ::google::protobuf::int64 BlockSolverConfig::minibatch_size() const {
+  return minibatch_size_;
 }
-inline void BlockIteratorConfig::set_example_block_size(::google::protobuf::int64 value) {
-  set_has_example_block_size();
-  example_block_size_ = value;
+inline void BlockSolverConfig::set_minibatch_size(::google::protobuf::int64 value) {
+  set_has_minibatch_size();
+  minibatch_size_ = value;
 }
 
 // optional float feature_block_ratio = 2 [default = 0];
-inline bool BlockIteratorConfig::has_feature_block_ratio() const {
+inline bool BlockSolverConfig::has_feature_block_ratio() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void BlockIteratorConfig::set_has_feature_block_ratio() {
+inline void BlockSolverConfig::set_has_feature_block_ratio() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void BlockIteratorConfig::clear_has_feature_block_ratio() {
+inline void BlockSolverConfig::clear_has_feature_block_ratio() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void BlockIteratorConfig::clear_feature_block_ratio() {
+inline void BlockSolverConfig::clear_feature_block_ratio() {
   feature_block_ratio_ = 0;
   clear_has_feature_block_ratio();
 }
-inline float BlockIteratorConfig::feature_block_ratio() const {
+inline float BlockSolverConfig::feature_block_ratio() const {
   return feature_block_ratio_;
 }
-inline void BlockIteratorConfig::set_feature_block_ratio(float value) {
+inline void BlockSolverConfig::set_feature_block_ratio(float value) {
   set_has_feature_block_ratio();
   feature_block_ratio_ = value;
 }
 
 // optional bool random_feature_block_order = 3 [default = true];
-inline bool BlockIteratorConfig::has_random_feature_block_order() const {
+inline bool BlockSolverConfig::has_random_feature_block_order() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void BlockIteratorConfig::set_has_random_feature_block_order() {
+inline void BlockSolverConfig::set_has_random_feature_block_order() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void BlockIteratorConfig::clear_has_random_feature_block_order() {
+inline void BlockSolverConfig::clear_has_random_feature_block_order() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void BlockIteratorConfig::clear_random_feature_block_order() {
+inline void BlockSolverConfig::clear_random_feature_block_order() {
   random_feature_block_order_ = true;
   clear_has_random_feature_block_order();
 }
-inline bool BlockIteratorConfig::random_feature_block_order() const {
+inline bool BlockSolverConfig::random_feature_block_order() const {
   return random_feature_block_order_;
 }
-inline void BlockIteratorConfig::set_random_feature_block_order(bool value) {
+inline void BlockSolverConfig::set_random_feature_block_order(bool value) {
   set_has_random_feature_block_order();
   random_feature_block_order_ = value;
 }
 
 // optional int32 max_pass_of_data = 8 [default = 10];
-inline bool BlockIteratorConfig::has_max_pass_of_data() const {
+inline bool BlockSolverConfig::has_max_pass_of_data() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void BlockIteratorConfig::set_has_max_pass_of_data() {
+inline void BlockSolverConfig::set_has_max_pass_of_data() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void BlockIteratorConfig::clear_has_max_pass_of_data() {
+inline void BlockSolverConfig::clear_has_max_pass_of_data() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void BlockIteratorConfig::clear_max_pass_of_data() {
+inline void BlockSolverConfig::clear_max_pass_of_data() {
   max_pass_of_data_ = 10;
   clear_has_max_pass_of_data();
 }
-inline ::google::protobuf::int32 BlockIteratorConfig::max_pass_of_data() const {
+inline ::google::protobuf::int32 BlockSolverConfig::max_pass_of_data() const {
   return max_pass_of_data_;
 }
-inline void BlockIteratorConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
+inline void BlockSolverConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
   set_has_max_pass_of_data();
   max_pass_of_data_ = value;
 }
 
 // optional int32 max_block_delay = 10 [default = 0];
-inline bool BlockIteratorConfig::has_max_block_delay() const {
+inline bool BlockSolverConfig::has_max_block_delay() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void BlockIteratorConfig::set_has_max_block_delay() {
+inline void BlockSolverConfig::set_has_max_block_delay() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void BlockIteratorConfig::clear_has_max_block_delay() {
+inline void BlockSolverConfig::clear_has_max_block_delay() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void BlockIteratorConfig::clear_max_block_delay() {
+inline void BlockSolverConfig::clear_max_block_delay() {
   max_block_delay_ = 0;
   clear_has_max_block_delay();
 }
-inline ::google::protobuf::int32 BlockIteratorConfig::max_block_delay() const {
+inline ::google::protobuf::int32 BlockSolverConfig::max_block_delay() const {
   return max_block_delay_;
 }
-inline void BlockIteratorConfig::set_max_block_delay(::google::protobuf::int32 value) {
+inline void BlockSolverConfig::set_max_block_delay(::google::protobuf::int32 value) {
   set_has_max_block_delay();
   max_block_delay_ = value;
 }
 
 // optional double epsilon = 11 [default = 0.0001];
-inline bool BlockIteratorConfig::has_epsilon() const {
+inline bool BlockSolverConfig::has_epsilon() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void BlockIteratorConfig::set_has_epsilon() {
+inline void BlockSolverConfig::set_has_epsilon() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void BlockIteratorConfig::clear_has_epsilon() {
+inline void BlockSolverConfig::clear_has_epsilon() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void BlockIteratorConfig::clear_epsilon() {
+inline void BlockSolverConfig::clear_epsilon() {
   epsilon_ = 0.0001;
   clear_has_epsilon();
 }
-inline double BlockIteratorConfig::epsilon() const {
+inline double BlockSolverConfig::epsilon() const {
   return epsilon_;
 }
-inline void BlockIteratorConfig::set_epsilon(double value) {
+inline void BlockSolverConfig::set_epsilon(double value) {
   set_has_epsilon();
   epsilon_ = value;
 }
 
+// optional int64 auc_goodness = 12 [default = 100000];
+inline bool BlockSolverConfig::has_auc_goodness() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void BlockSolverConfig::set_has_auc_goodness() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void BlockSolverConfig::clear_has_auc_goodness() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void BlockSolverConfig::clear_auc_goodness() {
+  auc_goodness_ = GOOGLE_LONGLONG(100000);
+  clear_has_auc_goodness();
+}
+inline ::google::protobuf::int64 BlockSolverConfig::auc_goodness() const {
+  return auc_goodness_;
+}
+inline void BlockSolverConfig::set_auc_goodness(::google::protobuf::int64 value) {
+  set_has_auc_goodness();
+  auc_goodness_ = value;
+}
+
 // -------------------------------------------------------------------
 
-// BlockCoordL1LRConfig
+// BCDL1LRConfig
 
 // optional double delta_init_value = 1 [default = 1];
-inline bool BlockCoordL1LRConfig::has_delta_init_value() const {
+inline bool BCDL1LRConfig::has_delta_init_value() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_delta_init_value() {
+inline void BCDL1LRConfig::set_has_delta_init_value() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void BlockCoordL1LRConfig::clear_has_delta_init_value() {
+inline void BCDL1LRConfig::clear_has_delta_init_value() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void BlockCoordL1LRConfig::clear_delta_init_value() {
+inline void BCDL1LRConfig::clear_delta_init_value() {
   delta_init_value_ = 1;
   clear_has_delta_init_value();
 }
-inline double BlockCoordL1LRConfig::delta_init_value() const {
+inline double BCDL1LRConfig::delta_init_value() const {
   return delta_init_value_;
 }
-inline void BlockCoordL1LRConfig::set_delta_init_value(double value) {
+inline void BCDL1LRConfig::set_delta_init_value(double value) {
   set_has_delta_init_value();
   delta_init_value_ = value;
 }
 
 // optional double delta_max_value = 2 [default = 5];
-inline bool BlockCoordL1LRConfig::has_delta_max_value() const {
+inline bool BCDL1LRConfig::has_delta_max_value() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_delta_max_value() {
+inline void BCDL1LRConfig::set_has_delta_max_value() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void BlockCoordL1LRConfig::clear_has_delta_max_value() {
+inline void BCDL1LRConfig::clear_has_delta_max_value() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void BlockCoordL1LRConfig::clear_delta_max_value() {
+inline void BCDL1LRConfig::clear_delta_max_value() {
   delta_max_value_ = 5;
   clear_has_delta_max_value();
 }
-inline double BlockCoordL1LRConfig::delta_max_value() const {
+inline double BCDL1LRConfig::delta_max_value() const {
   return delta_max_value_;
 }
-inline void BlockCoordL1LRConfig::set_delta_max_value(double value) {
+inline void BCDL1LRConfig::set_delta_max_value(double value) {
   set_has_delta_max_value();
   delta_max_value_ = value;
 }
 
-// optional double learning_rate = 3 [default = 1];
-inline bool BlockCoordL1LRConfig::has_learning_rate() const {
+// optional double kkt_filter_threshold_ratio = 10 [default = 10];
+inline bool BCDL1LRConfig::has_kkt_filter_threshold_ratio() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void BlockCoordL1LRConfig::set_has_learning_rate() {
+inline void BCDL1LRConfig::set_has_kkt_filter_threshold_ratio() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void BlockCoordL1LRConfig::clear_has_learning_rate() {
+inline void BCDL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void BlockCoordL1LRConfig::clear_learning_rate() {
-  learning_rate_ = 1;
-  clear_has_learning_rate();
-}
-inline double BlockCoordL1LRConfig::learning_rate() const {
-  return learning_rate_;
-}
-inline void BlockCoordL1LRConfig::set_learning_rate(double value) {
-  set_has_learning_rate();
-  learning_rate_ = value;
-}
-
-// optional bool enable_multi_thread = 4 [default = false];
-inline bool BlockCoordL1LRConfig::has_enable_multi_thread() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void BlockCoordL1LRConfig::set_has_enable_multi_thread() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void BlockCoordL1LRConfig::clear_has_enable_multi_thread() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void BlockCoordL1LRConfig::clear_enable_multi_thread() {
-  enable_multi_thread_ = false;
-  clear_has_enable_multi_thread();
-}
-inline bool BlockCoordL1LRConfig::enable_multi_thread() const {
-  return enable_multi_thread_;
-}
-inline void BlockCoordL1LRConfig::set_enable_multi_thread(bool value) {
-  set_has_enable_multi_thread();
-  enable_multi_thread_ = value;
-}
-
-// optional double kkt_filter_threshold_ratio = 10 [default = 10];
-inline bool BlockCoordL1LRConfig::has_kkt_filter_threshold_ratio() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void BlockCoordL1LRConfig::set_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void BlockCoordL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void BlockCoordL1LRConfig::clear_kkt_filter_threshold_ratio() {
+inline void BCDL1LRConfig::clear_kkt_filter_threshold_ratio() {
   kkt_filter_threshold_ratio_ = 10;
   clear_has_kkt_filter_threshold_ratio();
 }
-inline double BlockCoordL1LRConfig::kkt_filter_threshold_ratio() const {
+inline double BCDL1LRConfig::kkt_filter_threshold_ratio() const {
   return kkt_filter_threshold_ratio_;
 }
-inline void BlockCoordL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
+inline void BCDL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
   set_has_kkt_filter_threshold_ratio();
   kkt_filter_threshold_ratio_ = value;
-}
-
-// optional int64 auc_goodness = 12 [default = 100000];
-inline bool BlockCoordL1LRConfig::has_auc_goodness() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void BlockCoordL1LRConfig::set_has_auc_goodness() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void BlockCoordL1LRConfig::clear_has_auc_goodness() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void BlockCoordL1LRConfig::clear_auc_goodness() {
-  auc_goodness_ = GOOGLE_LONGLONG(100000);
-  clear_has_auc_goodness();
-}
-inline ::google::protobuf::int64 BlockCoordL1LRConfig::auc_goodness() const {
-  return auc_goodness_;
-}
-inline void BlockCoordL1LRConfig::set_auc_goodness(::google::protobuf::int64 value) {
-  set_has_auc_goodness();
-  auc_goodness_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2452,54 +2428,6 @@ inline void LearnerConfig::set_type(::PS::LearnerConfig_Type value) {
   assert(::PS::LearnerConfig_Type_IsValid(value));
   set_has_type();
   type_ = value;
-}
-
-// optional float learning_rate = 2 [default = 1];
-inline bool LearnerConfig::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void LearnerConfig::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void LearnerConfig::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void LearnerConfig::clear_learning_rate() {
-  learning_rate_ = 1;
-  clear_has_learning_rate();
-}
-inline float LearnerConfig::learning_rate() const {
-  return learning_rate_;
-}
-inline void LearnerConfig::set_learning_rate(float value) {
-  set_has_learning_rate();
-  learning_rate_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// AggGradLearnerArg
-
-// optional float learning_rate = 1 [default = 1];
-inline bool AggGradLearnerArg::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void AggGradLearnerArg::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void AggGradLearnerArg::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void AggGradLearnerArg::clear_learning_rate() {
-  learning_rate_ = 1;
-  clear_has_learning_rate();
-}
-inline float AggGradLearnerArg::learning_rate() const {
-  return learning_rate_;
-}
-inline void AggGradLearnerArg::set_learning_rate(float value) {
-  set_has_learning_rate();
-  learning_rate_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2600,6 +2528,32 @@ inline void LearningRateConfig::set_eta(double value) {
   eta_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// AggGradLearnerArg
+
+// optional double learning_rate = 1;
+inline bool AggGradLearnerArg::has_learning_rate() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void AggGradLearnerArg::set_has_learning_rate() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void AggGradLearnerArg::clear_has_learning_rate() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void AggGradLearnerArg::clear_learning_rate() {
+  learning_rate_ = 0;
+  clear_has_learning_rate();
+}
+inline double AggGradLearnerArg::learning_rate() const {
+  return learning_rate_;
+}
+inline void AggGradLearnerArg::set_learning_rate(double value) {
+  set_has_learning_rate();
+  learning_rate_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -2610,8 +2564,8 @@ namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::AppConfig_AppType>() {
-  return ::PS::AppConfig_AppType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::AppConfig_Type>() {
+  return ::PS::AppConfig_Type_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataConfig_DataFormat>() {

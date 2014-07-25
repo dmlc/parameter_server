@@ -1,5 +1,5 @@
-#progma once
-
+#pragma once
+#include "linear_method/linear_method.h"
 namespace PS {
 namespace LM {
 

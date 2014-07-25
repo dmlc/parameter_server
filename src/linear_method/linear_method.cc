@@ -1,4 +1,4 @@
-#include "app/linear_method.h"
+#include "linear_method/linear_method.h"
 #include "base/range.h"
 #include "util/eigen3.h"
 #include "base/matrix_io.h"
@@ -6,6 +6,7 @@
 #include "base/io.h"
 
 namespace PS {
+namespace LM {
 
 void LinearMethod::init() {
   bool has_learner = app_cf_.has_learner();
@@ -110,4 +111,5 @@ void LinearMethod::startSystem() {
 }
 
 
+} // namespace LM
 } // namespace PS

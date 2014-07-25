@@ -1,6 +1,6 @@
 #include "app/app.h"
-#include "app/linear_block_iterator.h"
-#include "app/block_coordinate_l1lr.h"
+#include "linear_method/batch_solver.h"
+#include "linear_method/block_coord_desc_l1lr.h"
 
 // #include "app/grad_desc.h"
 // #include "app/block_prox_grad.h"
@@ -12,10 +12,18 @@ DEFINE_bool(test_fault_tol, false, "");
 
 AppPtr App::create(const AppConfig& config) {
   AppPtr ptr;
-  if (config.has_block_coord_l1lr()) {
-    ptr = AppPtr(new BlockCoordinateL1LR());
-  } else if (config.has_block_iterator()) {
-    ptr = AppPtr(new LinearBlockIterator());
+  if (config.has_block_solver()) {
+    auto blk = config.block_solver();
+    if (blk.minibatch_size() <= 0) {
+      // batch solver
+      if (config.has_bcd_l1lr()) {
+        ptr = AppPtr(new LM::BlockCoordDescL1LR());
+      } else {
+        ptr = AppPtr(new LM::BatchSolver());
+      }
+    } else {
+      // online sovler
+    }
   } else {
     CHECK(false) << "unknown app: " << config.DebugString();
   }

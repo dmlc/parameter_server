@@ -3,11 +3,11 @@ package PS;
 import "proto/range.proto";
 
 message AppConfig {
-  enum AppType {
+  enum Type {
     RISK_MINIMIZATION = 1;
     SKETCH = 2;
   }
-  optional AppType type = 1;
+  optional Type type = 1;
   optional string app_name = 2;
   repeated string parameter_name = 3;
 
@@ -22,14 +22,12 @@ message AppConfig {
   optional PenaltyConfig penalty = 21;
 
   optional LearnerConfig learner = 30;
+  optional LearningRateConfig learning_rate = 31;
 
-  optional BlockIteratorConfig block_iterator = 40;
+  optional BlockSolverConfig block_solver = 40;
 
-  optional BlockCoordL1LRConfig block_coord_l1lr = 41;
+  optional BCDL1LRConfig bcd_l1lr = 41;
 
-  // optional GradDescConfig grad_desc = 21;
-  // optional BlockProxGradConfig block_prox_grad = 22;
-  // optional SketchConfig sketch = 31;
 }
 
 message DataConfig {
@@ -53,10 +51,10 @@ message ParameterInitConfig {
   optional double random_std = 2 [default = 1];
 }
 
-message BlockIteratorConfig {
+message BlockSolverConfig {
   // the number of example in a block. It is the minibatch size for
   // minibatch-sgd. If <= 0, then use the whole data
-  optional int64 example_block_size = 1 [default = -1];
+  optional int64 minibatch_size = 1 [default = 0];
 
   // divide a feature group into feature_block_ratio x nnz_feature_per_instance
   // blocks. If = 0, then use all features
@@ -67,31 +65,27 @@ message BlockIteratorConfig {
   optional bool random_feature_block_order = 3 [default = true];
 
   optional int32 max_pass_of_data = 8 [default = 10];
+
   // bounded-delay consistency
   optional int32 max_block_delay = 10 [default = 0];
 
   // convergance critiria. stop if the relative objective <= epsilon
   optional double epsilon = 11 [default = 1e-4];
 
+  // precision of auc, the larger the better
+  optional int64 auc_goodness = 12 [default = 100000];
 }
 
-message BlockCoordL1LRConfig {
+
+message BCDL1LRConfig {
   optional double delta_init_value = 1 [default = 1];
   optional double delta_max_value = 2 [default = 5];
   // optional bool KKT_filter = 1 [default = true];
-
-  optional double learning_rate = 3 [default = 1];
-
-  // use multi-thread for calculation gradient and updating dual
-  optional bool enable_multi_thread = 4 [default = false];
 
   // kkt_filter_threshold = max_gradient_violation / num_examples *
   // kkt_filter_threshold_ratio. increasing this number reduces the effect of
   // kkt filter.
   optional double kkt_filter_threshold_ratio = 10 [default = 10];
-
-  optional int64 auc_goodness = 12 [default = 100000];
-
 
 }
 
@@ -112,12 +106,6 @@ message LearnerConfig {
     LBFGS = 3;
   }
   required Type type = 1;
-  optional float learning_rate = 2 [default = 1];
-}
-
-
-message AggGradLearnerArg {
-  optional float learning_rate = 1 [default = 1];
 }
 
 message PenaltyConfig {
@@ -135,4 +123,8 @@ message LearningRateConfig {
   }
   required Type type = 1;
   optional double eta = 2 [default = 1];
+}
+
+message AggGradLearnerArg {
+  optional double learning_rate = 1;
 }

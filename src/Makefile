@@ -55,9 +55,10 @@ SRCS = $(PROTOS_CC) \
 	system/executor.cc \
 	app/app.cc \
 	app/risk_minimization.cc \
-	app/linear_method.cc \
-	app/linear_block_iterator.cc \
-	app/block_coordinate_l1lr.cc
+	linear_method/linear_method.cc \
+	linear_method/block_solver.cc \
+	linear_method/batch_solver.cc \
+	linear_method/block_coord_desc_l1lr.cc
 
 OBJS = $(SRCS:.cc=.o)
 DEPS = $(SRCS:.cc=.d)

@@ -1,4 +1,4 @@
-#include "linear_method/block_iterator.h"
+#include "linear_method/block_solver.h"
 
 namespace PS {
 namespace LM {
@@ -6,8 +6,8 @@ namespace LM {
 BlockSolver::FeatureBlocks BlockSolver::partitionFeatures(
       const AppConfig& app_cf, const std::vector<MatrixInfo>& infos) {
   FeatureBlocks blocks;
-  CHECK(app_cf.has_block_iterator());
-  auto cf = app_cf.block_iterator();
+  CHECK(app_cf.has_block_solver());
+  auto cf = app_cf.block_solver();
   if (cf.feature_block_ratio() <= 0) {
     Range<Key> range(-1, 0);
     for (const auto& info : infos) range.setUnion(Range<Key>(info.col()));
