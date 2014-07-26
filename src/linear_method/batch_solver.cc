@@ -12,48 +12,88 @@ void BatchSolver::init() {
 }
 
 void BatchSolver::run() {
-  // LinearMethod::startSystem();
-  // auto blocks = BlockSolver::partitionFeatures(app_cf_, global_training_info_);
-  // std::vector<int> block_order;
-  // for (int i = 0; i < blocks.size(); ++i) block_order.push_back(i);
-  // auto cf = app_cf_.block_iterator();
+  LinearMethod::startSystem();
 
-  // // iterating
-  // auto pool = taskpool(kActiveGroup);
-  // int time = pool->time();
-  // int tau = cf.max_block_delay();
-  // for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-  //   if (cf.random_feature_block_order())
-  //     std::random_shuffle(block_order.begin(), block_order.end());
+  // evenly partition feature blocks
+  CHECK(app_cf_.has_block_solver());
+  auto cf = app_cf_.block_solver();
+  if (cf.feature_block_ratio() <= 0) {
+    Range<Key> range(-1, 0);
+    for (const auto& info : global_training_info_)
+      range.setUnion(Range<Key>(info.col()));
+    fea_blocks_.push_back(std::make_pair(-1, range));
+  } else {
+    for (const auto& info : global_training_info_) {
+      CHECK(info.has_nnz_per_row());
+      CHECK(info.has_id());
+      float b = std::round(
+          std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
+      int n = std::max((int)b, 1);
+      for (int i = 0; i < n; ++i) {
+        auto block = Range<Key>(info.col()).evenDivide(n, i);
+        if (block.empty()) continue;
+        fea_blocks_.push_back(std::make_pair(info.id(), block));
+      }
+    }
+  }
+  fprintf(stderr, "features are partitioned into %lu blocks\n",
+  fea_blocks_.size());
 
-  //   for (int b : block_order)  {
-  //     Task update;
-  //     update.set_wait_time(time - tau);
-  //     auto cmd = RiskMinimization::setCall(&update);
-  //     cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
-  //     // set the feature key range will be updated in this block
-  //     blocks[b].second.to(cmd->mutable_key());
-  //     time = pool->submit(update);
-  //   }
+  // a simple block order
+  block_order_.clear();
+  for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
 
-  //   Task eval;
-  //   RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
-  //   eval.set_wait_time(time - tau);
+  runIteration();
 
-  //   time = pool->submit(eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
-  //   pool->waitOutgoingTask(time);
+  if (app_cf_.has_validation_data()) {
+    fprintf(stderr, "evaluate with %lu validation examples\n",
+            global_validation_info_[0].row().end());
+    Task test;
+    AUC validation_auc;
+    RiskMinimization::setCall(&test)->set_cmd(RiskMinCall::COMPUTE_VALIDATION_AUC);
+    taskpool(kActiveGroup)->submitAndWait(test, [this, &validation_auc](){
+        RiskMinimization::mergeAUC(&validation_auc); });
+    fprintf(stderr, "evaluation auc: %f\n", validation_auc.evaluate());
+  }
 
-  //   showProgress(iter);
-  //   if (fabs(global_progress_[iter].relative_objv()) <= cf.epsilon()) {
-  //     fprintf(stderr, "convergence criteria satisfied: relative objective <= %.1e\n", cf.epsilon());
-  //     break;
-  //   }
-  // }
+  Task save_model;
+  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  taskpool(kActiveGroup)->submitAndWait(save_model);
+}
 
-  // Task save_model;
-  // RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
-  // time = pool->submit(save_model);
-  // pool->waitOutgoingTask(time);
+void BatchSolver::runIteration() {
+  auto cf = app_cf_.block_solver();
+  auto pool = taskpool(kActiveGroup);
+  int time = pool->time();
+  int tau = cf.max_block_delay();
+  for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
+    if (cf.random_feature_block_order())
+      std::random_shuffle(block_order_.begin(), block_order_.end());
+
+    for (int b : block_order_)  {
+      Task update;
+      update.set_wait_time(time - tau);
+      auto cmd = RiskMinimization::setCall(&update);
+      cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
+      // set the feature key range will be updated in this block
+      fea_blocks_[b].second.to(cmd->mutable_key());
+      time = pool->submit(update);
+    }
+
+    Task eval;
+    RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
+    eval.set_wait_time(time - tau);
+    time = pool->submitAndWait(
+        eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+
+    showProgress(iter);
+
+    double rel = global_progress_[iter].relative_objv();
+    if (rel > 0 && rel <= cf.epsilon()) {
+      fprintf(stderr, "stopped: relative objective <= %.1e\n", cf.epsilon());
+      break;
+    }
+  }
 }
 
 void BatchSolver::prepareData(const Message& msg) {
@@ -102,65 +142,60 @@ void BatchSolver::prepareData(const Message& msg) {
 
 
 void BatchSolver::updateModel(Message* msg) {
+  int time = msg->task.time() * 10;
+  Range<Key> global_range(msg->task.risk().key());
+  auto local_range = w_->localRange(global_range);
 
-  // auto time = msg->task.time() * 10;
-  // Range<Key> global_range(msg->task.risk().key());
-  // auto local_range = w_->localRange(global_range);
+  if (exec_.isWorker()) {
+    auto X = X_->colBlock(local_range);
 
-  // if (exec_.isWorker()) {
-  //   // CHECK(!local_range.empty());
-  //   // if (local_range.empty()) LL << global_range << " " << local_range;
-  //   // LL << global_range;
-  //   // int id = msg->task.risk().feature_group_id();
-  //   auto X = X_->colBlock(local_range);
+    SArrayList<double> local_grads(2);
+    local_grads[0].resize(local_range.size());
+    local_grads[1].resize(local_range.size());
+    AggGradLearnerArg arg;
+    {
+      Lock l(mu_);
+      busy_timer_.start();
+      learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
+      busy_timer_.stop();
+    }
 
-  //   SArrayList<double> local_grads(2);
-  //   local_grads[0].resize(local_range.size());
-  //   local_grads[1].resize(local_range.size());
-  //   AggGradLearnerArg arg;
-  //   {
-  //     Lock l(mu_);
-  //     busy_timer_.start();
-  //     learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
-  //     busy_timer_.stop();
-  //   }
+    msg->finished = false;
+    auto d = *msg;
+    w_->roundTripForWorker(time, global_range, local_grads, [this, X, local_range, d] (int time) {
+        Lock l(mu_);
+        busy_timer_.start();
 
-  //   msg->finished = false;
-  //   auto d = *msg;
-  //   w_->roundTripForWorker(time, global_range, local_grads, [this, X, local_range, d] (int time) {
-  //       Lock l(mu_);
-  //       busy_timer_.start();
+        if (!local_range.empty()) {
+          auto data = w_->received(time);
 
-  //       if (!local_range.empty()) {
-  //         auto data = w_->received(time);
+          CHECK_EQ(data.size(), 1);
+          CHECK_EQ(local_range, data[0].first);
+          auto new_w = data[0].second;
 
-  //         CHECK_EQ(data.size(), 1);
-  //         CHECK_EQ(local_range, data[0].first);
-  //         auto new_w = data[0].second;
+          auto delta = new_w.eigenVector() - w_->segment(local_range).eigenVector();
+          dual_.eigenVector() += *X * delta;
+          w_->segment(local_range).eigenVector() = new_w.eigenVector();
+        }
 
-  //         auto delta = new_w.eigenVector() - w_->segment(local_range).eigenVector();
-  //         dual_.eigenVector() += *X * delta;
-  //         w_->segment(local_range).eigenVector() = new_w.eigenVector();
-  //       }
-
-  //       busy_timer_.stop();
-  //       taskpool(d.sender)->finishIncomingTask(d.task.time());
-  //       sys_.reply(d);
-  //       // LL << myNodeID() << " done " << d.task.time();
-  //     });
-  // } else {
-  //   // aggregate local gradients, then update model
-  //   w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-  //       SArrayList<double> aggregated_gradient;
-  //       for (auto& d : w_->received(time)) {
-  //         CHECK_EQ(local_range, d.first);
-  //         aggregated_gradient.push_back(d.second);
-  //       }
-  //       AggGradLearnerArg arg;
-  //       arg.set_learning_rate(app_cf_.learner().learning_rate());
-  //       learner_->update(aggregated_gradient, arg, w_->segment(local_range));
-  //     });
-  // }
+        busy_timer_.stop();
+        taskpool(d.sender)->finishIncomingTask(d.task.time());
+        sys_.reply(d);
+        // LL << myNodeID() << " done " << d.task.time();
+      });
+  } else {
+    // aggregate local gradients, then update model
+    w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
+        SArrayList<double> aggregated_gradient;
+        for (auto& d : w_->received(time)) {
+          CHECK_EQ(local_range, d.first);
+          aggregated_gradient.push_back(d.second);
+        }
+        AggGradLearnerArg arg;
+        arg.set_learning_rate(app_cf_.learning_rate().eta());
+        learner_->update(aggregated_gradient, arg, w_->segment(local_range));
+      });
+  }
 
 }
 

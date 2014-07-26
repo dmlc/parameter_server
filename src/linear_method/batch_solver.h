@@ -5,7 +5,7 @@
 namespace PS {
 namespace LM {
 
-class BatchSolver : public BlockSolver {
+class BatchSolver : public LinearMethod {
  public:
   virtual void init();
   virtual void run();
@@ -13,6 +13,7 @@ class BatchSolver : public BlockSolver {
  protected:
   virtual void prepareData(const Message& msg);
   virtual void updateModel(Message* msg);
+  virtual void runIteration();
 
   virtual RiskMinProgress evaluateProgress();
   virtual void showProgress(int iter);
@@ -22,6 +23,10 @@ class BatchSolver : public BlockSolver {
 
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
+
+  typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
+  FeatureBlocks fea_blocks_;
+  std::vector<int> block_order_;
 
   // dual_ = X_ * w_
   SArray<double> dual_;
