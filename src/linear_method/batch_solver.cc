@@ -59,17 +59,13 @@ void BatchSolver::run() {
 void BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    // LL << myNodeID() << " training data " << app_cf_.training().DebugString();
     auto training_data = readMatrices<double>(app_cf_.training_data());
     CHECK_EQ(training_data.size(), 2);
-    // LL << myNodeID() << " load training data";
     y_ = training_data[0];
     X_ = training_data[1]->localize(&(w_->key()));
-    // LL << myNodeID() << " convert global fea_id into local ones";
     CHECK_EQ(y_->rows(), X_->rows());
     if (app_cf_.block_solver().feature_block_ratio() > 0) {
       X_ = X_->toColMajor();
-      // LL << myNodeID() << " to col major";
     }
     // sync keys and fetch initial value of w_
     SArrayList<double> empty;
@@ -231,20 +227,15 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   auto X = validation_data[1]->localize(&(w_->key()));
   CHECK_EQ(y.size(), X->rows());
 
-  Message pull_msg; pull_msg.key = w_->key();
-  int time = w_->sync(
-      CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
-  w_->taskpool(kServerGroup)->waitOutgoingTask(time);
+  w_->fetchValueFromServers();
 
-  auto recv = w_->received(time);
-  auto w = recv[0].second;
-  for (int i = 0; i < w.size(); ++i) if (w[i] != w[i]) w[i] = 0;
   // w.writeToFile("w");
   // CHECK_EQ.size(), w.size());
 
   AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
   SArray<double> Xw(X->rows());
-  Xw.eigenVector() = *X * w.eigenVector();
+  for (auto& v : w_->value()) if (v != v) v = 0;
+  Xw.eigenVector() = *X * w_->value().eigenVector();
   auc.compute(y, Xw, data);
 
   // Xw.writeToFile("Xw_"+myNodeID());

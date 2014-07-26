@@ -72,6 +72,7 @@ using std::initializer_list;
 using google::protobuf::TextFormat;
 
 #define LL LOG(ERROR)
+#define LI LOG(INFO)
 
 DECLARE_int32(num_threads);
 

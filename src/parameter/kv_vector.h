@@ -32,10 +32,6 @@ class KVVector : public SharedParameter<K,V> {
 
   // # of nnz entries
   size_t nnz() const { return val_.nnz(); }
-  //   size_t ret = 0;
-  //   for (auto v : val_) ret += (v != 0);
-  //   return ret;
-  // }
 
   // resize val_ into the size as key_,
   // void resizeValue() {
@@ -48,11 +44,34 @@ class KVVector : public SharedParameter<K,V> {
   //////////// functions for applications
   // global keys
   SArray<K>& key() { return key_; }
+  // TODO also set value?
+  void setKey(const SArray<K>& key) { key_ = key; }
 
   // mapping a global key range into local range
   SizeR localRange (const Range<K>& global_range) {
     return key_.findRange(global_range);
   }
+
+  void fetchValueFromServers() {
+    Message pull_msg; pull_msg.key = key_;
+    int time = sync(
+        CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
+    taskpool(kServerGroup)->waitOutgoingTask(time);
+    auto recv = received(time);
+    val_ = recv[0].second;
+    CHECK_EQ(val_.size(), key_.size());
+  }
+
+  // void aggregateKeyAtServers(int time) {
+  //   if (exec_.isWorker()) {
+  //     Message push_msg; push_msg.key = key_;
+  //     time = sync(
+  //         CallSharedPara::PUSH, kServerGroup, Range<Key>::all(), push_msg, time);
+  //     taskpool(kServerGroup)->waitOutgoingTask(time);
+  //   } else  if (exec.isServer()) {
+  //     taskpool(kWorkerGroup)->waitIncomingTask(time);
+  //   }
+  // }
 
   // push a list of values to servers, and then pull the accoding values back.
   // callback will be run only once after the pulling is done

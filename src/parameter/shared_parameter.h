@@ -8,6 +8,10 @@ template <typename K, typename V>
 class SharedParameter : public Customer {
  public:
 
+  // snappy has good compression rate on 0xffff..ff, it is nan for double
+  // const double kFilteredDouble_ = *((double*)&kuint64max);
+  // const float kFilteredFloat_ = *(std::reinterpret_cast<float>(&kuint32max));
+
   // process a received message, will called by executor's thread
   void process(Message* msg);
 
