@@ -15,8 +15,8 @@ class RNode;
 typedef shared_ptr<RNode> RNodePtr;
 typedef std::vector<RNodePtr> RNodePtrList;
 
-// a remote node associated with a customer. one can send task to this remote
-// node, (similar to remote precedure call)
+// a remote node that the local node (the node of executor) can submit a task to
+// or receive a task from. (similar to remote precedure call)
 class RNode {
  public:
   typedef std::function<void()> Callback;
@@ -35,7 +35,7 @@ class RNode {
   Range<Key> keyRange() { return Range<Key>(node_.key()); }
 
 
-  // submit a task to this node
+  // submit a task to this remote node from the local node
   //
   // msg: task info, keys, and values
   //
@@ -77,7 +77,11 @@ class RNode {
   Message cacheKeyRecver(const Message& msg);
   void clearCache() { key_cache_.clear(); }
 
+  // wait a submitted task (send to the remote node from the local node) with
+  // timestamp _time_ until it finished (received all replied message)
   void waitOutgoingTask(int time);
+  // wait a received task (send from the remote node to the local node) until
+  // finished (this task has been marked as finished in TaskTracker)
   void waitIncomingTask(int time);
 
   bool tryWaitOutgoingTask(int time);
