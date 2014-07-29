@@ -6,7 +6,7 @@ namespace PS {
 
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
 
-int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
+int RNode::submit(Message msg, Callback received, Callback finished, bool no_wait) {
   auto& tk = msg.task;
   CHECK(tk.has_type());
   tk.set_request(true);
@@ -29,7 +29,7 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
       }
       tk.set_time(++time_);
     }
-    if (after) msg_finish_handle_[tk.time()] = after;
+    if (finished) msg_finish_handle_[tk.time()] = finished;
   }
 
   int t = tk.time();
@@ -51,7 +51,7 @@ int RNode::submit(Message msg, Callback before, Callback after, bool no_wait) {
       // do not pending it, it will not be replied
       if (tk.type() != Task::TERMINATE_CONFIRM)
         w->pending_msgs_[t] = msgs[i];
-      if (before) w->msg_receive_handle_[t] = before;
+      if (received) w->msg_receive_handle_[t] = received;
     }
     sys_.queue(w->cacheKeySender(msgs[i]));
   // if (tk.shared_para().cmd() == CallSharedPara::PUSH_REPLICA ) {

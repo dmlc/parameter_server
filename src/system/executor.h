@@ -17,6 +17,7 @@ const static NodeID kOwnerGroup = Van::id("all_owners");
 // all live nodes, including scheduler, workers, servers, unused nodes...
 const static NodeID kLiveGroup = Van::id("all_lives");
 
+//
 class Executor {
  public:
   Executor(Customer& obj) : obj_(obj) { }

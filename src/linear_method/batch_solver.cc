@@ -265,7 +265,6 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   w_->fetchValueFromServers();
 
   // w.writeToFile("w");
-  // CHECK_EQ.size(), w.size());
 
   AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
   SArray<double> Xw(X->rows());

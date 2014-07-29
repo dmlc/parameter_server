@@ -1,0 +1,18 @@
+package PS;
+
+message LayerConfig {
+  repeated string bottom = 1;
+  repeated string top = 2;
+  required string name = 3;
+
+  enum Type {
+    NONE = 0;
+  }
+  required Type type = 4;
+
+}
+
+message NetConfig {
+  optional string name = 1;
+  repeated LayerConfig layers = 2;
+}

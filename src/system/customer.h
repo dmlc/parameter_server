@@ -15,32 +15,34 @@ class Customer {
     exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
   }
 
-  void stop() {
-    exec_.stop();
-    exec_thread_->join();
-  }
-
   // process a message received from a remote node
   virtual void process(Message* msg) = 0;
 
-  // decompose the message give the partition keys
+  // given the partition keys (k_1, k_2, ..., k_n), decompose the message into
+  // n-1 messages such that the i-th message containing only keys and values in
+  // the key range [k_i, k_{i+1})
   virtual std::vector<Message>
   decompose(const Message& msg, const Keys& partition) {
     return std::vector<Message>(partition.size()-1, msg);
   }
 
-  // accessors and mutators
+  void stop() {
+    exec_.stop();
+    exec_thread_->join();
+  }
+
+  // unique name of this customer
   const string& name() const { return name_; }
   string& name() { return name_; }
 
+  // the uique node id running this customer
   NodeID myNodeID() { return exec_.myNode().id(); }
 
-  const std::vector<string> child_customers() const { return child_customers_; }
-
   Executor& exec() { return exec_; }
-
   RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
 
+  // all child customer names
+  const std::vector<string>& children() const { return child_customers_; }
 
  protected:
   string name_;

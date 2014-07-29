@@ -163,7 +163,7 @@ void Postoffice::manage_node(const Task& tk) {
       for (auto n : nodes) yp_.add(n);
       if (obj != nullptr) {
         obj->exec().init(nodes);
-        for (auto c : obj->child_customers())
+        for (auto c : obj->children())
           yp_.customer(c)->exec().init(nodes);
       }
       break;
@@ -171,7 +171,7 @@ void Postoffice::manage_node(const Task& tk) {
     case ManageNode::REPLACE:
       CHECK_EQ(nodes.size(), 2);
       obj->exec().replace(nodes[0], nodes[1]);
-      for (auto c : obj->child_customers())
+      for (auto c : obj->children())
         yp_.customer(c)->exec().replace(nodes[0], nodes[1]);
       break;
 
