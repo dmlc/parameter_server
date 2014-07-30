@@ -16,7 +16,7 @@ void LinearMethod::init() {
   }
 
   if (app_cf_.has_loss()) {
-    loss_ = LossFactory<double>::create(app_cf_.loss());
+    loss_ = Loss<double>::create(app_cf_.loss());
     if (has_learner) learner_->setLoss(loss_);
   }
 

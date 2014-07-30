@@ -2,6 +2,8 @@ package PS;
 import "proto/range.proto";
 import "proto/auc.proto";
 
+
+
 message RiskMinProgress {
   optional double objv = 1;
   optional double relative_objv = 2;
