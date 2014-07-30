@@ -1,6 +1,6 @@
 #include <mpi.h>
 #include "system/postoffice.h"
-#include "app/app.h"
+#include "system/app.h"
 #include "util/local_machine.h"
 
 DEFINE_string(interface, "lo0", "network interface will use");

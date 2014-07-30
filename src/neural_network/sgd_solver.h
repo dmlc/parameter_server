@@ -4,8 +4,9 @@
 namespace PS {
 namespace NN {
 
-class SGDSolver : public NNSolver {
-
+class SGDSolver : public Solver {
+ public:
+  void run();
 
 };
 

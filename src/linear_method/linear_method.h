@@ -1,5 +1,5 @@
 #pragma once
-#include "app/risk_minimization.h"
+#include "risk_minimization/risk_minimization.h"
 #include "parameter/kv_vector.h"
 
 #include "loss/loss_factory.h"

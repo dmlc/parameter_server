@@ -54,7 +54,7 @@ SRCS = $(PROTOS_CC) \
 	system/remote_node.cc \
 	system/executor.cc \
 	system/app.cc \
-	app/risk_minimization.cc \
+	risk_minimization/risk_minimization.cc \
 	linear_method/linear_method.cc \
 	linear_method/block_solver.cc \
 	linear_method/batch_solver.cc \
