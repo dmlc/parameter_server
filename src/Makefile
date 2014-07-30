@@ -55,10 +55,10 @@ SRCS = $(PROTOS_CC) \
 	system/executor.cc \
 	system/app.cc \
 	risk_minimization/risk_minimization.cc \
-	linear_method/linear_method.cc \
-	linear_method/block_solver.cc \
-	linear_method/batch_solver.cc \
-	linear_method/block_coord_desc_l1lr.cc
+	risk_minimization/linear_method/linear_method.cc \
+	risk_minimization/linear_method/block_solver.cc \
+	risk_minimization/linear_method/batch_solver.cc \
+	risk_minimization/linear_method/block_coord_desc_l1lr.cc
 
 OBJS = $(SRCS:.cc=.o)
 DEPS = $(SRCS:.cc=.d)
@@ -92,7 +92,7 @@ dir:
 	mkdir -p $(LIB)
 	mkdir -p $(BIN)
 clean:
-	rm -rf */*.o */*.d proto/*.cc $(BIN) $(LIB)
+	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
 
 %.o: %.cc %.h
 	$(CC) $(CFLAGS) -c $< -o $@

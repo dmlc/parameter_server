@@ -1,6 +1,6 @@
 #include "system/app.h"
-#include "linear_method/batch_solver.h"
-#include "linear_method/block_coord_desc_l1lr.h"
+#include "risk_minimization/linear_method/batch_solver.h"
+#include "risk_minimization/linear_method/block_coord_desc_l1lr.h"
 
 // #include "app/grad_desc.h"
 // #include "app/block_prox_grad.h"
