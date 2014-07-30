@@ -12,11 +12,11 @@ typedef std::shared_ptr<App> AppPtr;
 
 class App : public Customer {
  public:
-
   // factory function
   static AppPtr create(const AppConfig& config);
 
   virtual void init() = 0;
+
   // run the applications: load data, iterating...
   virtual void run() = 0;
 

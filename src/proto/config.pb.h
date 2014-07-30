@@ -26,6 +26,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
+#include "proto/neural_network.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -48,11 +49,12 @@ class AggGradLearnerArg;
 
 enum AppConfig_Type {
   AppConfig_Type_RISK_MINIMIZATION = 1,
-  AppConfig_Type_SKETCH = 2
+  AppConfig_Type_SKETCH = 2,
+  AppConfig_Type_NEURAL_NETWORK = 3
 };
 bool AppConfig_Type_IsValid(int value);
 const AppConfig_Type AppConfig_Type_Type_MIN = AppConfig_Type_RISK_MINIMIZATION;
-const AppConfig_Type AppConfig_Type_Type_MAX = AppConfig_Type_SKETCH;
+const AppConfig_Type AppConfig_Type_Type_MAX = AppConfig_Type_NEURAL_NETWORK;
 const int AppConfig_Type_Type_ARRAYSIZE = AppConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* AppConfig_Type_descriptor();
@@ -240,6 +242,7 @@ class AppConfig : public ::google::protobuf::Message {
   typedef AppConfig_Type Type;
   static const Type RISK_MINIMIZATION = AppConfig_Type_RISK_MINIMIZATION;
   static const Type SKETCH = AppConfig_Type_SKETCH;
+  static const Type NEURAL_NETWORK = AppConfig_Type_NEURAL_NETWORK;
   static inline bool Type_IsValid(int value) {
     return AppConfig_Type_IsValid(value);
   }
@@ -352,41 +355,59 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::PenaltyConfig* release_penalty();
   inline void set_allocated_penalty(::PS::PenaltyConfig* penalty);
 
-  // optional .PS.LearnerConfig learner = 30;
-  inline bool has_learner() const;
-  inline void clear_learner();
-  static const int kLearnerFieldNumber = 30;
-  inline const ::PS::LearnerConfig& learner() const;
-  inline ::PS::LearnerConfig* mutable_learner();
-  inline ::PS::LearnerConfig* release_learner();
-  inline void set_allocated_learner(::PS::LearnerConfig* learner);
-
-  // optional .PS.LearningRateConfig learning_rate = 31;
+  // optional .PS.LearningRateConfig learning_rate = 23;
   inline bool has_learning_rate() const;
   inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 31;
+  static const int kLearningRateFieldNumber = 23;
   inline const ::PS::LearningRateConfig& learning_rate() const;
   inline ::PS::LearningRateConfig* mutable_learning_rate();
   inline ::PS::LearningRateConfig* release_learning_rate();
   inline void set_allocated_learning_rate(::PS::LearningRateConfig* learning_rate);
 
-  // optional .PS.BlockSolverConfig block_solver = 40;
+  // optional .PS.LearnerConfig learner = 22;
+  inline bool has_learner() const;
+  inline void clear_learner();
+  static const int kLearnerFieldNumber = 22;
+  inline const ::PS::LearnerConfig& learner() const;
+  inline ::PS::LearnerConfig* mutable_learner();
+  inline ::PS::LearnerConfig* release_learner();
+  inline void set_allocated_learner(::PS::LearnerConfig* learner);
+
+  // optional .PS.BlockSolverConfig block_solver = 24;
   inline bool has_block_solver() const;
   inline void clear_block_solver();
-  static const int kBlockSolverFieldNumber = 40;
+  static const int kBlockSolverFieldNumber = 24;
   inline const ::PS::BlockSolverConfig& block_solver() const;
   inline ::PS::BlockSolverConfig* mutable_block_solver();
   inline ::PS::BlockSolverConfig* release_block_solver();
   inline void set_allocated_block_solver(::PS::BlockSolverConfig* block_solver);
 
-  // optional .PS.BCDL1LRConfig bcd_l1lr = 41;
+  // optional .PS.BCDL1LRConfig bcd_l1lr = 25;
   inline bool has_bcd_l1lr() const;
   inline void clear_bcd_l1lr();
-  static const int kBcdL1LrFieldNumber = 41;
+  static const int kBcdL1LrFieldNumber = 25;
   inline const ::PS::BCDL1LRConfig& bcd_l1lr() const;
   inline ::PS::BCDL1LRConfig* mutable_bcd_l1lr();
   inline ::PS::BCDL1LRConfig* release_bcd_l1lr();
   inline void set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr);
+
+  // optional .PS.NN.NetConfig nn = 30;
+  inline bool has_nn() const;
+  inline void clear_nn();
+  static const int kNnFieldNumber = 30;
+  inline const ::PS::NN::NetConfig& nn() const;
+  inline ::PS::NN::NetConfig* mutable_nn();
+  inline ::PS::NN::NetConfig* release_nn();
+  inline void set_allocated_nn(::PS::NN::NetConfig* nn);
+
+  // optional .PS.NN.SolverConfig nn_solver = 31;
+  inline bool has_nn_solver() const;
+  inline void clear_nn_solver();
+  static const int kNnSolverFieldNumber = 31;
+  inline const ::PS::NN::SolverConfig& nn_solver() const;
+  inline ::PS::NN::SolverConfig* mutable_nn_solver();
+  inline ::PS::NN::SolverConfig* release_nn_solver();
+  inline void set_allocated_nn_solver(::PS::NN::SolverConfig* nn_solver);
 
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
@@ -406,14 +427,18 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_loss();
   inline void set_has_penalty();
   inline void clear_has_penalty();
-  inline void set_has_learner();
-  inline void clear_has_learner();
   inline void set_has_learning_rate();
   inline void clear_has_learning_rate();
+  inline void set_has_learner();
+  inline void clear_has_learner();
   inline void set_has_block_solver();
   inline void clear_has_block_solver();
   inline void set_has_bcd_l1lr();
   inline void clear_has_bcd_l1lr();
+  inline void set_has_nn();
+  inline void clear_has_nn();
+  inline void set_has_nn_solver();
+  inline void clear_has_nn_solver();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -425,14 +450,16 @@ class AppConfig : public ::google::protobuf::Message {
   ::PS::DataConfig* model_output_;
   ::PS::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
-  ::PS::LearnerConfig* learner_;
   ::PS::LearningRateConfig* learning_rate_;
+  ::PS::LearnerConfig* learner_;
   ::PS::BlockSolverConfig* block_solver_;
   ::PS::BCDL1LRConfig* bcd_l1lr_;
+  ::PS::NN::NetConfig* nn_;
+  ::PS::NN::SolverConfig* nn_solver_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1838,53 +1865,15 @@ inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
   }
 }
 
-// optional .PS.LearnerConfig learner = 30;
-inline bool AppConfig::has_learner() const {
+// optional .PS.LearningRateConfig learning_rate = 23;
+inline bool AppConfig::has_learning_rate() const {
   return (_has_bits_[0] & 0x00000200u) != 0;
 }
-inline void AppConfig::set_has_learner() {
+inline void AppConfig::set_has_learning_rate() {
   _has_bits_[0] |= 0x00000200u;
 }
-inline void AppConfig::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void AppConfig::clear_learner() {
-  if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
-  clear_has_learner();
-}
-inline const ::PS::LearnerConfig& AppConfig::learner() const {
-  return learner_ != NULL ? *learner_ : *default_instance_->learner_;
-}
-inline ::PS::LearnerConfig* AppConfig::mutable_learner() {
-  set_has_learner();
-  if (learner_ == NULL) learner_ = new ::PS::LearnerConfig;
-  return learner_;
-}
-inline ::PS::LearnerConfig* AppConfig::release_learner() {
-  clear_has_learner();
-  ::PS::LearnerConfig* temp = learner_;
-  learner_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
-  delete learner_;
-  learner_ = learner;
-  if (learner) {
-    set_has_learner();
-  } else {
-    clear_has_learner();
-  }
-}
-
-// optional .PS.LearningRateConfig learning_rate = 31;
-inline bool AppConfig::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void AppConfig::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000400u;
-}
 inline void AppConfig::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void AppConfig::clear_learning_rate() {
   if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
@@ -1914,7 +1903,45 @@ inline void AppConfig::set_allocated_learning_rate(::PS::LearningRateConfig* lea
   }
 }
 
-// optional .PS.BlockSolverConfig block_solver = 40;
+// optional .PS.LearnerConfig learner = 22;
+inline bool AppConfig::has_learner() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void AppConfig::set_has_learner() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void AppConfig::clear_has_learner() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void AppConfig::clear_learner() {
+  if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
+  clear_has_learner();
+}
+inline const ::PS::LearnerConfig& AppConfig::learner() const {
+  return learner_ != NULL ? *learner_ : *default_instance_->learner_;
+}
+inline ::PS::LearnerConfig* AppConfig::mutable_learner() {
+  set_has_learner();
+  if (learner_ == NULL) learner_ = new ::PS::LearnerConfig;
+  return learner_;
+}
+inline ::PS::LearnerConfig* AppConfig::release_learner() {
+  clear_has_learner();
+  ::PS::LearnerConfig* temp = learner_;
+  learner_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
+  delete learner_;
+  learner_ = learner;
+  if (learner) {
+    set_has_learner();
+  } else {
+    clear_has_learner();
+  }
+}
+
+// optional .PS.BlockSolverConfig block_solver = 24;
 inline bool AppConfig::has_block_solver() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
@@ -1952,7 +1979,7 @@ inline void AppConfig::set_allocated_block_solver(::PS::BlockSolverConfig* block
   }
 }
 
-// optional .PS.BCDL1LRConfig bcd_l1lr = 41;
+// optional .PS.BCDL1LRConfig bcd_l1lr = 25;
 inline bool AppConfig::has_bcd_l1lr() const {
   return (_has_bits_[0] & 0x00001000u) != 0;
 }
@@ -1987,6 +2014,82 @@ inline void AppConfig::set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr) {
     set_has_bcd_l1lr();
   } else {
     clear_has_bcd_l1lr();
+  }
+}
+
+// optional .PS.NN.NetConfig nn = 30;
+inline bool AppConfig::has_nn() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void AppConfig::set_has_nn() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void AppConfig::clear_has_nn() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void AppConfig::clear_nn() {
+  if (nn_ != NULL) nn_->::PS::NN::NetConfig::Clear();
+  clear_has_nn();
+}
+inline const ::PS::NN::NetConfig& AppConfig::nn() const {
+  return nn_ != NULL ? *nn_ : *default_instance_->nn_;
+}
+inline ::PS::NN::NetConfig* AppConfig::mutable_nn() {
+  set_has_nn();
+  if (nn_ == NULL) nn_ = new ::PS::NN::NetConfig;
+  return nn_;
+}
+inline ::PS::NN::NetConfig* AppConfig::release_nn() {
+  clear_has_nn();
+  ::PS::NN::NetConfig* temp = nn_;
+  nn_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_nn(::PS::NN::NetConfig* nn) {
+  delete nn_;
+  nn_ = nn;
+  if (nn) {
+    set_has_nn();
+  } else {
+    clear_has_nn();
+  }
+}
+
+// optional .PS.NN.SolverConfig nn_solver = 31;
+inline bool AppConfig::has_nn_solver() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void AppConfig::set_has_nn_solver() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void AppConfig::clear_has_nn_solver() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void AppConfig::clear_nn_solver() {
+  if (nn_solver_ != NULL) nn_solver_->::PS::NN::SolverConfig::Clear();
+  clear_has_nn_solver();
+}
+inline const ::PS::NN::SolverConfig& AppConfig::nn_solver() const {
+  return nn_solver_ != NULL ? *nn_solver_ : *default_instance_->nn_solver_;
+}
+inline ::PS::NN::SolverConfig* AppConfig::mutable_nn_solver() {
+  set_has_nn_solver();
+  if (nn_solver_ == NULL) nn_solver_ = new ::PS::NN::SolverConfig;
+  return nn_solver_;
+}
+inline ::PS::NN::SolverConfig* AppConfig::release_nn_solver() {
+  clear_has_nn_solver();
+  ::PS::NN::SolverConfig* temp = nn_solver_;
+  nn_solver_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_nn_solver(::PS::NN::SolverConfig* nn_solver) {
+  delete nn_solver_;
+  nn_solver_ = nn_solver;
+  if (nn_solver) {
+    set_has_nn_solver();
+  } else {
+    clear_has_nn_solver();
   }
 }
 

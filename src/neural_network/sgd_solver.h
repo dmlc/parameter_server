@@ -1,9 +1,11 @@
 #pragma once
-#include "system/app.h"
+#include "neural_network/solver.h"
+
 namespace PS {
 namespace NN {
 
-class NNSolver : public App {
+class SGDSolver : public NNSolver {
+
 
 };
 

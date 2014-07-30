@@ -28,6 +28,7 @@
 // @@protoc_insertion_point(includes)
 
 namespace PS {
+namespace NN {
 
 // Internal implementation detail -- do not call these.
 void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
@@ -36,13 +37,16 @@ void protobuf_ShutdownFile_proto_2fneural_5fnetwork_2eproto();
 
 class LayerConfig;
 class NetConfig;
+class ActivationConfig;
+class SolverConfig;
 
 enum LayerConfig_Type {
-  LayerConfig_Type_NONE = 0
+  LayerConfig_Type_NONE = 0,
+  LayerConfig_Type_FULLY_CONNECTED = 1
 };
 bool LayerConfig_Type_IsValid(int value);
 const LayerConfig_Type LayerConfig_Type_Type_MIN = LayerConfig_Type_NONE;
-const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_NONE;
+const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_FULLY_CONNECTED;
 const int LayerConfig_Type_Type_ARRAYSIZE = LayerConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* LayerConfig_Type_descriptor();
@@ -54,6 +58,46 @@ inline bool LayerConfig_Type_Parse(
     const ::std::string& name, LayerConfig_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<LayerConfig_Type>(
     LayerConfig_Type_descriptor(), name, value);
+}
+enum ActivationConfig_Type {
+  ActivationConfig_Type_IDENTITY = 0,
+  ActivationConfig_Type_SIGMOID = 1,
+  ActivationConfig_Type_LOGISTIC = 2,
+  ActivationConfig_Type_SOFTMAX = 3,
+  ActivationConfig_Type_RELU = 4
+};
+bool ActivationConfig_Type_IsValid(int value);
+const ActivationConfig_Type ActivationConfig_Type_Type_MIN = ActivationConfig_Type_IDENTITY;
+const ActivationConfig_Type ActivationConfig_Type_Type_MAX = ActivationConfig_Type_RELU;
+const int ActivationConfig_Type_Type_ARRAYSIZE = ActivationConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* ActivationConfig_Type_descriptor();
+inline const ::std::string& ActivationConfig_Type_Name(ActivationConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    ActivationConfig_Type_descriptor(), value);
+}
+inline bool ActivationConfig_Type_Parse(
+    const ::std::string& name, ActivationConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<ActivationConfig_Type>(
+    ActivationConfig_Type_descriptor(), name, value);
+}
+enum SolverConfig_Type {
+  SolverConfig_Type_SGD = 1
+};
+bool SolverConfig_Type_IsValid(int value);
+const SolverConfig_Type SolverConfig_Type_Type_MIN = SolverConfig_Type_SGD;
+const SolverConfig_Type SolverConfig_Type_Type_MAX = SolverConfig_Type_SGD;
+const int SolverConfig_Type_Type_ARRAYSIZE = SolverConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SolverConfig_Type_descriptor();
+inline const ::std::string& SolverConfig_Type_Name(SolverConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SolverConfig_Type_descriptor(), value);
+}
+inline bool SolverConfig_Type_Parse(
+    const ::std::string& name, SolverConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SolverConfig_Type>(
+    SolverConfig_Type_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -111,6 +155,7 @@ class LayerConfig : public ::google::protobuf::Message {
 
   typedef LayerConfig_Type Type;
   static const Type NONE = LayerConfig_Type_NONE;
+  static const Type FULLY_CONNECTED = LayerConfig_Type_FULLY_CONNECTED;
   static inline bool Type_IsValid(int value) {
     return LayerConfig_Type_IsValid(value);
   }
@@ -134,42 +179,17 @@ class LayerConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // repeated string bottom = 1;
-  inline int bottom_size() const;
-  inline void clear_bottom();
-  static const int kBottomFieldNumber = 1;
-  inline const ::std::string& bottom(int index) const;
-  inline ::std::string* mutable_bottom(int index);
-  inline void set_bottom(int index, const ::std::string& value);
-  inline void set_bottom(int index, const char* value);
-  inline void set_bottom(int index, const char* value, size_t size);
-  inline ::std::string* add_bottom();
-  inline void add_bottom(const ::std::string& value);
-  inline void add_bottom(const char* value);
-  inline void add_bottom(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& bottom() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_bottom();
+  // required .PS.NN.LayerConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::NN::LayerConfig_Type type() const;
+  inline void set_type(::PS::NN::LayerConfig_Type value);
 
-  // repeated string top = 2;
-  inline int top_size() const;
-  inline void clear_top();
-  static const int kTopFieldNumber = 2;
-  inline const ::std::string& top(int index) const;
-  inline ::std::string* mutable_top(int index);
-  inline void set_top(int index, const ::std::string& value);
-  inline void set_top(int index, const char* value);
-  inline void set_top(int index, const char* value, size_t size);
-  inline ::std::string* add_top();
-  inline void add_top(const ::std::string& value);
-  inline void add_top(const char* value);
-  inline void add_top(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& top() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_top();
-
-  // required string name = 3;
+  // required string name = 2;
   inline bool has_name() const;
   inline void clear_name();
-  static const int kNameFieldNumber = 3;
+  static const int kNameFieldNumber = 2;
   inline const ::std::string& name() const;
   inline void set_name(const ::std::string& value);
   inline void set_name(const char* value);
@@ -178,29 +198,66 @@ class LayerConfig : public ::google::protobuf::Message {
   inline ::std::string* release_name();
   inline void set_allocated_name(::std::string* name);
 
-  // required .PS.LayerConfig.Type type = 4;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 4;
-  inline ::PS::LayerConfig_Type type() const;
-  inline void set_type(::PS::LayerConfig_Type value);
+  // repeated string in = 3;
+  inline int in_size() const;
+  inline void clear_in();
+  static const int kInFieldNumber = 3;
+  inline const ::std::string& in(int index) const;
+  inline ::std::string* mutable_in(int index);
+  inline void set_in(int index, const ::std::string& value);
+  inline void set_in(int index, const char* value);
+  inline void set_in(int index, const char* value, size_t size);
+  inline ::std::string* add_in();
+  inline void add_in(const ::std::string& value);
+  inline void add_in(const char* value);
+  inline void add_in(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& in() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_in();
 
-  // @@protoc_insertion_point(class_scope:PS.LayerConfig)
+  // repeated string out = 4;
+  inline int out_size() const;
+  inline void clear_out();
+  static const int kOutFieldNumber = 4;
+  inline const ::std::string& out(int index) const;
+  inline ::std::string* mutable_out(int index);
+  inline void set_out(int index, const ::std::string& value);
+  inline void set_out(int index, const char* value);
+  inline void set_out(int index, const char* value, size_t size);
+  inline ::std::string* add_out();
+  inline void add_out(const ::std::string& value);
+  inline void add_out(const char* value);
+  inline void add_out(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& out() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_out();
+
+  // optional .PS.NN.ActivationConfig activation = 5;
+  inline bool has_activation() const;
+  inline void clear_activation();
+  static const int kActivationFieldNumber = 5;
+  inline const ::PS::NN::ActivationConfig& activation() const;
+  inline ::PS::NN::ActivationConfig* mutable_activation();
+  inline ::PS::NN::ActivationConfig* release_activation();
+  inline void set_allocated_activation(::PS::NN::ActivationConfig* activation);
+
+  // @@protoc_insertion_point(class_scope:PS.NN.LayerConfig)
  private:
-  inline void set_has_name();
-  inline void clear_has_name();
   inline void set_has_type();
   inline void clear_has_type();
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_activation();
+  inline void clear_has_activation();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::std::string> bottom_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> top_;
   ::std::string* name_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> in_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> out_;
+  ::PS::NN::ActivationConfig* activation_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -277,19 +334,19 @@ class NetConfig : public ::google::protobuf::Message {
   inline ::std::string* release_name();
   inline void set_allocated_name(::std::string* name);
 
-  // repeated .PS.LayerConfig layers = 2;
+  // repeated .PS.NN.LayerConfig layers = 2;
   inline int layers_size() const;
   inline void clear_layers();
   static const int kLayersFieldNumber = 2;
-  inline const ::PS::LayerConfig& layers(int index) const;
-  inline ::PS::LayerConfig* mutable_layers(int index);
-  inline ::PS::LayerConfig* add_layers();
-  inline const ::google::protobuf::RepeatedPtrField< ::PS::LayerConfig >&
+  inline const ::PS::NN::LayerConfig& layers(int index) const;
+  inline ::PS::NN::LayerConfig* mutable_layers(int index);
+  inline ::PS::NN::LayerConfig* add_layers();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >&
       layers() const;
-  inline ::google::protobuf::RepeatedPtrField< ::PS::LayerConfig >*
+  inline ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >*
       mutable_layers();
 
-  // @@protoc_insertion_point(class_scope:PS.NetConfig)
+  // @@protoc_insertion_point(class_scope:PS.NN.NetConfig)
  private:
   inline void set_has_name();
   inline void clear_has_name();
@@ -297,7 +354,7 @@ class NetConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* name_;
-  ::google::protobuf::RepeatedPtrField< ::PS::LayerConfig > layers_;
+  ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig > layers_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
@@ -309,6 +366,240 @@ class NetConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static NetConfig* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class ActivationConfig : public ::google::protobuf::Message {
+ public:
+  ActivationConfig();
+  virtual ~ActivationConfig();
+
+  ActivationConfig(const ActivationConfig& from);
+
+  inline ActivationConfig& operator=(const ActivationConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ActivationConfig& default_instance();
+
+  void Swap(ActivationConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  ActivationConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ActivationConfig& from);
+  void MergeFrom(const ActivationConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef ActivationConfig_Type Type;
+  static const Type IDENTITY = ActivationConfig_Type_IDENTITY;
+  static const Type SIGMOID = ActivationConfig_Type_SIGMOID;
+  static const Type LOGISTIC = ActivationConfig_Type_LOGISTIC;
+  static const Type SOFTMAX = ActivationConfig_Type_SOFTMAX;
+  static const Type RELU = ActivationConfig_Type_RELU;
+  static inline bool Type_IsValid(int value) {
+    return ActivationConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    ActivationConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    ActivationConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    ActivationConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return ActivationConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return ActivationConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return ActivationConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.NN.ActivationConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::NN::ActivationConfig_Type type() const;
+  inline void set_type(::PS::NN::ActivationConfig_Type value);
+
+  // @@protoc_insertion_point(class_scope:PS.NN.ActivationConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fneural_5fnetwork_2eproto();
+
+  void InitAsDefaultInstance();
+  static ActivationConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SolverConfig : public ::google::protobuf::Message {
+ public:
+  SolverConfig();
+  virtual ~SolverConfig();
+
+  SolverConfig(const SolverConfig& from);
+
+  inline SolverConfig& operator=(const SolverConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SolverConfig& default_instance();
+
+  void Swap(SolverConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  SolverConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SolverConfig& from);
+  void MergeFrom(const SolverConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef SolverConfig_Type Type;
+  static const Type SGD = SolverConfig_Type_SGD;
+  static inline bool Type_IsValid(int value) {
+    return SolverConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    SolverConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    SolverConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    SolverConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return SolverConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return SolverConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return SolverConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.NN.SolverConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::NN::SolverConfig_Type type() const;
+  inline void set_type(::PS::NN::SolverConfig_Type value);
+
+  // optional int64 minibatch_size = 2 [default = 10];
+  inline bool has_minibatch_size() const;
+  inline void clear_minibatch_size();
+  static const int kMinibatchSizeFieldNumber = 2;
+  inline ::google::protobuf::int64 minibatch_size() const;
+  inline void set_minibatch_size(::google::protobuf::int64 value);
+
+  // optional int32 max_iteration = 3 [default = 1000];
+  inline bool has_max_iteration() const;
+  inline void clear_max_iteration();
+  static const int kMaxIterationFieldNumber = 3;
+  inline ::google::protobuf::int32 max_iteration() const;
+  inline void set_max_iteration(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:PS.NN.SolverConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_minibatch_size();
+  inline void clear_has_minibatch_size();
+  inline void set_has_max_iteration();
+  inline void clear_has_max_iteration();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 minibatch_size_;
+  int type_;
+  ::google::protobuf::int32 max_iteration_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fneural_5fnetwork_2eproto();
+
+  void InitAsDefaultInstance();
+  static SolverConfig* default_instance_;
+};
 // ===================================================================
 
 
@@ -316,103 +607,38 @@ class NetConfig : public ::google::protobuf::Message {
 
 // LayerConfig
 
-// repeated string bottom = 1;
-inline int LayerConfig::bottom_size() const {
-  return bottom_.size();
+// required .PS.NN.LayerConfig.Type type = 1;
+inline bool LayerConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void LayerConfig::clear_bottom() {
-  bottom_.Clear();
+inline void LayerConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
 }
-inline const ::std::string& LayerConfig::bottom(int index) const {
-  return bottom_.Get(index);
+inline void LayerConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
 }
-inline ::std::string* LayerConfig::mutable_bottom(int index) {
-  return bottom_.Mutable(index);
+inline void LayerConfig::clear_type() {
+  type_ = 0;
+  clear_has_type();
 }
-inline void LayerConfig::set_bottom(int index, const ::std::string& value) {
-  bottom_.Mutable(index)->assign(value);
+inline ::PS::NN::LayerConfig_Type LayerConfig::type() const {
+  return static_cast< ::PS::NN::LayerConfig_Type >(type_);
 }
-inline void LayerConfig::set_bottom(int index, const char* value) {
-  bottom_.Mutable(index)->assign(value);
-}
-inline void LayerConfig::set_bottom(int index, const char* value, size_t size) {
-  bottom_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* LayerConfig::add_bottom() {
-  return bottom_.Add();
-}
-inline void LayerConfig::add_bottom(const ::std::string& value) {
-  bottom_.Add()->assign(value);
-}
-inline void LayerConfig::add_bottom(const char* value) {
-  bottom_.Add()->assign(value);
-}
-inline void LayerConfig::add_bottom(const char* value, size_t size) {
-  bottom_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-LayerConfig::bottom() const {
-  return bottom_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-LayerConfig::mutable_bottom() {
-  return &bottom_;
+inline void LayerConfig::set_type(::PS::NN::LayerConfig_Type value) {
+  assert(::PS::NN::LayerConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
 }
 
-// repeated string top = 2;
-inline int LayerConfig::top_size() const {
-  return top_.size();
-}
-inline void LayerConfig::clear_top() {
-  top_.Clear();
-}
-inline const ::std::string& LayerConfig::top(int index) const {
-  return top_.Get(index);
-}
-inline ::std::string* LayerConfig::mutable_top(int index) {
-  return top_.Mutable(index);
-}
-inline void LayerConfig::set_top(int index, const ::std::string& value) {
-  top_.Mutable(index)->assign(value);
-}
-inline void LayerConfig::set_top(int index, const char* value) {
-  top_.Mutable(index)->assign(value);
-}
-inline void LayerConfig::set_top(int index, const char* value, size_t size) {
-  top_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* LayerConfig::add_top() {
-  return top_.Add();
-}
-inline void LayerConfig::add_top(const ::std::string& value) {
-  top_.Add()->assign(value);
-}
-inline void LayerConfig::add_top(const char* value) {
-  top_.Add()->assign(value);
-}
-inline void LayerConfig::add_top(const char* value, size_t size) {
-  top_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-LayerConfig::top() const {
-  return top_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-LayerConfig::mutable_top() {
-  return &top_;
-}
-
-// required string name = 3;
+// required string name = 2;
 inline bool LayerConfig::has_name() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void LayerConfig::set_has_name() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void LayerConfig::clear_has_name() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void LayerConfig::clear_name() {
   if (name_ != &::google::protobuf::internal::kEmptyString) {
@@ -474,27 +700,130 @@ inline void LayerConfig::set_allocated_name(::std::string* name) {
   }
 }
 
-// required .PS.LayerConfig.Type type = 4;
-inline bool LayerConfig::has_type() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+// repeated string in = 3;
+inline int LayerConfig::in_size() const {
+  return in_.size();
 }
-inline void LayerConfig::set_has_type() {
-  _has_bits_[0] |= 0x00000008u;
+inline void LayerConfig::clear_in() {
+  in_.Clear();
 }
-inline void LayerConfig::clear_has_type() {
-  _has_bits_[0] &= ~0x00000008u;
+inline const ::std::string& LayerConfig::in(int index) const {
+  return in_.Get(index);
 }
-inline void LayerConfig::clear_type() {
-  type_ = 0;
-  clear_has_type();
+inline ::std::string* LayerConfig::mutable_in(int index) {
+  return in_.Mutable(index);
 }
-inline ::PS::LayerConfig_Type LayerConfig::type() const {
-  return static_cast< ::PS::LayerConfig_Type >(type_);
+inline void LayerConfig::set_in(int index, const ::std::string& value) {
+  in_.Mutable(index)->assign(value);
 }
-inline void LayerConfig::set_type(::PS::LayerConfig_Type value) {
-  assert(::PS::LayerConfig_Type_IsValid(value));
-  set_has_type();
-  type_ = value;
+inline void LayerConfig::set_in(int index, const char* value) {
+  in_.Mutable(index)->assign(value);
+}
+inline void LayerConfig::set_in(int index, const char* value, size_t size) {
+  in_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* LayerConfig::add_in() {
+  return in_.Add();
+}
+inline void LayerConfig::add_in(const ::std::string& value) {
+  in_.Add()->assign(value);
+}
+inline void LayerConfig::add_in(const char* value) {
+  in_.Add()->assign(value);
+}
+inline void LayerConfig::add_in(const char* value, size_t size) {
+  in_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+LayerConfig::in() const {
+  return in_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+LayerConfig::mutable_in() {
+  return &in_;
+}
+
+// repeated string out = 4;
+inline int LayerConfig::out_size() const {
+  return out_.size();
+}
+inline void LayerConfig::clear_out() {
+  out_.Clear();
+}
+inline const ::std::string& LayerConfig::out(int index) const {
+  return out_.Get(index);
+}
+inline ::std::string* LayerConfig::mutable_out(int index) {
+  return out_.Mutable(index);
+}
+inline void LayerConfig::set_out(int index, const ::std::string& value) {
+  out_.Mutable(index)->assign(value);
+}
+inline void LayerConfig::set_out(int index, const char* value) {
+  out_.Mutable(index)->assign(value);
+}
+inline void LayerConfig::set_out(int index, const char* value, size_t size) {
+  out_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* LayerConfig::add_out() {
+  return out_.Add();
+}
+inline void LayerConfig::add_out(const ::std::string& value) {
+  out_.Add()->assign(value);
+}
+inline void LayerConfig::add_out(const char* value) {
+  out_.Add()->assign(value);
+}
+inline void LayerConfig::add_out(const char* value, size_t size) {
+  out_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+LayerConfig::out() const {
+  return out_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+LayerConfig::mutable_out() {
+  return &out_;
+}
+
+// optional .PS.NN.ActivationConfig activation = 5;
+inline bool LayerConfig::has_activation() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void LayerConfig::set_has_activation() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void LayerConfig::clear_has_activation() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void LayerConfig::clear_activation() {
+  if (activation_ != NULL) activation_->::PS::NN::ActivationConfig::Clear();
+  clear_has_activation();
+}
+inline const ::PS::NN::ActivationConfig& LayerConfig::activation() const {
+  return activation_ != NULL ? *activation_ : *default_instance_->activation_;
+}
+inline ::PS::NN::ActivationConfig* LayerConfig::mutable_activation() {
+  set_has_activation();
+  if (activation_ == NULL) activation_ = new ::PS::NN::ActivationConfig;
+  return activation_;
+}
+inline ::PS::NN::ActivationConfig* LayerConfig::release_activation() {
+  clear_has_activation();
+  ::PS::NN::ActivationConfig* temp = activation_;
+  activation_ = NULL;
+  return temp;
+}
+inline void LayerConfig::set_allocated_activation(::PS::NN::ActivationConfig* activation) {
+  delete activation_;
+  activation_ = activation;
+  if (activation) {
+    set_has_activation();
+  } else {
+    clear_has_activation();
+  }
 }
 
 // -------------------------------------------------------------------
@@ -571,34 +900,133 @@ inline void NetConfig::set_allocated_name(::std::string* name) {
   }
 }
 
-// repeated .PS.LayerConfig layers = 2;
+// repeated .PS.NN.LayerConfig layers = 2;
 inline int NetConfig::layers_size() const {
   return layers_.size();
 }
 inline void NetConfig::clear_layers() {
   layers_.Clear();
 }
-inline const ::PS::LayerConfig& NetConfig::layers(int index) const {
+inline const ::PS::NN::LayerConfig& NetConfig::layers(int index) const {
   return layers_.Get(index);
 }
-inline ::PS::LayerConfig* NetConfig::mutable_layers(int index) {
+inline ::PS::NN::LayerConfig* NetConfig::mutable_layers(int index) {
   return layers_.Mutable(index);
 }
-inline ::PS::LayerConfig* NetConfig::add_layers() {
+inline ::PS::NN::LayerConfig* NetConfig::add_layers() {
   return layers_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::PS::LayerConfig >&
+inline const ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >&
 NetConfig::layers() const {
   return layers_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::PS::LayerConfig >*
+inline ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >*
 NetConfig::mutable_layers() {
   return &layers_;
+}
+
+// -------------------------------------------------------------------
+
+// ActivationConfig
+
+// required .PS.NN.ActivationConfig.Type type = 1;
+inline bool ActivationConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ActivationConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ActivationConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ActivationConfig::clear_type() {
+  type_ = 0;
+  clear_has_type();
+}
+inline ::PS::NN::ActivationConfig_Type ActivationConfig::type() const {
+  return static_cast< ::PS::NN::ActivationConfig_Type >(type_);
+}
+inline void ActivationConfig::set_type(::PS::NN::ActivationConfig_Type value) {
+  assert(::PS::NN::ActivationConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// SolverConfig
+
+// required .PS.NN.SolverConfig.Type type = 1;
+inline bool SolverConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SolverConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SolverConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SolverConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::NN::SolverConfig_Type SolverConfig::type() const {
+  return static_cast< ::PS::NN::SolverConfig_Type >(type_);
+}
+inline void SolverConfig::set_type(::PS::NN::SolverConfig_Type value) {
+  assert(::PS::NN::SolverConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional int64 minibatch_size = 2 [default = 10];
+inline bool SolverConfig::has_minibatch_size() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SolverConfig::set_has_minibatch_size() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SolverConfig::clear_has_minibatch_size() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SolverConfig::clear_minibatch_size() {
+  minibatch_size_ = GOOGLE_LONGLONG(10);
+  clear_has_minibatch_size();
+}
+inline ::google::protobuf::int64 SolverConfig::minibatch_size() const {
+  return minibatch_size_;
+}
+inline void SolverConfig::set_minibatch_size(::google::protobuf::int64 value) {
+  set_has_minibatch_size();
+  minibatch_size_ = value;
+}
+
+// optional int32 max_iteration = 3 [default = 1000];
+inline bool SolverConfig::has_max_iteration() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SolverConfig::set_has_max_iteration() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SolverConfig::clear_has_max_iteration() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SolverConfig::clear_max_iteration() {
+  max_iteration_ = 1000;
+  clear_has_max_iteration();
+}
+inline ::google::protobuf::int32 SolverConfig::max_iteration() const {
+  return max_iteration_;
+}
+inline void SolverConfig::set_max_iteration(::google::protobuf::int32 value) {
+  set_has_max_iteration();
+  max_iteration_ = value;
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
 
+}  // namespace NN
 }  // namespace PS
 
 #ifndef SWIG
@@ -606,8 +1034,16 @@ namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::LayerConfig_Type>() {
-  return ::PS::LayerConfig_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::LayerConfig_Type>() {
+  return ::PS::NN::LayerConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::ActivationConfig_Type>() {
+  return ::PS::NN::ActivationConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::SolverConfig_Type>() {
+  return ::PS::NN::SolverConfig_Type_descriptor();
 }
 
 }  // namespace google

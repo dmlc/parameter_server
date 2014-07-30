@@ -1,16 +1,19 @@
 package PS;
-// configuration of data, objective function, and optimizaiton method
+// configuration of data, model, and solver
 import "proto/range.proto";
+import "proto/neural_network.proto";
 
 message AppConfig {
   enum Type {
     RISK_MINIMIZATION = 1;
     SKETCH = 2;
+    NEURAL_NETWORK = 3;
   }
   optional Type type = 1;
   optional string app_name = 2;
   repeated string parameter_name = 3;
 
+  // input / output
   optional DataConfig training_data = 10;
   optional DataConfig validation_data = 11;
 
@@ -18,16 +21,22 @@ message AppConfig {
 
   optional DataConfig model_output = 15;
 
+  // risk minimization
   optional LossConfig loss = 20;
   optional PenaltyConfig penalty = 21;
+  optional LearningRateConfig learning_rate = 23;
 
-  optional LearnerConfig learner = 30;
-  optional LearningRateConfig learning_rate = 31;
+  optional LearnerConfig learner = 22;
 
-  optional BlockSolverConfig block_solver = 40;
+  optional BlockSolverConfig block_solver = 24;
 
-  optional BCDL1LRConfig bcd_l1lr = 41;
+  optional BCDL1LRConfig bcd_l1lr = 25;
 
+  // neural network
+  optional NN.NetConfig nn = 30;
+  optional NN.SolverConfig nn_solver = 31;
+
+  // others
 }
 
 message DataConfig {

@@ -9,8 +9,11 @@ template<typename V> class Net {
  public:
   explicit Net(const NetConfig& config)
       : cf_(config) { }
+
   // construct the network
   void init();
+
+
  protected:
   NetConfig cf_;
  private:

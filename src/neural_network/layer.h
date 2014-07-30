@@ -7,18 +7,24 @@
 namespace PS {
 namespace NN {
 
+template<typename V> class Layer;
+template<typename V> using LayerPtr = std::shared_ptr<Layer<V>>;
+template<typename V> using LayerPtrList = std::vector<LayerPtr<V>>;
+
 template<typename V> class Layer {
  public:
   explicit Layer(const LayerConfig& config)
       : cf_(config) { }
 
   virtual void init() { }
-
-  virtual V forward(const MatrixPtr<V>& bottom, MatrixPtr<V> top) = 0;
-  virtual V backward(const MatrixPtr<V>& top, MatrixPtr<V> bottom) = 0;
+  virtual void forward() = 0;
+  virtual void backward() = 0;
 
  protected:
   LayerConfig cf_;
+  LayerPtrList<V> in_layers_, out_layers_;
+  ArgumentList<V> in_args_, out_args_;
+
  private:
   DISALLOW_COPY_AND_ASSIGN(Layer);
 };

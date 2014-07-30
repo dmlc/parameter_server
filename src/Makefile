@@ -53,7 +53,7 @@ SRCS = $(PROTOS_CC) \
 	system/yellow_pages.cc \
 	system/remote_node.cc \
 	system/executor.cc \
-	app/app.cc \
+	system/app.cc \
 	app/risk_minimization.cc \
 	linear_method/linear_method.cc \
 	linear_method/block_solver.cc \

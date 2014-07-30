@@ -7,6 +7,7 @@
 
 namespace PS {
 
+// track a task by using its timestamp, thread safe
 class TaskTracker {
  public:
   TaskTracker() { }
@@ -44,9 +45,6 @@ class TaskTracker {
   }
 
  private:
-  // typedef std::lock_guard<std::recursive_mutex> Lock;
-  // std::recursive_mutex mu_;
-
   typedef std::lock_guard<std::mutex> Lock;
   typedef std::unique_lock<std::mutex> ULock;
 
