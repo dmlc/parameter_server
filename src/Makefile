@@ -85,7 +85,7 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps_mpi text2bin) # ps ps_local
+all: dir $(addprefix $(BIN)/, ps ps_mpi text2bin) # ps ps_local
 test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:
@@ -117,6 +117,9 @@ $(LIB)/libps.a: $(OBJS) #gtest
 
 # $(BIN)/ps: ps.cc $(LIB)/libps.so
 # 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -Wl,-rpath=../lib  -o $@
+
+$(BIN)/ps: ps.cc $(LIB)/libps.a
+	$(MPICC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
 
 $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@

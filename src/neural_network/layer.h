@@ -3,7 +3,7 @@
 #include "util/common.h"
 #include "proto/neural_network.pb.h"
 #include "base/matrix.h"
-
+#include "neural_network/argument.h"
 namespace PS {
 namespace NN {
 
@@ -19,11 +19,11 @@ template<typename V> class Layer {
   virtual void init() { }
   virtual void forward() = 0;
   virtual void backward() = 0;
-
+  virtual void update() = 0;
  protected:
   LayerConfig cf_;
   LayerPtrList<V> in_layers_, out_layers_;
-  ArgumentList<V> in_args_, out_args_;
+  ArgumentPtrList<V> in_args_, out_args_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Layer);

@@ -7,7 +7,7 @@ namespace PS {
 // #define _DEBUG_VAN_
 // static string van_filter = "";
 
-DEFINE_string(my_node, "", "my node");
+DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_bool(compress_message, true, "");
 
 void Van::init() {

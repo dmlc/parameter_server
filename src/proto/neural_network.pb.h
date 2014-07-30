@@ -575,6 +575,13 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_iteration() const;
   inline void set_max_iteration(::google::protobuf::int32 value);
 
+  // optional int32 display = 4 [default = 100];
+  inline bool has_display() const;
+  inline void clear_display();
+  static const int kDisplayFieldNumber = 4;
+  inline ::google::protobuf::int32 display() const;
+  inline void set_display(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.NN.SolverConfig)
  private:
   inline void set_has_type();
@@ -583,15 +590,18 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_minibatch_size();
   inline void set_has_max_iteration();
   inline void clear_has_max_iteration();
+  inline void set_has_display();
+  inline void clear_has_display();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int64 minibatch_size_;
   int type_;
   ::google::protobuf::int32 max_iteration_;
+  ::google::protobuf::int32 display_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -1021,6 +1031,28 @@ inline ::google::protobuf::int32 SolverConfig::max_iteration() const {
 inline void SolverConfig::set_max_iteration(::google::protobuf::int32 value) {
   set_has_max_iteration();
   max_iteration_ = value;
+}
+
+// optional int32 display = 4 [default = 100];
+inline bool SolverConfig::has_display() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SolverConfig::set_has_display() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SolverConfig::clear_has_display() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SolverConfig::clear_display() {
+  display_ = 100;
+  clear_has_display();
+}
+inline ::google::protobuf::int32 SolverConfig::display() const {
+  return display_;
+}
+inline void SolverConfig::set_display(::google::protobuf::int32 value) {
+  set_has_display();
+  display_ = value;
 }
 
 

@@ -1,5 +1,4 @@
 #include "system/postoffice.h"
-#include "system/app.h"
 
 int main(int argc, char *argv[]) {
   FLAGS_logtostderr = 1;

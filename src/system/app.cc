@@ -1,6 +1,7 @@
 #include "system/app.h"
 #include "risk_minimization/linear_method/batch_solver.h"
 #include "risk_minimization/linear_method/block_coord_desc_l1lr.h"
+#include "neural_network/sgd_solver.h"
 
 // #include "app/grad_desc.h"
 // #include "app/block_prox_grad.h"
@@ -13,6 +14,7 @@ DEFINE_bool(test_fault_tol, false, "");
 AppPtr App::create(const AppConfig& config) {
   AppPtr ptr;
   if (config.has_block_solver()) {
+    CHECK_EQ(config.type(), AppConfig::RISK_MINIMIZATION);
     auto blk = config.block_solver();
     if (blk.minibatch_size() <= 0) {
       // batch solver
@@ -24,6 +26,9 @@ AppPtr App::create(const AppConfig& config) {
     } else {
       // online sovler
     }
+  } else if (config.has_nn_solver()) {
+    CHECK_EQ(config.type(), AppConfig::NEURAL_NETWORK);
+    ptr = AppPtr(new NN::SGDSolver());
   } else {
     CHECK(false) << "unknown app: " << config.DebugString();
   }

@@ -39,4 +39,7 @@ message SolverConfig {
   optional int64 minibatch_size = 2 [default = 10];
 
   optional int32 max_iteration = 3 [default = 1000];
+
+  // display every _display_ iteration
+  optional int32 display = 4 [default = 100];
 }
