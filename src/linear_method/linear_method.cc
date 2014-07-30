@@ -21,7 +21,7 @@ void LinearMethod::init() {
   }
 
   if (app_cf_.has_penalty()) {
-    penalty_ = PenaltyFactory<double>::create(app_cf_.penalty());
+    penalty_ = Penalty<double>::create(app_cf_.penalty());
     if (has_learner) learner_->setPenalty(penalty_);
   }
 }

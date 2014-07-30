@@ -3,7 +3,7 @@
 #include "parameter/kv_vector.h"
 
 #include "risk_minimization/loss_inl.h"
-#include "penalty/penalty_factory.h"
+#include "risk_minimization/penalty_inl.h"
 #include "learner/learner_factory.h"
 
 // #include "loss/scalar_loss.h"

@@ -4,7 +4,7 @@
 #include "base/shared_array_inl.h"
 #include "proto/config.pb.h"
 // #include "loss/loss_factory.h"
-#include "penalty/penalty_factory.h"
+// #include "penalty/penalty_factory.h"
 namespace PS {
 
 template <typename T>

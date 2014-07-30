@@ -1,6 +1,5 @@
 #pragma once
 #include "learner/aggregate_gradient.h"
-#include "penalty/p_norm_penalty.h"
 
 namespace PS {
 
