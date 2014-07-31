@@ -17,9 +17,10 @@ void SGDSolver::run() {
 
   int iter = 0;
   for (; iter < cf.max_iteration(); ++iter) {
-    for (auto& l : net_->layers()) l->forward();
-    for (auto& l : net_->layers()) l->backward();
-    for (auto& l : net_->layers()) l->update();
+    LL << iter;
+    // for (auto& l : train_->layers()) l->forward();
+    // for (auto& l : train_->layers()) l->backward();
+    // for (auto& l : train_->layers()) l->update();
   }
 
   LL << "finished";

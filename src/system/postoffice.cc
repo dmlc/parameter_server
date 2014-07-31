@@ -51,8 +51,6 @@ void Postoffice::run() {
     // run as a daemon
     while (!done_) usleep(300);
     // LL << myNode().uid() << " stopped";
-    // std::this_thread::yield();
-    // usleep(2000);
   }
 }
 
@@ -68,17 +66,10 @@ void Postoffice::reply(const Message& msg, const string& reply_msg) {
 
 void Postoffice::queue(const Message& msg) {
 
-  // if (msg.task.time() == 1450) LL << msg.shortDebugString();
   if (msg.valid) {
     sending_queue_.push(msg);
-    // if (msg.sender == "S29") { //} && msg.recver == "U0") {
-    // // LL << msg.shortDebugString()<<"\n";
-    //   if (sending_queue_.size() < 200)
-    //     LL << sending_queue_.size() << " " << msg;
-    // }
   } else {
     // do not send, fake a reply mesage
-    // LL << myNode().id() << " " << msg.shortDebugString();
     Message re = replyTemplate(msg);
     re.task.set_type(Task::REPLY);
     re.task.set_time(msg.task.time());
@@ -93,9 +84,6 @@ void Postoffice::send() {
   while (true) {
     sending_queue_.wait_and_pop(msg);
     if (msg.terminate) break;
-    // if (msg.sender == "S29" ) LL << sending_queue_.size() << " " << msg;
-    // LL <<  msg.shortDebugString()<<"\n";
-    // CHECK(stat.ok()) << "error: " << stat.ToString();
 
     Status stat = yp_.van().send(msg);
     if (!stat.ok()) {
@@ -107,25 +95,13 @@ void Postoffice::send() {
 
 void Postoffice::recv() {
   Message msg;
-  // bool shutting_down = false;
   while (true) {
     auto stat = yp_.van().recv(&msg);
     // if (!stat.ok()) break;
     CHECK(stat.ok()) << stat.ToString();
     auto& tk = msg.task;
-    // check if I could do something
-    // if (shutting_down) {
-    //   if (tk.request() && tk.type() == Task::TERMINATE_CONFIRM) {
-    //     done_ = true;
-    //     break;
-    //   } else {
-    //     continue;
-    //   }
-    // }
     if (tk.request() && tk.type() == Task::TERMINATE) {
       yp_.van().statistic();
-      // reply(msg);
-      // shutting_down = true;
       done_ = true;
       break;
     } else if (tk.request() && tk.type() == Task::MANAGE) {

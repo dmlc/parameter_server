@@ -49,7 +49,7 @@ class Executor {
     Lock l(node_mu_);
     auto it = nodes_.find(k);
     if (it == nodes_.end()) {
-      LL << my_node_.id() << " look for empty " << k;
+      // LL << my_node_.id() << " look for empty " << k;
       return RNodePtr();
     }
     // CHECK(it != nodes_.end()) << "unkonw node: " << k << " i'm " << my_node_.uid();
@@ -82,10 +82,9 @@ class Executor {
   // return a more meaningful name for debug use
   // string dbname(const NodeID& uid);
 
-
+  void add(const Node& node);
  private:
 
-  void add(const Node& node);
   // void remove(const Node& node);
 
   Customer& obj_;

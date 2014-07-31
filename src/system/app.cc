@@ -40,7 +40,14 @@ AppPtr App::create(const AppConfig& config) {
 void App::stop() {
   Task terminate;
   terminate.set_type(Task::TERMINATE);
-  taskpool(kLiveGroup)->submit(terminate);
+  auto pool = taskpool(kLiveGroup);
+  if (!pool) {
+    // hack... i need to send the terminal signal to myself
+    std::vector<Node> nodes(1, sys_.myNode());
+    exec_.init(nodes);
+    pool = taskpool(kLiveGroup);
+  }
+  pool->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
   usleep(800);
   fprintf(stderr, "system stopped\n");

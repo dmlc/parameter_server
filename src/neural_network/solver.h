@@ -9,14 +9,13 @@ class Solver : public App {
  public:
   void init();
  protected:
-  unique_ptr<Net<float>> net_;
+  unique_ptr<Net<float>> train_;
 
 };
 
 void Solver::init() {
   CHECK(app_cf_.has_nn());
-  net_->init(app_cf_.nn());
-
+  train_.reset(new Net<float>(app_cf_.nn()));
 }
 
 } // namespace NN

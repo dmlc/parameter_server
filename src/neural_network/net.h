@@ -8,9 +8,10 @@ namespace NN {
 
 template<typename V> class Net {
  public:
+  Net(const NetConfig& config) : cf_(config) { }
+
   // construct the network
-  void init(const NetConfig& config) {
-    cf_ = config;
+  void init() {
   }
 
   LayerPtrList<V>& layers() { return layers_; }
