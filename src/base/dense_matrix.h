@@ -7,7 +7,11 @@ namespace PS {
 template<typename V>
 class DenseMatrix : public Matrix<V> {
  public:
-  DenseMatrix(size_t rows, size_t cols, bool row_major = true);
+  DenseMatrix(size_t rows = 0, size_t cols = 0, bool row_major = true) {
+    resize(rows, cols, rows*cols, row_major);
+  }
+
+  void resize(size_t rows, size_t cols, size_t nnz, bool row_major);
 
   DenseMatrix(const MatrixInfo& info, SArray<V> value)
       : Matrix<V>(info, value) { }
@@ -39,19 +43,21 @@ class DenseMatrix : public Matrix<V> {
 };
 
 template<typename V>
-DenseMatrix<V>::DenseMatrix(size_t rows, size_t cols, bool row_major) {
-  // info
+void DenseMatrix<V>::resize(
+    size_t rows, size_t cols, size_t nnz, bool row_major) {
   info_.set_type(MatrixInfo::DENSE);
   info_.set_row_major(row_major);
   SizeR(0, rows).to(info_.mutable_row());
   SizeR(0, cols).to(info_.mutable_col());
-  info_.set_nnz(rows*cols);
+  CHECK_EQ(nnz, rows*cols);
+  info_.set_nnz(nnz);
   info_.set_sizeof_value(sizeof(V));
   info_.set_nnz_per_row(cols);
   info_.set_nnz_per_col(rows);
   // data
-  value_.resize(rows*cols);
+  value_.resize(nnz);
   value_.setZero();
+
 }
 
 

@@ -23,6 +23,10 @@ class SparseMatrix : public Matrix<V> {
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
       : Matrix<V>(info, value), offset_(offset), index_(index) { }
 
+  void resize(size_t rows, size_t cols, size_t nnz, bool row_major) {
+    CHECK(false) << "TODO";
+  }
+
   bool binary() const { return this->info_.type() == MatrixInfo::SPARSE_BINARY; }
 
   void times(const double* x, double *y) const { templateTimes(x, y); }

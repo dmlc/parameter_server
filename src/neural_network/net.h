@@ -35,14 +35,16 @@ Net<V>::init() {
       auto in = f.in(i);
       CHECK_EQ(layer_ids_.count(in), 1)
           << "layers should be in a bottom-to-up order for the config file";
-      int in_id = layer_ids_[in];
-      l->in_layers_.push_back(layers_[in_id]);
-      layers_[in_id].out_layers_.push_back(l);
+      auto in_layer = layers_[layer_ids_[in]];
+      // addOutLayer should be called before addInLayer
+      in_layer->addOutLayer(l);
+      l->addInLayer(in_layer);
     }
-    l->init();
     layers_.push_back(l);
     layer_ids_[f.name()] = id;
   }
+
+  for (auto& l : layers_) l->initModel();
 }
 
 } // namespace NN

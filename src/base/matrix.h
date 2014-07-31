@@ -21,6 +21,8 @@ class Matrix {
   Matrix(const MatrixInfo& info, const SArray<V>& value)
       : info_(info), value_(value) { };
 
+  virtual void resize(size_t rows, size_t cols, size_t nnz, bool row_major);
+
   // multi-threaded matrix-vector multiplication:
   // y = A * x
   typedef Eigen::Matrix<V, Eigen::Dynamic, 1> EVec;

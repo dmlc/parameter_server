@@ -8,12 +8,13 @@ namespace NN {
 template<typename V>
 class FullyConnectedLayer : public Layer<V>  {
  public:
-  void init() {
-    // TODO init model, output
+  void initModel() {
+    CHECK_EQ(in_layers_.size(), 1);
+    CHECK_EQ(out_layers_.size(), 1);
 
-    // weight_ = MatrixPtr<V>(new DenseMatrix<V>(cf_.in_size(), cf_.out_size()));
-    out_args.clear();
-    CHECK_EQ(out_layers)
+    uint32 in_size = in_layers_[0]->size();
+    model_->value->resize(in_size, size(), in_size*size(), true);
+    model_->gradient->resize(in_size, size(), in_size*size(), true);
   }
 
   V forward() {

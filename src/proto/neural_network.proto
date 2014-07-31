@@ -3,6 +3,7 @@ package PS.NN;
 message LayerConfig {
   enum Type {
     NONE = 0;
+    DATA = 2;
     FULLY_CONNECTED = 1;
   }
   required Type type = 1;
@@ -10,6 +11,9 @@ message LayerConfig {
   required string name = 2;
   repeated string in = 3;
   // repeated string out = 4;
+
+  // the number of neuroons
+  optional uint32 size = 6;
 
   optional ActivationConfig activation = 5;
 
