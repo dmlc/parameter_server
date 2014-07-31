@@ -391,19 +391,28 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::BCDL1LRConfig* release_bcd_l1lr();
   inline void set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr);
 
-  // optional .PS.NN.NetConfig nn = 30;
-  inline bool has_nn() const;
-  inline void clear_nn();
-  static const int kNnFieldNumber = 30;
-  inline const ::PS::NN::NetConfig& nn() const;
-  inline ::PS::NN::NetConfig* mutable_nn();
-  inline ::PS::NN::NetConfig* release_nn();
-  inline void set_allocated_nn(::PS::NN::NetConfig* nn);
+  // optional .PS.NN.NetConfig nn_train = 30;
+  inline bool has_nn_train() const;
+  inline void clear_nn_train();
+  static const int kNnTrainFieldNumber = 30;
+  inline const ::PS::NN::NetConfig& nn_train() const;
+  inline ::PS::NN::NetConfig* mutable_nn_train();
+  inline ::PS::NN::NetConfig* release_nn_train();
+  inline void set_allocated_nn_train(::PS::NN::NetConfig* nn_train);
 
-  // optional .PS.NN.SolverConfig nn_solver = 31;
+  // optional .PS.NN.NetConfig nn_test = 31;
+  inline bool has_nn_test() const;
+  inline void clear_nn_test();
+  static const int kNnTestFieldNumber = 31;
+  inline const ::PS::NN::NetConfig& nn_test() const;
+  inline ::PS::NN::NetConfig* mutable_nn_test();
+  inline ::PS::NN::NetConfig* release_nn_test();
+  inline void set_allocated_nn_test(::PS::NN::NetConfig* nn_test);
+
+  // optional .PS.NN.SolverConfig nn_solver = 32;
   inline bool has_nn_solver() const;
   inline void clear_nn_solver();
-  static const int kNnSolverFieldNumber = 31;
+  static const int kNnSolverFieldNumber = 32;
   inline const ::PS::NN::SolverConfig& nn_solver() const;
   inline ::PS::NN::SolverConfig* mutable_nn_solver();
   inline ::PS::NN::SolverConfig* release_nn_solver();
@@ -435,8 +444,10 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_block_solver();
   inline void set_has_bcd_l1lr();
   inline void clear_has_bcd_l1lr();
-  inline void set_has_nn();
-  inline void clear_has_nn();
+  inline void set_has_nn_train();
+  inline void clear_has_nn_train();
+  inline void set_has_nn_test();
+  inline void clear_has_nn_test();
   inline void set_has_nn_solver();
   inline void clear_has_nn_solver();
 
@@ -454,12 +465,13 @@ class AppConfig : public ::google::protobuf::Message {
   ::PS::LearnerConfig* learner_;
   ::PS::BlockSolverConfig* block_solver_;
   ::PS::BCDL1LRConfig* bcd_l1lr_;
-  ::PS::NN::NetConfig* nn_;
+  ::PS::NN::NetConfig* nn_train_;
+  ::PS::NN::NetConfig* nn_test_;
   ::PS::NN::SolverConfig* nn_solver_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -2017,53 +2029,91 @@ inline void AppConfig::set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr) {
   }
 }
 
-// optional .PS.NN.NetConfig nn = 30;
-inline bool AppConfig::has_nn() const {
+// optional .PS.NN.NetConfig nn_train = 30;
+inline bool AppConfig::has_nn_train() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
-inline void AppConfig::set_has_nn() {
+inline void AppConfig::set_has_nn_train() {
   _has_bits_[0] |= 0x00002000u;
 }
-inline void AppConfig::clear_has_nn() {
+inline void AppConfig::clear_has_nn_train() {
   _has_bits_[0] &= ~0x00002000u;
 }
-inline void AppConfig::clear_nn() {
-  if (nn_ != NULL) nn_->::PS::NN::NetConfig::Clear();
-  clear_has_nn();
+inline void AppConfig::clear_nn_train() {
+  if (nn_train_ != NULL) nn_train_->::PS::NN::NetConfig::Clear();
+  clear_has_nn_train();
 }
-inline const ::PS::NN::NetConfig& AppConfig::nn() const {
-  return nn_ != NULL ? *nn_ : *default_instance_->nn_;
+inline const ::PS::NN::NetConfig& AppConfig::nn_train() const {
+  return nn_train_ != NULL ? *nn_train_ : *default_instance_->nn_train_;
 }
-inline ::PS::NN::NetConfig* AppConfig::mutable_nn() {
-  set_has_nn();
-  if (nn_ == NULL) nn_ = new ::PS::NN::NetConfig;
-  return nn_;
+inline ::PS::NN::NetConfig* AppConfig::mutable_nn_train() {
+  set_has_nn_train();
+  if (nn_train_ == NULL) nn_train_ = new ::PS::NN::NetConfig;
+  return nn_train_;
 }
-inline ::PS::NN::NetConfig* AppConfig::release_nn() {
-  clear_has_nn();
-  ::PS::NN::NetConfig* temp = nn_;
-  nn_ = NULL;
+inline ::PS::NN::NetConfig* AppConfig::release_nn_train() {
+  clear_has_nn_train();
+  ::PS::NN::NetConfig* temp = nn_train_;
+  nn_train_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_nn(::PS::NN::NetConfig* nn) {
-  delete nn_;
-  nn_ = nn;
-  if (nn) {
-    set_has_nn();
+inline void AppConfig::set_allocated_nn_train(::PS::NN::NetConfig* nn_train) {
+  delete nn_train_;
+  nn_train_ = nn_train;
+  if (nn_train) {
+    set_has_nn_train();
   } else {
-    clear_has_nn();
+    clear_has_nn_train();
   }
 }
 
-// optional .PS.NN.SolverConfig nn_solver = 31;
-inline bool AppConfig::has_nn_solver() const {
+// optional .PS.NN.NetConfig nn_test = 31;
+inline bool AppConfig::has_nn_test() const {
   return (_has_bits_[0] & 0x00004000u) != 0;
 }
-inline void AppConfig::set_has_nn_solver() {
+inline void AppConfig::set_has_nn_test() {
   _has_bits_[0] |= 0x00004000u;
 }
-inline void AppConfig::clear_has_nn_solver() {
+inline void AppConfig::clear_has_nn_test() {
   _has_bits_[0] &= ~0x00004000u;
+}
+inline void AppConfig::clear_nn_test() {
+  if (nn_test_ != NULL) nn_test_->::PS::NN::NetConfig::Clear();
+  clear_has_nn_test();
+}
+inline const ::PS::NN::NetConfig& AppConfig::nn_test() const {
+  return nn_test_ != NULL ? *nn_test_ : *default_instance_->nn_test_;
+}
+inline ::PS::NN::NetConfig* AppConfig::mutable_nn_test() {
+  set_has_nn_test();
+  if (nn_test_ == NULL) nn_test_ = new ::PS::NN::NetConfig;
+  return nn_test_;
+}
+inline ::PS::NN::NetConfig* AppConfig::release_nn_test() {
+  clear_has_nn_test();
+  ::PS::NN::NetConfig* temp = nn_test_;
+  nn_test_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_nn_test(::PS::NN::NetConfig* nn_test) {
+  delete nn_test_;
+  nn_test_ = nn_test;
+  if (nn_test) {
+    set_has_nn_test();
+  } else {
+    clear_has_nn_test();
+  }
+}
+
+// optional .PS.NN.SolverConfig nn_solver = 32;
+inline bool AppConfig::has_nn_solver() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void AppConfig::set_has_nn_solver() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void AppConfig::clear_has_nn_solver() {
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void AppConfig::clear_nn_solver() {
   if (nn_solver_ != NULL) nn_solver_->::PS::NN::SolverConfig::Clear();

@@ -7,9 +7,10 @@ namespace PS {
 template<typename V>
 class DenseMatrix : public Matrix<V> {
  public:
-  DenseMatrix(size_t rows = 0, size_t cols = 0, bool row_major = true) {
-    resize(rows, cols, rows*cols, row_major);
-  }
+  DenseMatrix() { }
+  // DenseMatrix(size_t rows = 0, size_t cols = 0, bool row_major = true) {
+  //   resize(rows, cols, rows*cols, row_major);
+  // }
 
   void resize(size_t rows, size_t cols, size_t nnz, bool row_major);
 
@@ -17,7 +18,7 @@ class DenseMatrix : public Matrix<V> {
       : Matrix<V>(info, value) { }
 
   // TODO
-  virtual void times(const double* x, double *y) const { }
+  virtual void times(const V* x, V *y) const { }
 
   // C = A .* B
   virtual MatrixPtr<V> dotTimes(const MatrixPtr<V>& B) const { return MatrixPtr<V>(); }

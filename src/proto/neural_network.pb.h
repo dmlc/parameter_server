@@ -42,11 +42,13 @@ class SolverConfig;
 
 enum LayerConfig_Type {
   LayerConfig_Type_NONE = 0,
-  LayerConfig_Type_FULLY_CONNECTED = 1
+  LayerConfig_Type_DATA = 2,
+  LayerConfig_Type_FULLY_CONNECTED = 1,
+  LayerConfig_Type_LOGISTIC_LOSS = 3
 };
 bool LayerConfig_Type_IsValid(int value);
 const LayerConfig_Type LayerConfig_Type_Type_MIN = LayerConfig_Type_NONE;
-const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_FULLY_CONNECTED;
+const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_LOGISTIC_LOSS;
 const int LayerConfig_Type_Type_ARRAYSIZE = LayerConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* LayerConfig_Type_descriptor();
@@ -155,7 +157,9 @@ class LayerConfig : public ::google::protobuf::Message {
 
   typedef LayerConfig_Type Type;
   static const Type NONE = LayerConfig_Type_NONE;
+  static const Type DATA = LayerConfig_Type_DATA;
   static const Type FULLY_CONNECTED = LayerConfig_Type_FULLY_CONNECTED;
+  static const Type LOGISTIC_LOSS = LayerConfig_Type_LOGISTIC_LOSS;
   static inline bool Type_IsValid(int value) {
     return LayerConfig_Type_IsValid(value);
   }
@@ -214,21 +218,12 @@ class LayerConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& in() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_in();
 
-  // repeated string out = 4;
-  inline int out_size() const;
-  inline void clear_out();
-  static const int kOutFieldNumber = 4;
-  inline const ::std::string& out(int index) const;
-  inline ::std::string* mutable_out(int index);
-  inline void set_out(int index, const ::std::string& value);
-  inline void set_out(int index, const char* value);
-  inline void set_out(int index, const char* value, size_t size);
-  inline ::std::string* add_out();
-  inline void add_out(const ::std::string& value);
-  inline void add_out(const char* value);
-  inline void add_out(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& out() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_out();
+  // optional uint32 size = 7;
+  inline bool has_size() const;
+  inline void clear_size();
+  static const int kSizeFieldNumber = 7;
+  inline ::google::protobuf::uint32 size() const;
+  inline void set_size(::google::protobuf::uint32 value);
 
   // optional .PS.NN.ActivationConfig activation = 5;
   inline bool has_activation() const;
@@ -252,6 +247,8 @@ class LayerConfig : public ::google::protobuf::Message {
   inline void clear_has_type();
   inline void set_has_name();
   inline void clear_has_name();
+  inline void set_has_size();
+  inline void clear_has_size();
   inline void set_has_activation();
   inline void clear_has_activation();
   inline void set_has_lr_scale();
@@ -260,11 +257,11 @@ class LayerConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* name_;
+  int type_;
+  ::google::protobuf::uint32 size_;
   ::google::protobuf::RepeatedPtrField< ::std::string> in_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> out_;
   ::PS::NN::ActivationConfig* activation_;
   double lr_scale_;
-  int type_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
@@ -344,17 +341,17 @@ class NetConfig : public ::google::protobuf::Message {
   inline ::std::string* release_name();
   inline void set_allocated_name(::std::string* name);
 
-  // repeated .PS.NN.LayerConfig layers = 2;
-  inline int layers_size() const;
-  inline void clear_layers();
-  static const int kLayersFieldNumber = 2;
-  inline const ::PS::NN::LayerConfig& layers(int index) const;
-  inline ::PS::NN::LayerConfig* mutable_layers(int index);
-  inline ::PS::NN::LayerConfig* add_layers();
+  // repeated .PS.NN.LayerConfig layer = 2;
+  inline int layer_size() const;
+  inline void clear_layer();
+  static const int kLayerFieldNumber = 2;
+  inline const ::PS::NN::LayerConfig& layer(int index) const;
+  inline ::PS::NN::LayerConfig* mutable_layer(int index);
+  inline ::PS::NN::LayerConfig* add_layer();
   inline const ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >&
-      layers() const;
+      layer() const;
   inline ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >*
-      mutable_layers();
+      mutable_layer();
 
   // @@protoc_insertion_point(class_scope:PS.NN.NetConfig)
  private:
@@ -364,7 +361,7 @@ class NetConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* name_;
-  ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig > layers_;
+  ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig > layer_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
@@ -764,48 +761,26 @@ LayerConfig::mutable_in() {
   return &in_;
 }
 
-// repeated string out = 4;
-inline int LayerConfig::out_size() const {
-  return out_.size();
+// optional uint32 size = 7;
+inline bool LayerConfig::has_size() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void LayerConfig::clear_out() {
-  out_.Clear();
+inline void LayerConfig::set_has_size() {
+  _has_bits_[0] |= 0x00000008u;
 }
-inline const ::std::string& LayerConfig::out(int index) const {
-  return out_.Get(index);
+inline void LayerConfig::clear_has_size() {
+  _has_bits_[0] &= ~0x00000008u;
 }
-inline ::std::string* LayerConfig::mutable_out(int index) {
-  return out_.Mutable(index);
+inline void LayerConfig::clear_size() {
+  size_ = 0u;
+  clear_has_size();
 }
-inline void LayerConfig::set_out(int index, const ::std::string& value) {
-  out_.Mutable(index)->assign(value);
+inline ::google::protobuf::uint32 LayerConfig::size() const {
+  return size_;
 }
-inline void LayerConfig::set_out(int index, const char* value) {
-  out_.Mutable(index)->assign(value);
-}
-inline void LayerConfig::set_out(int index, const char* value, size_t size) {
-  out_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* LayerConfig::add_out() {
-  return out_.Add();
-}
-inline void LayerConfig::add_out(const ::std::string& value) {
-  out_.Add()->assign(value);
-}
-inline void LayerConfig::add_out(const char* value) {
-  out_.Add()->assign(value);
-}
-inline void LayerConfig::add_out(const char* value, size_t size) {
-  out_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-LayerConfig::out() const {
-  return out_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-LayerConfig::mutable_out() {
-  return &out_;
+inline void LayerConfig::set_size(::google::protobuf::uint32 value) {
+  set_has_size();
+  size_ = value;
 }
 
 // optional .PS.NN.ActivationConfig activation = 5;
@@ -942,29 +917,29 @@ inline void NetConfig::set_allocated_name(::std::string* name) {
   }
 }
 
-// repeated .PS.NN.LayerConfig layers = 2;
-inline int NetConfig::layers_size() const {
-  return layers_.size();
+// repeated .PS.NN.LayerConfig layer = 2;
+inline int NetConfig::layer_size() const {
+  return layer_.size();
 }
-inline void NetConfig::clear_layers() {
-  layers_.Clear();
+inline void NetConfig::clear_layer() {
+  layer_.Clear();
 }
-inline const ::PS::NN::LayerConfig& NetConfig::layers(int index) const {
-  return layers_.Get(index);
+inline const ::PS::NN::LayerConfig& NetConfig::layer(int index) const {
+  return layer_.Get(index);
 }
-inline ::PS::NN::LayerConfig* NetConfig::mutable_layers(int index) {
-  return layers_.Mutable(index);
+inline ::PS::NN::LayerConfig* NetConfig::mutable_layer(int index) {
+  return layer_.Mutable(index);
 }
-inline ::PS::NN::LayerConfig* NetConfig::add_layers() {
-  return layers_.Add();
+inline ::PS::NN::LayerConfig* NetConfig::add_layer() {
+  return layer_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >&
-NetConfig::layers() const {
-  return layers_;
+NetConfig::layer() const {
+  return layer_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::PS::NN::LayerConfig >*
-NetConfig::mutable_layers() {
-  return &layers_;
+NetConfig::mutable_layer() {
+  return &layer_;
 }
 
 // -------------------------------------------------------------------

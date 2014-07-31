@@ -17,11 +17,12 @@ template<typename V> using MatrixPtrInitList = std::initializer_list<MatrixPtr<V
 template<typename V>
 class Matrix {
  public:
+  Matrix() { }
   explicit Matrix(const MatrixInfo& info) : info_(info) { };
   Matrix(const MatrixInfo& info, const SArray<V>& value)
       : info_(info), value_(value) { };
 
-  virtual void resize(size_t rows, size_t cols, size_t nnz, bool row_major);
+  virtual void resize(size_t rows, size_t cols, size_t nnz, bool row_major) = 0;
 
   // multi-threaded matrix-vector multiplication:
   // y = A * x

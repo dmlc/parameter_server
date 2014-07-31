@@ -25,7 +25,7 @@ template<typename V> class Net {
 };
 
 template<typename V>
-Net<V>::init() {
+void Net<V>::init() {
   CHECK_GT(cf_.layer_size(), 0);
   layers_.clear();
   for (int id = 0; id < cf_.layer_size(); ++id) {

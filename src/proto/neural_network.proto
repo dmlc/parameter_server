@@ -5,6 +5,7 @@ message LayerConfig {
     NONE = 0;
     DATA = 2;
     FULLY_CONNECTED = 1;
+    LOGISTIC_LOSS = 3;
   }
   required Type type = 1;
 
@@ -13,7 +14,7 @@ message LayerConfig {
   // repeated string out = 4;
 
   // the number of neuroons
-  optional uint32 size = 6;
+  optional uint32 size = 7;
 
   optional ActivationConfig activation = 5;
 
