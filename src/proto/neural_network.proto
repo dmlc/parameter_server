@@ -12,6 +12,10 @@ message LayerConfig {
   repeated string out = 4;
 
   optional ActivationConfig activation = 5;
+
+  // optional int32 in_size = 6;
+  // optional int32 out_size = 7;
+
 }
 
 message NetConfig {

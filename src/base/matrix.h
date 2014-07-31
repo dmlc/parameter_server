@@ -69,7 +69,7 @@ class Matrix {
   // I/O see matrix_io.h for more
   virtual bool writeToBinFile(string name) const = 0;
 
-  // accessor and mutators
+  // accessors and mutators
   MatrixInfo info() const { return info_; }
   uint64 rows() const { return info_.row().end() - info_.row().begin(); }
   uint64 cols() const { return info_.col().end() - info_.col().begin(); }
@@ -88,6 +88,14 @@ class Matrix {
     *info_.mutable_col() = info.row();
   }
 
+  // to eigen3 type
+  typedef Eigen::Matrix<
+    V, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EMat;
+  Eigen::Map<EMat> eigenMatrix() {
+    CHECK(rowMajor());
+    CHECK_EQ(info_.type(), MatrixInfo::DENSE);
+    return Eigen::Map<EMat>(value_.data(), rows(), cols());
+  }
 
  protected:
   MatrixInfo info_;

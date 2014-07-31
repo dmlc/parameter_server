@@ -17,6 +17,7 @@ class Postoffice {
   SINGLETON(Postoffice);
   ~Postoffice();
 
+  // run the system
   void run();
 
   // queue a message into the sending buffer, which will be sent by the sending
