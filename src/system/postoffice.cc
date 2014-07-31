@@ -54,6 +54,21 @@ void Postoffice::run() {
   }
 }
 
+void Postoffice::reply(
+    const NodeID& recver, const Task& task, const string& reply_msg) {
+  if (!task.request()) return;
+  Task tk;
+  tk.set_customer(task.customer());
+  tk.set_request(false);
+  tk.set_type(Task::REPLY);
+  if (!reply_msg.empty()) tk.set_msg(reply_msg);
+  tk.set_time(task.time());
+
+  Message re(tk);
+  re.recver = recver;
+  queue(re);
+}
+
 void Postoffice::reply(const Message& msg, const string& reply_msg) {
   if (!msg.task.request()) return;
   Message re = replyTemplate(msg);

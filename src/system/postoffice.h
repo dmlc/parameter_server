@@ -15,48 +15,38 @@ DECLARE_string(node_file);
 class Postoffice {
  public:
   SINGLETON(Postoffice);
-
   ~Postoffice();
 
   void run();
 
-  // std::vector<Node> requestNodes() { CHECK(false); }
-
+  // queue a message into the sending buffer, which will be sent by the sending
+  // thread.
   void queue(const Message& msg);
 
+  // send the reply message for the _task_ from _recver_
+  void reply(const NodeID& recver,
+             const Task& task,
+             const string& reply_msg = string());
+
+  void reply(const Message& msg, const string& reply_msg = string());
+
+  // add the nodes in _pt_ into the system
+  void manage_node(const Task& pt);
+
+  // accessors and mutators
   YellowPages& yp() { return yp_; }
   Node& myNode() { return yp_.van().myNode(); }
 
-  void reply(
-      const NodeID& recver, const Task& task, const string& reply_msg = string()) {
-    if (!task.request()) return;
-    Task tk;
-    tk.set_customer(task.customer());
-    tk.set_request(false);
-    tk.set_type(Task::REPLY);
-    if (!reply_msg.empty()) tk.set_msg(reply_msg);
-    tk.set_time(task.time());
-
-    Message re(tk);
-    re.recver = recver;
-    queue(re);
-  }
-
-  void reply(const Message& msg, const string& reply_msg = string());
-  void manage_node(const Task& pt);
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
   Postoffice() { }
 
   void manage_app(const Task& pt);
   void send();
+  void recv();
 
   std::mutex mutex_;
-
   bool done_ = false;
-
-
-  void recv();
 
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
