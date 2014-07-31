@@ -31,7 +31,7 @@ class Postoffice {
   void reply(const Message& msg, const string& reply_msg = string());
 
   // add the nodes in _pt_ into the system
-  void manage_node(const Task& pt);
+  void manageNode(const Task& pt);
 
   // accessors and mutators
   YellowPages& yp() { return yp_; }

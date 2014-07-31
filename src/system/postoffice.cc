@@ -121,7 +121,7 @@ void Postoffice::recv() {
       break;
     } else if (tk.request() && tk.type() == Task::MANAGE) {
       if (tk.has_mng_app()) manage_app(tk);
-      if (tk.has_mng_node()) manage_node(tk);
+      if (tk.has_mng_node()) manageNode(tk);
     } else {
       yp_.customer(tk.customer())->exec().accept(msg);
       continue;
@@ -140,7 +140,7 @@ void Postoffice::manage_app(const Task& tk) {
   }
 }
 
-void Postoffice::manage_node(const Task& tk) {
+void Postoffice::manageNode(const Task& tk) {
   // LL << tk.DebugString();
   CHECK(tk.has_mng_node());
   auto& mng = tk.mng_node();

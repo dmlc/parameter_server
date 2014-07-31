@@ -82,7 +82,7 @@ void LinearMethod::startSystem() {
   }
 
   // let the scheduler connect all other nodes
-  sys_.manage_node(start);
+  sys_.manageNode(start);
 
   // create the app on other nodes
   int time = 0, k = 0;
