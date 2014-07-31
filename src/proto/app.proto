@@ -1,0 +1,71 @@
+package PS;
+
+import "proto/range.proto";
+import "proto/neural_network.proto";
+import "proto/risk_minimization.proto";
+
+message AppConfig {
+  enum Type {
+    RISK_MINIMIZATION = 1;
+    SKETCH = 2;
+    NEURAL_NETWORK = 3;
+  }
+  optional Type type = 1;
+  optional string app_name = 2;
+  repeated string parameter_name = 3;
+
+  // input / output
+  optional DataConfig training_data = 10;
+  optional DataConfig validation_data = 11;
+
+  optional ParameterInitConfig init_w = 13;
+
+  optional DataConfig model_output = 15;
+
+  // risk minimization
+  optional LossConfig loss = 20;
+  optional PenaltyConfig penalty = 21;
+  optional LearningRateConfig learning_rate = 23;
+
+  optional LearnerConfig learner = 22;
+
+  optional BlockSolverConfig block_solver = 24;
+
+  optional BCDL1LRConfig bcd_l1lr = 25;
+
+  // neural network
+  optional NN.NetConfig nn_train = 30;
+  optional NN.NetConfig nn_test = 31;
+  optional NN.SolverConfig nn_solver = 32;
+
+  // others
+}
+
+message DataConfig {
+  enum DataFormat {
+    BIN = 1;
+    PROTO = 2;
+    TEXT = 3;
+  }
+  required DataFormat format = 1;
+  repeated string files = 2;
+  optional PbRange range = 3;  // only valid for the binary format
+}
+
+message ParameterInitConfig {
+  enum Type {
+    ZERO = 1;
+    RANDOM = 2;
+    FILE = 3;
+  }
+  optional Type type = 1 [default = ZERO];
+  optional double random_std = 2 [default = 1];
+}
+
+message LearningRateConfig {
+  enum Type {
+    CONSTANT = 1;
+  }
+  required Type type = 1;
+  optional double eta = 2 [default = 1];
+}

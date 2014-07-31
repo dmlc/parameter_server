@@ -1,7 +1,7 @@
 package PS;
 import "proto/node.proto";
 import "proto/range.proto";
-import "proto/config.proto";
+import "proto/app.proto";
 import "proto/risk_minimization.proto";
 
 message Task {

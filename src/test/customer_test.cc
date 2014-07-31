@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "system/customer.h"
-#include "proto/config.pb.h"
+#include "proto/app.pb.h"
 
 #include "google/protobuf/text_format.h"
 using namespace PS;

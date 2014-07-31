@@ -36,9 +36,75 @@ void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
 void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
 void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
 
+class BlockSolverConfig;
+class BCDL1LRConfig;
+class LossConfig;
+class LearnerConfig;
+class PenaltyConfig;
 class RiskMinProgress;
 class RiskMinCall;
+class AggGradLearnerArg;
 
+enum LossConfig_Type {
+  LossConfig_Type_SQUARE = 1,
+  LossConfig_Type_LOGIT = 2,
+  LossConfig_Type_HINGE = 3,
+  LossConfig_Type_SQUARE_HINGE = 4
+};
+bool LossConfig_Type_IsValid(int value);
+const LossConfig_Type LossConfig_Type_Type_MIN = LossConfig_Type_SQUARE;
+const LossConfig_Type LossConfig_Type_Type_MAX = LossConfig_Type_SQUARE_HINGE;
+const int LossConfig_Type_Type_ARRAYSIZE = LossConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* LossConfig_Type_descriptor();
+inline const ::std::string& LossConfig_Type_Name(LossConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    LossConfig_Type_descriptor(), value);
+}
+inline bool LossConfig_Type_Parse(
+    const ::std::string& name, LossConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<LossConfig_Type>(
+    LossConfig_Type_descriptor(), name, value);
+}
+enum LearnerConfig_Type {
+  LearnerConfig_Type_GRADIENT_DESCENT = 1,
+  LearnerConfig_Type_PROXIMAL_GRADIENT = 2,
+  LearnerConfig_Type_LBFGS = 3
+};
+bool LearnerConfig_Type_IsValid(int value);
+const LearnerConfig_Type LearnerConfig_Type_Type_MIN = LearnerConfig_Type_GRADIENT_DESCENT;
+const LearnerConfig_Type LearnerConfig_Type_Type_MAX = LearnerConfig_Type_LBFGS;
+const int LearnerConfig_Type_Type_ARRAYSIZE = LearnerConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* LearnerConfig_Type_descriptor();
+inline const ::std::string& LearnerConfig_Type_Name(LearnerConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    LearnerConfig_Type_descriptor(), value);
+}
+inline bool LearnerConfig_Type_Parse(
+    const ::std::string& name, LearnerConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<LearnerConfig_Type>(
+    LearnerConfig_Type_descriptor(), name, value);
+}
+enum PenaltyConfig_Type {
+  PenaltyConfig_Type_L1 = 1,
+  PenaltyConfig_Type_L2 = 2
+};
+bool PenaltyConfig_Type_IsValid(int value);
+const PenaltyConfig_Type PenaltyConfig_Type_Type_MIN = PenaltyConfig_Type_L1;
+const PenaltyConfig_Type PenaltyConfig_Type_Type_MAX = PenaltyConfig_Type_L2;
+const int PenaltyConfig_Type_Type_ARRAYSIZE = PenaltyConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* PenaltyConfig_Type_descriptor();
+inline const ::std::string& PenaltyConfig_Type_Name(PenaltyConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    PenaltyConfig_Type_descriptor(), value);
+}
+inline bool PenaltyConfig_Type_Parse(
+    const ::std::string& name, PenaltyConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<PenaltyConfig_Type>(
+    PenaltyConfig_Type_descriptor(), name, value);
+}
 enum RiskMinCall_Command {
   RiskMinCall_Command_PREPARE_DATA = 1,
   RiskMinCall_Command_UPDATE_MODEL = 2,
@@ -63,6 +129,581 @@ inline bool RiskMinCall_Command_Parse(
     RiskMinCall_Command_descriptor(), name, value);
 }
 // ===================================================================
+
+class BlockSolverConfig : public ::google::protobuf::Message {
+ public:
+  BlockSolverConfig();
+  virtual ~BlockSolverConfig();
+
+  BlockSolverConfig(const BlockSolverConfig& from);
+
+  inline BlockSolverConfig& operator=(const BlockSolverConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const BlockSolverConfig& default_instance();
+
+  void Swap(BlockSolverConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  BlockSolverConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const BlockSolverConfig& from);
+  void MergeFrom(const BlockSolverConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 minibatch_size = 1 [default = 0];
+  inline bool has_minibatch_size() const;
+  inline void clear_minibatch_size();
+  static const int kMinibatchSizeFieldNumber = 1;
+  inline ::google::protobuf::int64 minibatch_size() const;
+  inline void set_minibatch_size(::google::protobuf::int64 value);
+
+  // optional float feature_block_ratio = 2 [default = 0];
+  inline bool has_feature_block_ratio() const;
+  inline void clear_feature_block_ratio();
+  static const int kFeatureBlockRatioFieldNumber = 2;
+  inline float feature_block_ratio() const;
+  inline void set_feature_block_ratio(float value);
+
+  // optional bool random_feature_block_order = 3 [default = true];
+  inline bool has_random_feature_block_order() const;
+  inline void clear_random_feature_block_order();
+  static const int kRandomFeatureBlockOrderFieldNumber = 3;
+  inline bool random_feature_block_order() const;
+  inline void set_random_feature_block_order(bool value);
+
+  // optional int32 max_pass_of_data = 8 [default = 10];
+  inline bool has_max_pass_of_data() const;
+  inline void clear_max_pass_of_data();
+  static const int kMaxPassOfDataFieldNumber = 8;
+  inline ::google::protobuf::int32 max_pass_of_data() const;
+  inline void set_max_pass_of_data(::google::protobuf::int32 value);
+
+  // optional int32 max_block_delay = 10 [default = 0];
+  inline bool has_max_block_delay() const;
+  inline void clear_max_block_delay();
+  static const int kMaxBlockDelayFieldNumber = 10;
+  inline ::google::protobuf::int32 max_block_delay() const;
+  inline void set_max_block_delay(::google::protobuf::int32 value);
+
+  // optional double epsilon = 11 [default = 0.0001];
+  inline bool has_epsilon() const;
+  inline void clear_epsilon();
+  static const int kEpsilonFieldNumber = 11;
+  inline double epsilon() const;
+  inline void set_epsilon(double value);
+
+  // optional int64 auc_goodness = 12 [default = 100000];
+  inline bool has_auc_goodness() const;
+  inline void clear_auc_goodness();
+  static const int kAucGoodnessFieldNumber = 12;
+  inline ::google::protobuf::int64 auc_goodness() const;
+  inline void set_auc_goodness(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:PS.BlockSolverConfig)
+ private:
+  inline void set_has_minibatch_size();
+  inline void clear_has_minibatch_size();
+  inline void set_has_feature_block_ratio();
+  inline void clear_has_feature_block_ratio();
+  inline void set_has_random_feature_block_order();
+  inline void clear_has_random_feature_block_order();
+  inline void set_has_max_pass_of_data();
+  inline void clear_has_max_pass_of_data();
+  inline void set_has_max_block_delay();
+  inline void clear_has_max_block_delay();
+  inline void set_has_epsilon();
+  inline void clear_has_epsilon();
+  inline void set_has_auc_goodness();
+  inline void clear_has_auc_goodness();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 minibatch_size_;
+  float feature_block_ratio_;
+  bool random_feature_block_order_;
+  ::google::protobuf::int32 max_pass_of_data_;
+  ::google::protobuf::int32 max_block_delay_;
+  double epsilon_;
+  ::google::protobuf::int64 auc_goodness_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static BlockSolverConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class BCDL1LRConfig : public ::google::protobuf::Message {
+ public:
+  BCDL1LRConfig();
+  virtual ~BCDL1LRConfig();
+
+  BCDL1LRConfig(const BCDL1LRConfig& from);
+
+  inline BCDL1LRConfig& operator=(const BCDL1LRConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const BCDL1LRConfig& default_instance();
+
+  void Swap(BCDL1LRConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  BCDL1LRConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const BCDL1LRConfig& from);
+  void MergeFrom(const BCDL1LRConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional double delta_init_value = 1 [default = 1];
+  inline bool has_delta_init_value() const;
+  inline void clear_delta_init_value();
+  static const int kDeltaInitValueFieldNumber = 1;
+  inline double delta_init_value() const;
+  inline void set_delta_init_value(double value);
+
+  // optional double delta_max_value = 2 [default = 5];
+  inline bool has_delta_max_value() const;
+  inline void clear_delta_max_value();
+  static const int kDeltaMaxValueFieldNumber = 2;
+  inline double delta_max_value() const;
+  inline void set_delta_max_value(double value);
+
+  // optional double kkt_filter_threshold_ratio = 10 [default = 10];
+  inline bool has_kkt_filter_threshold_ratio() const;
+  inline void clear_kkt_filter_threshold_ratio();
+  static const int kKktFilterThresholdRatioFieldNumber = 10;
+  inline double kkt_filter_threshold_ratio() const;
+  inline void set_kkt_filter_threshold_ratio(double value);
+
+  // @@protoc_insertion_point(class_scope:PS.BCDL1LRConfig)
+ private:
+  inline void set_has_delta_init_value();
+  inline void clear_has_delta_init_value();
+  inline void set_has_delta_max_value();
+  inline void clear_has_delta_max_value();
+  inline void set_has_kkt_filter_threshold_ratio();
+  inline void clear_has_kkt_filter_threshold_ratio();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  double delta_init_value_;
+  double delta_max_value_;
+  double kkt_filter_threshold_ratio_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static BCDL1LRConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LossConfig : public ::google::protobuf::Message {
+ public:
+  LossConfig();
+  virtual ~LossConfig();
+
+  LossConfig(const LossConfig& from);
+
+  inline LossConfig& operator=(const LossConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const LossConfig& default_instance();
+
+  void Swap(LossConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  LossConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const LossConfig& from);
+  void MergeFrom(const LossConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef LossConfig_Type Type;
+  static const Type SQUARE = LossConfig_Type_SQUARE;
+  static const Type LOGIT = LossConfig_Type_LOGIT;
+  static const Type HINGE = LossConfig_Type_HINGE;
+  static const Type SQUARE_HINGE = LossConfig_Type_SQUARE_HINGE;
+  static inline bool Type_IsValid(int value) {
+    return LossConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    LossConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    LossConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    LossConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return LossConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return LossConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return LossConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.LossConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::LossConfig_Type type() const;
+  inline void set_type(::PS::LossConfig_Type value);
+
+  // @@protoc_insertion_point(class_scope:PS.LossConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static LossConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LearnerConfig : public ::google::protobuf::Message {
+ public:
+  LearnerConfig();
+  virtual ~LearnerConfig();
+
+  LearnerConfig(const LearnerConfig& from);
+
+  inline LearnerConfig& operator=(const LearnerConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const LearnerConfig& default_instance();
+
+  void Swap(LearnerConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  LearnerConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const LearnerConfig& from);
+  void MergeFrom(const LearnerConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef LearnerConfig_Type Type;
+  static const Type GRADIENT_DESCENT = LearnerConfig_Type_GRADIENT_DESCENT;
+  static const Type PROXIMAL_GRADIENT = LearnerConfig_Type_PROXIMAL_GRADIENT;
+  static const Type LBFGS = LearnerConfig_Type_LBFGS;
+  static inline bool Type_IsValid(int value) {
+    return LearnerConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    LearnerConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    LearnerConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    LearnerConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return LearnerConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return LearnerConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return LearnerConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.LearnerConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::LearnerConfig_Type type() const;
+  inline void set_type(::PS::LearnerConfig_Type value);
+
+  // @@protoc_insertion_point(class_scope:PS.LearnerConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static LearnerConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class PenaltyConfig : public ::google::protobuf::Message {
+ public:
+  PenaltyConfig();
+  virtual ~PenaltyConfig();
+
+  PenaltyConfig(const PenaltyConfig& from);
+
+  inline PenaltyConfig& operator=(const PenaltyConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const PenaltyConfig& default_instance();
+
+  void Swap(PenaltyConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  PenaltyConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const PenaltyConfig& from);
+  void MergeFrom(const PenaltyConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef PenaltyConfig_Type Type;
+  static const Type L1 = PenaltyConfig_Type_L1;
+  static const Type L2 = PenaltyConfig_Type_L2;
+  static inline bool Type_IsValid(int value) {
+    return PenaltyConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    PenaltyConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    PenaltyConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    PenaltyConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return PenaltyConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return PenaltyConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return PenaltyConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.PenaltyConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::PenaltyConfig_Type type() const;
+  inline void set_type(::PS::PenaltyConfig_Type value);
+
+  // required float coefficient = 2 [default = 0];
+  inline bool has_coefficient() const;
+  inline void clear_coefficient();
+  static const int kCoefficientFieldNumber = 2;
+  inline float coefficient() const;
+  inline void set_coefficient(float value);
+
+  // @@protoc_insertion_point(class_scope:PS.PenaltyConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_coefficient();
+  inline void clear_has_coefficient();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int type_;
+  float coefficient_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static PenaltyConfig* default_instance_;
+};
+// -------------------------------------------------------------------
 
 class RiskMinProgress : public ::google::protobuf::Message {
  public:
@@ -381,10 +1022,423 @@ class RiskMinCall : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static RiskMinCall* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class AggGradLearnerArg : public ::google::protobuf::Message {
+ public:
+  AggGradLearnerArg();
+  virtual ~AggGradLearnerArg();
+
+  AggGradLearnerArg(const AggGradLearnerArg& from);
+
+  inline AggGradLearnerArg& operator=(const AggGradLearnerArg& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AggGradLearnerArg& default_instance();
+
+  void Swap(AggGradLearnerArg* other);
+
+  // implements Message ----------------------------------------------
+
+  AggGradLearnerArg* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const AggGradLearnerArg& from);
+  void MergeFrom(const AggGradLearnerArg& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional double learning_rate = 1;
+  inline bool has_learning_rate() const;
+  inline void clear_learning_rate();
+  static const int kLearningRateFieldNumber = 1;
+  inline double learning_rate() const;
+  inline void set_learning_rate(double value);
+
+  // @@protoc_insertion_point(class_scope:PS.AggGradLearnerArg)
+ private:
+  inline void set_has_learning_rate();
+  inline void clear_has_learning_rate();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  double learning_rate_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static AggGradLearnerArg* default_instance_;
+};
 // ===================================================================
 
 
 // ===================================================================
+
+// BlockSolverConfig
+
+// optional int64 minibatch_size = 1 [default = 0];
+inline bool BlockSolverConfig::has_minibatch_size() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void BlockSolverConfig::set_has_minibatch_size() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void BlockSolverConfig::clear_has_minibatch_size() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void BlockSolverConfig::clear_minibatch_size() {
+  minibatch_size_ = GOOGLE_LONGLONG(0);
+  clear_has_minibatch_size();
+}
+inline ::google::protobuf::int64 BlockSolverConfig::minibatch_size() const {
+  return minibatch_size_;
+}
+inline void BlockSolverConfig::set_minibatch_size(::google::protobuf::int64 value) {
+  set_has_minibatch_size();
+  minibatch_size_ = value;
+}
+
+// optional float feature_block_ratio = 2 [default = 0];
+inline bool BlockSolverConfig::has_feature_block_ratio() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void BlockSolverConfig::set_has_feature_block_ratio() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void BlockSolverConfig::clear_has_feature_block_ratio() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void BlockSolverConfig::clear_feature_block_ratio() {
+  feature_block_ratio_ = 0;
+  clear_has_feature_block_ratio();
+}
+inline float BlockSolverConfig::feature_block_ratio() const {
+  return feature_block_ratio_;
+}
+inline void BlockSolverConfig::set_feature_block_ratio(float value) {
+  set_has_feature_block_ratio();
+  feature_block_ratio_ = value;
+}
+
+// optional bool random_feature_block_order = 3 [default = true];
+inline bool BlockSolverConfig::has_random_feature_block_order() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void BlockSolverConfig::set_has_random_feature_block_order() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void BlockSolverConfig::clear_has_random_feature_block_order() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void BlockSolverConfig::clear_random_feature_block_order() {
+  random_feature_block_order_ = true;
+  clear_has_random_feature_block_order();
+}
+inline bool BlockSolverConfig::random_feature_block_order() const {
+  return random_feature_block_order_;
+}
+inline void BlockSolverConfig::set_random_feature_block_order(bool value) {
+  set_has_random_feature_block_order();
+  random_feature_block_order_ = value;
+}
+
+// optional int32 max_pass_of_data = 8 [default = 10];
+inline bool BlockSolverConfig::has_max_pass_of_data() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void BlockSolverConfig::set_has_max_pass_of_data() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void BlockSolverConfig::clear_has_max_pass_of_data() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void BlockSolverConfig::clear_max_pass_of_data() {
+  max_pass_of_data_ = 10;
+  clear_has_max_pass_of_data();
+}
+inline ::google::protobuf::int32 BlockSolverConfig::max_pass_of_data() const {
+  return max_pass_of_data_;
+}
+inline void BlockSolverConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
+  set_has_max_pass_of_data();
+  max_pass_of_data_ = value;
+}
+
+// optional int32 max_block_delay = 10 [default = 0];
+inline bool BlockSolverConfig::has_max_block_delay() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void BlockSolverConfig::set_has_max_block_delay() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void BlockSolverConfig::clear_has_max_block_delay() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void BlockSolverConfig::clear_max_block_delay() {
+  max_block_delay_ = 0;
+  clear_has_max_block_delay();
+}
+inline ::google::protobuf::int32 BlockSolverConfig::max_block_delay() const {
+  return max_block_delay_;
+}
+inline void BlockSolverConfig::set_max_block_delay(::google::protobuf::int32 value) {
+  set_has_max_block_delay();
+  max_block_delay_ = value;
+}
+
+// optional double epsilon = 11 [default = 0.0001];
+inline bool BlockSolverConfig::has_epsilon() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void BlockSolverConfig::set_has_epsilon() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void BlockSolverConfig::clear_has_epsilon() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void BlockSolverConfig::clear_epsilon() {
+  epsilon_ = 0.0001;
+  clear_has_epsilon();
+}
+inline double BlockSolverConfig::epsilon() const {
+  return epsilon_;
+}
+inline void BlockSolverConfig::set_epsilon(double value) {
+  set_has_epsilon();
+  epsilon_ = value;
+}
+
+// optional int64 auc_goodness = 12 [default = 100000];
+inline bool BlockSolverConfig::has_auc_goodness() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void BlockSolverConfig::set_has_auc_goodness() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void BlockSolverConfig::clear_has_auc_goodness() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void BlockSolverConfig::clear_auc_goodness() {
+  auc_goodness_ = GOOGLE_LONGLONG(100000);
+  clear_has_auc_goodness();
+}
+inline ::google::protobuf::int64 BlockSolverConfig::auc_goodness() const {
+  return auc_goodness_;
+}
+inline void BlockSolverConfig::set_auc_goodness(::google::protobuf::int64 value) {
+  set_has_auc_goodness();
+  auc_goodness_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// BCDL1LRConfig
+
+// optional double delta_init_value = 1 [default = 1];
+inline bool BCDL1LRConfig::has_delta_init_value() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void BCDL1LRConfig::set_has_delta_init_value() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void BCDL1LRConfig::clear_has_delta_init_value() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void BCDL1LRConfig::clear_delta_init_value() {
+  delta_init_value_ = 1;
+  clear_has_delta_init_value();
+}
+inline double BCDL1LRConfig::delta_init_value() const {
+  return delta_init_value_;
+}
+inline void BCDL1LRConfig::set_delta_init_value(double value) {
+  set_has_delta_init_value();
+  delta_init_value_ = value;
+}
+
+// optional double delta_max_value = 2 [default = 5];
+inline bool BCDL1LRConfig::has_delta_max_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void BCDL1LRConfig::set_has_delta_max_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void BCDL1LRConfig::clear_has_delta_max_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void BCDL1LRConfig::clear_delta_max_value() {
+  delta_max_value_ = 5;
+  clear_has_delta_max_value();
+}
+inline double BCDL1LRConfig::delta_max_value() const {
+  return delta_max_value_;
+}
+inline void BCDL1LRConfig::set_delta_max_value(double value) {
+  set_has_delta_max_value();
+  delta_max_value_ = value;
+}
+
+// optional double kkt_filter_threshold_ratio = 10 [default = 10];
+inline bool BCDL1LRConfig::has_kkt_filter_threshold_ratio() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void BCDL1LRConfig::set_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void BCDL1LRConfig::clear_has_kkt_filter_threshold_ratio() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void BCDL1LRConfig::clear_kkt_filter_threshold_ratio() {
+  kkt_filter_threshold_ratio_ = 10;
+  clear_has_kkt_filter_threshold_ratio();
+}
+inline double BCDL1LRConfig::kkt_filter_threshold_ratio() const {
+  return kkt_filter_threshold_ratio_;
+}
+inline void BCDL1LRConfig::set_kkt_filter_threshold_ratio(double value) {
+  set_has_kkt_filter_threshold_ratio();
+  kkt_filter_threshold_ratio_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// LossConfig
+
+// required .PS.LossConfig.Type type = 1;
+inline bool LossConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LossConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LossConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LossConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::LossConfig_Type LossConfig::type() const {
+  return static_cast< ::PS::LossConfig_Type >(type_);
+}
+inline void LossConfig::set_type(::PS::LossConfig_Type value) {
+  assert(::PS::LossConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// LearnerConfig
+
+// required .PS.LearnerConfig.Type type = 1;
+inline bool LearnerConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LearnerConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LearnerConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LearnerConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::LearnerConfig_Type LearnerConfig::type() const {
+  return static_cast< ::PS::LearnerConfig_Type >(type_);
+}
+inline void LearnerConfig::set_type(::PS::LearnerConfig_Type value) {
+  assert(::PS::LearnerConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// PenaltyConfig
+
+// required .PS.PenaltyConfig.Type type = 1;
+inline bool PenaltyConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void PenaltyConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void PenaltyConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void PenaltyConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::PenaltyConfig_Type PenaltyConfig::type() const {
+  return static_cast< ::PS::PenaltyConfig_Type >(type_);
+}
+inline void PenaltyConfig::set_type(::PS::PenaltyConfig_Type value) {
+  assert(::PS::PenaltyConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// required float coefficient = 2 [default = 0];
+inline bool PenaltyConfig::has_coefficient() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void PenaltyConfig::set_has_coefficient() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void PenaltyConfig::clear_has_coefficient() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void PenaltyConfig::clear_coefficient() {
+  coefficient_ = 0;
+  clear_has_coefficient();
+}
+inline float PenaltyConfig::coefficient() const {
+  return coefficient_;
+}
+inline void PenaltyConfig::set_coefficient(float value) {
+  set_has_coefficient();
+  coefficient_ = value;
+}
+
+// -------------------------------------------------------------------
 
 // RiskMinProgress
 
@@ -736,6 +1790,32 @@ inline void RiskMinCall::set_kkt_filter_reset(bool value) {
   kkt_filter_reset_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// AggGradLearnerArg
+
+// optional double learning_rate = 1;
+inline bool AggGradLearnerArg::has_learning_rate() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void AggGradLearnerArg::set_has_learning_rate() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void AggGradLearnerArg::clear_has_learning_rate() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void AggGradLearnerArg::clear_learning_rate() {
+  learning_rate_ = 0;
+  clear_has_learning_rate();
+}
+inline double AggGradLearnerArg::learning_rate() const {
+  return learning_rate_;
+}
+inline void AggGradLearnerArg::set_learning_rate(double value) {
+  set_has_learning_rate();
+  learning_rate_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -745,6 +1825,18 @@ inline void RiskMinCall::set_kkt_filter_reset(bool value) {
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LossConfig_Type>() {
+  return ::PS::LossConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LearnerConfig_Type>() {
+  return ::PS::LearnerConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::PenaltyConfig_Type>() {
+  return ::PS::PenaltyConfig_Type_descriptor();
+}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::RiskMinCall_Command>() {
   return ::PS::RiskMinCall_Command_descriptor();

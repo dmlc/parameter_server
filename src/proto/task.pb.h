@@ -27,7 +27,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/node.pb.h"
 #include "proto/range.pb.h"
-#include "proto/config.pb.h"
+#include "proto/app.pb.h"
 #include "proto/risk_minimization.pb.h"
 // @@protoc_insertion_point(includes)
 

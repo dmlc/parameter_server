@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include "proto/config.pb.h"
+#include "proto/risk_minimization.pb.h"
 
 namespace PS {
 

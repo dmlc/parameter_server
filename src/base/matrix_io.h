@@ -5,7 +5,7 @@
 #include "base/dense_matrix.h"
 #include "base/shared_array_inl.h"
 #include "util/recordio.h"
-#include "proto/config.pb.h"
+#include "proto/app.pb.h"
 #include "proto/instance.pb.h"
 #include "util/file.h"
 

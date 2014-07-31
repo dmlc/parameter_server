@@ -4,7 +4,7 @@
 #include <regex>
 
 #include "util/common.h"
-#include "proto/config.pb.h"
+#include "proto/app.pb.h"
 #include "util/split.h"
 #include "util/file.h"
 
