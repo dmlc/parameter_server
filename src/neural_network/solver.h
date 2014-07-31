@@ -8,14 +8,17 @@ namespace NN {
 class Solver : public App {
  public:
   void init();
+
  protected:
   unique_ptr<Net<float>> train_;
+  unique_ptr<Net<float>> test_;
 
 };
 
 void Solver::init() {
-  CHECK(app_cf_.has_nn());
-  train_.reset(new Net<float>(app_cf_.nn()));
+  CHECK(app_cf_.has_nn_train());
+  train_.reset(new Net<float>(app_cf_.nn_train()));
+  train_->init();
 }
 
 } // namespace NN

@@ -97,6 +97,8 @@ class Matrix {
     return Eigen::Map<EMat>(value_.data(), rows(), cols());
   }
 
+  typedef Eigen::Array<V, Eigen::Dynamic, 1>  EArr;
+  Eigen::Map<EArr> eigenArray() { return value_.eigenArray(); }
  protected:
   MatrixInfo info_;
   SArray<V> value_;

@@ -33,8 +33,9 @@ message AppConfig {
   optional BCDL1LRConfig bcd_l1lr = 25;
 
   // neural network
-  optional NN.NetConfig nn = 30;
-  optional NN.SolverConfig nn_solver = 31;
+  optional NN.NetConfig nn_train = 30;
+  optional NN.NetConfig nn_test = 31;
+  optional NN.SolverConfig nn_solver = 32;
 
   // others
 }

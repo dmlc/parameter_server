@@ -5,13 +5,13 @@
 namespace PS {
 namespace NN {
 
-template<typename V> struct Blob;
-template<typename V> using BlobPtr = std::shared_ptr<Blob<V>>;
-template<typename V> using BlobPtrList = std::vector<BlobPtr<V>>;
+template<typename V> struct Parameter;
+template<typename V> using ParameterPtr = std::shared_ptr<Parameter<V>>;
+template<typename V> using ParameterPtrList = std::vector<ParameterPtr<V>>;
 
 // data blob
 template<typename V>
-struct Blob {
+struct Parameter {
   MatrixPtr<V> value;
   MatrixPtr<V> gradient;
   MatrixPtr<V> hession;

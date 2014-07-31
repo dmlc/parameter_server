@@ -239,6 +239,13 @@ class LayerConfig : public ::google::protobuf::Message {
   inline ::PS::NN::ActivationConfig* release_activation();
   inline void set_allocated_activation(::PS::NN::ActivationConfig* activation);
 
+  // optional double lr_scale = 6 [default = 1];
+  inline bool has_lr_scale() const;
+  inline void clear_lr_scale();
+  static const int kLrScaleFieldNumber = 6;
+  inline double lr_scale() const;
+  inline void set_lr_scale(double value);
+
   // @@protoc_insertion_point(class_scope:PS.NN.LayerConfig)
  private:
   inline void set_has_type();
@@ -247,6 +254,8 @@ class LayerConfig : public ::google::protobuf::Message {
   inline void clear_has_name();
   inline void set_has_activation();
   inline void clear_has_activation();
+  inline void set_has_lr_scale();
+  inline void clear_has_lr_scale();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -254,10 +263,11 @@ class LayerConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> in_;
   ::google::protobuf::RepeatedPtrField< ::std::string> out_;
   ::PS::NN::ActivationConfig* activation_;
+  double lr_scale_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -834,6 +844,28 @@ inline void LayerConfig::set_allocated_activation(::PS::NN::ActivationConfig* ac
   } else {
     clear_has_activation();
   }
+}
+
+// optional double lr_scale = 6 [default = 1];
+inline bool LayerConfig::has_lr_scale() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void LayerConfig::set_has_lr_scale() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void LayerConfig::clear_has_lr_scale() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void LayerConfig::clear_lr_scale() {
+  lr_scale_ = 1;
+  clear_has_lr_scale();
+}
+inline double LayerConfig::lr_scale() const {
+  return lr_scale_;
+}
+inline void LayerConfig::set_lr_scale(double value) {
+  set_has_lr_scale();
+  lr_scale_ = value;
 }
 
 // -------------------------------------------------------------------

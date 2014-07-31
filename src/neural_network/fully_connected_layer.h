@@ -10,6 +10,7 @@ class FullyConnectedLayer : public Layer<V>  {
  public:
   void init() {
     // TODO init model, output
+
     // weight_ = MatrixPtr<V>(new DenseMatrix<V>(cf_.in_size(), cf_.out_size()));
     out_args.clear();
     CHECK_EQ(out_layers)

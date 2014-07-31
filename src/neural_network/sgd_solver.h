@@ -8,7 +8,12 @@ class SGDSolver : public Solver {
  public:
   void run();
 
+  void updater(int iter, ParameterPtr<float>& param) {
+    param->value->eigenArray() -= .1 * param->gradient->eigenArray();
+  }
+
   void process(Message* msg) { }
+
 };
 
 void SGDSolver::run() {
@@ -17,10 +22,19 @@ void SGDSolver::run() {
 
   int iter = 0;
   for (; iter < cf.max_iteration(); ++iter) {
-    LL << iter;
-    // for (auto& l : train_->layers()) l->forward();
-    // for (auto& l : train_->layers()) l->backward();
-    // for (auto& l : train_->layers()) l->update();
+    float objv = 0;
+    for (auto& l : train_->layers()) {
+      objv += l->forward();
+    }
+    for (auto& l : train_->layers()) {
+      l->backward();
+    }
+
+    for (auto& l : train_->layers()) {
+      updater(iter, l->model());
+    }
+
+    LL << iter << " objv: " << objv;
   }
 
   LL << "finished";

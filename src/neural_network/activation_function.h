@@ -1,7 +1,7 @@
 #pragma once
 
 #include "proto/neural_network.pb.h"
-#include "neural_network/blob.h"
+#include "neural_network/parameter.h"
 
 namespace PS {
 namespace NN {
@@ -25,15 +25,15 @@ class ActivationFunction {
     return ActivationFuncPtr<V>(nullptr);
   }
 
-  virtual void forward(BlobPtr<V>& arg) = 0;
-  virtual void backward(BlobPtr<V>& arg) = 0;
+  virtual void forward(ParameterPtr<V>& arg) = 0;
+  virtual void backward(ParameterPtr<V>& arg) = 0;
 };
 
 
 template <typename V>
 class ReluActivation : public ActivationFunction<V> {
  public:
-  void forward(BlobPtr<V>& arg) {
+  void forward(ParameterPtr<V>& arg) {
     CHECK(arg->value);
     auto X = arg->value->value();
 
@@ -41,7 +41,7 @@ class ReluActivation : public ActivationFunction<V> {
       X[i] = X[i] < 0 ? 0 : X[i];
   }
 
-  void backward(BlobPtr<V>& arg) {
+  void backward(ParameterPtr<V>& arg) {
     CHECK(arg->value);
     CHECK(arg->gradient);
     auto X = arg->value->value();
