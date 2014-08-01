@@ -78,6 +78,7 @@ class Matrix {
   uint64 cols() const { return info_.col().end() - info_.col().begin(); }
   uint64 nnz() const { return info_.nnz(); }
   bool rowMajor() const { return info_.row_major(); }
+  bool colMajor() const { return (!info_.row_major()); }
   size_t innerSize() const { return (rowMajor() ? cols() : rows()); }
   size_t outerSize() const { return (rowMajor() ? rows() : cols()); }
   bool empty() const { return (rows() == 0 && cols() == 0); }

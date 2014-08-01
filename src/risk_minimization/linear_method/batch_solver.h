@@ -20,6 +20,7 @@ class BatchSolver : public LinearMethod {
 
   void computeEvaluationAUC(AUCData *data);
   void saveModel(const Message& msg);
+  void saveAsDenseData(const Message& msg);
 
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;

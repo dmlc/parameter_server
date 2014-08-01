@@ -7,7 +7,7 @@ namespace NN {
 template<typename V>
 class LossLayer : public Layer<V>  {
  public:
-  void initModel() { }
+  void init() { }
  protected:
   void checkSalarLoss() {
     CHECK_EQ(in_args_.size(), 2);

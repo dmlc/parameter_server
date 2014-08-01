@@ -16,6 +16,7 @@ class RiskMinimization : public App {
   virtual RiskMinProgress evaluateProgress() = 0;
   virtual void saveModel(const Message& msg) = 0;
   virtual void computeEvaluationAUC(AUCData *data) = 0;
+  virtual void saveAsDenseData(const Message& msg) { }
 
   void showTime(int iter);
   void showObjective(int iter);

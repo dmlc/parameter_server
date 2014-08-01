@@ -88,7 +88,8 @@ message RiskMinCall {
     PREPARE_DATA = 1;
     UPDATE_MODEL = 2;
     EVALUATE_PROGRESS = 3;
-    SAVE_MODEL = 4;
+    SAVE_MODEL = 4;  // save w
+    SAVE_AS_DENSE = 7;     // save X * w in a given key range
     RECOVER = 5;
     COMPUTE_VALIDATION_AUC = 6;
   }
@@ -98,6 +99,8 @@ message RiskMinCall {
 
   optional double kkt_filter_threshold = 4;
   optional bool kkt_filter_reset = 5;
+
+  repeated PbRange reduce_range = 6;
 }
 
 message AggGradLearnerArg {

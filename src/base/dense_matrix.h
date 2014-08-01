@@ -8,9 +8,9 @@ template<typename V>
 class DenseMatrix : public Matrix<V> {
  public:
   DenseMatrix() { }
-  // DenseMatrix(size_t rows = 0, size_t cols = 0, bool row_major = true) {
-  //   resize(rows, cols, rows*cols, row_major);
-  // }
+  DenseMatrix(size_t rows, size_t cols, bool row_major = true) {
+    resize(rows, cols, rows*cols, row_major);
+  }
 
   void resize(size_t rows, size_t cols, size_t nnz, bool row_major);
 
@@ -33,12 +33,21 @@ class DenseMatrix : public Matrix<V> {
 
   // non-copy matrix block
   virtual MatrixPtr<V> rowBlock(SizeR range) const { return MatrixPtr<V>(); }
-  virtual MatrixPtr<V> colBlock(SizeR range) const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> colBlock(SizeR range) const {
+    if (this->rowMajor()) CHECK_EQ(range, SizeR(0, cols()));
+    auto info = info_;
+    range.to(info.mutable_col());
+    info.set_nnz(range.size() * rows());
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*rows())));
+  }
 
   virtual bool writeToBinFile(string name) const {
     return (WriteProtoToASCIIFile(info_, name+".info") && value_.writeToFile(name+".value"));
   }
  private:
+  using Matrix<V>::rowMajor;
+  using Matrix<V>::rows;
+  using Matrix<V>::cols;
   using Matrix<V>::info_;
   using Matrix<V>::value_;
 };

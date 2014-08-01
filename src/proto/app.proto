@@ -1,6 +1,6 @@
 package PS;
 
-import "proto/range.proto";
+import "proto/config.proto";
 import "proto/neural_network.proto";
 import "proto/risk_minimization.proto";
 
@@ -39,33 +39,4 @@ message AppConfig {
   optional NN.SolverConfig nn_solver = 32;
 
   // others
-}
-
-message DataConfig {
-  enum DataFormat {
-    BIN = 1;
-    PROTO = 2;
-    TEXT = 3;
-  }
-  required DataFormat format = 1;
-  repeated string files = 2;
-  optional PbRange range = 3;  // only valid for the binary format
-}
-
-message ParameterInitConfig {
-  enum Type {
-    ZERO = 1;
-    RANDOM = 2;
-    FILE = 3;
-  }
-  optional Type type = 1 [default = ZERO];
-  optional double random_std = 2 [default = 1];
-}
-
-message LearningRateConfig {
-  enum Type {
-    CONSTANT = 1;
-  }
-  required Type type = 1;
-  optional double eta = 2 [default = 1];
 }

@@ -26,17 +26,14 @@ void SGDSolver::run() {
     for (auto& l : train_->layers()) {
       objv += l->forward();
     }
-    for (auto& l : train_->layers()) {
-      l->backward();
-    }
 
-    for (auto& l : train_->layers()) {
+    for (int i = train_->layers().size(); i > 0 ; --i) {
+      auto& l = train_->layers()[i-1];
+      l->backward();
       updater(iter, l->model());
     }
-
     LL << iter << " objv: " << objv;
   }
-
   LL << "finished";
 }
 

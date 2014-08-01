@@ -277,5 +277,21 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   // LL << auc.evaluate();
 }
 
+void BatchSolver::saveAsDenseData(const Message& msg) {
+  auto call = RiskMinimization::getCall(msg);
+  int n = call.reduce_range_size();
+  if (n == 0) return;
+  if (n > 1 && X_->rowMajor()) {
+    X_ = X_->toColMajor();
+  }
+  DenseMatrix<double> Xw(X_->rows(), n, false);
+  for (int i = 0; i < n; ++i) {
+    auto lr = w_->localRange(Range<Key>(call.reduce_range(i)));
+
+    Xw.colBlock(SizeR(i, i+1))->eigenArray() =
+        *(X_->colBlock(lr)) * w_->segment(lr).eigenVector();
+  }
+}
+
 } // namespace LM
 } // namespace PS

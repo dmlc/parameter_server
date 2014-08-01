@@ -12,6 +12,9 @@ template<typename V> using ParameterPtrList = std::vector<ParameterPtr<V>>;
 // data blob
 template<typename V>
 struct Parameter {
+  Parameter(const string& n)
+      : name(n) { }
+  string name;
   MatrixPtr<V> value;
   MatrixPtr<V> gradient;
   MatrixPtr<V> hession;

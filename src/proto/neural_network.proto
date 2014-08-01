@@ -1,4 +1,5 @@
 package PS.NN;
+import "proto/config.proto";
 
 message LayerConfig {
   enum Type {
@@ -8,11 +9,12 @@ message LayerConfig {
     LOGISTIC_LOSS = 3;
   }
   required Type type = 1;
-
+  // layer name
   required string name = 2;
+  // in edge name, could be the same as *name*
   repeated string in = 3;
-  // repeated string out = 4;
-
+  // out edge name
+  repeated string out = 4;
   // the number of neuroons
   optional uint32 size = 7;
 
@@ -23,6 +25,8 @@ message LayerConfig {
 
   // optional int32 in_size = 6;
   // optional int32 out_size = 7;
+
+  optional DataConfig data = 11;
 
 }
 

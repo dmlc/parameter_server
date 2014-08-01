@@ -110,12 +110,13 @@ enum RiskMinCall_Command {
   RiskMinCall_Command_UPDATE_MODEL = 2,
   RiskMinCall_Command_EVALUATE_PROGRESS = 3,
   RiskMinCall_Command_SAVE_MODEL = 4,
+  RiskMinCall_Command_SAVE_AS_DENSE = 7,
   RiskMinCall_Command_RECOVER = 5,
   RiskMinCall_Command_COMPUTE_VALIDATION_AUC = 6
 };
 bool RiskMinCall_Command_IsValid(int value);
 const RiskMinCall_Command RiskMinCall_Command_Command_MIN = RiskMinCall_Command_PREPARE_DATA;
-const RiskMinCall_Command RiskMinCall_Command_Command_MAX = RiskMinCall_Command_COMPUTE_VALIDATION_AUC;
+const RiskMinCall_Command RiskMinCall_Command_Command_MAX = RiskMinCall_Command_SAVE_AS_DENSE;
 const int RiskMinCall_Command_Command_ARRAYSIZE = RiskMinCall_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RiskMinCall_Command_descriptor();
@@ -929,6 +930,7 @@ class RiskMinCall : public ::google::protobuf::Message {
   static const Command UPDATE_MODEL = RiskMinCall_Command_UPDATE_MODEL;
   static const Command EVALUATE_PROGRESS = RiskMinCall_Command_EVALUATE_PROGRESS;
   static const Command SAVE_MODEL = RiskMinCall_Command_SAVE_MODEL;
+  static const Command SAVE_AS_DENSE = RiskMinCall_Command_SAVE_AS_DENSE;
   static const Command RECOVER = RiskMinCall_Command_RECOVER;
   static const Command COMPUTE_VALIDATION_AUC = RiskMinCall_Command_COMPUTE_VALIDATION_AUC;
   static inline bool Command_IsValid(int value) {
@@ -991,6 +993,18 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline bool kkt_filter_reset() const;
   inline void set_kkt_filter_reset(bool value);
 
+  // repeated .PS.PbRange reduce_range = 6;
+  inline int reduce_range_size() const;
+  inline void clear_reduce_range();
+  static const int kReduceRangeFieldNumber = 6;
+  inline const ::PS::PbRange& reduce_range(int index) const;
+  inline ::PS::PbRange* mutable_reduce_range(int index);
+  inline ::PS::PbRange* add_reduce_range();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::PbRange >&
+      reduce_range() const;
+  inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
+      mutable_reduce_range();
+
   // @@protoc_insertion_point(class_scope:PS.RiskMinCall)
  private:
   inline void set_has_cmd();
@@ -1010,10 +1024,11 @@ class RiskMinCall : public ::google::protobuf::Message {
   int cmd_;
   ::google::protobuf::int32 feature_group_id_;
   double kkt_filter_threshold_;
+  ::google::protobuf::RepeatedPtrField< ::PS::PbRange > reduce_range_;
   bool kkt_filter_reset_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -1788,6 +1803,31 @@ inline bool RiskMinCall::kkt_filter_reset() const {
 inline void RiskMinCall::set_kkt_filter_reset(bool value) {
   set_has_kkt_filter_reset();
   kkt_filter_reset_ = value;
+}
+
+// repeated .PS.PbRange reduce_range = 6;
+inline int RiskMinCall::reduce_range_size() const {
+  return reduce_range_.size();
+}
+inline void RiskMinCall::clear_reduce_range() {
+  reduce_range_.Clear();
+}
+inline const ::PS::PbRange& RiskMinCall::reduce_range(int index) const {
+  return reduce_range_.Get(index);
+}
+inline ::PS::PbRange* RiskMinCall::mutable_reduce_range(int index) {
+  return reduce_range_.Mutable(index);
+}
+inline ::PS::PbRange* RiskMinCall::add_reduce_range() {
+  return reduce_range_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::PS::PbRange >&
+RiskMinCall::reduce_range() const {
+  return reduce_range_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
+RiskMinCall::mutable_reduce_range() {
+  return &reduce_range_;
 }
 
 // -------------------------------------------------------------------

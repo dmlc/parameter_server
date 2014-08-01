@@ -25,6 +25,7 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
+#include "proto/config.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -218,6 +219,22 @@ class LayerConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& in() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_in();
 
+  // repeated string out = 4;
+  inline int out_size() const;
+  inline void clear_out();
+  static const int kOutFieldNumber = 4;
+  inline const ::std::string& out(int index) const;
+  inline ::std::string* mutable_out(int index);
+  inline void set_out(int index, const ::std::string& value);
+  inline void set_out(int index, const char* value);
+  inline void set_out(int index, const char* value, size_t size);
+  inline ::std::string* add_out();
+  inline void add_out(const ::std::string& value);
+  inline void add_out(const char* value);
+  inline void add_out(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& out() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_out();
+
   // optional uint32 size = 7;
   inline bool has_size() const;
   inline void clear_size();
@@ -241,6 +258,15 @@ class LayerConfig : public ::google::protobuf::Message {
   inline double lr_scale() const;
   inline void set_lr_scale(double value);
 
+  // optional .PS.DataConfig data = 11;
+  inline bool has_data() const;
+  inline void clear_data();
+  static const int kDataFieldNumber = 11;
+  inline const ::PS::DataConfig& data() const;
+  inline ::PS::DataConfig* mutable_data();
+  inline ::PS::DataConfig* release_data();
+  inline void set_allocated_data(::PS::DataConfig* data);
+
   // @@protoc_insertion_point(class_scope:PS.NN.LayerConfig)
  private:
   inline void set_has_type();
@@ -253,18 +279,22 @@ class LayerConfig : public ::google::protobuf::Message {
   inline void clear_has_activation();
   inline void set_has_lr_scale();
   inline void clear_has_lr_scale();
+  inline void set_has_data();
+  inline void clear_has_data();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* name_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> in_;
   int type_;
   ::google::protobuf::uint32 size_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> in_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> out_;
   ::PS::NN::ActivationConfig* activation_;
   double lr_scale_;
+  ::PS::DataConfig* data_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -761,15 +791,59 @@ LayerConfig::mutable_in() {
   return &in_;
 }
 
+// repeated string out = 4;
+inline int LayerConfig::out_size() const {
+  return out_.size();
+}
+inline void LayerConfig::clear_out() {
+  out_.Clear();
+}
+inline const ::std::string& LayerConfig::out(int index) const {
+  return out_.Get(index);
+}
+inline ::std::string* LayerConfig::mutable_out(int index) {
+  return out_.Mutable(index);
+}
+inline void LayerConfig::set_out(int index, const ::std::string& value) {
+  out_.Mutable(index)->assign(value);
+}
+inline void LayerConfig::set_out(int index, const char* value) {
+  out_.Mutable(index)->assign(value);
+}
+inline void LayerConfig::set_out(int index, const char* value, size_t size) {
+  out_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* LayerConfig::add_out() {
+  return out_.Add();
+}
+inline void LayerConfig::add_out(const ::std::string& value) {
+  out_.Add()->assign(value);
+}
+inline void LayerConfig::add_out(const char* value) {
+  out_.Add()->assign(value);
+}
+inline void LayerConfig::add_out(const char* value, size_t size) {
+  out_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+LayerConfig::out() const {
+  return out_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+LayerConfig::mutable_out() {
+  return &out_;
+}
+
 // optional uint32 size = 7;
 inline bool LayerConfig::has_size() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void LayerConfig::set_has_size() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void LayerConfig::clear_has_size() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void LayerConfig::clear_size() {
   size_ = 0u;
@@ -785,13 +859,13 @@ inline void LayerConfig::set_size(::google::protobuf::uint32 value) {
 
 // optional .PS.NN.ActivationConfig activation = 5;
 inline bool LayerConfig::has_activation() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void LayerConfig::set_has_activation() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void LayerConfig::clear_has_activation() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void LayerConfig::clear_activation() {
   if (activation_ != NULL) activation_->::PS::NN::ActivationConfig::Clear();
@@ -823,13 +897,13 @@ inline void LayerConfig::set_allocated_activation(::PS::NN::ActivationConfig* ac
 
 // optional double lr_scale = 6 [default = 1];
 inline bool LayerConfig::has_lr_scale() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void LayerConfig::set_has_lr_scale() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void LayerConfig::clear_has_lr_scale() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void LayerConfig::clear_lr_scale() {
   lr_scale_ = 1;
@@ -841,6 +915,44 @@ inline double LayerConfig::lr_scale() const {
 inline void LayerConfig::set_lr_scale(double value) {
   set_has_lr_scale();
   lr_scale_ = value;
+}
+
+// optional .PS.DataConfig data = 11;
+inline bool LayerConfig::has_data() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void LayerConfig::set_has_data() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void LayerConfig::clear_has_data() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void LayerConfig::clear_data() {
+  if (data_ != NULL) data_->::PS::DataConfig::Clear();
+  clear_has_data();
+}
+inline const ::PS::DataConfig& LayerConfig::data() const {
+  return data_ != NULL ? *data_ : *default_instance_->data_;
+}
+inline ::PS::DataConfig* LayerConfig::mutable_data() {
+  set_has_data();
+  if (data_ == NULL) data_ = new ::PS::DataConfig;
+  return data_;
+}
+inline ::PS::DataConfig* LayerConfig::release_data() {
+  clear_has_data();
+  ::PS::DataConfig* temp = data_;
+  data_ = NULL;
+  return temp;
+}
+inline void LayerConfig::set_allocated_data(::PS::DataConfig* data) {
+  delete data_;
+  data_ = data;
+  if (data) {
+    set_has_data();
+  } else {
+    clear_has_data();
+  }
 }
 
 // -------------------------------------------------------------------

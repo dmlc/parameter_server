@@ -38,6 +38,9 @@ void RiskMinimization::process(Message* msg) {
       msg->replied = true;
       break;
     }
+    case Call::SAVE_AS_DENSE:
+      saveAsDenseData(*msg);
+      break;
     default:
       CHECK(false) << "unknown cmd: " << getCall(*msg).cmd();
   }

@@ -19,7 +19,10 @@ template<typename V> class Net {
   LayerPtrList<V> layers_;
   NetConfig cf_;
 
-  std::map<string, int> layer_ids_;
+  // std::map<string, LayerPtr<V>> in_edges_;
+  std::map<string, LayerPtr<V>> out_edges_;
+
+  // std::map<string, int> layer_ids_;
  private:
   DISALLOW_COPY_AND_ASSIGN(Net);
 };
@@ -27,24 +30,26 @@ template<typename V> class Net {
 template<typename V>
 void Net<V>::init() {
   CHECK_GT(cf_.layer_size(), 0);
-  layers_.clear();
   for (int id = 0; id < cf_.layer_size(); ++id) {
     auto f = cf_.layer(id);
     auto l = LayerFactory<V>::create(f);
     for (int i = 0; i < f.in_size(); ++i) {
-      auto in = f.in(i);
-      CHECK_EQ(layer_ids_.count(in), 1)
+      auto edge = f.in(i);
+      CHECK_EQ(out_edges_.count(edge), 1)
           << "layers should be in a bottom-to-up order for the config file";
-      auto in_layer = layers_[layer_ids_[in]];
+      auto in_layer = out_edges_[edge];
       // addOutLayer should be called before addInLayer
-      in_layer->addOutLayer(l);
-      l->addInLayer(in_layer);
+      in_layer->addOutLayer(l, edge);
+      l->addInLayer(in_layer, edge);
     }
     layers_.push_back(l);
-    layer_ids_[f.name()] = id;
+    for (int i = 0; i < f.out_size(); ++i) {
+      auto edge = f.out(i);
+      CHECK_EQ(out_edges_.count(edge), 0);
+      out_edges_[edge] = l;
+    }
   }
-
-  for (auto& l : layers_) l->initModel();
+  for (auto& l : layers_) l->init();
 }
 
 } // namespace NN

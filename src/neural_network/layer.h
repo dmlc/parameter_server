@@ -22,19 +22,19 @@ template<typename V> class Layer {
   size_t size() { return cf_.size(); }
 
   // all in layers and out layers have been added
-  virtual void initModel() = 0;
+  virtual void init() = 0;
   virtual V forward() = 0;
   virtual void backward() = 0;
 
-  void addInLayer(const LayerPtr<V>& in) {
-    CHECK_EQ(name(), in->out_layers_.back()->name());
-    in_args_.push_back(in->out_args_.back());
-    in_layers_.push_back(in);
+  void addInLayer(const LayerPtr<V>& layer, const string& edge) {
+    CHECK_EQ(name(), layer->out_layers_.back()->name());
+    in_args_.push_back(layer->out_args_.back());
+    in_layers_.push_back(layer);
   }
 
-  void addOutLayer(const LayerPtr<V>& out) {
-    out_layers_.push_back(out);
-    ParameterPtr<V> arg(new Parameter<V>());
+  void addOutLayer(const LayerPtr<V>& layer, const string& edge) {
+    out_layers_.push_back(layer);
+    ParameterPtr<V> arg(new Parameter<V>(edge));
     arg->value = MatrixPtr<V>(new DenseMatrix<V>());
     if (!cf_.type() == LayerConfig::DATA) {
       arg->gradient = MatrixPtr<V>(new DenseMatrix<V>());
