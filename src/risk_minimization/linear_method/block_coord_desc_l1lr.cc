@@ -24,23 +24,21 @@ void BlockCoordDescL1LR::runIteration() {
     if (block_cf.random_feature_block_order())
       std::random_shuffle(block_order_.begin(), block_order_.end());
     for (int b : block_order_)  {
-      Task update;
+      Task update = newTask(RiskMinCall::UPDATE_MODEL);
       update.set_wait_time(time - tau);
-      auto cmd = RiskMinimization::setCall(&update);
+      auto cmd = setCall(&update);
       if (b == block_order_[0]) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
       }
       if (reset_kkt_filter) {
         cmd->set_kkt_filter_reset(true);
       }
-      cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       fea_blocks_[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(fea_blocks_[b].first);
       time = pool->submit(update);
     }
 
-    Task eval;
-    RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
+    Task eval = newTask(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
         eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });

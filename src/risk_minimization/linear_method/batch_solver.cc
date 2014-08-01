@@ -46,39 +46,37 @@ void BatchSolver::run() {
   runIteration();
 
   auto active = taskpool(kActiveGroup);
-  Task save_dense_data;
-  auto mut_data = RiskMinimization::setCall(&save_dense_data);
-  mut_data->set_cmd(RiskMinCall::SAVE_AS_DENSE);
-  mut_data->set_name(name()+"_train");
-  for (const auto& info : global_training_info_) {
-    Range<Key>(info.col()).to(mut_data->add_reduce_range());
-  }
-  active->submitAndWait(save_dense_data);
+
+  // Task save_dense_data = newTask(RiskMinCall::SAVE_AS_DENSE);
+  // auto mut_data = setCall(&save_dense_data);
+  // mut_data->set_name(name()+"_train");
+  // for (const auto& info : global_training_info_) {
+  //   Range<Key>(info.col()).to(mut_data->add_reduce_range());
+  // }
+  // active->submitAndWait(save_dense_data);
 
 
   if (app_cf_.has_validation_data()) {
     fprintf(stderr, "evaluate with %lu validation examples\n",
             global_validation_info_[0].row().end());
-    Task test;
+    Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
-    RiskMinimization::setCall(&test)->set_cmd(RiskMinCall::COMPUTE_VALIDATION_AUC);
     active->submitAndWait(test, [this, &validation_auc](){
-        RiskMinimization::mergeAUC(&validation_auc); });
+        mergeAUC(&validation_auc); });
     fprintf(stderr, "evaluation accuracy: %f,\tauc: %f\n",
             validation_auc.accuracy(0), validation_auc.evaluate());
 
-    Task save_dense_data;
-    auto mut_data = RiskMinimization::setCall(&save_dense_data);
-    mut_data->set_cmd(RiskMinCall::SAVE_AS_DENSE);
-    mut_data->set_name(name()+"_test");
-    for (const auto& info : global_training_info_) {
-      Range<Key>(info.col()).to(mut_data->add_reduce_range());
-    }
-    active->submitAndWait(save_dense_data);
+    // auto active = taskpool(kActiveGroup);
+    // Task save_dense_data = newTask(RiskMinCall::SAVE_AS_DENSE);
+    // auto mut_data = setCall(&save_dense_data);
+    // mut_data->set_name(name()+"_test");
+    // for (const auto& info : global_training_info_) {
+    //   Range<Key>(info.col()).to(mut_data->add_reduce_range());
+    // }
+    // active->submitAndWait(save_dense_data);
   }
 
-  Task save_model;
-  RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
+  Task save_model = newTask(RiskMinCall::SAVE_MODEL);
   active->submitAndWait(save_model);
 }
 
@@ -92,17 +90,14 @@ void BatchSolver::runIteration() {
       std::random_shuffle(block_order_.begin(), block_order_.end());
 
     for (int b : block_order_)  {
-      Task update;
+      Task update = newTask(RiskMinCall::UPDATE_MODEL);
       update.set_wait_time(time - tau);
-      auto cmd = RiskMinimization::setCall(&update);
-      cmd->set_cmd(RiskMinCall::UPDATE_MODEL);
       // set the feature key range will be updated in this block
-      fea_blocks_[b].second.to(cmd->mutable_key());
+      fea_blocks_[b].second.to(setCall(&update)->mutable_key());
       time = pool->submit(update);
     }
 
-    Task eval;
-    RiskMinimization::setCall(&eval)->set_cmd(RiskMinCall::EVALUATE_PROGRESS);
+    Task eval = newTask(RiskMinCall::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
         eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
@@ -307,13 +302,12 @@ void BatchSolver::saveAsDenseData(const Message& msg) {
   auto call = RiskMinimization::getCall(msg);
   int n = call.reduce_range_size();
   if (n == 0) return;
-  if (n > 1 && X_->rowMajor()) {
+  if (X_->rowMajor()) {
     X_ = X_->toColMajor();
   }
   DenseMatrix<double> Xw(X_->rows(), n, false);
   for (int i = 0; i < n; ++i) {
     auto lr = w_->localRange(Range<Key>(call.reduce_range(i)));
-
     Xw.colBlock(SizeR(i, i+1))->eigenArray() =
         *(X_->colBlock(lr)) * w_->segment(lr).eigenVector();
   }

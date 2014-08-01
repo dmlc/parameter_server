@@ -22,18 +22,21 @@ class RiskMinimization : public App {
   void showObjective(int iter);
   void showNNZ(int iter);
 
- protected:
-  RiskMinCall getCall(const Message& msg) {
+  static RiskMinCall getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
     CHECK(msg.task.has_risk());
     return msg.task.risk();
   }
 
-  RiskMinCall* setCall(Task *task) {
+  static RiskMinCall* setCall(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
     return task->mutable_risk();
   }
 
+  static Task newTask(RiskMinCall::Command cmd) {
+    Task task; setCall(&task)->set_cmd(cmd);
+    return task;
+  }
   // progress of all iterations, only valid for the scheduler
   std::map<int, RiskMinProgress> global_progress_;
   double init_sys_time_ = 0;

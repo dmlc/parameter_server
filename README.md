@@ -28,7 +28,6 @@ dependent libraries and the parameter server:
 git clone https://github.com/mli/parameter_server
 cd parameter_server
 git clone https://github.com/mli/third_party
-git clone https://github.com/mli/data
 cd third_party && ./install.sh
 cd .. && make -j8
 ```
@@ -54,7 +53,7 @@ export GOOGLE_HASH=0 && make -j8
 
 The parameter system can read data in either raw binary format or protobuf
 format. There is a `text2bin` program converting data from a range of text
-formats into binary ones:
+formats into binary ones. See `data/rcv1_bianry.sh` for an example.
 
 ### parameter server format
 

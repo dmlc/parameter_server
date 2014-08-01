@@ -281,7 +281,8 @@ void KVVector<K,V>::getValue(Message* msg) {
   CHECK_EQ(key_.size(), val_.size());
   SArray<K> recv_key(msg->key);
   size_t n = 0;
-  auto aligned = match(recv_key, key_, val_.data(), key_.range(), &n);
+  Range<Key> range = recv_key.range().setUnion(key_.range());
+  auto aligned = match(recv_key, key_, val_.data(), range, &n);
   // LL << "val: " << dbstr(val_.data(), val_.size());
   CHECK_EQ(aligned.second.size(), recv_key.size())
       << recv_key << "\n" << key_;
