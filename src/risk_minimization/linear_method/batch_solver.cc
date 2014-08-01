@@ -45,20 +45,41 @@ void BatchSolver::run() {
 
   runIteration();
 
+  auto active = taskpool(kActiveGroup);
+  Task save_dense_data;
+  auto mut_data = RiskMinimization::setCall(&save_dense_data);
+  mut_data->set_cmd(RiskMinCall::SAVE_AS_DENSE);
+  mut_data->set_name(name()+"_train");
+  for (const auto& info : global_training_info_) {
+    Range<Key>(info.col()).to(mut_data->add_reduce_range());
+  }
+  active->submitAndWait(save_dense_data);
+
+
   if (app_cf_.has_validation_data()) {
     fprintf(stderr, "evaluate with %lu validation examples\n",
             global_validation_info_[0].row().end());
     Task test;
     AUC validation_auc;
     RiskMinimization::setCall(&test)->set_cmd(RiskMinCall::COMPUTE_VALIDATION_AUC);
-    taskpool(kActiveGroup)->submitAndWait(test, [this, &validation_auc](){
+    active->submitAndWait(test, [this, &validation_auc](){
         RiskMinimization::mergeAUC(&validation_auc); });
-    fprintf(stderr, "evaluation auc: %f\n", validation_auc.evaluate());
+    fprintf(stderr, "evaluation accuracy: %f,\tauc: %f\n",
+            validation_auc.accuracy(0), validation_auc.evaluate());
+
+    Task save_dense_data;
+    auto mut_data = RiskMinimization::setCall(&save_dense_data);
+    mut_data->set_cmd(RiskMinCall::SAVE_AS_DENSE);
+    mut_data->set_name(name()+"_test");
+    for (const auto& info : global_training_info_) {
+      Range<Key>(info.col()).to(mut_data->add_reduce_range());
+    }
+    active->submitAndWait(save_dense_data);
   }
 
   Task save_model;
   RiskMinimization::setCall(&save_model)->set_cmd(RiskMinCall::SAVE_MODEL);
-  taskpool(kActiveGroup)->submitAndWait(save_model);
+  active->submitAndWait(save_model);
 }
 
 void BatchSolver::runIteration() {
@@ -214,8 +235,6 @@ RiskMinProgress BatchSolver::evaluateProgress() {
 }
 
 void BatchSolver::saveModel(const Message& msg) {
-  // didn't use msg here. in future, one may pass the model_file by msg
-
   if (!exec_.isServer()) return;
   if (!app_cf_.has_model_output()) return;
 
@@ -228,6 +247,7 @@ void BatchSolver::saveModel(const Message& msg) {
   CHECK_EQ(w_->key().size(), w_->value().size());
 
   if (output.format() == DataConfig::TEXT) {
+    // TODO use the model_file in msg
     std::string file = w_->name() + "_" + exec_.myNode().id();
     if (output.files_size() > 0) file = output.files(0) + file;
     fprintf(stderr, "%s writes model to %s\n",
@@ -258,19 +278,19 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   auto validation_data = readMatrices<double>(app_cf_.validation_data());
   CHECK_EQ(validation_data.size(), 2);
 
-  auto y = validation_data[0]->value();
-  auto X = validation_data[1]->localize(&(w_->key()));
-  CHECK_EQ(y.size(), X->rows());
+  y_ = validation_data[0];
+  X_ = validation_data[1]->localize(&(w_->key()));
+  CHECK_EQ(y_->rows(), X_->rows());
 
   w_->fetchValueFromServers();
 
   // w.writeToFile("w");
 
   AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
-  SArray<double> Xw(X->rows());
+  SArray<double> Xw(X_->rows());
   for (auto& v : w_->value()) if (v != v) v = 0;
-  Xw.eigenVector() = *X * w_->value().eigenVector();
-  auc.compute(y, Xw, data);
+  Xw.eigenVector() = *X_ * w_->value().eigenVector();
+  auc.compute(y_->value(), Xw, data);
 
   // Xw.writeToFile("Xw_"+myNodeID());
   // y.writeToFile("y_"+myNodeID());
@@ -278,6 +298,7 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
 }
 
 void BatchSolver::saveAsDenseData(const Message& msg) {
+  if (!exec_.isWorker()) return;
   auto call = RiskMinimization::getCall(msg);
   int n = call.reduce_range_size();
   if (n == 0) return;
@@ -291,6 +312,9 @@ void BatchSolver::saveAsDenseData(const Message& msg) {
     Xw.colBlock(SizeR(i, i+1))->eigenArray() =
         *(X_->colBlock(lr)) * w_->segment(lr).eigenVector();
   }
+
+  Xw.writeToBinFile(call.name()+"_Xw");
+  y_->writeToBinFile(call.name()+"_y");
 }
 
 } // namespace LM

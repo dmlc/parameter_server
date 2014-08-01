@@ -125,7 +125,8 @@ void Text2Bin::processAdFea(char *line) {
     uint64 num;
     if (!strtou64(tk, &num)) return;
     if (i == 2) {
-      instance.set_label(num);
+      int y = num == 0 ? -1 : 1;
+      instance.set_label(y);
     } else if (i % 2 == 1) {
       fea_id = num;
     } else {
@@ -300,7 +301,7 @@ void Text2Bin::processLibSvm(char *buff) {
       instance.set_label(label);
       if (floor(label) != label) {
         info_.set_label_type(InstanceInfo::CONTINUOUS);
-      } else if (label != 1 && label != -1) { 
+      } else if (label != 1 && label != -1) {
         info_.set_label_type(InstanceInfo::MULTICLASS);
       }
     } else {
@@ -323,7 +324,7 @@ void Text2Bin::processLibSvm(char *buff) {
       instance.add_value(val);
     }
     pch = strtok (NULL, " \t\r\n");
-    cnt ++; 
+    cnt ++;
   }
 
   CHECK(record_writer_->WriteProtocolMessage(instance));

@@ -1,6 +1,6 @@
 package PS;
 import "proto/range.proto";
-import "proto/auc.proto";
+import "proto/evaluation.proto";
 
 message BlockSolverConfig {
   // the number of example in a block. It is the minibatch size for
@@ -101,6 +101,7 @@ message RiskMinCall {
   optional bool kkt_filter_reset = 5;
 
   repeated PbRange reduce_range = 6;
+  optional string name = 7;
 }
 
 message AggGradLearnerArg {

@@ -1,6 +1,6 @@
 #pragma once
 #include "base/shared_array.h"
-#include "proto/auc.pb.h"
+#include "proto/evaluation.pb.h"
 
 namespace PS {
 
@@ -20,6 +20,21 @@ class AUC {
       fp_count_[data.fp_key(i)] += data.fp_count(i);
 
     // LL << tp_count_.size() << " " << fp_count_.size();
+  }
+
+  double accuracy(double threshold = 0) {
+    double total = 0, correct = 0;
+    double x = threshold * goodness_;
+    for (auto& it : tp_count_) {
+      if (it.first >= x) correct += it.second;
+      total += it.second;
+    }
+
+    for (auto& it : fp_count_) {
+      if (it.first < x) correct += it.second;
+      total += it.second;
+    }
+    return (correct / total);
   }
 
   // evaluate the auc after merging all workers' results

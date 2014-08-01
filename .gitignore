@@ -5,3 +5,4 @@ third_party
 *.d
 *.o
 *.pb.cc
+/src/risk_minimization/Makefile

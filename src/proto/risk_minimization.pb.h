@@ -26,7 +26,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
-#include "proto/auc.pb.h"
+#include "proto/evaluation.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -1005,6 +1005,18 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
       mutable_reduce_range();
 
+  // optional string name = 7;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 7;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const char* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
   // @@protoc_insertion_point(class_scope:PS.RiskMinCall)
  private:
   inline void set_has_cmd();
@@ -1017,6 +1029,8 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline void clear_has_kkt_filter_threshold();
   inline void set_has_kkt_filter_reset();
   inline void clear_has_kkt_filter_reset();
+  inline void set_has_name();
+  inline void clear_has_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1025,10 +1039,11 @@ class RiskMinCall : public ::google::protobuf::Message {
   ::google::protobuf::int32 feature_group_id_;
   double kkt_filter_threshold_;
   ::google::protobuf::RepeatedPtrField< ::PS::PbRange > reduce_range_;
+  ::std::string* name_;
   bool kkt_filter_reset_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -1828,6 +1843,76 @@ RiskMinCall::reduce_range() const {
 inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
 RiskMinCall::mutable_reduce_range() {
   return &reduce_range_;
+}
+
+// optional string name = 7;
+inline bool RiskMinCall::has_name() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void RiskMinCall::set_has_name() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void RiskMinCall::clear_has_name() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void RiskMinCall::clear_name() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& RiskMinCall::name() const {
+  return *name_;
+}
+inline void RiskMinCall::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void RiskMinCall::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void RiskMinCall::set_name(const char* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* RiskMinCall::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  return name_;
+}
+inline ::std::string* RiskMinCall::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void RiskMinCall::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------
