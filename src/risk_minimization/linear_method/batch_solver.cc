@@ -292,8 +292,13 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   Xw.eigenVector() = *X_ * w_->value().eigenVector();
   auc.compute(y_->value(), Xw, data);
 
+  // double correct = 0;
+  // for (int i = 0; i < Xw.size(); ++i)
+  //   if (y_->value()[i] * Xw[i] >= 0) correct += 1;
+  // LL << correct / Xw.size();
+
   // Xw.writeToFile("Xw_"+myNodeID());
-  // y.writeToFile("y_"+myNodeID());
+  // y_->value().writeToFile("y_"+myNodeID());
   // LL << auc.evaluate();
 }
 
