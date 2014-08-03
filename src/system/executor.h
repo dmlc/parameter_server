@@ -17,7 +17,8 @@ const static NodeID kOwnerGroup = Van::id("all_owners");
 // all live nodes, including scheduler, workers, servers, unused nodes...
 const static NodeID kLiveGroup = Van::id("all_lives");
 
-//
+// Maintain all remote nodes for a customer. It has its own thread to process a
+// received task.
 class Executor {
  public:
   Executor(Customer& obj) : obj_(obj) { }
@@ -33,8 +34,7 @@ class Executor {
   // or the thread call wk->submit
   void accept(const Message& msg);
 
-
-  // will be called by customer ctor,
+  // will be called by the customer's ctor,
   void run();
   void stop() { done_ = true; notify(); }
 

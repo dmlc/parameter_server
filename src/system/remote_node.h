@@ -56,12 +56,10 @@ class RNode {
       Message msg, Callback received = Callback(), Callback finished = Callback()) {
     return submit(msg, received, finished, true);
   }
-
   int submitAndWait(
       Message msg, Callback received = Callback(), Callback finished = Callback()) {
     return submit(msg, received, finished, false);
   }
-
   int submit(
       Task task, Callback received = Callback(), Callback finished = Callback()) {
     return submit(Message(task), received, finished, true);
@@ -80,6 +78,7 @@ class RNode {
   // wait a submitted task (send to the remote node from the local node) with
   // timestamp _time_ until it finished (received all replied message)
   void waitOutgoingTask(int time);
+
   // wait a received task (send from the remote node to the local node) until
   // finished (this task has been marked as finished in TaskTracker)
   void waitIncomingTask(int time);

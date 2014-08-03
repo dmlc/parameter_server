@@ -4,15 +4,12 @@
 
 namespace PS {
 
+// the base class of shared parameters
 template <typename K, typename V>
 class SharedParameter : public Customer {
  public:
 
-  // snappy has good compression rate on 0xffff..ff, it is nan for double
-  // const double kFilteredDouble_ = *((double*)&kuint64max);
-  // const float kFilteredFloat_ = *(std::reinterpret_cast<float>(&kuint32max));
-
-  // process a received message, will called by executor's thread
+  // process a received message, will called by the thread of executor
   void process(Message* msg);
 
   std::vector<Message> decompose(const Message& msg, const Keys& partition);
@@ -28,8 +25,10 @@ class SharedParameter : public Customer {
       Range<K> range,
       // must has key_ and (may empty) value_, all other entries are optional
       Message msg,
-      // optional argments:
+      // optional argments: the timestamp of this task, if -1 then the sytem
+      // will automaitically assign a timestamp
       int time = -1,
+      // the timestamp of the task this task must wait
       int wait_time = -1,
       // Will be called if anythings goes back from the dest node but before
       // this task has been marked as finished
@@ -46,7 +45,6 @@ class SharedParameter : public Customer {
 
     return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
   }
-
 
  protected:
 
@@ -93,11 +91,11 @@ class SharedParameter : public Customer {
     }
   }
 
-  // query the key range of a node
   Range<K> myKeyRange() {
     return keyRange(Customer::myNodeID());
   }
 
+  // query the key range of a node
   Range<K> keyRange(const NodeID& id) {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
@@ -107,7 +105,6 @@ class SharedParameter : public Customer {
     CHECK(msg.task.has_shared_para());
     return msg.task.shared_para();
   }
-
   CallSharedPara* setCall(Message *msg) {
     return setCall(&(msg->task));
   }
