@@ -84,10 +84,13 @@ class SArray {
   V* end() { return data() + size(); }
   const V* end() const { return data() + size(); }
 
-  V back() const { return data_[size_-1]; }
-  V front() const { return data_[0]; }
+  V back() const { CHECK(!empty()); return data_[size_-1]; }
+  V front() const { CHECK(!empty()); return data_[0]; }
 
-  Range<V> range() const { return Range<V>(front(), back()+1); }
+  Range<V> range() const {
+    return (empty() ? Range<V>(0,0) : Range<V>(front(), back()+1));
+  }
+
   const shared_ptr<void>& pointer() const { return ptr_; }
 
   V& operator[] (int i) { return data_[i]; }

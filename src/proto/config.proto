@@ -8,8 +8,9 @@ message DataConfig {
     TEXT = 3;
   }
   required DataFormat format = 1;
-  repeated string files = 2;
-  optional PbRange range = 3;  // only valid for the binary format
+  repeated string file = 2;
+  // only valid for the binary format
+  optional PbRange range = 3;
 }
 
 message ParameterInitConfig {
@@ -28,4 +29,14 @@ message LearningRateConfig {
   }
   required Type type = 1;
   optional double eta = 2 [default = 1];
+}
+
+
+message PenaltyConfig {
+  enum Type {
+    L1 = 1;  // lambda(0) * ||w||_1 + lambda(1) * ||w||_F^2
+    L2 = 2;  // lambda(0) * ||w||_F^2
+  }
+  required Type type = 1;
+  repeated double lambda = 2;
 }

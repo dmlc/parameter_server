@@ -59,14 +59,14 @@ message LearnerConfig {
   required Type type = 1;
 }
 
-message PenaltyConfig {
-  enum Type {
-    L1 = 1;
-    L2 = 2;
-  }
-  required Type type = 1;
-  required float coefficient = 2 [default = 0];
-}
+// message PenaltyConfig {
+//   enum Type {
+//     L1 = 1;
+//     L2 = 2;
+//   }
+//   required Type type = 1;
+//   required float coefficient = 2 [default = 0];
+// }
 
 
 message RiskMinProgress {

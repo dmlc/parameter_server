@@ -268,7 +268,7 @@ void BlockCoordDescL1LR::updateWeight(
   CHECK_EQ(U.size(), local_feature_range.size());
 
   double eta = app_cf_.learning_rate().eta();
-  double lambda = app_cf_.penalty().coefficient();
+  double lambda = app_cf_.penalty().lambda(0);
 
   for (size_t i = 0; i < local_feature_range.size(); ++i) {
     size_t k = i + local_feature_range.begin();
@@ -343,7 +343,7 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
       ++ nnz_w;
       objv += fabs(w);
     }
-    prog.set_objv(objv * app_cf_.penalty().coefficient());
+    prog.set_objv(objv * app_cf_.penalty().lambda(0));
     prog.set_nnz_w(nnz_w);
     prog.set_violation(violation_);
     prog.set_nnz_active_set(active_set_.nnz());

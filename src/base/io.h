@@ -46,22 +46,22 @@ string removeExtension(const string& file) {
 }
 
 DataConfig searchFiles(const DataConfig& config) {
-  int n = config.files_size();
+  int n = config.file_size();
   CHECK_GE(n, 1) << "empty files: " << config.DebugString();
 
   string dir;
   std::vector<std::regex> patterns;
   for (int i = 0; i < n; ++i) {
     if (i == 0)
-      dir = path(config.files(i));
+      dir = path(config.file(i));
     else
-      CHECK_EQ(dir, path(config.files(i)))
+      CHECK_EQ(dir, path(config.file(i)))
           << " all files should in the same directory";
     try {
-      std::regex re(filename(config.files(i)));
+      std::regex re(filename(config.file(i)));
       patterns.push_back(re);
     } catch (const std::regex_error& e) {
-      CHECK(false) << filename(config.files(i))
+      CHECK(false) << filename(config.file(i))
                    << " is not valid (supported) regex, regex_error caught: "
                    << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
@@ -76,7 +76,7 @@ DataConfig searchFiles(const DataConfig& config) {
 
   // match regex
   DataConfig ret = config;
-  ret.clear_files();
+  ret.clear_file();
 
   for (auto& f : files) {
     bool matched = false;
@@ -87,7 +87,7 @@ DataConfig searchFiles(const DataConfig& config) {
       }
     }
     if (matched) {
-      ret.add_files(dir+"/"+f);
+      ret.add_file(dir+"/"+f);
     }
   }
   return ret;
@@ -97,12 +97,12 @@ std::vector<DataConfig> assignDataToNodes(
     const DataConfig& config, int num_nodes, InstanceInfo* info) {
   CHECK_EQ(config.format(), DataConfig::PROTO) << "TODO, support more formats";
   auto data = searchFiles(config);
-  CHECK_GT(data.files_size(), 0) << "search failed" << config.DebugString();
-  CHECK_GE(data.files_size(), num_nodes) << "too many nodes";
+  CHECK_GT(data.file_size(), 0) << "search failed" << config.DebugString();
+  CHECK_GE(data.file_size(), num_nodes) << "too many nodes";
 
-  for (int i = 0; i < data.files_size(); ++i) {
+  for (int i = 0; i < data.file_size(); ++i) {
     InstanceInfo f;
-    ReadFileToProtoOrDie(data.files(i)+".info", &f);
+    ReadFileToProtoOrDie(data.file(i)+".info", &f);
     *info = i == 0 ? f : mergeInstanceInfo(*info, f);
   }
 
@@ -110,9 +110,9 @@ std::vector<DataConfig> assignDataToNodes(
   std::vector<DataConfig> nodes_config;
   for (int i = 0; i < num_nodes; ++i) {
     DataConfig dc; dc.set_format(DataConfig::PROTO);
-    auto file_os = Range<int>(0, data.files_size()).evenDivide(num_nodes, i);
+    auto file_os = Range<int>(0, data.file_size()).evenDivide(num_nodes, i);
     for (int j = file_os.begin(); j < file_os.end(); ++j)
-      dc.add_files(data.files(j));
+      dc.add_file(data.file(j));
     nodes_config.push_back(dc);
   }
   return nodes_config;

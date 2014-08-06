@@ -13,9 +13,9 @@ template<typename T> class Penalty {
   static PenaltyPtr<T> create(const PenaltyConfig& config) {
     switch (config.type()) {
       case PenaltyConfig::L1:
-        return PenaltyPtr<T>(new PNormPenalty<T>(1, config.coefficient()));
+        return PenaltyPtr<T>(new PNormPenalty<T>(1, config.lambda(0)));
       case PenaltyConfig::L2:
-        return PenaltyPtr<T>(new PNormPenalty<T>(2, config.coefficient()));
+        return PenaltyPtr<T>(new PNormPenalty<T>(2, config.lambda(0)));
       default:
         CHECK(false) << "unknown type: " << config.DebugString();
     }

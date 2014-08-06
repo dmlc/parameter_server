@@ -38,6 +38,7 @@ void protobuf_ShutdownFile_proto_2fconfig_2eproto();
 class DataConfig;
 class ParameterInitConfig;
 class LearningRateConfig;
+class PenaltyConfig;
 
 enum DataConfig_DataFormat {
   DataConfig_DataFormat_BIN = 1,
@@ -96,6 +97,25 @@ inline bool LearningRateConfig_Type_Parse(
     const ::std::string& name, LearningRateConfig_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<LearningRateConfig_Type>(
     LearningRateConfig_Type_descriptor(), name, value);
+}
+enum PenaltyConfig_Type {
+  PenaltyConfig_Type_L1 = 1,
+  PenaltyConfig_Type_L2 = 2
+};
+bool PenaltyConfig_Type_IsValid(int value);
+const PenaltyConfig_Type PenaltyConfig_Type_Type_MIN = PenaltyConfig_Type_L1;
+const PenaltyConfig_Type PenaltyConfig_Type_Type_MAX = PenaltyConfig_Type_L2;
+const int PenaltyConfig_Type_Type_ARRAYSIZE = PenaltyConfig_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* PenaltyConfig_Type_descriptor();
+inline const ::std::string& PenaltyConfig_Type_Name(PenaltyConfig_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    PenaltyConfig_Type_descriptor(), value);
+}
+inline bool PenaltyConfig_Type_Parse(
+    const ::std::string& name, PenaltyConfig_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<PenaltyConfig_Type>(
+    PenaltyConfig_Type_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -185,21 +205,21 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig_DataFormat format() const;
   inline void set_format(::PS::DataConfig_DataFormat value);
 
-  // repeated string files = 2;
-  inline int files_size() const;
-  inline void clear_files();
-  static const int kFilesFieldNumber = 2;
-  inline const ::std::string& files(int index) const;
-  inline ::std::string* mutable_files(int index);
-  inline void set_files(int index, const ::std::string& value);
-  inline void set_files(int index, const char* value);
-  inline void set_files(int index, const char* value, size_t size);
-  inline ::std::string* add_files();
-  inline void add_files(const ::std::string& value);
-  inline void add_files(const char* value);
-  inline void add_files(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& files() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_files();
+  // repeated string file = 2;
+  inline int file_size() const;
+  inline void clear_file();
+  static const int kFileFieldNumber = 2;
+  inline const ::std::string& file(int index) const;
+  inline ::std::string* mutable_file(int index);
+  inline void set_file(int index, const ::std::string& value);
+  inline void set_file(int index, const char* value);
+  inline void set_file(int index, const char* value, size_t size);
+  inline ::std::string* add_file();
+  inline void add_file(const ::std::string& value);
+  inline void add_file(const char* value);
+  inline void add_file(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& file() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_file();
 
   // optional .PS.PbRange range = 3;
   inline bool has_range() const;
@@ -219,7 +239,7 @@ class DataConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::std::string> files_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> file_;
   ::PS::PbRange* range_;
   int format_;
 
@@ -465,6 +485,125 @@ class LearningRateConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static LearningRateConfig* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class PenaltyConfig : public ::google::protobuf::Message {
+ public:
+  PenaltyConfig();
+  virtual ~PenaltyConfig();
+
+  PenaltyConfig(const PenaltyConfig& from);
+
+  inline PenaltyConfig& operator=(const PenaltyConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const PenaltyConfig& default_instance();
+
+  void Swap(PenaltyConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  PenaltyConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const PenaltyConfig& from);
+  void MergeFrom(const PenaltyConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef PenaltyConfig_Type Type;
+  static const Type L1 = PenaltyConfig_Type_L1;
+  static const Type L2 = PenaltyConfig_Type_L2;
+  static inline bool Type_IsValid(int value) {
+    return PenaltyConfig_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    PenaltyConfig_Type_Type_MIN;
+  static const Type Type_MAX =
+    PenaltyConfig_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    PenaltyConfig_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return PenaltyConfig_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return PenaltyConfig_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return PenaltyConfig_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.PenaltyConfig.Type type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::PS::PenaltyConfig_Type type() const;
+  inline void set_type(::PS::PenaltyConfig_Type value);
+
+  // repeated double lambda = 2;
+  inline int lambda_size() const;
+  inline void clear_lambda();
+  static const int kLambdaFieldNumber = 2;
+  inline double lambda(int index) const;
+  inline void set_lambda(int index, double value);
+  inline void add_lambda(double value);
+  inline const ::google::protobuf::RepeatedField< double >&
+      lambda() const;
+  inline ::google::protobuf::RepeatedField< double >*
+      mutable_lambda();
+
+  // @@protoc_insertion_point(class_scope:PS.PenaltyConfig)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedField< double > lambda_;
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static PenaltyConfig* default_instance_;
+};
 // ===================================================================
 
 
@@ -495,48 +634,48 @@ inline void DataConfig::set_format(::PS::DataConfig_DataFormat value) {
   format_ = value;
 }
 
-// repeated string files = 2;
-inline int DataConfig::files_size() const {
-  return files_.size();
+// repeated string file = 2;
+inline int DataConfig::file_size() const {
+  return file_.size();
 }
-inline void DataConfig::clear_files() {
-  files_.Clear();
+inline void DataConfig::clear_file() {
+  file_.Clear();
 }
-inline const ::std::string& DataConfig::files(int index) const {
-  return files_.Get(index);
+inline const ::std::string& DataConfig::file(int index) const {
+  return file_.Get(index);
 }
-inline ::std::string* DataConfig::mutable_files(int index) {
-  return files_.Mutable(index);
+inline ::std::string* DataConfig::mutable_file(int index) {
+  return file_.Mutable(index);
 }
-inline void DataConfig::set_files(int index, const ::std::string& value) {
-  files_.Mutable(index)->assign(value);
+inline void DataConfig::set_file(int index, const ::std::string& value) {
+  file_.Mutable(index)->assign(value);
 }
-inline void DataConfig::set_files(int index, const char* value) {
-  files_.Mutable(index)->assign(value);
+inline void DataConfig::set_file(int index, const char* value) {
+  file_.Mutable(index)->assign(value);
 }
-inline void DataConfig::set_files(int index, const char* value, size_t size) {
-  files_.Mutable(index)->assign(
+inline void DataConfig::set_file(int index, const char* value, size_t size) {
+  file_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* DataConfig::add_files() {
-  return files_.Add();
+inline ::std::string* DataConfig::add_file() {
+  return file_.Add();
 }
-inline void DataConfig::add_files(const ::std::string& value) {
-  files_.Add()->assign(value);
+inline void DataConfig::add_file(const ::std::string& value) {
+  file_.Add()->assign(value);
 }
-inline void DataConfig::add_files(const char* value) {
-  files_.Add()->assign(value);
+inline void DataConfig::add_file(const char* value) {
+  file_.Add()->assign(value);
 }
-inline void DataConfig::add_files(const char* value, size_t size) {
-  files_.Add()->assign(reinterpret_cast<const char*>(value), size);
+inline void DataConfig::add_file(const char* value, size_t size) {
+  file_.Add()->assign(reinterpret_cast<const char*>(value), size);
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-DataConfig::files() const {
-  return files_;
+DataConfig::file() const {
+  return file_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-DataConfig::mutable_files() {
-  return &files_;
+DataConfig::mutable_file() {
+  return &file_;
 }
 
 // optional .PS.PbRange range = 3;
@@ -675,6 +814,58 @@ inline void LearningRateConfig::set_eta(double value) {
   eta_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// PenaltyConfig
+
+// required .PS.PenaltyConfig.Type type = 1;
+inline bool PenaltyConfig::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void PenaltyConfig::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void PenaltyConfig::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void PenaltyConfig::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::PS::PenaltyConfig_Type PenaltyConfig::type() const {
+  return static_cast< ::PS::PenaltyConfig_Type >(type_);
+}
+inline void PenaltyConfig::set_type(::PS::PenaltyConfig_Type value) {
+  assert(::PS::PenaltyConfig_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// repeated double lambda = 2;
+inline int PenaltyConfig::lambda_size() const {
+  return lambda_.size();
+}
+inline void PenaltyConfig::clear_lambda() {
+  lambda_.Clear();
+}
+inline double PenaltyConfig::lambda(int index) const {
+  return lambda_.Get(index);
+}
+inline void PenaltyConfig::set_lambda(int index, double value) {
+  lambda_.Set(index, value);
+}
+inline void PenaltyConfig::add_lambda(double value) {
+  lambda_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< double >&
+PenaltyConfig::lambda() const {
+  return lambda_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+PenaltyConfig::mutable_lambda() {
+  return &lambda_;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -695,6 +886,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::ParameterInitConfig_Type>(
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::LearningRateConfig_Type>() {
   return ::PS::LearningRateConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::PenaltyConfig_Type>() {
+  return ::PS::PenaltyConfig_Type_descriptor();
 }
 
 }  // namespace google

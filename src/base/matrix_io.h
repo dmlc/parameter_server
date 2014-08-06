@@ -210,7 +210,7 @@ MatrixPtrList<V> readMatricesFromBin(
 template<typename V>
 MatrixPtrList<V> readMatrices(const DataConfig& config) {
   std::vector<std::string> files;
-  for (int i = 0; i < config.files_size(); ++i) files.push_back(config.files(i));
+  for (int i = 0; i < config.file_size(); ++i) files.push_back(config.file(i));
   if (config.format() == DataConfig::BIN) {
     SizeR outer_range = SizeR::all();
     if (config.has_range()) outer_range.copyFrom(config.range());
