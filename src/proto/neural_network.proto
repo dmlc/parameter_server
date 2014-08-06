@@ -17,9 +17,9 @@ message LayerConfig {
   repeated string out = 4;
   // the number of neuroons
   optional uint32 size = 7;
-
   optional ActivationConfig activation = 5;
 
+  optional int32 minibatch_size = 8 [default = 0];  // 0 means all
   // scaling factor of learning rate
   optional double lr_scale = 6 [default = 1.0];
 
@@ -52,8 +52,7 @@ message SolverConfig {
   }
   required Type type = 1;
 
-  optional int64 minibatch_size = 2 [default = 10];
-
+  optional LearningRateConfig lr = 2;
   optional int32 max_iteration = 3 [default = 1000];
 
   // display every _display_ iteration
