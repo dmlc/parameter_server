@@ -22,7 +22,8 @@ class Matrix {
   Matrix(const MatrixInfo& info, const SArray<V>& value)
       : info_(info), value_(value) { };
 
-  virtual void resize(size_t rows, size_t cols, size_t nnz, bool row_major) = 0;
+  virtual void resize(size_t rows, size_t cols, size_t nnz = 0, bool row_major =
+  true) = 0;
 
   // multi-threaded matrix-vector multiplication:
   // y = A * x

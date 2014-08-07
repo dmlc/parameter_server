@@ -251,6 +251,13 @@ class LayerConfig : public ::google::protobuf::Message {
   inline ::PS::NN::ActivationConfig* release_activation();
   inline void set_allocated_activation(::PS::NN::ActivationConfig* activation);
 
+  // optional int32 minibatch_size = 8 [default = 0];
+  inline bool has_minibatch_size() const;
+  inline void clear_minibatch_size();
+  static const int kMinibatchSizeFieldNumber = 8;
+  inline ::google::protobuf::int32 minibatch_size() const;
+  inline void set_minibatch_size(::google::protobuf::int32 value);
+
   // optional double lr_scale = 6 [default = 1];
   inline bool has_lr_scale() const;
   inline void clear_lr_scale();
@@ -277,6 +284,8 @@ class LayerConfig : public ::google::protobuf::Message {
   inline void clear_has_size();
   inline void set_has_activation();
   inline void clear_has_activation();
+  inline void set_has_minibatch_size();
+  inline void clear_has_minibatch_size();
   inline void set_has_lr_scale();
   inline void clear_has_lr_scale();
   inline void set_has_data();
@@ -292,9 +301,10 @@ class LayerConfig : public ::google::protobuf::Message {
   ::PS::NN::ActivationConfig* activation_;
   double lr_scale_;
   ::PS::DataConfig* data_;
+  ::google::protobuf::int32 minibatch_size_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -598,12 +608,14 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::PS::NN::SolverConfig_Type type() const;
   inline void set_type(::PS::NN::SolverConfig_Type value);
 
-  // optional int64 minibatch_size = 2 [default = 10];
-  inline bool has_minibatch_size() const;
-  inline void clear_minibatch_size();
-  static const int kMinibatchSizeFieldNumber = 2;
-  inline ::google::protobuf::int64 minibatch_size() const;
-  inline void set_minibatch_size(::google::protobuf::int64 value);
+  // optional .PS.LearningRateConfig lr = 2;
+  inline bool has_lr() const;
+  inline void clear_lr();
+  static const int kLrFieldNumber = 2;
+  inline const ::PS::LearningRateConfig& lr() const;
+  inline ::PS::LearningRateConfig* mutable_lr();
+  inline ::PS::LearningRateConfig* release_lr();
+  inline void set_allocated_lr(::PS::LearningRateConfig* lr);
 
   // optional int32 max_iteration = 3 [default = 1000];
   inline bool has_max_iteration() const;
@@ -623,8 +635,8 @@ class SolverConfig : public ::google::protobuf::Message {
  private:
   inline void set_has_type();
   inline void clear_has_type();
-  inline void set_has_minibatch_size();
-  inline void clear_has_minibatch_size();
+  inline void set_has_lr();
+  inline void clear_has_lr();
   inline void set_has_max_iteration();
   inline void clear_has_max_iteration();
   inline void set_has_display();
@@ -632,7 +644,7 @@ class SolverConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::int64 minibatch_size_;
+  ::PS::LearningRateConfig* lr_;
   int type_;
   ::google::protobuf::int32 max_iteration_;
   ::google::protobuf::int32 display_;
@@ -895,15 +907,37 @@ inline void LayerConfig::set_allocated_activation(::PS::NN::ActivationConfig* ac
   }
 }
 
-// optional double lr_scale = 6 [default = 1];
-inline bool LayerConfig::has_lr_scale() const {
+// optional int32 minibatch_size = 8 [default = 0];
+inline bool LayerConfig::has_minibatch_size() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void LayerConfig::set_has_lr_scale() {
+inline void LayerConfig::set_has_minibatch_size() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void LayerConfig::clear_has_lr_scale() {
+inline void LayerConfig::clear_has_minibatch_size() {
   _has_bits_[0] &= ~0x00000040u;
+}
+inline void LayerConfig::clear_minibatch_size() {
+  minibatch_size_ = 0;
+  clear_has_minibatch_size();
+}
+inline ::google::protobuf::int32 LayerConfig::minibatch_size() const {
+  return minibatch_size_;
+}
+inline void LayerConfig::set_minibatch_size(::google::protobuf::int32 value) {
+  set_has_minibatch_size();
+  minibatch_size_ = value;
+}
+
+// optional double lr_scale = 6 [default = 1];
+inline bool LayerConfig::has_lr_scale() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void LayerConfig::set_has_lr_scale() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void LayerConfig::clear_has_lr_scale() {
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void LayerConfig::clear_lr_scale() {
   lr_scale_ = 1;
@@ -919,13 +953,13 @@ inline void LayerConfig::set_lr_scale(double value) {
 
 // optional .PS.DataConfig data = 11;
 inline bool LayerConfig::has_data() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void LayerConfig::set_has_data() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void LayerConfig::clear_has_data() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void LayerConfig::clear_data() {
   if (data_ != NULL) data_->::PS::DataConfig::Clear();
@@ -1108,26 +1142,42 @@ inline void SolverConfig::set_type(::PS::NN::SolverConfig_Type value) {
   type_ = value;
 }
 
-// optional int64 minibatch_size = 2 [default = 10];
-inline bool SolverConfig::has_minibatch_size() const {
+// optional .PS.LearningRateConfig lr = 2;
+inline bool SolverConfig::has_lr() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void SolverConfig::set_has_minibatch_size() {
+inline void SolverConfig::set_has_lr() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void SolverConfig::clear_has_minibatch_size() {
+inline void SolverConfig::clear_has_lr() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void SolverConfig::clear_minibatch_size() {
-  minibatch_size_ = GOOGLE_LONGLONG(10);
-  clear_has_minibatch_size();
+inline void SolverConfig::clear_lr() {
+  if (lr_ != NULL) lr_->::PS::LearningRateConfig::Clear();
+  clear_has_lr();
 }
-inline ::google::protobuf::int64 SolverConfig::minibatch_size() const {
-  return minibatch_size_;
+inline const ::PS::LearningRateConfig& SolverConfig::lr() const {
+  return lr_ != NULL ? *lr_ : *default_instance_->lr_;
 }
-inline void SolverConfig::set_minibatch_size(::google::protobuf::int64 value) {
-  set_has_minibatch_size();
-  minibatch_size_ = value;
+inline ::PS::LearningRateConfig* SolverConfig::mutable_lr() {
+  set_has_lr();
+  if (lr_ == NULL) lr_ = new ::PS::LearningRateConfig;
+  return lr_;
+}
+inline ::PS::LearningRateConfig* SolverConfig::release_lr() {
+  clear_has_lr();
+  ::PS::LearningRateConfig* temp = lr_;
+  lr_ = NULL;
+  return temp;
+}
+inline void SolverConfig::set_allocated_lr(::PS::LearningRateConfig* lr) {
+  delete lr_;
+  lr_ = lr;
+  if (lr) {
+    set_has_lr();
+  } else {
+    clear_has_lr();
+  }
 }
 
 // optional int32 max_iteration = 3 [default = 1000];

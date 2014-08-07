@@ -59,7 +59,8 @@ void DenseMatrix<V>::resize(
   info_.set_row_major(row_major);
   SizeR(0, rows).to(info_.mutable_row());
   SizeR(0, cols).to(info_.mutable_col());
-  CHECK_EQ(nnz, rows*cols);
+  nnz = rows * cols;
+  // CHECK_EQ(nnz, rows*cols);
   info_.set_nnz(nnz);
   info_.set_sizeof_value(sizeof(V));
   info_.set_nnz_per_row(cols);

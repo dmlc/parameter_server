@@ -12,6 +12,7 @@ template<typename V> using ParameterPtrList = std::vector<ParameterPtr<V>>;
 // data blob
 template<typename V>
 struct Parameter {
+  // Parameter() { }
   Parameter(const string& n)
       : name(n) { }
   string name;

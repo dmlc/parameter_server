@@ -74,6 +74,7 @@ TESTS = \
 	sparse_matrix_perf \
 	shared_array_test \
 	eigen3_test \
+	auc_layer_test \
 	# double_test \
 	# aggregated_gradient_test \
 	# grad_desc_test \

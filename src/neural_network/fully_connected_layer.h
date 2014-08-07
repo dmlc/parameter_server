@@ -17,12 +17,15 @@ class FullyConnectedLayer : public Layer<V>  {
     model_ = ParameterPtr<V> (new Parameter<V>(this->name() + "_model"));
     model_->value->resize(in_size, my_size, nnz, true);
     model_->gradient->resize(in_size, my_size, nnz, true);
+
   }
 
   V forward() {
     CHECK(out_args_[0]->value);
     auto X = in_args_[0]->value->eigenMatrix();
     auto W = model_->value->eigenMatrix();
+    out_args_[0]->value->resize(X.rows(), this->size());
+    out_args_[0]->gradient->resize(X.rows(), this->size());
     auto Y = out_args_[0]->value->eigenMatrix();
 
     Y = X * W;

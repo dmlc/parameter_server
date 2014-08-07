@@ -35,10 +35,10 @@ template<typename V> class Layer {
   void addOutLayer(const LayerPtr<V>& layer, const string& edge) {
     out_layers_.push_back(layer);
     ParameterPtr<V> arg(new Parameter<V>(edge));
-    arg->value = MatrixPtr<V>(new DenseMatrix<V>());
-    if (!cf_.type() == LayerConfig::DATA) {
-      arg->gradient = MatrixPtr<V>(new DenseMatrix<V>());
-    }
+    // arg->value = MatrixPtr<V>(new DenseMatrix<V>());
+    // if (!cf_.type() == LayerConfig::DATA) {
+    //   arg->gradient = MatrixPtr<V>(new DenseMatrix<V>());
+    // }
     out_args_.push_back(arg);
   }
 
@@ -46,6 +46,8 @@ template<typename V> class Layer {
   ParameterPtr<V>& model() { return model_; }
   const LayerConfig& config() { return cf_; }
 
+  ParameterPtrList<V>& inArgs() { return in_args_; }
+  ParameterPtrList<V>& outArgs() { return out_args_; }
  protected:
   LayerConfig cf_;
   LayerPtrList<V> in_layers_, out_layers_;
