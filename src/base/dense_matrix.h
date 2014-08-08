@@ -7,6 +7,7 @@ namespace PS {
 template<typename V>
 class DenseMatrix : public Matrix<V> {
  public:
+  USING_MATRIX;
   DenseMatrix() { }
   DenseMatrix(size_t rows, size_t cols, bool row_major = true) {
     resize(rows, cols, rows*cols, row_major);
@@ -18,23 +19,30 @@ class DenseMatrix : public Matrix<V> {
       : Matrix<V>(info, value) { }
 
   // TODO
-  virtual void times(const V* x, V *y) const { }
+  virtual void times(const V* x, V *y) const {CHECK(false);  }
 
   // C = A .* B
-  virtual MatrixPtr<V> dotTimes(const MatrixPtr<V>& B) const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> dotTimes(const MatrixPtr<V>& B) const { CHECK(false); return MatrixPtr<V>(); }
 
   // (nearly) non-copy matrix transpose
-  virtual MatrixPtr<V> trans() const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> trans() const {CHECK(false);  return MatrixPtr<V>(); }
 
   // convert global index into local index (0,1,2,3...) and return the key map
-  virtual MatrixPtr<V> localize(SArray<Key>* key_map) const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> localize(SArray<Key>* key_map) const {CHECK(false);  return MatrixPtr<V>(); }
 
-  virtual MatrixPtr<V> alterStorage() const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> alterStorage() const;
 
   // non-copy matrix block
-  virtual MatrixPtr<V> rowBlock(SizeR range) const { return MatrixPtr<V>(); }
+  virtual MatrixPtr<V> rowBlock(SizeR range) const {
+    if (colMajor()) CHECK_EQ(range, SizeR(0, rows()));
+    auto info = info_;
+    range.to(info.mutable_row());
+    info.set_nnz(range.size() * cols());
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*cols())));
+  }
+
   virtual MatrixPtr<V> colBlock(SizeR range) const {
-    if (this->rowMajor()) CHECK_EQ(range, SizeR(0, cols()));
+    if (rowMajor()) CHECK_EQ(range, SizeR(0, cols()));
     auto info = info_;
     range.to(info.mutable_col());
     info.set_nnz(range.size() * rows());
@@ -44,12 +52,6 @@ class DenseMatrix : public Matrix<V> {
   virtual bool writeToBinFile(string name) const {
     return (WriteProtoToASCIIFile(info_, name+".info") && value_.writeToFile(name+".value"));
   }
- private:
-  using Matrix<V>::rowMajor;
-  using Matrix<V>::rows;
-  using Matrix<V>::cols;
-  using Matrix<V>::info_;
-  using Matrix<V>::value_;
 };
 
 template<typename V>
@@ -71,5 +73,25 @@ void DenseMatrix<V>::resize(
 
 }
 
+
+template<typename V>
+MatrixPtr<V> DenseMatrix<V>::alterStorage() const {
+  size_t in = innerSize();
+  size_t out = outerSize();
+  CHECK_EQ(value_.size(), in*out);
+
+  SArray<V> new_value(value_.size());
+
+  for (size_t i = 0; i < in; ++i) {
+    for (size_t j = 0; j < out; ++j) {
+      new_value[i*out+j] = value_[j*in+i];
+    }
+  }
+
+  auto new_info = info_;
+  new_info.set_row_major(!info_.row_major());
+
+  return MatrixPtr<V>(new DenseMatrix<V>(new_info, new_value));
+}
 
 } // namespace PS

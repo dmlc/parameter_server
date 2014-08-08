@@ -1,8 +1,8 @@
 CC = g++
 # CC = clang
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -31,7 +31,7 @@ ifeq (${STATIC}, 1)
 # TODO a lot of warning on mac with llvm
     CFLAGS = -static -static-libgcc -static-libstdc++ -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
 else
-    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) -fopenmp #-fPIC #
+    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fopenmp #-fPIC #
 endif
 
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \

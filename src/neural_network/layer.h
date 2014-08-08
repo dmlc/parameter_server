@@ -14,10 +14,23 @@ template<typename V> class Layer;
 template<typename V> using LayerPtr = std::shared_ptr<Layer<V>>;
 template<typename V> using LayerPtrList = std::vector<LayerPtr<V>>;
 
+#define USING_LAYER \
+  using Layer<V>::in_args_;                     \
+  using Layer<V>::in_layers_;                   \
+  using Layer<V>::out_args_;                    \
+  using Layer<V>::out_layers_;                  \
+  using Layer<V>::model_;                       \
+  using Layer<V>::activation_;                       \
+  using Layer<V>::cf_;
+
 template<typename V> class Layer {
  public:
   Layer() { }
-  void set(const LayerConfig& config) { cf_ = config; }
+  void set(const LayerConfig& config) {
+    cf_ = config;
+    if (cf_.has_activation())
+      activation_ = ActivationFunction<V>::create(cf_.activation());
+  }
 
   size_t size() { return cf_.size(); }
 
@@ -35,10 +48,10 @@ template<typename V> class Layer {
   void addOutLayer(const LayerPtr<V>& layer, const string& edge) {
     out_layers_.push_back(layer);
     ParameterPtr<V> arg(new Parameter<V>(edge));
-    // arg->value = MatrixPtr<V>(new DenseMatrix<V>());
-    // if (!cf_.type() == LayerConfig::DATA) {
-    //   arg->gradient = MatrixPtr<V>(new DenseMatrix<V>());
-    // }
+    arg->value = MatrixPtr<V>(new DenseMatrix<V>());
+    if (!(cf_.type() == LayerConfig::DATA)) {
+      arg->gradient = MatrixPtr<V>(new DenseMatrix<V>());
+    }
     out_args_.push_back(arg);
   }
 

@@ -8,15 +8,18 @@ namespace NN {
 template<typename V>
 class FullyConnectedLayer : public Layer<V>  {
  public:
+  USING_LAYER;
   void init() {
     CHECK_EQ(in_layers_.size(), 1);
     CHECK_EQ(out_layers_.size(), 1);
     size_t my_size = this->size();
     size_t in_size = in_layers_[0]->size();
-    size_t nnz = my_size * in_size;
+    // size_t nnz = my_size * in_size;
     model_ = ParameterPtr<V> (new Parameter<V>(this->name() + "_model"));
-    model_->value->resize(in_size, my_size, nnz, true);
-    model_->gradient->resize(in_size, my_size, nnz, true);
+    model_->gradient = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));
+    model_->value = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));
+
+    model_->value->eigenMatrix() = Matrix<V>::EMat::Random(in_size, my_size);
 
   }
 
@@ -28,9 +31,13 @@ class FullyConnectedLayer : public Layer<V>  {
     out_args_[0]->gradient->resize(X.rows(), this->size());
     auto Y = out_args_[0]->value->eigenMatrix();
 
+    // LL << X.rows() << " " << X.cols();
+    // LL << W.rows() << " " << W.cols();
+    // LL << Y.rows() << " " << Y.cols();
     Y = X * W;
 
-    this->activation_->forward(out_args_[0]);
+    CHECK(activation_);
+    activation_->forward(out_args_[0]);
     return 0;
   }
 
@@ -50,12 +57,6 @@ class FullyConnectedLayer : public Layer<V>  {
       Xg = Z * W.transpose();
     }
   }
- protected:
-  using Layer<V>::in_args_;
-  using Layer<V>::in_layers_;
-  using Layer<V>::out_args_;
-  using Layer<V>::out_layers_;
-  using Layer<V>::model_;
 };
 
 } // namespace NN

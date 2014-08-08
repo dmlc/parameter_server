@@ -17,18 +17,24 @@ class DataLayer : public Layer<V>  {
     for (size_t i = 0; ; ++i) {
       size_t size = cf_.minibatch_size();
       size = size == 0 ? n : size;
-      SizeR batch = SizeR(0, size) * i;
+      SizeR batch = SizeR(0, size) + i * size;
       if (batch.end() > n) break;
       batches_.push_back(batch);
     }
+
+    CHECK_EQ(data_.size(), 2);
+    cf_.set_size(data_[0]->cols());
   }
 
   // forward the data
   V forward() {
-    out_args_.resize(data_.size());
+    CHECK_EQ(out_args_.size(), data_.size());
     SizeR batch = batches_[rand() % batches_.size()];
     for (int i = 0; i < data_.size(); ++i) {
-      out_args_.value = data_[i]->rowBlock(batch);
+      if (data_[i]->colMajor()) {
+        data_[i] = data_[i]->toRowMajor();
+      }
+      out_args_[i]->value = data_[i]->rowBlock(batch);
     }
     return 0;
   }
@@ -36,6 +42,7 @@ class DataLayer : public Layer<V>  {
   // do nothing
   void backward() {}
  protected:
+  USING_LAYER;
   MatrixPtrList<V> data_;
   std::vector<SizeR> batches_;
   size_t batch_id_ = 0;

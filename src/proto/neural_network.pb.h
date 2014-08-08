@@ -45,11 +45,12 @@ enum LayerConfig_Type {
   LayerConfig_Type_NONE = 0,
   LayerConfig_Type_DATA = 2,
   LayerConfig_Type_FULLY_CONNECTED = 1,
-  LayerConfig_Type_LOGISTIC_LOSS = 3
+  LayerConfig_Type_LOGISTIC_LOSS = 3,
+  LayerConfig_Type_AUC = 4
 };
 bool LayerConfig_Type_IsValid(int value);
 const LayerConfig_Type LayerConfig_Type_Type_MIN = LayerConfig_Type_NONE;
-const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_LOGISTIC_LOSS;
+const LayerConfig_Type LayerConfig_Type_Type_MAX = LayerConfig_Type_AUC;
 const int LayerConfig_Type_Type_ARRAYSIZE = LayerConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* LayerConfig_Type_descriptor();
@@ -161,6 +162,7 @@ class LayerConfig : public ::google::protobuf::Message {
   static const Type DATA = LayerConfig_Type_DATA;
   static const Type FULLY_CONNECTED = LayerConfig_Type_FULLY_CONNECTED;
   static const Type LOGISTIC_LOSS = LayerConfig_Type_LOGISTIC_LOSS;
+  static const Type AUC = LayerConfig_Type_AUC;
   static inline bool Type_IsValid(int value) {
     return LayerConfig_Type_IsValid(value);
   }

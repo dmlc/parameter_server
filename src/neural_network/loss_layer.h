@@ -9,8 +9,9 @@ class LossLayer : public Layer<V>  {
  public:
   void init() { }
  protected:
+  USING_LAYER;
   void checkValue(int n) {
-    CHECK_EQ(in_args_.size(), n);
+    CHECK_GE(in_args_.size(), n);
     for (int i = 0; i < n; ++i) {
       CHECK(in_args_[i]->value);
       CHECK_EQ(in_args_[i]->value->rows(), in_args_[0]->value->rows());
@@ -18,15 +19,14 @@ class LossLayer : public Layer<V>  {
     }
   }
 
-  //   CHECK(in_args_[0]->gradient);
-  //   CHECK_EQ(in_args_[0]->gradient->rows(), in_args_[0]->value->rows());
-  //   CHECK_EQ(in_args_[0]->gradient->cols(), in_args_[0]->value->cols());
-  // }
-  using Layer<V>::in_args_;
-  using Layer<V>::in_layers_;
-  using Layer<V>::out_args_;
-  using Layer<V>::out_layers_;
-  using Layer<V>::model_;
+  void checkGradient(int n) {
+    CHECK_GE(in_args_.size(), n);
+    for (int i = 0; i < n; ++i) {
+      CHECK(in_args_[i]->gradient);
+      CHECK_EQ(in_args_[i]->gradient->rows(), in_args_[0]->gradient->rows());
+      CHECK_EQ(in_args_[i]->gradient->cols(), in_args_[0]->gradient->cols());
+    }
+  }
 };
 
 // ln (1+exp(-y*x))
@@ -34,7 +34,7 @@ template<typename V>
 class LogisticLossLayer : public LossLayer<V> {
  public:
   V forward() {
-    // this->checkSalarLoss();
+    this->checkValue(2);
     auto X = this->in_args_[0]->value->eigenArray();
     auto Y = this->in_args_[1]->value->eigenArray();
 
@@ -42,7 +42,8 @@ class LogisticLossLayer : public LossLayer<V> {
   }
 
   void backward() {
-    // this->checkSalarLoss();
+    this->checkValue(2);
+    this->checkGradient(1);
     auto X = this->in_args_[0]->value->eigenArray();
     auto Y = this->in_args_[1]->value->eigenArray();
     auto Xg = this->in_args_[0]->gradient->eigenArray();

@@ -19,6 +19,7 @@ namespace PS {
 template<typename I, typename V>
 class SparseMatrix : public Matrix<V> {
  public:
+  USING_MATRIX;
   SparseMatrix(
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
       : Matrix<V>(info, value), offset_(offset), index_(index) { }
@@ -29,7 +30,8 @@ class SparseMatrix : public Matrix<V> {
 
   bool binary() const { return this->info_.type() == MatrixInfo::SPARSE_BINARY; }
 
-  void times(const double* x, double *y) const { templateTimes(x, y); }
+  void times(const V* x, V* y) const { templateTimes(x, y); }
+
   MatrixPtr<V> dotTimes(const MatrixPtr<V>& B) const;
 
   // (nearly) non-copy matrix transpose
@@ -67,16 +69,7 @@ class SparseMatrix : public Matrix<V> {
   SArray<I> index() const { return index_; }
   SArray<size_t> offset() const { return offset_; }
 
-  using Matrix<V>::rows;
-  using Matrix<V>::cols;
-  using Matrix<V>::nnz;
  private:
-  using Matrix<V>::info_;
-  using Matrix<V>::value_;
-  using Matrix<V>::rowMajor;
-  using Matrix<V>::empty;
-  using Matrix<V>::innerSize;
-  using Matrix<V>::outerSize;
 
   //// y = A * x, version 1. simper and faster
   // single-thread,  both x and y are pre-allocated

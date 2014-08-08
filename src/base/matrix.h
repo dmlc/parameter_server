@@ -14,6 +14,18 @@ template<typename V> using MatrixPtr = std::shared_ptr<Matrix<V>>;
 template<typename V> using MatrixPtrList = std::vector<MatrixPtr<V>>;
 template<typename V> using MatrixPtrInitList = std::initializer_list<MatrixPtr<V>>;
 
+#define USING_MATRIX                            \
+  using Matrix<V>::rows;                        \
+  using Matrix<V>::cols;                        \
+  using Matrix<V>::nnz;                         \
+  using Matrix<V>::info_;                       \
+  using Matrix<V>::value_;                      \
+  using Matrix<V>::rowMajor;                    \
+  using Matrix<V>::colMajor;                    \
+  using Matrix<V>::empty;                       \
+  using Matrix<V>::innerSize;                   \
+  using Matrix<V>::outerSize;
+
 template<typename V>
 class Matrix {
  public:

@@ -8,7 +8,8 @@ class SGDSolver : public Solver {
  public:
   void run();
 
-  void updater(int iter, ParameterPtr<float>& param) {
+  void update(int iter, ParameterPtr<real>& param) {
+    if (!param || !(param->value) || !(param->gradient)) return;
     param->value->eigenArray() -= .1 * param->gradient->eigenArray();
   }
 
@@ -30,7 +31,7 @@ void SGDSolver::run() {
     for (int i = train_->layers().size(); i > 0 ; --i) {
       auto& l = train_->layers()[i-1];
       l->backward();
-      updater(iter, l->model());
+      update(iter, l->model());
     }
     LL << iter << " objv: " << objv;
   }
