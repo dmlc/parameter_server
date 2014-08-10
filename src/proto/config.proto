@@ -20,7 +20,9 @@ message ParameterInitConfig {
     FILE = 3;
   }
   optional Type type = 1 [default = ZERO];
-  optional double random_std = 2 [default = 1];
+  optional double mean = 2 [default = 0];
+  optional double std = 3 [default = 1];
+  optional string file_name = 4;
 }
 
 message LearningRateConfig {
@@ -29,6 +31,8 @@ message LearningRateConfig {
   }
   required Type type = 1;
   optional double eta = 2 [default = 1];
+  optional double alpha = 3;
+  optional double beta = 4;
 }
 
 

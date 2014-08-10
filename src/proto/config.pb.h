@@ -341,27 +341,52 @@ class ParameterInitConfig : public ::google::protobuf::Message {
   inline ::PS::ParameterInitConfig_Type type() const;
   inline void set_type(::PS::ParameterInitConfig_Type value);
 
-  // optional double random_std = 2 [default = 1];
-  inline bool has_random_std() const;
-  inline void clear_random_std();
-  static const int kRandomStdFieldNumber = 2;
-  inline double random_std() const;
-  inline void set_random_std(double value);
+  // optional double mean = 2 [default = 0];
+  inline bool has_mean() const;
+  inline void clear_mean();
+  static const int kMeanFieldNumber = 2;
+  inline double mean() const;
+  inline void set_mean(double value);
+
+  // optional double std = 3 [default = 1];
+  inline bool has_std() const;
+  inline void clear_std();
+  static const int kStdFieldNumber = 3;
+  inline double std() const;
+  inline void set_std(double value);
+
+  // optional string file_name = 4;
+  inline bool has_file_name() const;
+  inline void clear_file_name();
+  static const int kFileNameFieldNumber = 4;
+  inline const ::std::string& file_name() const;
+  inline void set_file_name(const ::std::string& value);
+  inline void set_file_name(const char* value);
+  inline void set_file_name(const char* value, size_t size);
+  inline ::std::string* mutable_file_name();
+  inline ::std::string* release_file_name();
+  inline void set_allocated_file_name(::std::string* file_name);
 
   // @@protoc_insertion_point(class_scope:PS.ParameterInitConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
-  inline void set_has_random_std();
-  inline void clear_has_random_std();
+  inline void set_has_mean();
+  inline void clear_has_mean();
+  inline void set_has_std();
+  inline void clear_has_std();
+  inline void set_has_file_name();
+  inline void clear_has_file_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  double random_std_;
+  double mean_;
+  double std_;
+  ::std::string* file_name_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -463,20 +488,40 @@ class LearningRateConfig : public ::google::protobuf::Message {
   inline double eta() const;
   inline void set_eta(double value);
 
+  // optional double alpha = 3;
+  inline bool has_alpha() const;
+  inline void clear_alpha();
+  static const int kAlphaFieldNumber = 3;
+  inline double alpha() const;
+  inline void set_alpha(double value);
+
+  // optional double beta = 4;
+  inline bool has_beta() const;
+  inline void clear_beta();
+  static const int kBetaFieldNumber = 4;
+  inline double beta() const;
+  inline void set_beta(double value);
+
   // @@protoc_insertion_point(class_scope:PS.LearningRateConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
   inline void set_has_eta();
   inline void clear_has_eta();
+  inline void set_has_alpha();
+  inline void clear_has_alpha();
+  inline void set_has_beta();
+  inline void clear_has_beta();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   double eta_;
+  double alpha_;
+  double beta_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -743,26 +788,118 @@ inline void ParameterInitConfig::set_type(::PS::ParameterInitConfig_Type value) 
   type_ = value;
 }
 
-// optional double random_std = 2 [default = 1];
-inline bool ParameterInitConfig::has_random_std() const {
+// optional double mean = 2 [default = 0];
+inline bool ParameterInitConfig::has_mean() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void ParameterInitConfig::set_has_random_std() {
+inline void ParameterInitConfig::set_has_mean() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void ParameterInitConfig::clear_has_random_std() {
+inline void ParameterInitConfig::clear_has_mean() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void ParameterInitConfig::clear_random_std() {
-  random_std_ = 1;
-  clear_has_random_std();
+inline void ParameterInitConfig::clear_mean() {
+  mean_ = 0;
+  clear_has_mean();
 }
-inline double ParameterInitConfig::random_std() const {
-  return random_std_;
+inline double ParameterInitConfig::mean() const {
+  return mean_;
 }
-inline void ParameterInitConfig::set_random_std(double value) {
-  set_has_random_std();
-  random_std_ = value;
+inline void ParameterInitConfig::set_mean(double value) {
+  set_has_mean();
+  mean_ = value;
+}
+
+// optional double std = 3 [default = 1];
+inline bool ParameterInitConfig::has_std() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ParameterInitConfig::set_has_std() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ParameterInitConfig::clear_has_std() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ParameterInitConfig::clear_std() {
+  std_ = 1;
+  clear_has_std();
+}
+inline double ParameterInitConfig::std() const {
+  return std_;
+}
+inline void ParameterInitConfig::set_std(double value) {
+  set_has_std();
+  std_ = value;
+}
+
+// optional string file_name = 4;
+inline bool ParameterInitConfig::has_file_name() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ParameterInitConfig::set_has_file_name() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ParameterInitConfig::clear_has_file_name() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ParameterInitConfig::clear_file_name() {
+  if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+    file_name_->clear();
+  }
+  clear_has_file_name();
+}
+inline const ::std::string& ParameterInitConfig::file_name() const {
+  return *file_name_;
+}
+inline void ParameterInitConfig::set_file_name(const ::std::string& value) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(value);
+}
+inline void ParameterInitConfig::set_file_name(const char* value) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(value);
+}
+inline void ParameterInitConfig::set_file_name(const char* value, size_t size) {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  file_name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ParameterInitConfig::mutable_file_name() {
+  set_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    file_name_ = new ::std::string;
+  }
+  return file_name_;
+}
+inline ::std::string* ParameterInitConfig::release_file_name() {
+  clear_has_file_name();
+  if (file_name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = file_name_;
+    file_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ParameterInitConfig::set_allocated_file_name(::std::string* file_name) {
+  if (file_name_ != &::google::protobuf::internal::kEmptyString) {
+    delete file_name_;
+  }
+  if (file_name) {
+    set_has_file_name();
+    file_name_ = file_name;
+  } else {
+    clear_has_file_name();
+    file_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------
@@ -812,6 +949,50 @@ inline double LearningRateConfig::eta() const {
 inline void LearningRateConfig::set_eta(double value) {
   set_has_eta();
   eta_ = value;
+}
+
+// optional double alpha = 3;
+inline bool LearningRateConfig::has_alpha() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LearningRateConfig::set_has_alpha() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LearningRateConfig::clear_has_alpha() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LearningRateConfig::clear_alpha() {
+  alpha_ = 0;
+  clear_has_alpha();
+}
+inline double LearningRateConfig::alpha() const {
+  return alpha_;
+}
+inline void LearningRateConfig::set_alpha(double value) {
+  set_has_alpha();
+  alpha_ = value;
+}
+
+// optional double beta = 4;
+inline bool LearningRateConfig::has_beta() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LearningRateConfig::set_has_beta() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LearningRateConfig::clear_has_beta() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LearningRateConfig::clear_beta() {
+  beta_ = 0;
+  clear_has_beta();
+}
+inline double LearningRateConfig::beta() const {
+  return beta_;
+}
+inline void LearningRateConfig::set_beta(double value) {
+  set_has_beta();
+  beta_ = value;
 }
 
 // -------------------------------------------------------------------

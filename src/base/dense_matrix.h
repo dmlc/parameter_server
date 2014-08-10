@@ -52,7 +52,15 @@ class DenseMatrix : public Matrix<V> {
   virtual bool writeToBinFile(string name) const {
     return (WriteProtoToASCIIFile(info_, name+".info") && value_.writeToFile(name+".value"));
   }
+
+  virtual string debugString() const {
+    std::stringstream ss;
+    ss << rows() << " x " << cols() << " dense matrix " << std::endl
+       << dbstr(value_.data(), value_.size(), 8);
+    return ss.str();
+  }
 };
+
 
 template<typename V>
 void DenseMatrix<V>::resize(
@@ -93,5 +101,7 @@ MatrixPtr<V> DenseMatrix<V>::alterStorage() const {
 
   return MatrixPtr<V>(new DenseMatrix<V>(new_info, new_value));
 }
+
+
 
 } // namespace PS

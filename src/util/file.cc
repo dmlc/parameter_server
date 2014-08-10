@@ -37,10 +37,17 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   return f;
 }
 
-size_t File::size() {
+size_t File::size(const std::string& name) {
   struct stat f_stat;
-  stat(name_.c_str(), &f_stat);
+  stat(name.c_str(), &f_stat);
   return f_stat.st_size;
+}
+
+size_t File::size() {
+  return File::size(name_);
+  // struct stat f_stat;
+  // stat(name_.c_str(), &f_stat);
+  // return f_stat.st_size;
 }
 
 // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }

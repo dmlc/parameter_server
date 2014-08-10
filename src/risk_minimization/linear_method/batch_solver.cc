@@ -147,7 +147,7 @@ void BatchSolver::prepareData(const Message& msg) {
           w_->value().setZero();
         } else if (init.type() == ParameterInitConfig::RANDOM) {
           w_->value().eigenVector() =
-              Eigen::VectorXd::Random(w_->value().size()) * init.random_std();
+              Eigen::VectorXd::Random(w_->value().size()) * init.std();
           LL << w_->value().eigenVector().squaredNorm();
         } else {
           LL << "TOOD";

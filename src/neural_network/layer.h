@@ -14,13 +14,13 @@ template<typename V> class Layer;
 template<typename V> using LayerPtr = std::shared_ptr<Layer<V>>;
 template<typename V> using LayerPtrList = std::vector<LayerPtr<V>>;
 
-#define USING_LAYER \
+#define USING_LAYER                             \
   using Layer<V>::in_args_;                     \
   using Layer<V>::in_layers_;                   \
   using Layer<V>::out_args_;                    \
   using Layer<V>::out_layers_;                  \
   using Layer<V>::model_;                       \
-  using Layer<V>::activation_;                       \
+  using Layer<V>::activation_;                  \
   using Layer<V>::cf_;
 
 template<typename V> class Layer {

@@ -52,5 +52,6 @@ void Net<V>::init() {
   for (auto& l : layers_) l->init();
 }
 
+
 } // namespace NN
 } // namespace PS

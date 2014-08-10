@@ -1,6 +1,7 @@
 #pragma once
 #include "base/shared_array.h"
 #include "base/dense_matrix.h"
+#include <random>
 // zlib is too slow
 // #include "zlib.h"
 #include "snappy.h"
@@ -69,6 +70,28 @@ void SArray<V>::setValue(V value) {
     setZero();
   } else {
     for (size_t i = 0; i < size_; ++i) data_[i] = value;
+  }
+}
+
+template <typename V>
+void SArray<V>::setValue(const ParameterInitConfig& cf) {
+  typedef ParameterInitConfig Type;
+  if (cf.type() == Type::ZERO) {
+    setZero();
+  } else if (cf.type() == Type::RANDOM) {
+    if (cf.std() == 0) {
+      setValue((V)cf.mean());
+    } else {
+      for (size_t i = 0; i < size_; ++i) {
+        std::default_random_engine generator;
+        std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
+        data_[i] = distribution(generator);
+      }
+    }
+  } else if (cf.type() == Type::FILE) {
+    CHECK(false);
+    // TODO read from file
+    // size_t n = File::size(cf.file_name());
   }
 }
 

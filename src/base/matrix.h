@@ -116,6 +116,8 @@ class Matrix {
 
   typedef Eigen::Array<V, Eigen::Dynamic, 1>  EArr;
   Eigen::Map<EArr> eigenArray() { return value_.eigenArray(); }
+
+  virtual string debugString() const { return info_.DebugString(); }
  protected:
   MatrixInfo info_;
   SArray<V> value_;

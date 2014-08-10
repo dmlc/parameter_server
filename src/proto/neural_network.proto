@@ -28,7 +28,7 @@ message LayerConfig {
   // optional int32 out_size = 7;
 
   optional DataConfig data = 11;
-
+  optional ParameterInitConfig init = 12;
 }
 
 message NetConfig {

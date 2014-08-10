@@ -20,6 +20,7 @@ class File {
   // Flags are defined by fopen(), that is "r", "r+", "w", "w+". "a", and "a+".
   static File* open(const std::string& name, const char* const flag);
 
+  static size_t size(const std::string& name);
   // Opens file "name" with flags specified by "flag"
   // If open failed, program will exit.
   static File* openOrDie(const std::string& name, const char* const flag);

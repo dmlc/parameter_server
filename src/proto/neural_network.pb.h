@@ -276,6 +276,15 @@ class LayerConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_data();
   inline void set_allocated_data(::PS::DataConfig* data);
 
+  // optional .PS.ParameterInitConfig init = 12;
+  inline bool has_init() const;
+  inline void clear_init();
+  static const int kInitFieldNumber = 12;
+  inline const ::PS::ParameterInitConfig& init() const;
+  inline ::PS::ParameterInitConfig* mutable_init();
+  inline ::PS::ParameterInitConfig* release_init();
+  inline void set_allocated_init(::PS::ParameterInitConfig* init);
+
   // @@protoc_insertion_point(class_scope:PS.NN.LayerConfig)
  private:
   inline void set_has_type();
@@ -292,6 +301,8 @@ class LayerConfig : public ::google::protobuf::Message {
   inline void clear_has_lr_scale();
   inline void set_has_data();
   inline void clear_has_data();
+  inline void set_has_init();
+  inline void clear_has_init();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -303,10 +314,11 @@ class LayerConfig : public ::google::protobuf::Message {
   ::PS::NN::ActivationConfig* activation_;
   double lr_scale_;
   ::PS::DataConfig* data_;
+  ::PS::ParameterInitConfig* init_;
   ::google::protobuf::int32 minibatch_size_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -988,6 +1000,44 @@ inline void LayerConfig::set_allocated_data(::PS::DataConfig* data) {
     set_has_data();
   } else {
     clear_has_data();
+  }
+}
+
+// optional .PS.ParameterInitConfig init = 12;
+inline bool LayerConfig::has_init() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void LayerConfig::set_has_init() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void LayerConfig::clear_has_init() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void LayerConfig::clear_init() {
+  if (init_ != NULL) init_->::PS::ParameterInitConfig::Clear();
+  clear_has_init();
+}
+inline const ::PS::ParameterInitConfig& LayerConfig::init() const {
+  return init_ != NULL ? *init_ : *default_instance_->init_;
+}
+inline ::PS::ParameterInitConfig* LayerConfig::mutable_init() {
+  set_has_init();
+  if (init_ == NULL) init_ = new ::PS::ParameterInitConfig;
+  return init_;
+}
+inline ::PS::ParameterInitConfig* LayerConfig::release_init() {
+  clear_has_init();
+  ::PS::ParameterInitConfig* temp = init_;
+  init_ = NULL;
+  return temp;
+}
+inline void LayerConfig::set_allocated_init(::PS::ParameterInitConfig* init) {
+  delete init_;
+  init_ = init;
+  if (init) {
+    set_has_init();
+  } else {
+    clear_has_init();
   }
 }
 

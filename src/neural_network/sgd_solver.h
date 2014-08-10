@@ -10,7 +10,9 @@ class SGDSolver : public Solver {
 
   void update(int iter, ParameterPtr<real>& param) {
     if (!param || !(param->value) || !(param->gradient)) return;
-    param->value->eigenArray() -= .1 * param->gradient->eigenArray();
+    // LL << param->value->eigenArray()[0]
+    //    << " " << param->gradient->eigenArray()[0];
+    param->value->eigenArray() -= cf_.lr().eta() * param->gradient->eigenArray();
   }
 
   void process(Message* msg) { }
@@ -18,11 +20,9 @@ class SGDSolver : public Solver {
 };
 
 void SGDSolver::run() {
-  CHECK(app_cf_.has_nn_solver());
-  SolverConfig cf = app_cf_.nn_solver();
 
   int iter = 0;
-  for (; iter < cf.max_iteration(); ++iter) {
+  for (; iter < cf_.max_iteration(); ++iter) {
     float objv = 0;
     for (auto& l : train_->layers()) {
       objv += l->forward();

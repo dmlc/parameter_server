@@ -30,12 +30,16 @@ class DataLayer : public Layer<V>  {
   V forward() {
     CHECK_EQ(out_args_.size(), data_.size());
     SizeR batch = batches_[rand() % batches_.size()];
+    // SizeR batch = batches_[0];
     for (int i = 0; i < data_.size(); ++i) {
       if (data_[i]->colMajor()) {
         data_[i] = data_[i]->toRowMajor();
+        LL << data_[i]->debugString();
       }
       out_args_[i]->value = data_[i]->rowBlock(batch);
+      // LL << out_args_[i]->value->debugString();
     }
+
     return 0;
   }
 

@@ -33,22 +33,28 @@ class LossLayer : public Layer<V>  {
 template<typename V>
 class LogisticLossLayer : public LossLayer<V> {
  public:
+  USING_LAYER;
+  using LossLayer<V>::checkValue;
+  using LossLayer<V>::checkGradient;
   V forward() {
-    this->checkValue(2);
-    auto X = this->in_args_[0]->value->eigenArray();
-    auto Y = this->in_args_[1]->value->eigenArray();
+    checkValue(2);
+    auto X = in_args_[0]->value->eigenArray();
+    auto Y = in_args_[1]->value->eigenArray();
 
     return (log( 1 + exp( -X * Y )).sum());
   }
 
   void backward() {
-    this->checkValue(2);
-    this->checkGradient(1);
-    auto X = this->in_args_[0]->value->eigenArray();
-    auto Y = this->in_args_[1]->value->eigenArray();
-    auto Xg = this->in_args_[0]->gradient->eigenArray();
+    checkValue(2);
+    checkGradient(1);
+    auto X = in_args_[0]->value->eigenArray();
+    auto Y = in_args_[1]->value->eigenArray();
+    auto Xg = in_args_[0]->gradient->eigenArray();
 
     Xg = - Y / ( 1 + exp( Y * X ));
+
+    // LL << in_args_[0]->name;
+    // LL << in_args_[0]->gradient->debugString();
   }
 };
 

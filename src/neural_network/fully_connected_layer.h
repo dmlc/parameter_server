@@ -18,9 +18,8 @@ class FullyConnectedLayer : public Layer<V>  {
     model_ = ParameterPtr<V> (new Parameter<V>(this->name() + "_model"));
     model_->gradient = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));
     model_->value = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));
-
-    model_->value->eigenMatrix() = Matrix<V>::EMat::Random(in_size, my_size);
-
+    model_->value->value().setValue(cf_.init());
+    // model_->value->eigenMatrix() = Matrix<V>::EMat::Random(in_size, my_size);
   }
 
   V forward() {
@@ -48,8 +47,13 @@ class FullyConnectedLayer : public Layer<V>  {
     auto Z = out_args_[0]->gradient->eigenMatrix();
     auto Wg = model_->gradient->eigenMatrix();
 
+    // LL << in_args_[0]->value->debugString();
+    // LL << out_args_[0]->name;
+    // LL << out_args_[0]->gradient->debugString();
+
     Wg = X.transpose() * Z;
 
+    // LL << Wg(0,0);
     if (in_args_[0]->gradient) {
       auto W = model_->value->eigenMatrix();
       auto Xg = in_args_[0]->gradient->eigenMatrix();
