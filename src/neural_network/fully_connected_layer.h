@@ -15,6 +15,8 @@ class FullyConnectedLayer : public Layer<V>  {
     size_t my_size = this->size();
     size_t in_size = in_layers_[0]->size();
     // size_t nnz = my_size * in_size;
+    if (cf_.init().type() == ParameterInitConfig::CLONE)
+      return;
     model_ = ParameterPtr<V> (new Parameter<V>(this->name() + "_model"));
     model_->gradient = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));
     model_->value = MatrixPtr<V>(new DenseMatrix<V>(in_size, my_size));

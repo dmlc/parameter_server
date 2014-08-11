@@ -9,7 +9,6 @@
 namespace PS {
 namespace NN {
 
-template<typename V> class Net;
 template<typename V> class Layer;
 template<typename V> using LayerPtr = std::shared_ptr<Layer<V>>;
 template<typename V> using LayerPtrList = std::vector<LayerPtr<V>>;

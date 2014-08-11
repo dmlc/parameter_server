@@ -23,17 +23,22 @@ void SGDSolver::run() {
 
   int iter = 0;
   for (; iter < cf_.max_iteration(); ++iter) {
-    float objv = 0;
+    real objv = 0;
     for (auto& l : train_->layers()) {
       objv += l->forward();
     }
-
     for (int i = train_->layers().size(); i > 0 ; --i) {
       auto& l = train_->layers()[i-1];
       l->backward();
       update(iter, l->model());
     }
     LL << iter << " objv: " << objv;
+
+    real auc = 0;
+    for (auto& l : test_->layers()) {
+      auc += l->forward();
+    }
+    LL << "test auc: " << auc;
   }
   LL << "finished";
 }

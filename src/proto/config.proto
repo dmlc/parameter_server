@@ -18,6 +18,7 @@ message ParameterInitConfig {
     ZERO = 1;
     RANDOM = 2;
     FILE = 3;
+    CLONE = 4;
   }
   optional Type type = 1 [default = ZERO];
   optional double mean = 2 [default = 0];

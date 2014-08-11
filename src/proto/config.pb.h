@@ -63,11 +63,12 @@ inline bool DataConfig_DataFormat_Parse(
 enum ParameterInitConfig_Type {
   ParameterInitConfig_Type_ZERO = 1,
   ParameterInitConfig_Type_RANDOM = 2,
-  ParameterInitConfig_Type_FILE = 3
+  ParameterInitConfig_Type_FILE = 3,
+  ParameterInitConfig_Type_CLONE = 4
 };
 bool ParameterInitConfig_Type_IsValid(int value);
 const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MIN = ParameterInitConfig_Type_ZERO;
-const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MAX = ParameterInitConfig_Type_FILE;
+const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MAX = ParameterInitConfig_Type_CLONE;
 const int ParameterInitConfig_Type_Type_ARRAYSIZE = ParameterInitConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ParameterInitConfig_Type_descriptor();
@@ -311,6 +312,7 @@ class ParameterInitConfig : public ::google::protobuf::Message {
   static const Type ZERO = ParameterInitConfig_Type_ZERO;
   static const Type RANDOM = ParameterInitConfig_Type_RANDOM;
   static const Type FILE = ParameterInitConfig_Type_FILE;
+  static const Type CLONE = ParameterInitConfig_Type_CLONE;
   static inline bool Type_IsValid(int value) {
     return ParameterInitConfig_Type_IsValid(value);
   }
