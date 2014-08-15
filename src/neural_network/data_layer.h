@@ -22,6 +22,14 @@ class DataLayer : public Layer<V>  {
       batches_.push_back(batch);
     }
 
+    for (size_t i = 0; i < data_[0]->cols(); ++i) {
+      auto col = data_[0]->colBlock(SizeR(i,i+1))->eigenArray();
+      col -= col.mean();
+      V v = col.matrix().norm();
+      if (v != 0) col = col / v * sqrt((V)n);
+      // LL << data_[0]->colBlock(SizeR(i,i+1))->eigenArray().matrix().squaredNorm();
+    }
+
     CHECK_EQ(data_.size(), 2);
     cf_.set_size(data_[0]->cols());
   }
@@ -34,7 +42,7 @@ class DataLayer : public Layer<V>  {
     for (int i = 0; i < data_.size(); ++i) {
       if (data_[i]->colMajor()) {
         data_[i] = data_[i]->toRowMajor();
-        LL << data_[i]->debugString();
+        // LL << data_[i]->debugString();
       }
       out_args_[i]->value = data_[i]->rowBlock(batch);
       // LL << out_args_[i]->value->debugString();

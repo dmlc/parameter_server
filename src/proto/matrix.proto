@@ -1,5 +1,6 @@
 package PS;
 import "proto/range.proto";
+import "proto/instance.proto";
 
 message MatrixInfo {
   enum Type {
@@ -26,14 +27,5 @@ message MatrixInfo {
   optional float nnz_per_row = 11;
   optional float nnz_per_col = 12;
 
-  // localization
-  // optional bool localized = 21 [default = false];
-  // optional uint32 local_rows = 22;
-  // optional uint32 local_cols = 23;
-
-  // // stored files
-  // repeated string proto_files = 21;
-  // repeated string text_files = 22;
-  // // a single binary file
-  // optional string bin_file = 23;
+  repeated FeatureGroupInfo group_info = 13;
 }

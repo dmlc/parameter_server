@@ -103,6 +103,25 @@ inline bool SolverConfig_Type_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<SolverConfig_Type>(
     SolverConfig_Type_descriptor(), name, value);
 }
+enum SolverConfig_Update {
+  SolverConfig_Update_NORMAL = 1,
+  SolverConfig_Update_ADAGRAD = 2
+};
+bool SolverConfig_Update_IsValid(int value);
+const SolverConfig_Update SolverConfig_Update_Update_MIN = SolverConfig_Update_NORMAL;
+const SolverConfig_Update SolverConfig_Update_Update_MAX = SolverConfig_Update_ADAGRAD;
+const int SolverConfig_Update_Update_ARRAYSIZE = SolverConfig_Update_Update_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SolverConfig_Update_descriptor();
+inline const ::std::string& SolverConfig_Update_Name(SolverConfig_Update value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SolverConfig_Update_descriptor(), value);
+}
+inline bool SolverConfig_Update_Parse(
+    const ::std::string& name, SolverConfig_Update* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SolverConfig_Update>(
+    SolverConfig_Update_descriptor(), name, value);
+}
 // ===================================================================
 
 class LayerConfig : public ::google::protobuf::Message {
@@ -613,6 +632,30 @@ class SolverConfig : public ::google::protobuf::Message {
     return SolverConfig_Type_Parse(name, value);
   }
 
+  typedef SolverConfig_Update Update;
+  static const Update NORMAL = SolverConfig_Update_NORMAL;
+  static const Update ADAGRAD = SolverConfig_Update_ADAGRAD;
+  static inline bool Update_IsValid(int value) {
+    return SolverConfig_Update_IsValid(value);
+  }
+  static const Update Update_MIN =
+    SolverConfig_Update_Update_MIN;
+  static const Update Update_MAX =
+    SolverConfig_Update_Update_MAX;
+  static const int Update_ARRAYSIZE =
+    SolverConfig_Update_Update_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Update_descriptor() {
+    return SolverConfig_Update_descriptor();
+  }
+  static inline const ::std::string& Update_Name(Update value) {
+    return SolverConfig_Update_Name(value);
+  }
+  static inline bool Update_Parse(const ::std::string& name,
+      Update* value) {
+    return SolverConfig_Update_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required .PS.NN.SolverConfig.Type type = 1;
@@ -621,6 +664,13 @@ class SolverConfig : public ::google::protobuf::Message {
   static const int kTypeFieldNumber = 1;
   inline ::PS::NN::SolverConfig_Type type() const;
   inline void set_type(::PS::NN::SolverConfig_Type value);
+
+  // optional .PS.NN.SolverConfig.Update update = 6;
+  inline bool has_update() const;
+  inline void clear_update();
+  static const int kUpdateFieldNumber = 6;
+  inline ::PS::NN::SolverConfig_Update update() const;
+  inline void set_update(::PS::NN::SolverConfig_Update value);
 
   // optional .PS.LearningRateConfig lr = 2;
   inline bool has_lr() const;
@@ -645,26 +695,39 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 display() const;
   inline void set_display(::google::protobuf::int32 value);
 
+  // optional int32 validation = 5 [default = 100];
+  inline bool has_validation() const;
+  inline void clear_validation();
+  static const int kValidationFieldNumber = 5;
+  inline ::google::protobuf::int32 validation() const;
+  inline void set_validation(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.NN.SolverConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
+  inline void set_has_update();
+  inline void clear_has_update();
   inline void set_has_lr();
   inline void clear_has_lr();
   inline void set_has_max_iteration();
   inline void clear_has_max_iteration();
   inline void set_has_display();
   inline void clear_has_display();
+  inline void set_has_validation();
+  inline void clear_has_validation();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PS::LearningRateConfig* lr_;
   int type_;
+  int update_;
+  ::PS::LearningRateConfig* lr_;
   ::google::protobuf::int32 max_iteration_;
   ::google::protobuf::int32 display_;
+  ::google::protobuf::int32 validation_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
   friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
@@ -1194,15 +1257,38 @@ inline void SolverConfig::set_type(::PS::NN::SolverConfig_Type value) {
   type_ = value;
 }
 
-// optional .PS.LearningRateConfig lr = 2;
-inline bool SolverConfig::has_lr() const {
+// optional .PS.NN.SolverConfig.Update update = 6;
+inline bool SolverConfig::has_update() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void SolverConfig::set_has_lr() {
+inline void SolverConfig::set_has_update() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void SolverConfig::clear_has_lr() {
+inline void SolverConfig::clear_has_update() {
   _has_bits_[0] &= ~0x00000002u;
+}
+inline void SolverConfig::clear_update() {
+  update_ = 1;
+  clear_has_update();
+}
+inline ::PS::NN::SolverConfig_Update SolverConfig::update() const {
+  return static_cast< ::PS::NN::SolverConfig_Update >(update_);
+}
+inline void SolverConfig::set_update(::PS::NN::SolverConfig_Update value) {
+  assert(::PS::NN::SolverConfig_Update_IsValid(value));
+  set_has_update();
+  update_ = value;
+}
+
+// optional .PS.LearningRateConfig lr = 2;
+inline bool SolverConfig::has_lr() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SolverConfig::set_has_lr() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SolverConfig::clear_has_lr() {
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void SolverConfig::clear_lr() {
   if (lr_ != NULL) lr_->::PS::LearningRateConfig::Clear();
@@ -1234,13 +1320,13 @@ inline void SolverConfig::set_allocated_lr(::PS::LearningRateConfig* lr) {
 
 // optional int32 max_iteration = 3 [default = 1000];
 inline bool SolverConfig::has_max_iteration() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void SolverConfig::set_has_max_iteration() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void SolverConfig::clear_has_max_iteration() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void SolverConfig::clear_max_iteration() {
   max_iteration_ = 1000;
@@ -1256,13 +1342,13 @@ inline void SolverConfig::set_max_iteration(::google::protobuf::int32 value) {
 
 // optional int32 display = 4 [default = 100];
 inline bool SolverConfig::has_display() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void SolverConfig::set_has_display() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void SolverConfig::clear_has_display() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void SolverConfig::clear_display() {
   display_ = 100;
@@ -1274,6 +1360,28 @@ inline ::google::protobuf::int32 SolverConfig::display() const {
 inline void SolverConfig::set_display(::google::protobuf::int32 value) {
   set_has_display();
   display_ = value;
+}
+
+// optional int32 validation = 5 [default = 100];
+inline bool SolverConfig::has_validation() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void SolverConfig::set_has_validation() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void SolverConfig::clear_has_validation() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void SolverConfig::clear_validation() {
+  validation_ = 100;
+  clear_has_validation();
+}
+inline ::google::protobuf::int32 SolverConfig::validation() const {
+  return validation_;
+}
+inline void SolverConfig::set_validation(::google::protobuf::int32 value) {
+  set_has_validation();
+  validation_ = value;
 }
 
 
@@ -1297,6 +1405,10 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::ActivationConfig_Type>
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::SolverConfig_Type>() {
   return ::PS::NN::SolverConfig_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::NN::SolverConfig_Update>() {
+  return ::PS::NN::SolverConfig_Update_descriptor();
 }
 
 }  // namespace google

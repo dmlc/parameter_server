@@ -298,6 +298,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
   }
 
   auto info = info_;
+  info.set_sizeof_index(sizeof(uint32));
   SizeR local(0, key_map->size());
   if (rowMajor())
     local.to(info.mutable_col());
@@ -386,6 +387,7 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
   }
 
   auto info = info_;
+  info.set_sizeof_index(sizeof(uint32));
   SizeR local(0, key_map->size());
   if (rowMajor())
     local.to(info.mutable_col());

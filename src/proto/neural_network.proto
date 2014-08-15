@@ -53,9 +53,17 @@ message SolverConfig {
   }
   required Type type = 1;
 
+  enum Update {
+    NORMAL = 1;
+    ADAGRAD = 2;
+  }
+  optional Update update = 6;
+
   optional LearningRateConfig lr = 2;
   optional int32 max_iteration = 3 [default = 1000];
 
   // display every _display_ iteration
   optional int32 display = 4 [default = 100];
+  // evaluate on the validation set every _validation_ iteration
+  optional int32 validation = 5 [default = 100];
 }

@@ -125,6 +125,9 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
   res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
   MatrixInfo f = readMatrixInfo<V>(info.all_group());
+  for (int i = 0; i < info.individual_groups_size(); ++i) {
+    *f.add_group_info() = info.individual_groups(i);
+  }
   res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 
   return res;

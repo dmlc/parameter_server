@@ -10,7 +10,7 @@
 
 namespace PS {
 
-std::vector<std::string> readFilenamesInDirectory(const std::string& directory) {
+static std::vector<std::string> readFilenamesInDirectory(const std::string& directory) {
   std::vector<std::string> files;
 
   DIR *dir = opendir(directory.c_str());
@@ -45,55 +45,52 @@ string removeExtension(const string& file) {
 
 }
 
-DataConfig searchFiles(const DataConfig& config) {
+static DataConfig searchFiles(const DataConfig& config) {
   int n = config.file_size();
   CHECK_GE(n, 1) << "empty files: " << config.DebugString();
 
-  string dir;
-  std::vector<std::regex> patterns;
+  std::vector<std::string> matched_files;
+
   for (int i = 0; i < n; ++i) {
-    if (i == 0)
-      dir = path(config.file(i));
-    else
-      CHECK_EQ(dir, path(config.file(i)))
-          << " all files should in the same directory";
+    string dir = path(config.file(i));
+    std::regex pattern;
     try {
-      std::regex re(filename(config.file(i)));
-      patterns.push_back(re);
+      pattern = std::regex(filename(config.file(i)));
     } catch (const std::regex_error& e) {
       CHECK(false) << filename(config.file(i))
                    << " is not valid (supported) regex, regex_error caught: "
                    << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
-  }
 
-  // remove file extensions and duplications
-  auto files = readFilenamesInDirectory(dir);
-  for (auto& f : files) f = removeExtension(f);
-  std::sort(files.begin(), files.end());
-  auto it = std::unique(files.begin(), files.end());
-  files.resize(std::distance(files.begin(), it));
+    // remove file extensions and duplications
+    auto files = readFilenamesInDirectory(dir);
+    for (auto& f : files) f = removeExtension(f);
+    std::sort(files.begin(), files.end());
+    auto it = std::unique(files.begin(), files.end());
+    files.resize(std::distance(files.begin(), it));
 
-  // match regex
-  DataConfig ret = config;
-  ret.clear_file();
-
-  for (auto& f : files) {
-    bool matched = false;
-    for (auto& ex : patterns) {
-      if (std::regex_match(f, ex)) {
-        matched = true;
-        break;
+    // match regex
+    for (auto& f : files) {
+      if (std::regex_match(f, pattern)) {
+        matched_files.push_back(dir+"/"+f);
       }
     }
-    if (matched) {
-      ret.add_file(dir+"/"+f);
-    }
   }
+
+  // remove duplicate files
+
+  std::sort(matched_files.begin(), matched_files.end());
+  auto it = std::unique(matched_files.begin(), matched_files.end());
+  matched_files.resize(std::distance(matched_files.begin(), it));
+
+  DataConfig ret = config;
+  ret.clear_file();
+  for (auto& f : matched_files)
+    ret.add_file(f);
   return ret;
 }
 
-std::vector<DataConfig> assignDataToNodes(
+static std::vector<DataConfig> assignDataToNodes(
     const DataConfig& config, int num_nodes, InstanceInfo* info) {
   CHECK_EQ(config.format(), DataConfig::PROTO) << "TODO, support more formats";
   auto data = searchFiles(config);

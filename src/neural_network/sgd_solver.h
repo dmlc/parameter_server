@@ -10,13 +10,34 @@ class SGDSolver : public Solver {
 
   void update(int iter, ParameterPtr<real>& param) {
     if (!param || !(param->value) || !(param->gradient)) return;
-    // LL << param->value->eigenArray()[0]
-    //    << " " << param->gradient->eigenArray()[0];
-    param->value->eigenArray() -= cf_.lr().eta() * param->gradient->eigenArray();
+
+    real alpha = cf_.lr().alpha();
+    real beta = cf_.lr().beta();
+    auto grad = param->gradient->eigenArray();
+    // LL << grad.matrix().squaredNorm();
+
+    if (cf_.update() == SolverConfig::ADAGRAD) {
+      const auto& name = param->name;
+      if (past_grads_.count(name) == 0) {
+        past_grads_[name] = MatrixPtr<real>(
+            new DenseMatrix<real>(
+                param->gradient->rows(), param->gradient->cols()));
+      }
+
+      auto ada_grad = past_grads_[name]->eigenArray();
+
+      ada_grad += grad.square();
+
+      LL << ada_grad.matrix().squaredNorm();
+      param->value->eigenArray() -=  alpha * grad / (beta + ada_grad.sqrt());
+    } else {
+      param->value->eigenArray() -=  alpha * grad / (beta + sqrt((real)iter));
+    }
   }
 
   void process(Message* msg) { }
-
+ protected:
+  std::map<string, MatrixPtr<real>> past_grads_;
 };
 
 void SGDSolver::run() {
@@ -34,11 +55,13 @@ void SGDSolver::run() {
     }
     LL << iter << " objv: " << objv;
 
-    real auc = 0;
-    for (auto& l : test_->layers()) {
-      auc += l->forward();
+    if ((iter+1) % cf_.validation() == 0) {
+      real auc = 0;
+      for (auto& l : test_->layers()) {
+        auc += l->forward();
+      }
+      LL << "test auc: " << auc;
     }
-    LL << "test auc: " << auc;
   }
   LL << "finished";
 }

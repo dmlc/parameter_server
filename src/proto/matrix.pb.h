@@ -26,6 +26,7 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
+#include "proto/instance.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -212,6 +213,18 @@ class MatrixInfo : public ::google::protobuf::Message {
   inline float nnz_per_col() const;
   inline void set_nnz_per_col(float value);
 
+  // repeated .PS.FeatureGroupInfo group_info = 13;
+  inline int group_info_size() const;
+  inline void clear_group_info();
+  static const int kGroupInfoFieldNumber = 13;
+  inline const ::PS::FeatureGroupInfo& group_info(int index) const;
+  inline ::PS::FeatureGroupInfo* mutable_group_info(int index);
+  inline ::PS::FeatureGroupInfo* add_group_info();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
+      group_info() const;
+  inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
+      mutable_group_info();
+
   // @@protoc_insertion_point(class_scope:PS.MatrixInfo)
  private:
   inline void set_has_type();
@@ -246,10 +259,11 @@ class MatrixInfo : public ::google::protobuf::Message {
   ::google::protobuf::uint64 nnz_;
   ::google::protobuf::uint32 sizeof_value_;
   float nnz_per_row_;
+  ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo > group_info_;
   float nnz_per_col_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fmatrix_2eproto();
   friend void protobuf_AssignDesc_proto_2fmatrix_2eproto();
@@ -516,6 +530,31 @@ inline float MatrixInfo::nnz_per_col() const {
 inline void MatrixInfo::set_nnz_per_col(float value) {
   set_has_nnz_per_col();
   nnz_per_col_ = value;
+}
+
+// repeated .PS.FeatureGroupInfo group_info = 13;
+inline int MatrixInfo::group_info_size() const {
+  return group_info_.size();
+}
+inline void MatrixInfo::clear_group_info() {
+  group_info_.Clear();
+}
+inline const ::PS::FeatureGroupInfo& MatrixInfo::group_info(int index) const {
+  return group_info_.Get(index);
+}
+inline ::PS::FeatureGroupInfo* MatrixInfo::mutable_group_info(int index) {
+  return group_info_.Mutable(index);
+}
+inline ::PS::FeatureGroupInfo* MatrixInfo::add_group_info() {
+  return group_info_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
+MatrixInfo::group_info() const {
+  return group_info_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
+MatrixInfo::mutable_group_info() {
+  return &group_info_;
 }
 
 
