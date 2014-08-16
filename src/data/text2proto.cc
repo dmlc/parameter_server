@@ -3,13 +3,12 @@
 #include "base/matrix_io.h"
 // #include <bitset>
 
-// TODO if input is emtpy, use std::in
-// DEFINE_string(input, "../data/ps.txt", "input file name");
-// DEFINE_string(output, "../data/ps", "output file name");
+DEFINE_string(input, "stdin", "stdin or a input filename");
+DEFINE_string(output, "stdout", "stdout or a output filename");
 
 DEFINE_uint64(format_detector, 1000,
               "using the first *format_detector* lines to detect the format");
-DEFINE_bool(verbose, true, "");
+// DEFINE_bool(verbose, true, "");
 DEFINE_string(format, "none", "pserver, libsvm, vw or adfea");
 
 namespace PS {
@@ -22,21 +21,25 @@ void Text2Proto::init() {
   std::transform(format_.begin(), format_.end(), format_.begin(), ::tolower);
 
   if (adfea()) {
-    info_.set_fea_type(FeatureGroupInfo::SPARSE_BINARY);
+    info_.set_fea_type(InstanceInfo::SPARSE_BINARY);
     info_.set_label_type(InstanceInfo::BINARY);
   } else if (libsvm()) {
-    info_.set_fea_type(FeatureGroupInfo::SPARSE);
+    info_.set_fea_type(InstanceInfo::SPARSE);
     info_.set_label_type(InstanceInfo::BINARY);
   }
 }
 
 void Text2Proto::write() {
-  CHECK(!group_info_.emtpy());
-  info_.set_num_ins(num_good_record_);
+  // CHECK(!group_info_.empty());
+  info_.set_num_ins(records_.size());
   for (auto& it : group_info_) {
     *info_.add_fea_group() = it.second;
   }
-  writer_.WriteProtocolMessage(info_);
+  writer_->WriteProtocolMessage(info_);
+
+  for (const auto& r : records_) {
+    writer_->WriteProtocolMessage(r);
+  }
 }
 
 // input format:
@@ -251,7 +254,7 @@ bool Text2Proto::parsePServerInstance(const string& line) {
 // PARSE_PS_ERROR:
 //   LL << "failed to parse line " << num_line_processed_
 //      << " of " << FLAGS_input << ": " << line;
-//   return false;
+  return false;
 }
 
 bool Text2Proto::detectPServerInstance(const string& line) {
@@ -285,7 +288,7 @@ bool Text2Proto::detectPServerInstance(const string& line) {
   //     }
   //   }
   // }
-  // return true;
+  return true;
 }
 
 void Text2Proto::processPServer(char *line) {
@@ -308,12 +311,10 @@ void Text2Proto::processPServer(char *line) {
 int main(int argc, char *argv[]) {
   using namespace PS;
   FLAGS_logtostderr = 1;
+  google::SetUsageMessage("./self -format libsvm < text_file > recordio_file");
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
-  if (FLAGS_verbose) {
-    std::cerr << "parse input as " << FLAGS_text_format << " format\n";
-  }
   Text2Proto convertor;
   convertor.init();
 
@@ -336,19 +337,18 @@ int main(int argc, char *argv[]) {
         convertor.processAdFea(line);
       });
   } else {
-    CHECK(false) << "unknow text format " << FLAGS_text_format;
+    CHECK(false) << "unknow text format " << FLAGS_format;
   }
   reader.Reload();
 
-  convertor.finalize();
+  convertor.write();
 
-  if (FLAGS_verbose) {
-    std::cerr << "written " << convertor.num_lines_written()
-              << " instances in " <<  t.get()  << " sec." << std::endl;
-    if (convertor.num_lines_skipped()) {
-      std::cerr << convertor.num_lines_skipped()
-                << " bad instances are skipped" << std::endl;
-    }
+  std::cerr << "written " << convertor.num_lines_written()
+            << " instances in " <<  t.get()  << " sec." << std::endl;
+  if (convertor.num_lines_skipped()) {
+    std::cerr << convertor.num_lines_skipped()
+              << " bad instances are skipped" << std::endl;
   }
+
   return 0;
 }

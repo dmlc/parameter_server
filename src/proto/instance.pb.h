@@ -25,7 +25,6 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
-#include "proto/range.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -60,25 +59,25 @@ inline bool InstanceInfo_LabelType_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<InstanceInfo_LabelType>(
     InstanceInfo_LabelType_descriptor(), name, value);
 }
-enum FeatureGroupInfo_FeatureType {
-  FeatureGroupInfo_FeatureType_DENSE = 1,
-  FeatureGroupInfo_FeatureType_SPARSE = 2,
-  FeatureGroupInfo_FeatureType_SPARSE_BINARY = 3
+enum InstanceInfo_FeatureType {
+  InstanceInfo_FeatureType_DENSE = 1,
+  InstanceInfo_FeatureType_SPARSE = 2,
+  InstanceInfo_FeatureType_SPARSE_BINARY = 3
 };
-bool FeatureGroupInfo_FeatureType_IsValid(int value);
-const FeatureGroupInfo_FeatureType FeatureGroupInfo_FeatureType_FeatureType_MIN = FeatureGroupInfo_FeatureType_DENSE;
-const FeatureGroupInfo_FeatureType FeatureGroupInfo_FeatureType_FeatureType_MAX = FeatureGroupInfo_FeatureType_SPARSE_BINARY;
-const int FeatureGroupInfo_FeatureType_FeatureType_ARRAYSIZE = FeatureGroupInfo_FeatureType_FeatureType_MAX + 1;
+bool InstanceInfo_FeatureType_IsValid(int value);
+const InstanceInfo_FeatureType InstanceInfo_FeatureType_FeatureType_MIN = InstanceInfo_FeatureType_DENSE;
+const InstanceInfo_FeatureType InstanceInfo_FeatureType_FeatureType_MAX = InstanceInfo_FeatureType_SPARSE_BINARY;
+const int InstanceInfo_FeatureType_FeatureType_ARRAYSIZE = InstanceInfo_FeatureType_FeatureType_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* FeatureGroupInfo_FeatureType_descriptor();
-inline const ::std::string& FeatureGroupInfo_FeatureType_Name(FeatureGroupInfo_FeatureType value) {
+const ::google::protobuf::EnumDescriptor* InstanceInfo_FeatureType_descriptor();
+inline const ::std::string& InstanceInfo_FeatureType_Name(InstanceInfo_FeatureType value) {
   return ::google::protobuf::internal::NameOfEnum(
-    FeatureGroupInfo_FeatureType_descriptor(), value);
+    InstanceInfo_FeatureType_descriptor(), value);
 }
-inline bool FeatureGroupInfo_FeatureType_Parse(
-    const ::std::string& name, FeatureGroupInfo_FeatureType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<FeatureGroupInfo_FeatureType>(
-    FeatureGroupInfo_FeatureType_descriptor(), name, value);
+inline bool InstanceInfo_FeatureType_Parse(
+    const ::std::string& name, InstanceInfo_FeatureType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<InstanceInfo_FeatureType>(
+    InstanceInfo_FeatureType_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -160,6 +159,31 @@ class InstanceInfo : public ::google::protobuf::Message {
     return InstanceInfo_LabelType_Parse(name, value);
   }
 
+  typedef InstanceInfo_FeatureType FeatureType;
+  static const FeatureType DENSE = InstanceInfo_FeatureType_DENSE;
+  static const FeatureType SPARSE = InstanceInfo_FeatureType_SPARSE;
+  static const FeatureType SPARSE_BINARY = InstanceInfo_FeatureType_SPARSE_BINARY;
+  static inline bool FeatureType_IsValid(int value) {
+    return InstanceInfo_FeatureType_IsValid(value);
+  }
+  static const FeatureType FeatureType_MIN =
+    InstanceInfo_FeatureType_FeatureType_MIN;
+  static const FeatureType FeatureType_MAX =
+    InstanceInfo_FeatureType_FeatureType_MAX;
+  static const int FeatureType_ARRAYSIZE =
+    InstanceInfo_FeatureType_FeatureType_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  FeatureType_descriptor() {
+    return InstanceInfo_FeatureType_descriptor();
+  }
+  static inline const ::std::string& FeatureType_Name(FeatureType value) {
+    return InstanceInfo_FeatureType_Name(value);
+  }
+  static inline bool FeatureType_Parse(const ::std::string& name,
+      FeatureType* value) {
+    return InstanceInfo_FeatureType_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required .PS.InstanceInfo.LabelType label_type = 1;
@@ -169,42 +193,50 @@ class InstanceInfo : public ::google::protobuf::Message {
   inline ::PS::InstanceInfo_LabelType label_type() const;
   inline void set_label_type(::PS::InstanceInfo_LabelType value);
 
-  // required .PS.FeatureGroupInfo all_group = 2;
-  inline bool has_all_group() const;
-  inline void clear_all_group();
-  static const int kAllGroupFieldNumber = 2;
-  inline const ::PS::FeatureGroupInfo& all_group() const;
-  inline ::PS::FeatureGroupInfo* mutable_all_group();
-  inline ::PS::FeatureGroupInfo* release_all_group();
-  inline void set_allocated_all_group(::PS::FeatureGroupInfo* all_group);
+  // required .PS.InstanceInfo.FeatureType fea_type = 2;
+  inline bool has_fea_type() const;
+  inline void clear_fea_type();
+  static const int kFeaTypeFieldNumber = 2;
+  inline ::PS::InstanceInfo_FeatureType fea_type() const;
+  inline void set_fea_type(::PS::InstanceInfo_FeatureType value);
 
-  // repeated .PS.FeatureGroupInfo individual_groups = 3;
-  inline int individual_groups_size() const;
-  inline void clear_individual_groups();
-  static const int kIndividualGroupsFieldNumber = 3;
-  inline const ::PS::FeatureGroupInfo& individual_groups(int index) const;
-  inline ::PS::FeatureGroupInfo* mutable_individual_groups(int index);
-  inline ::PS::FeatureGroupInfo* add_individual_groups();
+  // repeated .PS.FeatureGroupInfo fea_group = 3;
+  inline int fea_group_size() const;
+  inline void clear_fea_group();
+  static const int kFeaGroupFieldNumber = 3;
+  inline const ::PS::FeatureGroupInfo& fea_group(int index) const;
+  inline ::PS::FeatureGroupInfo* mutable_fea_group(int index);
+  inline ::PS::FeatureGroupInfo* add_fea_group();
   inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
-      individual_groups() const;
+      fea_group() const;
   inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
-      mutable_individual_groups();
+      mutable_fea_group();
+
+  // optional uint64 num_ins = 4;
+  inline bool has_num_ins() const;
+  inline void clear_num_ins();
+  static const int kNumInsFieldNumber = 4;
+  inline ::google::protobuf::uint64 num_ins() const;
+  inline void set_num_ins(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:PS.InstanceInfo)
  private:
   inline void set_has_label_type();
   inline void clear_has_label_type();
-  inline void set_has_all_group();
-  inline void clear_has_all_group();
+  inline void set_has_fea_type();
+  inline void clear_has_fea_type();
+  inline void set_has_num_ins();
+  inline void clear_has_num_ins();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PS::FeatureGroupInfo* all_group_;
-  ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo > individual_groups_;
   int label_type_;
+  int fea_type_;
+  ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo > fea_group_;
+  ::google::protobuf::uint64 num_ins_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2finstance_2eproto();
   friend void protobuf_AssignDesc_proto_2finstance_2eproto();
@@ -267,101 +299,56 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef FeatureGroupInfo_FeatureType FeatureType;
-  static const FeatureType DENSE = FeatureGroupInfo_FeatureType_DENSE;
-  static const FeatureType SPARSE = FeatureGroupInfo_FeatureType_SPARSE;
-  static const FeatureType SPARSE_BINARY = FeatureGroupInfo_FeatureType_SPARSE_BINARY;
-  static inline bool FeatureType_IsValid(int value) {
-    return FeatureGroupInfo_FeatureType_IsValid(value);
-  }
-  static const FeatureType FeatureType_MIN =
-    FeatureGroupInfo_FeatureType_FeatureType_MIN;
-  static const FeatureType FeatureType_MAX =
-    FeatureGroupInfo_FeatureType_FeatureType_MAX;
-  static const int FeatureType_ARRAYSIZE =
-    FeatureGroupInfo_FeatureType_FeatureType_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  FeatureType_descriptor() {
-    return FeatureGroupInfo_FeatureType_descriptor();
-  }
-  static inline const ::std::string& FeatureType_Name(FeatureType value) {
-    return FeatureGroupInfo_FeatureType_Name(value);
-  }
-  static inline bool FeatureType_Parse(const ::std::string& name,
-      FeatureType* value) {
-    return FeatureGroupInfo_FeatureType_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
 
-  // required int32 group_id = 1;
+  // optional int32 group_id = 1;
   inline bool has_group_id() const;
   inline void clear_group_id();
   static const int kGroupIdFieldNumber = 1;
   inline ::google::protobuf::int32 group_id() const;
   inline void set_group_id(::google::protobuf::int32 value);
 
-  // required .PS.FeatureGroupInfo.FeatureType feature_type = 2;
-  inline bool has_feature_type() const;
-  inline void clear_feature_type();
-  static const int kFeatureTypeFieldNumber = 2;
-  inline ::PS::FeatureGroupInfo_FeatureType feature_type() const;
-  inline void set_feature_type(::PS::FeatureGroupInfo_FeatureType value);
+  // optional uint64 fea_begin = 3 [default = 18446744073709551615];
+  inline bool has_fea_begin() const;
+  inline void clear_fea_begin();
+  static const int kFeaBeginFieldNumber = 3;
+  inline ::google::protobuf::uint64 fea_begin() const;
+  inline void set_fea_begin(::google::protobuf::uint64 value);
 
-  // required uint64 feature_begin = 3 [default = 18446744073709551615];
-  inline bool has_feature_begin() const;
-  inline void clear_feature_begin();
-  static const int kFeatureBeginFieldNumber = 3;
-  inline ::google::protobuf::uint64 feature_begin() const;
-  inline void set_feature_begin(::google::protobuf::uint64 value);
+  // optional uint64 fea_end = 4;
+  inline bool has_fea_end() const;
+  inline void clear_fea_end();
+  static const int kFeaEndFieldNumber = 4;
+  inline ::google::protobuf::uint64 fea_end() const;
+  inline void set_fea_end(::google::protobuf::uint64 value);
 
-  // required uint64 feature_end = 4;
-  inline bool has_feature_end() const;
-  inline void clear_feature_end();
-  static const int kFeatureEndFieldNumber = 4;
-  inline ::google::protobuf::uint64 feature_end() const;
-  inline void set_feature_end(::google::protobuf::uint64 value);
-
-  // required uint64 num_instances = 5;
-  inline bool has_num_instances() const;
-  inline void clear_num_instances();
-  static const int kNumInstancesFieldNumber = 5;
-  inline ::google::protobuf::uint64 num_instances() const;
-  inline void set_num_instances(::google::protobuf::uint64 value);
-
-  // required uint64 num_entries = 6;
-  inline bool has_num_entries() const;
-  inline void clear_num_entries();
-  static const int kNumEntriesFieldNumber = 6;
-  inline ::google::protobuf::uint64 num_entries() const;
-  inline void set_num_entries(::google::protobuf::uint64 value);
+  // optional uint64 nnz = 6;
+  inline bool has_nnz() const;
+  inline void clear_nnz();
+  static const int kNnzFieldNumber = 6;
+  inline ::google::protobuf::uint64 nnz() const;
+  inline void set_nnz(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:PS.FeatureGroupInfo)
  private:
   inline void set_has_group_id();
   inline void clear_has_group_id();
-  inline void set_has_feature_type();
-  inline void clear_has_feature_type();
-  inline void set_has_feature_begin();
-  inline void clear_has_feature_begin();
-  inline void set_has_feature_end();
-  inline void clear_has_feature_end();
-  inline void set_has_num_instances();
-  inline void clear_has_num_instances();
-  inline void set_has_num_entries();
-  inline void clear_has_num_entries();
+  inline void set_has_fea_begin();
+  inline void clear_has_fea_begin();
+  inline void set_has_fea_end();
+  inline void clear_has_fea_end();
+  inline void set_has_nnz();
+  inline void clear_has_nnz();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::google::protobuf::uint64 fea_begin_;
+  ::google::protobuf::uint64 fea_end_;
+  ::google::protobuf::uint64 nnz_;
   ::google::protobuf::int32 group_id_;
-  int feature_type_;
-  ::google::protobuf::uint64 feature_begin_;
-  ::google::protobuf::uint64 feature_end_;
-  ::google::protobuf::uint64 num_instances_;
-  ::google::protobuf::uint64 num_entries_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2finstance_2eproto();
   friend void protobuf_AssignDesc_proto_2finstance_2eproto();
@@ -433,43 +420,53 @@ class Instance : public ::google::protobuf::Message {
   inline float label() const;
   inline void set_label(float value);
 
-  // repeated uint64 feature_id = 2;
-  inline int feature_id_size() const;
-  inline void clear_feature_id();
-  static const int kFeatureIdFieldNumber = 2;
-  inline ::google::protobuf::uint64 feature_id(int index) const;
-  inline void set_feature_id(int index, ::google::protobuf::uint64 value);
-  inline void add_feature_id(::google::protobuf::uint64 value);
+  // repeated uint64 fea_id = 2;
+  inline int fea_id_size() const;
+  inline void clear_fea_id();
+  static const int kFeaIdFieldNumber = 2;
+  inline ::google::protobuf::uint64 fea_id(int index) const;
+  inline void set_fea_id(int index, ::google::protobuf::uint64 value);
+  inline void add_fea_id(::google::protobuf::uint64 value);
   inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
-      feature_id() const;
+      fea_id() const;
   inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
-      mutable_feature_id();
+      mutable_fea_id();
 
-  // repeated float value = 3;
-  inline int value_size() const;
-  inline void clear_value();
-  static const int kValueFieldNumber = 3;
-  inline float value(int index) const;
-  inline void set_value(int index, float value);
-  inline void add_value(float value);
+  // repeated float fea_val = 3;
+  inline int fea_val_size() const;
+  inline void clear_fea_val();
+  static const int kFeaValFieldNumber = 3;
+  inline float fea_val(int index) const;
+  inline void set_fea_val(int index, float value);
+  inline void add_fea_val(float value);
   inline const ::google::protobuf::RepeatedField< float >&
-      value() const;
+      fea_val() const;
   inline ::google::protobuf::RepeatedField< float >*
-      mutable_value();
+      mutable_fea_val();
+
+  // optional int64 ins_id = 4;
+  inline bool has_ins_id() const;
+  inline void clear_ins_id();
+  static const int kInsIdFieldNumber = 4;
+  inline ::google::protobuf::int64 ins_id() const;
+  inline void set_ins_id(::google::protobuf::int64 value);
 
   // @@protoc_insertion_point(class_scope:PS.Instance)
  private:
   inline void set_has_label();
   inline void clear_has_label();
+  inline void set_has_ins_id();
+  inline void clear_has_ins_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > feature_id_;
-  ::google::protobuf::RepeatedField< float > value_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > fea_id_;
+  ::google::protobuf::RepeatedField< float > fea_val_;
+  ::google::protobuf::int64 ins_id_;
   float label_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2finstance_2eproto();
   friend void protobuf_AssignDesc_proto_2finstance_2eproto();
@@ -508,74 +505,81 @@ inline void InstanceInfo::set_label_type(::PS::InstanceInfo_LabelType value) {
   label_type_ = value;
 }
 
-// required .PS.FeatureGroupInfo all_group = 2;
-inline bool InstanceInfo::has_all_group() const {
+// required .PS.InstanceInfo.FeatureType fea_type = 2;
+inline bool InstanceInfo::has_fea_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void InstanceInfo::set_has_all_group() {
+inline void InstanceInfo::set_has_fea_type() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void InstanceInfo::clear_has_all_group() {
+inline void InstanceInfo::clear_has_fea_type() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void InstanceInfo::clear_all_group() {
-  if (all_group_ != NULL) all_group_->::PS::FeatureGroupInfo::Clear();
-  clear_has_all_group();
+inline void InstanceInfo::clear_fea_type() {
+  fea_type_ = 1;
+  clear_has_fea_type();
 }
-inline const ::PS::FeatureGroupInfo& InstanceInfo::all_group() const {
-  return all_group_ != NULL ? *all_group_ : *default_instance_->all_group_;
+inline ::PS::InstanceInfo_FeatureType InstanceInfo::fea_type() const {
+  return static_cast< ::PS::InstanceInfo_FeatureType >(fea_type_);
 }
-inline ::PS::FeatureGroupInfo* InstanceInfo::mutable_all_group() {
-  set_has_all_group();
-  if (all_group_ == NULL) all_group_ = new ::PS::FeatureGroupInfo;
-  return all_group_;
-}
-inline ::PS::FeatureGroupInfo* InstanceInfo::release_all_group() {
-  clear_has_all_group();
-  ::PS::FeatureGroupInfo* temp = all_group_;
-  all_group_ = NULL;
-  return temp;
-}
-inline void InstanceInfo::set_allocated_all_group(::PS::FeatureGroupInfo* all_group) {
-  delete all_group_;
-  all_group_ = all_group;
-  if (all_group) {
-    set_has_all_group();
-  } else {
-    clear_has_all_group();
-  }
+inline void InstanceInfo::set_fea_type(::PS::InstanceInfo_FeatureType value) {
+  assert(::PS::InstanceInfo_FeatureType_IsValid(value));
+  set_has_fea_type();
+  fea_type_ = value;
 }
 
-// repeated .PS.FeatureGroupInfo individual_groups = 3;
-inline int InstanceInfo::individual_groups_size() const {
-  return individual_groups_.size();
+// repeated .PS.FeatureGroupInfo fea_group = 3;
+inline int InstanceInfo::fea_group_size() const {
+  return fea_group_.size();
 }
-inline void InstanceInfo::clear_individual_groups() {
-  individual_groups_.Clear();
+inline void InstanceInfo::clear_fea_group() {
+  fea_group_.Clear();
 }
-inline const ::PS::FeatureGroupInfo& InstanceInfo::individual_groups(int index) const {
-  return individual_groups_.Get(index);
+inline const ::PS::FeatureGroupInfo& InstanceInfo::fea_group(int index) const {
+  return fea_group_.Get(index);
 }
-inline ::PS::FeatureGroupInfo* InstanceInfo::mutable_individual_groups(int index) {
-  return individual_groups_.Mutable(index);
+inline ::PS::FeatureGroupInfo* InstanceInfo::mutable_fea_group(int index) {
+  return fea_group_.Mutable(index);
 }
-inline ::PS::FeatureGroupInfo* InstanceInfo::add_individual_groups() {
-  return individual_groups_.Add();
+inline ::PS::FeatureGroupInfo* InstanceInfo::add_fea_group() {
+  return fea_group_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
-InstanceInfo::individual_groups() const {
-  return individual_groups_;
+InstanceInfo::fea_group() const {
+  return fea_group_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
-InstanceInfo::mutable_individual_groups() {
-  return &individual_groups_;
+InstanceInfo::mutable_fea_group() {
+  return &fea_group_;
+}
+
+// optional uint64 num_ins = 4;
+inline bool InstanceInfo::has_num_ins() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void InstanceInfo::set_has_num_ins() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void InstanceInfo::clear_has_num_ins() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void InstanceInfo::clear_num_ins() {
+  num_ins_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_ins();
+}
+inline ::google::protobuf::uint64 InstanceInfo::num_ins() const {
+  return num_ins_;
+}
+inline void InstanceInfo::set_num_ins(::google::protobuf::uint64 value) {
+  set_has_num_ins();
+  num_ins_ = value;
 }
 
 // -------------------------------------------------------------------
 
 // FeatureGroupInfo
 
-// required int32 group_id = 1;
+// optional int32 group_id = 1;
 inline bool FeatureGroupInfo::has_group_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -597,115 +601,70 @@ inline void FeatureGroupInfo::set_group_id(::google::protobuf::int32 value) {
   group_id_ = value;
 }
 
-// required .PS.FeatureGroupInfo.FeatureType feature_type = 2;
-inline bool FeatureGroupInfo::has_feature_type() const {
+// optional uint64 fea_begin = 3 [default = 18446744073709551615];
+inline bool FeatureGroupInfo::has_fea_begin() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void FeatureGroupInfo::set_has_feature_type() {
+inline void FeatureGroupInfo::set_has_fea_begin() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void FeatureGroupInfo::clear_has_feature_type() {
+inline void FeatureGroupInfo::clear_has_fea_begin() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void FeatureGroupInfo::clear_feature_type() {
-  feature_type_ = 1;
-  clear_has_feature_type();
+inline void FeatureGroupInfo::clear_fea_begin() {
+  fea_begin_ = GOOGLE_ULONGLONG(18446744073709551615);
+  clear_has_fea_begin();
 }
-inline ::PS::FeatureGroupInfo_FeatureType FeatureGroupInfo::feature_type() const {
-  return static_cast< ::PS::FeatureGroupInfo_FeatureType >(feature_type_);
+inline ::google::protobuf::uint64 FeatureGroupInfo::fea_begin() const {
+  return fea_begin_;
 }
-inline void FeatureGroupInfo::set_feature_type(::PS::FeatureGroupInfo_FeatureType value) {
-  assert(::PS::FeatureGroupInfo_FeatureType_IsValid(value));
-  set_has_feature_type();
-  feature_type_ = value;
+inline void FeatureGroupInfo::set_fea_begin(::google::protobuf::uint64 value) {
+  set_has_fea_begin();
+  fea_begin_ = value;
 }
 
-// required uint64 feature_begin = 3 [default = 18446744073709551615];
-inline bool FeatureGroupInfo::has_feature_begin() const {
+// optional uint64 fea_end = 4;
+inline bool FeatureGroupInfo::has_fea_end() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void FeatureGroupInfo::set_has_feature_begin() {
+inline void FeatureGroupInfo::set_has_fea_end() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void FeatureGroupInfo::clear_has_feature_begin() {
+inline void FeatureGroupInfo::clear_has_fea_end() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void FeatureGroupInfo::clear_feature_begin() {
-  feature_begin_ = GOOGLE_ULONGLONG(18446744073709551615);
-  clear_has_feature_begin();
+inline void FeatureGroupInfo::clear_fea_end() {
+  fea_end_ = GOOGLE_ULONGLONG(0);
+  clear_has_fea_end();
 }
-inline ::google::protobuf::uint64 FeatureGroupInfo::feature_begin() const {
-  return feature_begin_;
+inline ::google::protobuf::uint64 FeatureGroupInfo::fea_end() const {
+  return fea_end_;
 }
-inline void FeatureGroupInfo::set_feature_begin(::google::protobuf::uint64 value) {
-  set_has_feature_begin();
-  feature_begin_ = value;
+inline void FeatureGroupInfo::set_fea_end(::google::protobuf::uint64 value) {
+  set_has_fea_end();
+  fea_end_ = value;
 }
 
-// required uint64 feature_end = 4;
-inline bool FeatureGroupInfo::has_feature_end() const {
+// optional uint64 nnz = 6;
+inline bool FeatureGroupInfo::has_nnz() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void FeatureGroupInfo::set_has_feature_end() {
+inline void FeatureGroupInfo::set_has_nnz() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void FeatureGroupInfo::clear_has_feature_end() {
+inline void FeatureGroupInfo::clear_has_nnz() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void FeatureGroupInfo::clear_feature_end() {
-  feature_end_ = GOOGLE_ULONGLONG(0);
-  clear_has_feature_end();
+inline void FeatureGroupInfo::clear_nnz() {
+  nnz_ = GOOGLE_ULONGLONG(0);
+  clear_has_nnz();
 }
-inline ::google::protobuf::uint64 FeatureGroupInfo::feature_end() const {
-  return feature_end_;
+inline ::google::protobuf::uint64 FeatureGroupInfo::nnz() const {
+  return nnz_;
 }
-inline void FeatureGroupInfo::set_feature_end(::google::protobuf::uint64 value) {
-  set_has_feature_end();
-  feature_end_ = value;
-}
-
-// required uint64 num_instances = 5;
-inline bool FeatureGroupInfo::has_num_instances() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void FeatureGroupInfo::set_has_num_instances() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void FeatureGroupInfo::clear_has_num_instances() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void FeatureGroupInfo::clear_num_instances() {
-  num_instances_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_instances();
-}
-inline ::google::protobuf::uint64 FeatureGroupInfo::num_instances() const {
-  return num_instances_;
-}
-inline void FeatureGroupInfo::set_num_instances(::google::protobuf::uint64 value) {
-  set_has_num_instances();
-  num_instances_ = value;
-}
-
-// required uint64 num_entries = 6;
-inline bool FeatureGroupInfo::has_num_entries() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void FeatureGroupInfo::set_has_num_entries() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void FeatureGroupInfo::clear_has_num_entries() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void FeatureGroupInfo::clear_num_entries() {
-  num_entries_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_entries();
-}
-inline ::google::protobuf::uint64 FeatureGroupInfo::num_entries() const {
-  return num_entries_;
-}
-inline void FeatureGroupInfo::set_num_entries(::google::protobuf::uint64 value) {
-  set_has_num_entries();
-  num_entries_ = value;
+inline void FeatureGroupInfo::set_nnz(::google::protobuf::uint64 value) {
+  set_has_nnz();
+  nnz_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -734,54 +693,76 @@ inline void Instance::set_label(float value) {
   label_ = value;
 }
 
-// repeated uint64 feature_id = 2;
-inline int Instance::feature_id_size() const {
-  return feature_id_.size();
+// repeated uint64 fea_id = 2;
+inline int Instance::fea_id_size() const {
+  return fea_id_.size();
 }
-inline void Instance::clear_feature_id() {
-  feature_id_.Clear();
+inline void Instance::clear_fea_id() {
+  fea_id_.Clear();
 }
-inline ::google::protobuf::uint64 Instance::feature_id(int index) const {
-  return feature_id_.Get(index);
+inline ::google::protobuf::uint64 Instance::fea_id(int index) const {
+  return fea_id_.Get(index);
 }
-inline void Instance::set_feature_id(int index, ::google::protobuf::uint64 value) {
-  feature_id_.Set(index, value);
+inline void Instance::set_fea_id(int index, ::google::protobuf::uint64 value) {
+  fea_id_.Set(index, value);
 }
-inline void Instance::add_feature_id(::google::protobuf::uint64 value) {
-  feature_id_.Add(value);
+inline void Instance::add_fea_id(::google::protobuf::uint64 value) {
+  fea_id_.Add(value);
 }
 inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
-Instance::feature_id() const {
-  return feature_id_;
+Instance::fea_id() const {
+  return fea_id_;
 }
 inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
-Instance::mutable_feature_id() {
-  return &feature_id_;
+Instance::mutable_fea_id() {
+  return &fea_id_;
 }
 
-// repeated float value = 3;
-inline int Instance::value_size() const {
-  return value_.size();
+// repeated float fea_val = 3;
+inline int Instance::fea_val_size() const {
+  return fea_val_.size();
 }
-inline void Instance::clear_value() {
-  value_.Clear();
+inline void Instance::clear_fea_val() {
+  fea_val_.Clear();
 }
-inline float Instance::value(int index) const {
-  return value_.Get(index);
+inline float Instance::fea_val(int index) const {
+  return fea_val_.Get(index);
 }
-inline void Instance::set_value(int index, float value) {
-  value_.Set(index, value);
+inline void Instance::set_fea_val(int index, float value) {
+  fea_val_.Set(index, value);
 }
-inline void Instance::add_value(float value) {
-  value_.Add(value);
+inline void Instance::add_fea_val(float value) {
+  fea_val_.Add(value);
 }
 inline const ::google::protobuf::RepeatedField< float >&
-Instance::value() const {
-  return value_;
+Instance::fea_val() const {
+  return fea_val_;
 }
 inline ::google::protobuf::RepeatedField< float >*
-Instance::mutable_value() {
-  return &value_;
+Instance::mutable_fea_val() {
+  return &fea_val_;
+}
+
+// optional int64 ins_id = 4;
+inline bool Instance::has_ins_id() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Instance::set_has_ins_id() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Instance::clear_has_ins_id() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Instance::clear_ins_id() {
+  ins_id_ = GOOGLE_LONGLONG(0);
+  clear_has_ins_id();
+}
+inline ::google::protobuf::int64 Instance::ins_id() const {
+  return ins_id_;
+}
+inline void Instance::set_ins_id(::google::protobuf::int64 value) {
+  set_has_ins_id();
+  ins_id_ = value;
 }
 
 
@@ -798,8 +779,8 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::InstanceInfo_LabelType>() 
   return ::PS::InstanceInfo_LabelType_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::FeatureGroupInfo_FeatureType>() {
-  return ::PS::FeatureGroupInfo_FeatureType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::InstanceInfo_FeatureType>() {
+  return ::PS::InstanceInfo_FeatureType_descriptor();
 }
 
 }  // namespace google

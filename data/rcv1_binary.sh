@@ -15,6 +15,8 @@ test=rcv1/test
 mkdir -p $train
 mkdir -p $test
 
+rm $train/* $test/*
+
 i=0;
 for f in rcv1_train_*
 do
@@ -23,7 +25,7 @@ do
     then
         dir=$test
     fi
-    ../bin/text2bin -input ${f} -output $dir/part-$i -text_format libsvm
+    ../bin/text2proto -format libsvm < ${f} > $dir/part-$i
     ((i++))
 done
 

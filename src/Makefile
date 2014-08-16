@@ -86,8 +86,8 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps ps_mpi text2bin) # ps ps_local
-data: $(addprefix $(BIN)/, text2proto)
+all: dir $(addprefix $(BIN)/, ps ps_mpi)  # ps ps_local
+data: $(addprefix $(BIN)/, text2proto showins)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:
@@ -102,7 +102,7 @@ clean:
 %.d: %.cc %.h
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
 
-$(BIN)/%: data/&.cc $(LIB)/libps.a
+$(BIN)/%: data/%.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 $(BIN)/%: test/%.cc $(LIB)/libps.a
@@ -129,8 +129,8 @@ $(BIN)/ps: ps.cc $(LIB)/libps.a
 $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
 
-$(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
-	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
+# $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
+# 	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
 
 $(BIN)/tmp: tmp.cc  $(LIB)/libps.a
 	$(CC) $(CFLAGS) tmp.cc $(LDFLAGS)  -o $@

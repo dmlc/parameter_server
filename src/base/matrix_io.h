@@ -42,22 +42,22 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
 template<typename V>
 MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
   MatrixInfo f;
-  if (g.feature_type() == FeatureGroupInfo::DENSE)
-    f.set_type(MatrixInfo::DENSE);
-  else if (g.feature_type() == FeatureGroupInfo::SPARSE)
-    f.set_type(MatrixInfo::SPARSE);
-  else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
-    f.set_type(MatrixInfo::SPARSE_BINARY);
-  f.set_row_major(true);
-  f.set_id(g.group_id());
-  f.mutable_row()->set_begin(0);
-  f.mutable_row()->set_end(g.num_instances());
-  f.mutable_col()->set_begin(g.feature_begin());
-  f.mutable_col()->set_end(g.feature_end());
-  f.set_nnz(g.num_entries());
-  f.set_sizeof_index(sizeof(uint64));
-  f.set_sizeof_value(sizeof(V));
-  f.set_nnz_per_row((double) g.num_entries() / (double) g.num_instances());
+  // if (g.feature_type() == FeatureGroupInfo::DENSE)
+  //   f.set_type(MatrixInfo::DENSE);
+  // else if (g.feature_type() == FeatureGroupInfo::SPARSE)
+  //   f.set_type(MatrixInfo::SPARSE);
+  // else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
+  //   f.set_type(MatrixInfo::SPARSE_BINARY);
+  // f.set_row_major(true);
+  // f.set_id(g.group_id());
+  // f.mutable_row()->set_begin(0);
+  // f.mutable_row()->set_end(g.num_instances());
+  // f.mutable_col()->set_begin(g.feature_begin());
+  // f.mutable_col()->set_end(g.feature_end());
+  // f.set_nnz(g.num_entries());
+  // f.set_sizeof_index(sizeof(uint64));
+  // f.set_sizeof_value(sizeof(V));
+  // f.set_nnz_per_row((double) g.num_entries() / (double) g.num_instances());
   return f;
 }
 
@@ -65,62 +65,62 @@ MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
 // TODO do not support dense feature group yet...
 template<typename V>
 MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
-  // load info
-  InstanceInfo info;
-  for (int i = 0; i < files.size(); ++i) {
-    InstanceInfo f; ReadFileToProtoOrDie(files[i]+".info", &f);
-    info = i == 0 ? f : mergeInstanceInfo(info, f);
-  }
-  // // LL << info.DebugString();
+  // // load info
+  // InstanceInfo info;
+  // for (int i = 0; i < files.size(); ++i) {
+  //   InstanceInfo f; ReadFileToProtoOrDie(files[i]+".info", &f);
+  //   info = i == 0 ? f : mergeInstanceInfo(info, f);
+  // }
+  // // // LL << info.DebugString();
 
-  // allocate data
-  auto& all = info.all_group();
-  bool binary = all.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
-  SArray<V> label(all.num_instances());
-  SArray<size_t> offset(all.num_instances()+1);
-  offset[0] = 0;
-  SArray<uint64> index(all.num_entries());
-  SArray<V> value;
-  if (!binary) value.resize(all.num_entries());
+  // // allocate data
+  // auto& all = info.all_group();
+  // bool binary = all.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
+  // SArray<V> label(all.num_instances());
+  // SArray<size_t> offset(all.num_instances()+1);
+  // offset[0] = 0;
+  // SArray<uint64> index(all.num_entries());
+  // SArray<V> value;
+  // if (!binary) value.resize(all.num_entries());
 
-  uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
+  // uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
 
-  // file data
-  for (auto f : files) {
-    File* in = File::openOrDie(f+".recordio", "r");
-    RecordReader reader(in);
-    Instance record;
-    while (reader.ReadProtocolMessage(&record)) {
-      label[label_pos++] = record.label();
-      int n = record.feature_id_size();
-      for (int i = 0; i < n; ++i) {
-        index[index_pos++] = record.feature_id(i);
-        if (!binary) value[value_pos++] = record.value(i);
-      }
-      offset[offset_pos+1] = offset[offset_pos] + n;
-      offset_pos ++;
-    }
-  }
-  CHECK_EQ(offset_pos+1, offset.size());
-  CHECK_EQ(index_pos, index.size());
-  CHECK_EQ(value_pos, value.size());
+  // // file data
+  // for (auto f : files) {
+  //   File* in = File::openOrDie(f+".recordio", "r");
+  //   RecordReader reader(in);
+  //   Instance record;
+  //   while (reader.ReadProtocolMessage(&record)) {
+  //     label[label_pos++] = record.label();
+  //     int n = record.feature_id_size();
+  //     for (int i = 0; i < n; ++i) {
+  //       index[index_pos++] = record.feature_id(i);
+  //       if (!binary) value[value_pos++] = record.value(i);
+  //     }
+  //     offset[offset_pos+1] = offset[offset_pos] + n;
+  //     offset_pos ++;
+  //   }
+  // }
+  // CHECK_EQ(offset_pos+1, offset.size());
+  // CHECK_EQ(index_pos, index.size());
+  // CHECK_EQ(value_pos, value.size());
 
   // fill info
   MatrixPtrList<V> res;
-  MatrixInfo label_info;
-  string label_str = "type: DENSE row_major: true row { begin: 0 end: "
-                     + std::to_string(info.all_group().num_instances())
-                     + " } col { begin: 0 end: 1 } nnz: "
-                     + std::to_string(info.all_group().num_instances())
-                     + " sizeof_value: " + std::to_string(sizeof(V));
-  google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
-  res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
+  // MatrixInfo label_info;
+  // string label_str = "type: DENSE row_major: true row { begin: 0 end: "
+  //                    + std::to_string(info.all_group().num_instances())
+  //                    + " } col { begin: 0 end: 1 } nnz: "
+  //                    + std::to_string(info.all_group().num_instances())
+  //                    + " sizeof_value: " + std::to_string(sizeof(V));
+  // google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
+  // res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
-  MatrixInfo f = readMatrixInfo<V>(info.all_group());
-  for (int i = 0; i < info.individual_groups_size(); ++i) {
-    *f.add_group_info() = info.individual_groups(i);
-  }
-  res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
+  // MatrixInfo f = readMatrixInfo<V>(info.all_group());
+  // for (int i = 0; i < info.individual_groups_size(); ++i) {
+  //   *f.add_group_info() = info.individual_groups(i);
+  // }
+  // res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 
   return res;
 }

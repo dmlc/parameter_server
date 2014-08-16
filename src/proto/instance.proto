@@ -31,7 +31,7 @@ message FeatureGroupInfo {
   optional int32 group_id = 1;
 
   // the feature ranges for different groups should NOT overlapped
-  optional uint64 fea_begin = 3 [default = -1]; //[default = 0xFFFFFFFFFFFFFFFF];
+  optional uint64 fea_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
   optional uint64 fea_end = 4;
 
   // total number of non-zero entries

@@ -51,8 +51,8 @@ class Text2Proto {
   bool vw() { return format_ == "vw"; }
   bool adfea() { return format_ == "adfea"; }
 
-  size_t num_lines_written() { return num_good_record_; }
-  size_t num_lines_skipped() { return num_bad_record_; }
+  size_t num_lines_written() { return records_.size(); }
+  size_t num_lines_skipped() { return num_processed_ - num_lines_written(); }
 
   // string text_format() { return text_format_; }
  private:
