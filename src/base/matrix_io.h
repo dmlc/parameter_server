@@ -13,36 +13,28 @@ namespace PS {
 
 static FeatureGroupInfo
 mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
-  // be smart
   auto C = A;
-  if (A.group_id() == B.group_id()) {
-    CHECK_EQ(A.feature_type(), B.feature_type());
-    C.set_num_instances(A.num_instances() + B.num_instances());
-  } else {
-    C.set_num_instances(std::max(A.num_instances(), B.num_instances()));
-    C.set_group_id(-1);
-  }
-
-  C.set_feature_begin(std::min(A.feature_begin(), B.feature_begin()));
-  C.set_feature_end(std::max(A.feature_end(), B.feature_end()));
-  C.set_num_entries(A.num_entries() + B.num_entries());
+  C.set_fea_begin(std::min(A.fea_begin(), B.fea_begin()));
+  C.set_fea_end(std::max(A.fea_end(), B.fea_end()));
+  C.set_nnz(A.nnz() + B.nnz());
   return C;
 }
 
 static InstanceInfo
 mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
-  // LL << A.DebugString();
-  // LL << B.DebugString();
-  CHECK_EQ(A.label_type(), B.label_type());
-  InstanceInfo C = A;
-  *C.mutable_all_group() = mergeFeatureGroupInfo(A.all_group(), B.all_group());
+  auto as = A.fea_group_size();
+  auto bs = B.fea_group_size();
+  if (!as) return B;
+  if (!bs) return A;
+  CHECK_EQ(as, bs);
 
-  C.clear_individual_groups();
-  int n = A.individual_groups_size();
-  CHECK_EQ(n, B.individual_groups_size());
-  for (int i = 0; i < n; ++i) {
-    *C.add_individual_groups() =
-        mergeFeatureGroupInfo(A.individual_groups(i), B.individual_groups(i));
+  CHECK_EQ(A.label_type(), B.label_type());
+  CHECK_EQ(A.fea_type(), B.fea_type());
+
+  InstanceInfo C = A;
+  C.clear_fea_group();
+  for (int i = 0; i < as; ++i) {
+    *C.add_fea_group() = mergeFeatureGroupInfo(A.fea_group(i), B.fea_group(i));
   }
   return C;
 }

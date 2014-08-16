@@ -433,16 +433,16 @@ class Instance : public ::google::protobuf::Message {
   inline float label() const;
   inline void set_label(float value);
 
-  // repeated int64 feature_id = 2;
+  // repeated uint64 feature_id = 2;
   inline int feature_id_size() const;
   inline void clear_feature_id();
   static const int kFeatureIdFieldNumber = 2;
-  inline ::google::protobuf::int64 feature_id(int index) const;
-  inline void set_feature_id(int index, ::google::protobuf::int64 value);
-  inline void add_feature_id(::google::protobuf::int64 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+  inline ::google::protobuf::uint64 feature_id(int index) const;
+  inline void set_feature_id(int index, ::google::protobuf::uint64 value);
+  inline void add_feature_id(::google::protobuf::uint64 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
       feature_id() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
       mutable_feature_id();
 
   // repeated float value = 3;
@@ -464,7 +464,7 @@ class Instance : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > feature_id_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > feature_id_;
   ::google::protobuf::RepeatedField< float > value_;
   float label_;
 
@@ -734,27 +734,27 @@ inline void Instance::set_label(float value) {
   label_ = value;
 }
 
-// repeated int64 feature_id = 2;
+// repeated uint64 feature_id = 2;
 inline int Instance::feature_id_size() const {
   return feature_id_.size();
 }
 inline void Instance::clear_feature_id() {
   feature_id_.Clear();
 }
-inline ::google::protobuf::int64 Instance::feature_id(int index) const {
+inline ::google::protobuf::uint64 Instance::feature_id(int index) const {
   return feature_id_.Get(index);
 }
-inline void Instance::set_feature_id(int index, ::google::protobuf::int64 value) {
+inline void Instance::set_feature_id(int index, ::google::protobuf::uint64 value) {
   feature_id_.Set(index, value);
 }
-inline void Instance::add_feature_id(::google::protobuf::int64 value) {
+inline void Instance::add_feature_id(::google::protobuf::uint64 value) {
   feature_id_.Add(value);
 }
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
 Instance::feature_id() const {
   return feature_id_;
 }
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
 Instance::mutable_feature_id() {
   return &feature_id_;
 }

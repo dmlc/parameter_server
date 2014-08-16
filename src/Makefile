@@ -46,7 +46,6 @@ SRCS = $(PROTOS_CC) \
 	util/MurmurHash3.cc \
 	util/file.cc \
 	util/filelinereader.cc \
-	util/recordio.cc \
 	util/threadpool.cc \
 	system/van.cc \
 	system/postoffice.cc \
@@ -88,6 +87,7 @@ TESTS = \
 	fault_tolerance_press \
 
 all: dir $(addprefix $(BIN)/, ps ps_mpi text2bin) # ps ps_local
+data: $(addprefix $(BIN)/, text2proto)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:
@@ -102,8 +102,11 @@ clean:
 %.d: %.cc %.h
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
 
+$(BIN)/%: data/&.cc $(LIB)/libps.a
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+
 $(BIN)/%: test/%.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS)  -o $@
+	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS) -o $@
 
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
@@ -128,6 +131,11 @@ $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 
 $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
 	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
+
+$(BIN)/tmp: tmp.cc  $(LIB)/libps.a
+	$(CC) $(CFLAGS) tmp.cc $(LDFLAGS)  -o $@
+
+xxx: $(BIN)/tmp
 
 # test: $(TESTS)
 # 	for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done

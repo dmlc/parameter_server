@@ -13,7 +13,13 @@ namespace PS {
 
 File* File::open(const std::string& name, const char* const flag) {
   File* f;
-  if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
+  if (name == "stdin") {
+    f = new File(stdin, NULL, name);
+  } else if (name == "stdout") {
+    f = new File(stdout, NULL, name);
+  } else if (name == "stderr") {
+    f = new File(stderr, NULL, name);
+  } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
     gzFile des = gzopen(name.data(), flag);
     if (des == NULL) {
       LOG(ERROR) << "cannot open " << name;

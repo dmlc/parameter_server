@@ -14,6 +14,7 @@
 
 namespace PS {
 
+// TODO support HDFS
 class File {
  public:
   // Opens file "name" with flags specified by "flag".
