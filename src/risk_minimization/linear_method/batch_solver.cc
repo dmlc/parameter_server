@@ -11,6 +11,7 @@ void BatchSolver::init() {
   sys_.yp().add(std::static_pointer_cast<Customer>(w_));
 }
 
+
 void BatchSolver::run() {
   LinearMethod::startSystem();
 
@@ -42,6 +43,14 @@ void BatchSolver::run() {
   // a simple block order
   block_order_.clear();
   for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
+
+  // load data
+  Task prepare;
+  prepare.set_type(Task::CALL_CUSTOMER);
+  prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
+  taskpool(kActiveGroup)->submitAndWait(prepare);
+  init_sys_time_ = total_timer_.get();
+  fprintf(stderr, "loaded data... in %.3f sec\n", init_sys_time_);
 
   runIteration();
 
@@ -315,6 +324,8 @@ void BatchSolver::saveAsDenseData(const Message& msg) {
   Xw.writeToBinFile(call.name()+"_Xw");
   y_->writeToBinFile(call.name()+"_y");
 }
+
+
 
 } // namespace LM
 } // namespace PS

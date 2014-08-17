@@ -22,6 +22,10 @@ class BatchSolver : public LinearMethod {
   void saveModel(const Message& msg);
   void saveAsDenseData(const Message& msg);
 
+  // training data, available at the workers
+  MatrixPtr<double> y_, X_;
+
+
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
 

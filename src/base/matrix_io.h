@@ -224,5 +224,25 @@ MatrixPtrList<V> readMatrices(const DataConfig& config) {
   return MatrixPtrList<V>();
 }
 
+static InstanceInfo readInstanceInfo(const std::vector<std::string>& files) {
+  InstanceInfo info, tmp;
+  for (const auto& f : files) {
+    File* in = File::openOrDie(f, "r");
+    RecordReader r(in);
+    r.ReadProtocolMessage(&tmp);
+    info = mergeInstanceInfo(info, tmp);
+    in->Close();
+  }
+  return info;
+}
+
+static InstanceInfo readInstanceInfo(const DataConfig& config) {
+  CHECK_EQ(config.format(), DataConfig::PROTO);
+  std::vector<std::string> files;
+  for (int i = 0; i < config.file_size(); ++i) {
+    files.push_back(config.file(i));
+  }
+  return readInstanceInfo(files);
+}
 
 } // namespace PS

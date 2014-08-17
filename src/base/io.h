@@ -48,9 +48,7 @@ string removeExtension(const string& file) {
 static DataConfig searchFiles(const DataConfig& config) {
   int n = config.file_size();
   CHECK_GE(n, 1) << "empty files: " << config.DebugString();
-
   std::vector<std::string> matched_files;
-
   for (int i = 0; i < n; ++i) {
     string dir = path(config.file(i));
     std::regex pattern;
@@ -61,47 +59,28 @@ static DataConfig searchFiles(const DataConfig& config) {
                    << " is not valid (supported) regex, regex_error caught: "
                    << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
-
-    // remove duplications
-    auto files = readFilenamesInDirectory(dir);
-    // for (auto& f : files) f = removeExtension(f);
-    // std::sort(files.begin(), files.end());
-    // auto it = std::unique(files.begin(), files.end());
-    // files.resize(std::distance(files.begin(), it));
-
     // match regex
+    auto files = readFilenamesInDirectory(dir);
     for (auto& f : files) {
       if (std::regex_match(f, pattern)) {
         matched_files.push_back(dir+"/"+f);
       }
     }
   }
-
   // remove duplicate files
-
   std::sort(matched_files.begin(), matched_files.end());
   auto it = std::unique(matched_files.begin(), matched_files.end());
   matched_files.resize(std::distance(matched_files.begin(), it));
-
   DataConfig ret = config;
   ret.clear_file();
-  for (auto& f : matched_files)
-    ret.add_file(f);
+  for (auto& f : matched_files) ret.add_file(f);
   return ret;
 }
 
 static std::vector<DataConfig> assignDataToNodes(
-    const DataConfig& config, int num_nodes, InstanceInfo* info) {
-  CHECK_EQ(config.format(), DataConfig::PROTO) << "TODO, support more formats";
-  auto data = searchFiles(config);
-  CHECK_GT(data.file_size(), 0) << "search failed" << config.DebugString();
+    const DataConfig& data, int num_nodes) {
+  CHECK_GT(data.file_size(), 0) << "search failed" << data.DebugString();
   CHECK_GE(data.file_size(), num_nodes) << "too many nodes";
-
-  for (int i = 0; i < data.file_size(); ++i) {
-    InstanceInfo f;
-    ReadFileToProtoOrDie(data.file(i)+".info", &f);
-    *info = i == 0 ? f : mergeInstanceInfo(*info, f);
-  }
 
   // evenly assign files to machines
   std::vector<DataConfig> nodes_config;
