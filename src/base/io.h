@@ -62,12 +62,12 @@ static DataConfig searchFiles(const DataConfig& config) {
                    << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
 
-    // remove file extensions and duplications
+    // remove duplications
     auto files = readFilenamesInDirectory(dir);
-    for (auto& f : files) f = removeExtension(f);
-    std::sort(files.begin(), files.end());
-    auto it = std::unique(files.begin(), files.end());
-    files.resize(std::distance(files.begin(), it));
+    // for (auto& f : files) f = removeExtension(f);
+    // std::sort(files.begin(), files.end());
+    // auto it = std::unique(files.begin(), files.end());
+    // files.resize(std::distance(files.begin(), it));
 
     // match regex
     for (auto& f : files) {

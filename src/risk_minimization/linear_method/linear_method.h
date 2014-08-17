@@ -14,7 +14,6 @@ namespace PS {
 namespace LM {
 
 // linear classification/regerssion
-
 class LinearMethod : public RiskMinimization {
 
  public:

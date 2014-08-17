@@ -1,8 +1,8 @@
 CC = g++
 # CC = clang
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -74,7 +74,6 @@ TESTS = \
 	shared_array_test \
 	eigen3_test \
 	auc_layer_test \
-	recordio2bin \
 	# double_test \
 	# aggregated_gradient_test \
 	# grad_desc_test \
@@ -87,7 +86,7 @@ TESTS = \
 	fault_tolerance_press \
 
 all: dir $(addprefix $(BIN)/, ps ps_mpi)  # ps ps_local
-data: $(addprefix $(BIN)/, text2proto showins)
+data: $(addprefix $(BIN)/, text2proto showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:

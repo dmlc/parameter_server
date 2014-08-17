@@ -32,6 +32,7 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
   CHECK_EQ(A.fea_type(), B.fea_type());
 
   InstanceInfo C = A;
+  C.set_num_ins(A.num_ins() + B.num_ins());
   C.clear_fea_group();
   for (int i = 0; i < as; ++i) {
     *C.add_fea_group() = mergeFeatureGroupInfo(A.fea_group(i), B.fea_group(i));
@@ -40,24 +41,26 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
 }
 
 template<typename V>
-MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
+MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   MatrixInfo f;
-  // if (g.feature_type() == FeatureGroupInfo::DENSE)
-  //   f.set_type(MatrixInfo::DENSE);
-  // else if (g.feature_type() == FeatureGroupInfo::SPARSE)
-  //   f.set_type(MatrixInfo::SPARSE);
-  // else if (g.feature_type() == FeatureGroupInfo::SPARSE_BINARY)
-  //   f.set_type(MatrixInfo::SPARSE_BINARY);
-  // f.set_row_major(true);
-  // f.set_id(g.group_id());
-  // f.mutable_row()->set_begin(0);
-  // f.mutable_row()->set_end(g.num_instances());
-  // f.mutable_col()->set_begin(g.feature_begin());
-  // f.mutable_col()->set_end(g.feature_end());
-  // f.set_nnz(g.num_entries());
-  // f.set_sizeof_index(sizeof(uint64));
-  // f.set_sizeof_value(sizeof(V));
-  // f.set_nnz_per_row((double) g.num_entries() / (double) g.num_instances());
+  if (info.fea_type() == InstanceInfo::DENSE) {
+    f.set_type(MatrixInfo::DENSE);
+  } else if (info.fea_type() == InstanceInfo::SPARSE) {
+    f.set_type(MatrixInfo::SPARSE);
+  } else if (info.fea_type() == InstanceInfo::SPARSE_BINARY) {
+    f.set_type(MatrixInfo::SPARSE_BINARY);
+  }
+  auto g = info.fea_group(i);
+  f.set_row_major(true);
+  f.set_id(g.group_id());
+  f.mutable_row()->set_begin(0);
+  f.mutable_row()->set_end(info.num_ins());
+  f.mutable_col()->set_begin(g.fea_begin());
+  f.mutable_col()->set_end(g.fea_end());
+  f.set_nnz(g.nnz());
+  f.set_sizeof_index(sizeof(uint64));
+  f.set_sizeof_value(sizeof(V));
+  f.set_nnz_per_row((double) g.nnz() / (double) info.num_ins());
   return f;
 }
 
@@ -65,62 +68,65 @@ MatrixInfo readMatrixInfo(const FeatureGroupInfo g) {
 // TODO do not support dense feature group yet...
 template<typename V>
 MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
-  // // load info
-  // InstanceInfo info;
-  // for (int i = 0; i < files.size(); ++i) {
-  //   InstanceInfo f; ReadFileToProtoOrDie(files[i]+".info", &f);
-  //   info = i == 0 ? f : mergeInstanceInfo(info, f);
-  // }
-  // // // LL << info.DebugString();
+  // load info
+  std::vector<RecordReader> readers;
+  InstanceInfo info;
+  for (auto& f : files) {
+    File* in = File::openOrDie(f, "r");
+    InstanceInfo i;
+    RecordReader r(in);
+    CHECK(r.ReadProtocolMessage(&i));
+    // LL << i.DebugString();
+    info = mergeInstanceInfo(info, i);
+    readers.push_back(r);
+  }
+  LL << info.DebugString();
 
-  // // allocate data
-  // auto& all = info.all_group();
-  // bool binary = all.feature_type() == FeatureGroupInfo::SPARSE_BINARY;
-  // SArray<V> label(all.num_instances());
-  // SArray<size_t> offset(all.num_instances()+1);
-  // offset[0] = 0;
-  // SArray<uint64> index(all.num_entries());
-  // SArray<V> value;
-  // if (!binary) value.resize(all.num_entries());
+  // allocate data
+  SArray<V> label(info.num_ins());
+  SArray<size_t> offset(info.num_ins()+1);
+  offset[0] = 0;
+  CHECK_GT(info.fea_group_size(), 1);
+  SArray<uint64> index(info.fea_group(0).nnz());
+  SArray<V> value;
+  bool binary = info.fea_type() == InstanceInfo::SPARSE_BINARY;
+  if (!binary) value.resize(info.fea_group(0).nnz());
 
-  // uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
+  // file data
+  uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
+  Instance record;
+  for (auto& r : readers) {
+    while (r.ReadProtocolMessage(&record)) {
+      label[label_pos++] = record.label();
+      int n = record.fea_id_size();
+      for (int i = 0; i < n; ++i) {
+        index[index_pos++] = record.fea_id(i);
+        if (!binary) value[value_pos++] = record.fea_val(i);
+      }
+      offset[offset_pos+1] = offset[offset_pos] + n;
+      offset_pos ++;
+    }
+  }
+  CHECK_EQ(offset_pos+1, offset.size());
+  CHECK_EQ(index_pos, index.size());
+  CHECK_EQ(value_pos, value.size());
 
-  // // file data
-  // for (auto f : files) {
-  //   File* in = File::openOrDie(f+".recordio", "r");
-  //   RecordReader reader(in);
-  //   Instance record;
-  //   while (reader.ReadProtocolMessage(&record)) {
-  //     label[label_pos++] = record.label();
-  //     int n = record.feature_id_size();
-  //     for (int i = 0; i < n; ++i) {
-  //       index[index_pos++] = record.feature_id(i);
-  //       if (!binary) value[value_pos++] = record.value(i);
-  //     }
-  //     offset[offset_pos+1] = offset[offset_pos] + n;
-  //     offset_pos ++;
-  //   }
-  // }
-  // CHECK_EQ(offset_pos+1, offset.size());
-  // CHECK_EQ(index_pos, index.size());
-  // CHECK_EQ(value_pos, value.size());
-
-  // fill info
+  // construct the matrices
   MatrixPtrList<V> res;
-  // MatrixInfo label_info;
-  // string label_str = "type: DENSE row_major: true row { begin: 0 end: "
-  //                    + std::to_string(info.all_group().num_instances())
-  //                    + " } col { begin: 0 end: 1 } nnz: "
-  //                    + std::to_string(info.all_group().num_instances())
-  //                    + " sizeof_value: " + std::to_string(sizeof(V));
-  // google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
-  // res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
+  MatrixInfo label_info;
+  string label_str = "type: DENSE row_major: true row { begin: 0 end: "
+                     + std::to_string(info.num_ins())
+                     + " } col { begin: 0 end: 1 } nnz: "
+                     + std::to_string(info.num_ins())
+                     + " sizeof_value: " + std::to_string(sizeof(V));
+  google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
+  res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
-  // MatrixInfo f = readMatrixInfo<V>(info.all_group());
-  // for (int i = 0; i < info.individual_groups_size(); ++i) {
-  //   *f.add_group_info() = info.individual_groups(i);
-  // }
-  // res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
+  MatrixInfo f = readMatrixInfo<V>(info, 0);
+  for (int i = 1; i < info.fea_group_size(); ++i) {
+    *f.add_group_info() = info.fea_group(i);
+  }
+  res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 
   return res;
 }

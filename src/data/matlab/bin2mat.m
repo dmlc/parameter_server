@@ -21,7 +21,7 @@ elseif strfind(type, 'SPARSE')
 
   if exist([name, '.key'], 'file')
     group_id = str2num(grep(name, 'group_id'));
-    begin = sscanf(grep(name, 'feature_begin'), '%lu');
+    begin = sscanf(grep(name, 'fea_begin'), '%lu');
     [begin, ix] = sort(begin);
     group_id = group_id(ix);
     % begin = str2num(; %, 'uint64');

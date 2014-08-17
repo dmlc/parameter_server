@@ -25,7 +25,7 @@ do
     then
         dir=$test
     fi
-    ../bin/text2proto -format libsvm < ${f} > $dir/part-$i
+    ../bin/text2proto -format libsvm < ${f} > $dir/part-`printf %03d $i`
     ((i++))
 done
 

@@ -32,7 +32,14 @@ void Text2Proto::init() {
 void Text2Proto::write() {
   // CHECK(!group_info_.empty());
   info_.set_num_ins(records_.size());
+  FeatureGroupInfo g;
   for (auto& it : group_info_) {
+    g = mergeFeatureGroupInfo(g, it.second);
+  }
+  g.set_group_id(-1);
+  *info_.add_fea_group() = g;
+  for (auto& it : group_info_) {
+    it.second.set_group_id(it.first);
     *info_.add_fea_group() = it.second;
   }
   writer_->WriteProtocolMessage(info_);

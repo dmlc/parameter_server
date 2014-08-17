@@ -26,9 +26,7 @@ class SparseMatrixTest : public ::testing::Test {
 // }
 
 TEST_F(SparseMatrixTest, LoadFromRecordIO) {
-  std::vector<string> files;
-  for (int i = 0; i < 4; i++)
-    files.push_back("../data/recordio/rcv1_part_" + to_string(i));
+  std::vector<string> files(1, "../data/rcv1.recordio");
 
   auto data = readMatricesFromProto<double>(files);
   auto Y = data[1];
