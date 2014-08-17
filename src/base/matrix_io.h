@@ -76,11 +76,10 @@ MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
     InstanceInfo i;
     RecordReader r(in);
     CHECK(r.ReadProtocolMessage(&i));
-    // LL << i.DebugString();
     info = mergeInstanceInfo(info, i);
     readers.push_back(r);
   }
-  LL << info.DebugString();
+  // LL << info.DebugString();
 
   // allocate data
   SArray<V> label(info.num_ins());
