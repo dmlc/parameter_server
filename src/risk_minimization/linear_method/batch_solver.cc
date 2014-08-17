@@ -20,11 +20,11 @@ void BatchSolver::run() {
   auto cf = app_cf_.block_solver();
   if (cf.feature_block_ratio() <= 0) {
     Range<Key> range(-1, 0);
-    for (const auto& info : global_training_info_)
+    for (const auto& info : g_training_info_)
       range.setUnion(Range<Key>(info.col()));
     fea_blocks_.push_back(std::make_pair(-1, range));
   } else {
-    for (const auto& info : global_training_info_) {
+    for (const auto& info : g_training_info_) {
       CHECK(info.has_nnz_per_row());
       CHECK(info.has_id());
       float b = std::round(
@@ -67,7 +67,7 @@ void BatchSolver::run() {
 
   if (app_cf_.has_validation_data()) {
     fprintf(stderr, "evaluate with %lu validation examples\n",
-            global_validation_info_[0].row().end());
+            g_validation_info_[0].row().end());
     Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
     active->submitAndWait(test, [this, &validation_auc](){

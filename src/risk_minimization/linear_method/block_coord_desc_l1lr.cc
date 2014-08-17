@@ -48,7 +48,7 @@ void BlockCoordDescL1LR::runIteration() {
 
     double vio = global_progress_[iter].violation();
     KKT_filter_threshold_
-        = vio / (double)global_training_example_size_
+        = vio / (double)g_num_training_ins_
         * app_cf_.bcd_l1lr().kkt_filter_threshold_ratio();
 
     double rel = global_progress_[iter].relative_objv();

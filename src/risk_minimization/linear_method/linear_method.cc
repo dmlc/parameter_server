@@ -33,22 +33,22 @@ void LinearMethod::startSystem() {
   auto tr_cf = searchFiles(app_cf_.training_data());
   InstanceInfo tr_info = readInstanceInfo(tr_cf);
   for (int i = 1; i < tr_info.fea_group_size(); ++i) {
-    global_training_info_.push_back(readMatrixInfo<double>(tr_info, i));
+    g_training_info_.push_back(readMatrixInfo<double>(tr_info, i));
   }
-  global_feature_range_ = Range<Key>(
+  g_fea_range_ = Range<Key>(
       tr_info.fea_group(0).fea_begin(), tr_info.fea_group(0).fea_end());
-  global_training_example_size_ = tr_info.num_ins();
+  g_num_training_ins_ = tr_info.num_ins();
   fprintf(stderr, "training data info: %lu examples with feature range %s\n",
-          global_training_example_size_, global_feature_range_.toString().data());
+          g_num_training_ins_, g_fea_range_.toString().data());
 
   DataConfig va_cf;
   if (app_cf_.has_validation_data()) {
     va_cf = searchFiles(app_cf_.validation_data());
     InstanceInfo va_info = readInstanceInfo(va_cf);
     for (int i = 1; i < va_info.fea_group_size(); ++i) {
-      global_validation_info_.push_back(readMatrixInfo<double>(va_info, i));
+      g_validation_info_.push_back(readMatrixInfo<double>(va_info, i));
     }
-    global_feature_range_ = global_feature_range_.setUnion(
+    g_fea_range_ = g_fea_range_.setUnion(
         Range<Key>(va_info.fea_group(0).fea_begin(),
                    va_info.fea_group(0).fea_end()));
   }
@@ -64,8 +64,8 @@ void LinearMethod::startSystem() {
   int s = 0;
   for (auto& it : nodes_) {
     auto& node = it.second;
-    auto key = node.role() != Node::SERVER ? global_feature_range_ :
-               global_feature_range_.evenDivide(FLAGS_num_servers, s++);
+    auto key = node.role() != Node::SERVER ? g_fea_range_ :
+               g_fea_range_.evenDivide(FLAGS_num_servers, s++);
     key.to(node.mutable_key());
     *start.mutable_mng_node()->add_nodes() = node;
   }
