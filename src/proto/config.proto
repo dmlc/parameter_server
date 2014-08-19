@@ -11,6 +11,7 @@ message DataConfig {
   repeated string file = 2;
   // only valid for the binary format
   optional PbRange range = 3;
+  optional HDFSConfig hdfs = 4;
 }
 
 message ParameterInitConfig {
@@ -44,4 +45,10 @@ message PenaltyConfig {
   }
   required Type type = 1;
   repeated double lambda = 2;
+}
+
+message HDFSConfig {
+  optional string home = 1;  // HADOOP_HOME
+  optional string ugi = 2;   // hadoop.job.ugi, format: user,passwd
+  optional string namenode = 4;  // fs.default.name
 }

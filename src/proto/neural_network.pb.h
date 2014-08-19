@@ -68,11 +68,12 @@ enum ActivationConfig_Type {
   ActivationConfig_Type_SIGMOID = 1,
   ActivationConfig_Type_LOGISTIC = 2,
   ActivationConfig_Type_SOFTMAX = 3,
-  ActivationConfig_Type_RELU = 4
+  ActivationConfig_Type_RELU = 4,
+  ActivationConfig_Type_SCALED_TANH = 5
 };
 bool ActivationConfig_Type_IsValid(int value);
 const ActivationConfig_Type ActivationConfig_Type_Type_MIN = ActivationConfig_Type_IDENTITY;
-const ActivationConfig_Type ActivationConfig_Type_Type_MAX = ActivationConfig_Type_RELU;
+const ActivationConfig_Type ActivationConfig_Type_Type_MAX = ActivationConfig_Type_SCALED_TANH;
 const int ActivationConfig_Type_Type_ARRAYSIZE = ActivationConfig_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ActivationConfig_Type_descriptor();
@@ -506,6 +507,7 @@ class ActivationConfig : public ::google::protobuf::Message {
   static const Type LOGISTIC = ActivationConfig_Type_LOGISTIC;
   static const Type SOFTMAX = ActivationConfig_Type_SOFTMAX;
   static const Type RELU = ActivationConfig_Type_RELU;
+  static const Type SCALED_TANH = ActivationConfig_Type_SCALED_TANH;
   static inline bool Type_IsValid(int value) {
     return ActivationConfig_Type_IsValid(value);
   }

@@ -85,7 +85,7 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps ps_mpi)  # ps ps_local
+all: dir $(addprefix $(BIN)/, ps ps_mpi)
 data: $(addprefix $(BIN)/, text2proto showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 

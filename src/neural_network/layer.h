@@ -20,6 +20,7 @@ template<typename V> using LayerPtrList = std::vector<LayerPtr<V>>;
   using Layer<V>::out_layers_;                  \
   using Layer<V>::model_;                       \
   using Layer<V>::activation_;                  \
+  using Layer<V>::size;                         \
   using Layer<V>::cf_;
 
 template<typename V> class Layer {

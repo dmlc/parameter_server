@@ -39,6 +39,7 @@ class DataConfig;
 class ParameterInitConfig;
 class LearningRateConfig;
 class PenaltyConfig;
+class HDFSConfig;
 
 enum DataConfig_DataFormat {
   DataConfig_DataFormat_BIN = 1,
@@ -231,21 +232,33 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_range();
   inline void set_allocated_range(::PS::PbRange* range);
 
+  // optional .PS.HDFSConfig hdfs = 4;
+  inline bool has_hdfs() const;
+  inline void clear_hdfs();
+  static const int kHdfsFieldNumber = 4;
+  inline const ::PS::HDFSConfig& hdfs() const;
+  inline ::PS::HDFSConfig* mutable_hdfs();
+  inline ::PS::HDFSConfig* release_hdfs();
+  inline void set_allocated_hdfs(::PS::HDFSConfig* hdfs);
+
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
   inline void set_has_format();
   inline void clear_has_format();
   inline void set_has_range();
   inline void clear_has_range();
+  inline void set_has_hdfs();
+  inline void clear_has_hdfs();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::RepeatedPtrField< ::std::string> file_;
   ::PS::PbRange* range_;
+  ::PS::HDFSConfig* hdfs_;
   int format_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -651,6 +664,123 @@ class PenaltyConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static PenaltyConfig* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class HDFSConfig : public ::google::protobuf::Message {
+ public:
+  HDFSConfig();
+  virtual ~HDFSConfig();
+
+  HDFSConfig(const HDFSConfig& from);
+
+  inline HDFSConfig& operator=(const HDFSConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const HDFSConfig& default_instance();
+
+  void Swap(HDFSConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  HDFSConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const HDFSConfig& from);
+  void MergeFrom(const HDFSConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string home = 1;
+  inline bool has_home() const;
+  inline void clear_home();
+  static const int kHomeFieldNumber = 1;
+  inline const ::std::string& home() const;
+  inline void set_home(const ::std::string& value);
+  inline void set_home(const char* value);
+  inline void set_home(const char* value, size_t size);
+  inline ::std::string* mutable_home();
+  inline ::std::string* release_home();
+  inline void set_allocated_home(::std::string* home);
+
+  // optional string ugi = 2;
+  inline bool has_ugi() const;
+  inline void clear_ugi();
+  static const int kUgiFieldNumber = 2;
+  inline const ::std::string& ugi() const;
+  inline void set_ugi(const ::std::string& value);
+  inline void set_ugi(const char* value);
+  inline void set_ugi(const char* value, size_t size);
+  inline ::std::string* mutable_ugi();
+  inline ::std::string* release_ugi();
+  inline void set_allocated_ugi(::std::string* ugi);
+
+  // optional string namenode = 4;
+  inline bool has_namenode() const;
+  inline void clear_namenode();
+  static const int kNamenodeFieldNumber = 4;
+  inline const ::std::string& namenode() const;
+  inline void set_namenode(const ::std::string& value);
+  inline void set_namenode(const char* value);
+  inline void set_namenode(const char* value, size_t size);
+  inline ::std::string* mutable_namenode();
+  inline ::std::string* release_namenode();
+  inline void set_allocated_namenode(::std::string* namenode);
+
+  // @@protoc_insertion_point(class_scope:PS.HDFSConfig)
+ private:
+  inline void set_has_home();
+  inline void clear_has_home();
+  inline void set_has_ugi();
+  inline void clear_has_ugi();
+  inline void set_has_namenode();
+  inline void clear_has_namenode();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* home_;
+  ::std::string* ugi_;
+  ::std::string* namenode_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
+  friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static HDFSConfig* default_instance_;
+};
 // ===================================================================
 
 
@@ -760,6 +890,44 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
     set_has_range();
   } else {
     clear_has_range();
+  }
+}
+
+// optional .PS.HDFSConfig hdfs = 4;
+inline bool DataConfig::has_hdfs() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DataConfig::set_has_hdfs() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DataConfig::clear_has_hdfs() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DataConfig::clear_hdfs() {
+  if (hdfs_ != NULL) hdfs_->::PS::HDFSConfig::Clear();
+  clear_has_hdfs();
+}
+inline const ::PS::HDFSConfig& DataConfig::hdfs() const {
+  return hdfs_ != NULL ? *hdfs_ : *default_instance_->hdfs_;
+}
+inline ::PS::HDFSConfig* DataConfig::mutable_hdfs() {
+  set_has_hdfs();
+  if (hdfs_ == NULL) hdfs_ = new ::PS::HDFSConfig;
+  return hdfs_;
+}
+inline ::PS::HDFSConfig* DataConfig::release_hdfs() {
+  clear_has_hdfs();
+  ::PS::HDFSConfig* temp = hdfs_;
+  hdfs_ = NULL;
+  return temp;
+}
+inline void DataConfig::set_allocated_hdfs(::PS::HDFSConfig* hdfs) {
+  delete hdfs_;
+  hdfs_ = hdfs;
+  if (hdfs) {
+    set_has_hdfs();
+  } else {
+    clear_has_hdfs();
   }
 }
 
@@ -1047,6 +1215,220 @@ PenaltyConfig::lambda() const {
 inline ::google::protobuf::RepeatedField< double >*
 PenaltyConfig::mutable_lambda() {
   return &lambda_;
+}
+
+// -------------------------------------------------------------------
+
+// HDFSConfig
+
+// optional string home = 1;
+inline bool HDFSConfig::has_home() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void HDFSConfig::set_has_home() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void HDFSConfig::clear_has_home() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void HDFSConfig::clear_home() {
+  if (home_ != &::google::protobuf::internal::kEmptyString) {
+    home_->clear();
+  }
+  clear_has_home();
+}
+inline const ::std::string& HDFSConfig::home() const {
+  return *home_;
+}
+inline void HDFSConfig::set_home(const ::std::string& value) {
+  set_has_home();
+  if (home_ == &::google::protobuf::internal::kEmptyString) {
+    home_ = new ::std::string;
+  }
+  home_->assign(value);
+}
+inline void HDFSConfig::set_home(const char* value) {
+  set_has_home();
+  if (home_ == &::google::protobuf::internal::kEmptyString) {
+    home_ = new ::std::string;
+  }
+  home_->assign(value);
+}
+inline void HDFSConfig::set_home(const char* value, size_t size) {
+  set_has_home();
+  if (home_ == &::google::protobuf::internal::kEmptyString) {
+    home_ = new ::std::string;
+  }
+  home_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* HDFSConfig::mutable_home() {
+  set_has_home();
+  if (home_ == &::google::protobuf::internal::kEmptyString) {
+    home_ = new ::std::string;
+  }
+  return home_;
+}
+inline ::std::string* HDFSConfig::release_home() {
+  clear_has_home();
+  if (home_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = home_;
+    home_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void HDFSConfig::set_allocated_home(::std::string* home) {
+  if (home_ != &::google::protobuf::internal::kEmptyString) {
+    delete home_;
+  }
+  if (home) {
+    set_has_home();
+    home_ = home;
+  } else {
+    clear_has_home();
+    home_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string ugi = 2;
+inline bool HDFSConfig::has_ugi() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void HDFSConfig::set_has_ugi() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void HDFSConfig::clear_has_ugi() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void HDFSConfig::clear_ugi() {
+  if (ugi_ != &::google::protobuf::internal::kEmptyString) {
+    ugi_->clear();
+  }
+  clear_has_ugi();
+}
+inline const ::std::string& HDFSConfig::ugi() const {
+  return *ugi_;
+}
+inline void HDFSConfig::set_ugi(const ::std::string& value) {
+  set_has_ugi();
+  if (ugi_ == &::google::protobuf::internal::kEmptyString) {
+    ugi_ = new ::std::string;
+  }
+  ugi_->assign(value);
+}
+inline void HDFSConfig::set_ugi(const char* value) {
+  set_has_ugi();
+  if (ugi_ == &::google::protobuf::internal::kEmptyString) {
+    ugi_ = new ::std::string;
+  }
+  ugi_->assign(value);
+}
+inline void HDFSConfig::set_ugi(const char* value, size_t size) {
+  set_has_ugi();
+  if (ugi_ == &::google::protobuf::internal::kEmptyString) {
+    ugi_ = new ::std::string;
+  }
+  ugi_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* HDFSConfig::mutable_ugi() {
+  set_has_ugi();
+  if (ugi_ == &::google::protobuf::internal::kEmptyString) {
+    ugi_ = new ::std::string;
+  }
+  return ugi_;
+}
+inline ::std::string* HDFSConfig::release_ugi() {
+  clear_has_ugi();
+  if (ugi_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = ugi_;
+    ugi_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void HDFSConfig::set_allocated_ugi(::std::string* ugi) {
+  if (ugi_ != &::google::protobuf::internal::kEmptyString) {
+    delete ugi_;
+  }
+  if (ugi) {
+    set_has_ugi();
+    ugi_ = ugi;
+  } else {
+    clear_has_ugi();
+    ugi_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string namenode = 4;
+inline bool HDFSConfig::has_namenode() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void HDFSConfig::set_has_namenode() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void HDFSConfig::clear_has_namenode() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void HDFSConfig::clear_namenode() {
+  if (namenode_ != &::google::protobuf::internal::kEmptyString) {
+    namenode_->clear();
+  }
+  clear_has_namenode();
+}
+inline const ::std::string& HDFSConfig::namenode() const {
+  return *namenode_;
+}
+inline void HDFSConfig::set_namenode(const ::std::string& value) {
+  set_has_namenode();
+  if (namenode_ == &::google::protobuf::internal::kEmptyString) {
+    namenode_ = new ::std::string;
+  }
+  namenode_->assign(value);
+}
+inline void HDFSConfig::set_namenode(const char* value) {
+  set_has_namenode();
+  if (namenode_ == &::google::protobuf::internal::kEmptyString) {
+    namenode_ = new ::std::string;
+  }
+  namenode_->assign(value);
+}
+inline void HDFSConfig::set_namenode(const char* value, size_t size) {
+  set_has_namenode();
+  if (namenode_ == &::google::protobuf::internal::kEmptyString) {
+    namenode_ = new ::std::string;
+  }
+  namenode_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* HDFSConfig::mutable_namenode() {
+  set_has_namenode();
+  if (namenode_ == &::google::protobuf::internal::kEmptyString) {
+    namenode_ = new ::std::string;
+  }
+  return namenode_;
+}
+inline ::std::string* HDFSConfig::release_namenode() {
+  clear_has_namenode();
+  if (namenode_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = namenode_;
+    namenode_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void HDFSConfig::set_allocated_namenode(::std::string* namenode) {
+  if (namenode_ != &::google::protobuf::internal::kEmptyString) {
+    delete namenode_;
+  }
+  if (namenode) {
+    set_has_namenode();
+    namenode_ = namenode;
+  } else {
+    clear_has_namenode();
+    namenode_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 

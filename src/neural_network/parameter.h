@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/common.h"
+#include <sparsehash/dense_hash_map>
 
 namespace PS {
 namespace NN {
@@ -9,7 +10,7 @@ template<typename V> struct Parameter;
 template<typename V> using ParameterPtr = std::shared_ptr<Parameter<V>>;
 template<typename V> using ParameterPtrList = std::vector<ParameterPtr<V>>;
 
-// data blob
+// typedef google::dense_hash_map<Key, std::vector<V>>  SpaMatrix;
 template<typename V>
 struct Parameter {
   // Parameter() { }
@@ -19,6 +20,10 @@ struct Parameter {
   MatrixPtr<V> value;
   MatrixPtr<V> gradient;
   MatrixPtr<V> hession;
+
+  google::dense_hash_map<Key, std::vector<V>> spa_value;
+
+
 };
 
 

@@ -7,6 +7,7 @@
 #include "proto/app.pb.h"
 #include "util/split.h"
 #include "util/file.h"
+#include "util/hdfs.h"
 
 namespace PS {
 
@@ -19,6 +20,23 @@ static std::vector<std::string> readFilenamesInDirectory(const std::string& dire
   while ((ent = readdir (dir)) != NULL)
     files.push_back(string(ent->d_name));
   closedir (dir);
+  return files;
+}
+
+static std::vector<std::string> readFilenamesInHDFSDirectory(
+    const std::string& directory, const HDFSConfig& hdfs) {
+  std::vector<std::string> files;
+  string cmd = hadoopFS(hdfs) + " -ls " + directory;
+  FILE* des = popen(cmd.c_str(), "r");
+  CHECK(des);
+
+  char line[10000];
+  while (fgets(line, 10000, des)) {
+    auto ents = split(std::string(line), ' ', true);
+    if (ents.size() != 8) continue;
+    files.push_back(ents.back());
+  }
+  pclose(des);
   return files;
 }
 
@@ -60,7 +78,9 @@ static DataConfig searchFiles(const DataConfig& config) {
                    << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
     }
     // match regex
-    auto files = readFilenamesInDirectory(dir);
+    auto files = config.has_hdfs() ?
+                 readFilenamesInHDFSDirectory(dir, config.hdfs()) :
+                 readFilenamesInDirectory(dir);
     for (auto& f : files) {
       if (std::regex_match(f, pattern)) {
         matched_files.push_back(dir+"/"+f);

@@ -11,6 +11,7 @@ template<typename V>
 using ActivationFuncPtr = std::shared_ptr<ActivationFunction<V>>;
 template<typename V> class ReluActivation;
 template<typename V> class IdentityActivation;
+template<typename V> class ScaledTanh;
 
 template <typename V>
 class ActivationFunction {
@@ -22,6 +23,8 @@ class ActivationFunction {
         return ActivationFuncPtr<V>(new ReluActivation<V>());
       case Type::IDENTITY:
         return ActivationFuncPtr<V>(new IdentityActivation<V>());
+      case Type::SCALED_TANH:
+        return ActivationFuncPtr<V>(new ScaledTanh<V>());
       default:
         CHECK(false) << "unknown type: " << config.DebugString();
     }
@@ -41,7 +44,7 @@ class ReluActivation : public ActivationFunction<V> {
     auto X = arg->value->value();
 
     for (size_t i = 0; i < X.size(); ++i)
-      X[i] = X[i] < 0 ? 0 : X[i];
+      X[i] = X[i] < 0 ? 0 : X[i];  // FIXIT
   }
 
   void backward(ParameterPtr<V>& arg) {
@@ -67,6 +70,31 @@ class IdentityActivation : public ActivationFunction<V> {
     // CHECK_EQ(X.size(), G.size());
 
     // G.copyFrom(X);
+  }
+};
+
+template <typename V>
+class ScaledTanh : public ActivationFunction<V> {
+ public:
+  void forward(ParameterPtr<V>& arg) {
+    CHECK(arg->value);
+    auto X = arg->value->value();
+    for (size_t i = 0; i < X.size(); ++i) {
+      X[i] = 1.7159 * tanh(2/3*X[i]);
+    }
+  }
+
+  void backward(ParameterPtr<V>& arg) {
+    CHECK(arg->value);
+    CHECK(arg->gradient);
+    auto X = arg->value->value();
+    auto G = arg->gradient->value();
+    CHECK_EQ(X.size(), G.size());
+
+    for (size_t i = 0; i < X.size(); ++i) {
+      V tmp = 1.7159 - X[i];
+      G[i] *= 2 / 3 / 1.7159 * tmp * tmp;
+    }
   }
 };
 

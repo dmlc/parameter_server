@@ -43,6 +43,7 @@ message ActivationConfig {
     LOGISTIC = 2;  // f(x) = (1 - exp(-x)) / (1+ exp(-x))
     SOFTMAX = 3;   // y_i = f(x_i) = exp(x_i) / (\sum_i exp(x_i))
     RELU = 4;      // y = max(0, x)
+    SCALED_TANH = 5;     // f(x) = 1.7159 * tanh(2/3*x);
   }
   required Type type = 1;
 }
