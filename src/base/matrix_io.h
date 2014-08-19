@@ -67,16 +67,19 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
 // label, feature_group 1, feature_group 2, ...
 // TODO do not support dense feature group yet...
 template<typename V>
-MatrixPtrList<V> readMatricesFromProto(const std::vector<std::string>& files) {
+MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
   // load info
   std::vector<RecordReader> readers;
   InstanceInfo info;
-  for (auto& f : files) {
-    File* in = File::openOrDie(f, "r");
-    InstanceInfo i;
+  for (int i = 0; i < data.file_size(); ++i) {
+    auto f = data.file(i);
+    File *in = data.has_hdfs() ?
+               File::openHDFSOrDie(f, data.hdfs()) :
+               File::openOrDie(f, "r");
     RecordReader r(in);
-    CHECK(r.ReadProtocolMessage(&i));
-    info = mergeInstanceInfo(info, i);
+    InstanceInfo ins;
+    CHECK(r.ReadProtocolMessage(&ins));
+    info = mergeInstanceInfo(info, ins);
     readers.push_back(r);
   }
   // LL << info.DebugString();
@@ -216,7 +219,7 @@ MatrixPtrList<V> readMatrices(const DataConfig& config) {
     if (config.has_range()) outer_range.copyFrom(config.range());
     return readMatricesFromBin<V>(outer_range, files);
   } else if (config.format() == DataConfig::PROTO) {
-    return readMatricesFromProto<V>(files);
+    return readMatricesFromProto<V>(config);
   } else {
     CHECK(false) << "unknonw data format: " << config.DebugString();
   }

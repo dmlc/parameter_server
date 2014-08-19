@@ -5,6 +5,7 @@
 
 #include "util/common.h"
 #include "proto/app.pb.h"
+#include "base/range.h"
 #include "util/split.h"
 #include "util/file.h"
 #include "util/hdfs.h"
@@ -34,7 +35,9 @@ static std::vector<std::string> readFilenamesInHDFSDirectory(
   while (fgets(line, 10000, des)) {
     auto ents = split(std::string(line), ' ', true);
     if (ents.size() != 8) continue;
+    if (ents[0][0] == 'd') continue;
     files.push_back(ents.back());
+
   }
   pclose(des);
   return files;

@@ -6,6 +6,7 @@
 #include "zlib.h"
 #include "util/integral_types.h"
 #include "glog/logging.h"
+#include "proto/config.pb.h"
 
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"
@@ -20,11 +21,14 @@ class File {
   // Opens file "name" with flags specified by "flag".
   // Flags are defined by fopen(), that is "r", "r+", "w", "w+". "a", and "a+".
   static File* open(const std::string& name, const char* const flag);
-
-  static size_t size(const std::string& name);
-  // Opens file "name" with flags specified by "flag"
   // If open failed, program will exit.
   static File* openOrDie(const std::string& name, const char* const flag);
+
+  // implement by popen(hadoop fs -cat xxx), read only
+  static File* openHDFS(const std::string& name, const HDFSConfig& hdfs);
+  static File* openHDFSOrDie(const std::string& name, const HDFSConfig& hdfs);
+
+  static size_t size(const std::string& name);
 
   // Reads "size" bytes to buff from file, buff should be pre-allocated.
   size_t Read(void* const buff, size_t size);
@@ -84,9 +88,11 @@ class File {
   bool open() const { return (is_gz_ ? gz_f_ != NULL : f_ != NULL); }
 
  private:
-  File(FILE* f_des, gzFile gz_des, const std::string& name)
-      : f_(f_des), gz_f_(gz_des), name_(name) {
-    is_gz_ = gz_des != NULL;
+  File(FILE* f_des, const std::string& name)
+      : f_(f_des), name_(name) { }
+  File(gzFile gz_des, const std::string& name)
+      : gz_f_(gz_des), name_(name) {
+    is_gz_ = true;
   }
 
   FILE* f_ = NULL;

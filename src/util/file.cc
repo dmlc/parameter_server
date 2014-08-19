@@ -7,6 +7,8 @@
 #include <memory>
 
 #include "util/file.h"
+#include "util/hdfs.h"
+#include "base/io.h"
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
@@ -14,31 +16,44 @@ namespace PS {
 File* File::open(const std::string& name, const char* const flag) {
   File* f;
   if (name == "stdin") {
-    f = new File(stdin, NULL, name);
+    f = new File(stdin, name);
   } else if (name == "stdout") {
-    f = new File(stdout, NULL, name);
+    f = new File(stdout, name);
   } else if (name == "stderr") {
-    f = new File(stderr, NULL, name);
+    f = new File(stderr, name);
   } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
     gzFile des = gzopen(name.data(), flag);
     if (des == NULL) {
       LOG(ERROR) << "cannot open " << name;
       return NULL;
     }
-    f = new File(NULL, des, name);
+    f = new File(des, name);
   } else {
     FILE*  des = fopen(name.data(), flag);
     if (des == NULL) {
       LOG(ERROR) << "cannot open " << name;
       return NULL;
     }
-    f = new File(des, NULL, name);
+    f = new File(des, name);
   }
   return f;
 }
 
 File* File::openOrDie(const std::string& name, const char* const flag) {
   File* f = File::open(name, flag);
+  CHECK(f != NULL && f->open());
+  return f;
+}
+
+File* File::openHDFS(const std::string& name, const HDFSConfig& hdfs) {
+  string cmd = hadoopFS(hdfs) + " -cat " + name;
+FILE* des = popen(cmd.c_str(), "r");
+auto f = new File(des, name);
+  return f;
+}
+
+File* File::openHDFSOrDie(const std::string& name, const HDFSConfig& hdfs) {
+  File* f = File::openHDFS(name, hdfs);
   CHECK(f != NULL && f->open());
   return f;
 }
