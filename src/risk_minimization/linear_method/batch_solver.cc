@@ -252,7 +252,7 @@ void BatchSolver::saveModel(const Message& msg) {
 
   if (output.format() == DataConfig::TEXT) {
     // TODO use the model_file in msg
-    std::string file = w_->name() + "_" + exec_.myNode().id();
+    std::string file = "../output/" + w_->name() + "_" + exec_.myNode().id();
     if (output.file_size() > 0) file = output.file(0) + file;
     fprintf(stderr, "%s writes model to %s\n",
             exec_.myNode().id().data(), file.data());

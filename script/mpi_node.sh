@@ -54,6 +54,8 @@ else
     my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'U${my_rank}'"
 fi
 
+mkdir -p ../output
+
 ../bin/ps \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
