@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if ! [ -e rcv1_train.binary ]
-then
+if ! [ -e rcv1_train.binary ]; then
     wget http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2
     bunzip2 rcv1_train.binary.bz2
 fi
@@ -25,7 +24,7 @@ do
     then
         dir=$test
     fi
-    ../bin/text2proto -format libsvm < ${f} > $dir/part-`printf %03d $i`
+    ../bin/text2proto -format libsvm -input ${f} -output $dir/part-`printf %03d $i`
     ((i++))
 done
 

@@ -61,6 +61,28 @@ inline bool DataConfig_DataFormat_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<DataConfig_DataFormat>(
     DataConfig_DataFormat_descriptor(), name, value);
 }
+enum DataConfig_TextFormat {
+  DataConfig_TextFormat_PS_SPARSE_BINARY = 3,
+  DataConfig_TextFormat_PS_SPARSE = 2,
+  DataConfig_TextFormat_PS_DENSE = 1,
+  DataConfig_TextFormat_ADFEA = 4,
+  DataConfig_TextFormat_LIBSVM = 5
+};
+bool DataConfig_TextFormat_IsValid(int value);
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MIN = DataConfig_TextFormat_PS_DENSE;
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_LIBSVM;
+const int DataConfig_TextFormat_TextFormat_ARRAYSIZE = DataConfig_TextFormat_TextFormat_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* DataConfig_TextFormat_descriptor();
+inline const ::std::string& DataConfig_TextFormat_Name(DataConfig_TextFormat value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    DataConfig_TextFormat_descriptor(), value);
+}
+inline bool DataConfig_TextFormat_Parse(
+    const ::std::string& name, DataConfig_TextFormat* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<DataConfig_TextFormat>(
+    DataConfig_TextFormat_descriptor(), name, value);
+}
 enum ParameterInitConfig_Type {
   ParameterInitConfig_Type_ZERO = 1,
   ParameterInitConfig_Type_RANDOM = 2,
@@ -198,6 +220,33 @@ class DataConfig : public ::google::protobuf::Message {
     return DataConfig_DataFormat_Parse(name, value);
   }
 
+  typedef DataConfig_TextFormat TextFormat;
+  static const TextFormat PS_SPARSE_BINARY = DataConfig_TextFormat_PS_SPARSE_BINARY;
+  static const TextFormat PS_SPARSE = DataConfig_TextFormat_PS_SPARSE;
+  static const TextFormat PS_DENSE = DataConfig_TextFormat_PS_DENSE;
+  static const TextFormat ADFEA = DataConfig_TextFormat_ADFEA;
+  static const TextFormat LIBSVM = DataConfig_TextFormat_LIBSVM;
+  static inline bool TextFormat_IsValid(int value) {
+    return DataConfig_TextFormat_IsValid(value);
+  }
+  static const TextFormat TextFormat_MIN =
+    DataConfig_TextFormat_TextFormat_MIN;
+  static const TextFormat TextFormat_MAX =
+    DataConfig_TextFormat_TextFormat_MAX;
+  static const int TextFormat_ARRAYSIZE =
+    DataConfig_TextFormat_TextFormat_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  TextFormat_descriptor() {
+    return DataConfig_TextFormat_descriptor();
+  }
+  static inline const ::std::string& TextFormat_Name(TextFormat value) {
+    return DataConfig_TextFormat_Name(value);
+  }
+  static inline bool TextFormat_Parse(const ::std::string& name,
+      TextFormat* value) {
+    return DataConfig_TextFormat_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required .PS.DataConfig.DataFormat format = 1;
@@ -207,10 +256,17 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig_DataFormat format() const;
   inline void set_format(::PS::DataConfig_DataFormat value);
 
-  // repeated string file = 2;
+  // optional .PS.DataConfig.TextFormat text = 2;
+  inline bool has_text() const;
+  inline void clear_text();
+  static const int kTextFieldNumber = 2;
+  inline ::PS::DataConfig_TextFormat text() const;
+  inline void set_text(::PS::DataConfig_TextFormat value);
+
+  // repeated string file = 3;
   inline int file_size() const;
   inline void clear_file();
-  static const int kFileFieldNumber = 2;
+  static const int kFileFieldNumber = 3;
   inline const ::std::string& file(int index) const;
   inline ::std::string* mutable_file(int index);
   inline void set_file(int index, const ::std::string& value);
@@ -223,42 +279,45 @@ class DataConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& file() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_file();
 
-  // optional .PS.PbRange range = 3;
-  inline bool has_range() const;
-  inline void clear_range();
-  static const int kRangeFieldNumber = 3;
-  inline const ::PS::PbRange& range() const;
-  inline ::PS::PbRange* mutable_range();
-  inline ::PS::PbRange* release_range();
-  inline void set_allocated_range(::PS::PbRange* range);
-
-  // optional .PS.HDFSConfig hdfs = 4;
+  // optional .PS.HDFSConfig hdfs = 5;
   inline bool has_hdfs() const;
   inline void clear_hdfs();
-  static const int kHdfsFieldNumber = 4;
+  static const int kHdfsFieldNumber = 5;
   inline const ::PS::HDFSConfig& hdfs() const;
   inline ::PS::HDFSConfig* mutable_hdfs();
   inline ::PS::HDFSConfig* release_hdfs();
   inline void set_allocated_hdfs(::PS::HDFSConfig* hdfs);
 
+  // optional .PS.PbRange range = 4;
+  inline bool has_range() const;
+  inline void clear_range();
+  static const int kRangeFieldNumber = 4;
+  inline const ::PS::PbRange& range() const;
+  inline ::PS::PbRange* mutable_range();
+  inline ::PS::PbRange* release_range();
+  inline void set_allocated_range(::PS::PbRange* range);
+
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
   inline void set_has_format();
   inline void clear_has_format();
-  inline void set_has_range();
-  inline void clear_has_range();
+  inline void set_has_text();
+  inline void clear_has_text();
   inline void set_has_hdfs();
   inline void clear_has_hdfs();
+  inline void set_has_range();
+  inline void clear_has_range();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::std::string> file_;
-  ::PS::PbRange* range_;
-  ::PS::HDFSConfig* hdfs_;
   int format_;
+  int text_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> file_;
+  ::PS::HDFSConfig* hdfs_;
+  ::PS::PbRange* range_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -811,7 +870,30 @@ inline void DataConfig::set_format(::PS::DataConfig_DataFormat value) {
   format_ = value;
 }
 
-// repeated string file = 2;
+// optional .PS.DataConfig.TextFormat text = 2;
+inline bool DataConfig::has_text() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DataConfig::set_has_text() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DataConfig::clear_has_text() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DataConfig::clear_text() {
+  text_ = 3;
+  clear_has_text();
+}
+inline ::PS::DataConfig_TextFormat DataConfig::text() const {
+  return static_cast< ::PS::DataConfig_TextFormat >(text_);
+}
+inline void DataConfig::set_text(::PS::DataConfig_TextFormat value) {
+  assert(::PS::DataConfig_TextFormat_IsValid(value));
+  set_has_text();
+  text_ = value;
+}
+
+// repeated string file = 3;
 inline int DataConfig::file_size() const {
   return file_.size();
 }
@@ -855,45 +937,7 @@ DataConfig::mutable_file() {
   return &file_;
 }
 
-// optional .PS.PbRange range = 3;
-inline bool DataConfig::has_range() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void DataConfig::set_has_range() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void DataConfig::clear_has_range() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void DataConfig::clear_range() {
-  if (range_ != NULL) range_->::PS::PbRange::Clear();
-  clear_has_range();
-}
-inline const ::PS::PbRange& DataConfig::range() const {
-  return range_ != NULL ? *range_ : *default_instance_->range_;
-}
-inline ::PS::PbRange* DataConfig::mutable_range() {
-  set_has_range();
-  if (range_ == NULL) range_ = new ::PS::PbRange;
-  return range_;
-}
-inline ::PS::PbRange* DataConfig::release_range() {
-  clear_has_range();
-  ::PS::PbRange* temp = range_;
-  range_ = NULL;
-  return temp;
-}
-inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
-  delete range_;
-  range_ = range;
-  if (range) {
-    set_has_range();
-  } else {
-    clear_has_range();
-  }
-}
-
-// optional .PS.HDFSConfig hdfs = 4;
+// optional .PS.HDFSConfig hdfs = 5;
 inline bool DataConfig::has_hdfs() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -928,6 +972,44 @@ inline void DataConfig::set_allocated_hdfs(::PS::HDFSConfig* hdfs) {
     set_has_hdfs();
   } else {
     clear_has_hdfs();
+  }
+}
+
+// optional .PS.PbRange range = 4;
+inline bool DataConfig::has_range() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void DataConfig::set_has_range() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void DataConfig::clear_has_range() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void DataConfig::clear_range() {
+  if (range_ != NULL) range_->::PS::PbRange::Clear();
+  clear_has_range();
+}
+inline const ::PS::PbRange& DataConfig::range() const {
+  return range_ != NULL ? *range_ : *default_instance_->range_;
+}
+inline ::PS::PbRange* DataConfig::mutable_range() {
+  set_has_range();
+  if (range_ == NULL) range_ = new ::PS::PbRange;
+  return range_;
+}
+inline ::PS::PbRange* DataConfig::release_range() {
+  clear_has_range();
+  ::PS::PbRange* temp = range_;
+  range_ = NULL;
+  return temp;
+}
+inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
+  delete range_;
+  range_ = range;
+  if (range) {
+    set_has_range();
+  } else {
+    clear_has_range();
   }
 }
 
@@ -1443,6 +1525,10 @@ namespace protobuf {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataConfig_DataFormat>() {
   return ::PS::DataConfig_DataFormat_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataConfig_TextFormat>() {
+  return ::PS::DataConfig_TextFormat_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::ParameterInitConfig_Type>() {

@@ -15,10 +15,6 @@ int main(int argc, char *argv[]) {
   File* in = File::open(FLAGS_input, "r");
   RecordReader reader(in);
 
-  InstanceInfo info;
-  CHECK(reader.ReadProtocolMessage(&info));
-  std::cout << info.ShortDebugString() << std::endl;
-
   for (int i = 0; i < FLAGS_n; ++i) {
     Instance ins;
     CHECK(reader.ReadProtocolMessage(&ins));

@@ -8,10 +8,20 @@ message DataConfig {
     TEXT = 3;
   }
   required DataFormat format = 1;
-  repeated string file = 2;
+
+  enum TextFormat {
+    PS_SPARSE_BINARY = 3;
+    PS_SPARSE = 2;
+    PS_DENSE = 1;
+    ADFEA = 4;
+    LIBSVM = 5;
+  }
+  optional TextFormat text = 2;
+
+  repeated string file = 3;
+  optional HDFSConfig hdfs = 5;
   // only valid for the binary format
-  optional PbRange range = 3;
-  optional HDFSConfig hdfs = 4;
+  optional PbRange range = 4;
 }
 
 message ParameterInitConfig {
