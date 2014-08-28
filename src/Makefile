@@ -19,9 +19,6 @@ THIRD_BIN=$(THIRD)/bin
 THIRD_INC=$(THIRD)/include
 THIRD_LIB=$(THIRD)/lib
 
-# MPICC = mpic++
-MPICC = $(THIRD_BIN)/mpic++
-
 #-Wconversion -fPIC
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
 INCPATH = -I. -I${THIRD_INC}
@@ -126,6 +123,8 @@ $(BIN)/ps: ps.cc $(LIB)/libps.a
 # $(BIN)/ps: ps.cc $(LIB)/libps.so
 # 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -Wl,-rpath=../lib  -o $@
 
+# MPICC = mpic++
+MPICC = $(THIRD_BIN)/mpic++
 
 # $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 # 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@

@@ -12,6 +12,7 @@ S1="role:SERVER,hostname:'127.0.0.1',port:8011,id:'S1'"
 arg="-num_servers 2 -num_workers 2 -num_threads 4 -app ../config/rcv1_l1lr.config"
 
 mkdir -p ../output
+FLAGS_logtostderr=1
 bin="../bin/ps"
 ${bin} ${arg} -scheduler ${scheduler} -my_node ${scheduler} &
 ${bin} ${arg} -scheduler ${scheduler} -my_node ${W0} &

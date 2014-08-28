@@ -55,7 +55,7 @@ else
 fi
 
 mkdir -p ../output
-
+FLAGS_logtostderr=1
 ../bin/ps \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
