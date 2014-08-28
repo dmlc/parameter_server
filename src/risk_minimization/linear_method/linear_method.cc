@@ -80,6 +80,7 @@ void LinearMethod::startSystem() {
   }
   int time = 0, k = 0;
   start.mutable_mng_app()->set_cmd(ManageApp::ADD);
+
   for (auto& w : exec_.group(kActiveGroup)) {
     auto cf = app_cf_;
     cf.clear_training_data();
@@ -93,6 +94,7 @@ void LinearMethod::startSystem() {
     *(start.mutable_mng_app()->mutable_app_config()) = cf;
     CHECK_EQ(time, w->submit(start));
   }
+
   taskpool(kActiveGroup)->waitOutgoingTask(time);
   // fprintf(stderr, "system started...");
 }

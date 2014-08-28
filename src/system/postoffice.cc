@@ -117,7 +117,10 @@ void Postoffice::recv() {
       if (tk.has_mng_app()) manageApp(tk);
       if (tk.has_mng_node()) manageNode(tk);
     } else {
-      yellow_pages_.customer(tk.customer())->exec().accept(msg);
+      if (tk.customer() == "default") continue;
+      auto pt = yellow_pages_.customer(tk.customer());
+      CHECK(pt) << "customer [" << tk.customer() << "] doesn't exist";
+      pt->exec().accept(msg);
       continue;
     }
     auto ptr = yellow_pages_.customer(tk.customer());
@@ -135,7 +138,7 @@ void Postoffice::manageApp(const Task& tk) {
 }
 
 void Postoffice::manageNode(const Task& tk) {
-  // LL << tk.DebugString();
+
   CHECK(tk.has_mng_node());
   auto& mng = tk.mng_node();
   std::vector<Node> nodes;

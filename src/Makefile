@@ -1,8 +1,8 @@
 CC = g++
 # CC = clang
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -85,7 +85,7 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps ps_mpi)
+all: dir $(addprefix $(BIN)/, ps)
 data: $(addprefix $(BIN)/, text2proto showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
@@ -125,8 +125,8 @@ $(LIB)/libps.a: $(OBJS) #gtest
 $(BIN)/ps: ps.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
 
-$(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
-	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
+# $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
+# 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
 
 # $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
 # 	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
