@@ -1,15 +1,14 @@
 CC = g++
 # CC = clang
 
-# OPT = -O3 -ggdb
-OPT = -O0 -ggdb
+OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
 
 ifndef THIRD
 THIRD=$(shell cd ..;pwd)/third_party
-# THIRD=/usr/local/
 endif
 
 ifndef GOOGLE_HASH
@@ -85,8 +84,8 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps)
-data: $(addprefix $(BIN)/, text2proto showins proto2bin)
+all: dir $(addprefix $(BIN)/, ps text2proto)
+data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 dir:
@@ -116,14 +115,17 @@ $(BIN)/%: test/%.cc $(LIB)/libps.a
 $(LIB)/libps.a: $(OBJS) #gtest
 	ar crv $@ $(OBJS)
 
+$(BIN)/ps: ps.cc $(LIB)/libps.a
+	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
+
+# =====================
+
 # -Wl,-rpath=../lib $(LIB)/libps.so
 #  $(LIB)/libps.a
 
 # $(BIN)/ps: ps.cc $(LIB)/libps.so
 # 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -Wl,-rpath=../lib  -o $@
 
-$(BIN)/ps: ps.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
 
 # $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 # 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@
@@ -131,10 +133,10 @@ $(BIN)/ps: ps.cc $(LIB)/libps.a
 # $(BIN)/text2bin: data/text2bin.cc data/text2bin.h $(LIB)/libps.a
 # 	$(CC) $(CFLAGS) data/text2bin.cc $(LDFLAGS)  -o $@
 
-$(BIN)/tmp: tmp.cc  $(LIB)/libps.a
-	$(CC) $(CFLAGS) tmp.cc $(LDFLAGS)  -o $@
+# $(BIN)/tmp: tmp.cc  $(LIB)/libps.a
+# 	$(CC) $(CFLAGS) tmp.cc $(LDFLAGS)  -o $@
 
-xxx: $(BIN)/tmp
+# xxx: $(BIN)/tmp
 
 # test: $(TESTS)
 # 	for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done

@@ -52,7 +52,7 @@ export GOOGLE_HASH=0 && make -j8
 ## Input Data
 
 The parameter system can read data in either raw binary format or protobuf
-format. There is a `text2bin` program converting data from a range of text
+format. There is a `text2proto` program converting data from a range of text
 formats into binary ones. See `data/rcv1_bianry.sh` for an example.
 
 ### parameter server format
@@ -80,21 +80,20 @@ Sparse format:
 label feature_id:value feature_id:value ...
 ```
 
-### adfea
+<!-- ### adfea -->
+<!-- Sparse binary format: -->
 
-Sparse binary format:
-
-```
-label feature_id:groud_id feature_id:grou_id ...
-```
+<!-- ``` -->
+<!-- label feature_id:groud_id feature_id:grou_id ... -->
+<!-- ``` -->
 
 ### [vowpal wabbit format](https://github.com/JohnLangford/vowpal_wabbit/wiki/Input-format)
 
 TODO
 
-## Run the parameter server
+## Run
 
-### Run on local machine
+### On local machine
 
 See `script/local.sh`
 
