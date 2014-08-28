@@ -52,7 +52,7 @@ if (( ${my_rank} == 0 )); then
 elif (( ${my_rank} < ${num_servers} )); then
     my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'S${my_rank}'"
 elif (( ${my_rank} < ${num_servers} + ${num_workers} )); then
-    my_node="role:CLIENT,hostname:'${my_ip}',port:${my_port},id:'C${my_rank}'"
+    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'C${my_rank}'"
 else
     my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'U${my_rank}'"
 fi

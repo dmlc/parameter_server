@@ -138,7 +138,7 @@ void Executor::add(const Node& node) {
     node_groups_[kLiveGroup].push_back(w);
   }
 
-  if (role == Node::CLIENT) {
+  if (role == Node::WORKER) {
     node_groups_[kWorkerGroup].push_back(w);
     node_groups_[kActiveGroup].push_back(w);
   } else if (role == Node::SERVER) {

@@ -7,6 +7,5 @@ int main(int argc, char *argv[]) {
 
   PS::Postoffice::instance().run();
 
-  LL << "done";
   return 0;
 }

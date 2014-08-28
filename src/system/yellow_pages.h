@@ -7,6 +7,7 @@
 namespace PS {
 
 class Customer;
+typedef shared_ptr<Customer> CustomerPtr;
 class NodeGroup;
 
 // maintain inforamations about nodes and customers
@@ -17,20 +18,20 @@ class YellowPages {
 
   void init() { van_.init(); }
 
-  void add(shared_ptr<Customer> customer);
-  shared_ptr<Customer> customer(const string& name);
+  void add(CustomerPtr customer);
+  CustomerPtr customer(const string& name);
 
-  void add(const Node& node) {
-    nodes_[node.id()] = node;
-    // connect anyway, it's safe to connect to the same node twice (i not sure)
-    CHECK(van_.connect(node).ok());
-  }
+  void add(const Node& node);
 
   Van& van() { return van_; }
-  // Node& node(int uid) { return nodes_[uid]; }
 
+  int num_workers() { return num_workers_; }
+  int num_servers() { return num_servers_; }
+  const map<NodeID, Node>& nodes() { return nodes_; }
  private:
   DISALLOW_COPY_AND_ASSIGN(YellowPages);
+  int num_workers_ = 0;
+  int num_servers_ = 0;
 
   map<NodeID, Node> nodes_;
   map<string, shared_ptr<Customer>> customers_;

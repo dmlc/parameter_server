@@ -39,7 +39,7 @@ class Node;
 
 enum Node_Role {
   Node_Role_SERVER = 0,
-  Node_Role_CLIENT = 1,
+  Node_Role_WORKER = 1,
   Node_Role_MANAGER = 2,
   Node_Role_SCHEDULER = 3,
   Node_Role_GROUP = 4,
@@ -116,7 +116,7 @@ class Node : public ::google::protobuf::Message {
 
   typedef Node_Role Role;
   static const Role SERVER = Node_Role_SERVER;
-  static const Role CLIENT = Node_Role_CLIENT;
+  static const Role WORKER = Node_Role_WORKER;
   static const Role MANAGER = Node_Role_MANAGER;
   static const Role SCHEDULER = Node_Role_SCHEDULER;
   static const Role GROUP = Node_Role_GROUP;

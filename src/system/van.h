@@ -24,6 +24,7 @@ class Van {
   Status recv(Message* msg);
 
   Node& myNode() { return my_node_; }
+  Node& scheduler() { return scheduler_; };
 
   // utility functions for node
   static Node parseNode(const string& config) {
@@ -56,6 +57,7 @@ class Van {
   void *context_;
   void *receiver_;
   Node my_node_;
+  Node scheduler_;
   std::mutex mu_;
   std::map<NodeID, void *> senders_;
 

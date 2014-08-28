@@ -35,19 +35,22 @@ class Postoffice {
   void manageNode(const Task& pt);
 
   // accessors and mutators
-  YellowPages& yp() { return yp_; }
-  Node& myNode() { return yp_.van().myNode(); }
+  YellowPages& yp() { return yellow_pages_; }
+  Node& myNode() { return yellow_pages_.van().myNode(); }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
   Postoffice() { }
 
-  void manage_app(const Task& pt);
+  void manageApp(const Task& pt);
   void send();
   void recv();
+  void addMyNode(const string& name, const Node& recver);
 
   std::mutex mutex_;
   bool done_ = false;
+
+  std::promise<void> nodes_are_ready_;
 
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
@@ -55,7 +58,7 @@ class Postoffice {
   threadsafe_queue<Message> sending_queue_;
 
   // yp_ should stay behind sending_queue_ so it will be destroied earlier
-  YellowPages yp_;
+  YellowPages yellow_pages_;
 };
 
 } // namespace PS

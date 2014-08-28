@@ -60,14 +60,13 @@ void LinearMethod::startSystem() {
   start.set_type(Task::MANAGE);
   start.mutable_mng_node()->set_cmd(ManageNode::INIT);
 
-  App::requestNodes();
   int s = 0;
-  for (auto& it : nodes_) {
-    auto& node = it.second;
+  for (auto& it : sys_.yp().nodes()) {
+    auto node = it.second;
     auto key = node.role() != Node::SERVER ? g_fea_range_ :
                g_fea_range_.evenDivide(FLAGS_num_servers, s++);
     key.to(node.mutable_key());
-    *start.mutable_mng_node()->add_nodes() = node;
+    *start.mutable_mng_node()->add_node() = node;
   }
 
   // let the scheduler connect all other nodes
@@ -85,7 +84,7 @@ void LinearMethod::startSystem() {
     auto cf = app_cf_;
     cf.clear_training_data();
     cf.clear_validation_data();
-    if (w->role() == Node::CLIENT) {
+    if (w->role() == Node::WORKER) {
       if (app_cf_.has_validation_data()) {
         *cf.mutable_validation_data() = split_va_cf[k];
       }

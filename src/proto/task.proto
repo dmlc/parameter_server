@@ -51,12 +51,14 @@ message Task {
 message ManageNode {
   enum Command {
     INIT = 1;
+    ADD = 4;
     REPLACE = 2;
     REMOVE = 3;
   }
-
   required Command cmd = 1;
-  repeated Node nodes = 2;
+  repeated Node node = 2;
+  // optional int num_workers = 3;
+  // optional int num_servers = 4;
 }
 
 message ManageApp {

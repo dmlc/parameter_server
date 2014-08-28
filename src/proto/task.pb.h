@@ -70,12 +70,13 @@ inline bool Task_Type_Parse(
 }
 enum ManageNode_Command {
   ManageNode_Command_INIT = 1,
+  ManageNode_Command_ADD = 4,
   ManageNode_Command_REPLACE = 2,
   ManageNode_Command_REMOVE = 3
 };
 bool ManageNode_Command_IsValid(int value);
 const ManageNode_Command ManageNode_Command_Command_MIN = ManageNode_Command_INIT;
-const ManageNode_Command ManageNode_Command_Command_MAX = ManageNode_Command_REMOVE;
+const ManageNode_Command ManageNode_Command_Command_MAX = ManageNode_Command_ADD;
 const int ManageNode_Command_Command_ARRAYSIZE = ManageNode_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ManageNode_Command_descriptor();
@@ -490,6 +491,7 @@ class ManageNode : public ::google::protobuf::Message {
 
   typedef ManageNode_Command Command;
   static const Command INIT = ManageNode_Command_INIT;
+  static const Command ADD = ManageNode_Command_ADD;
   static const Command REPLACE = ManageNode_Command_REPLACE;
   static const Command REMOVE = ManageNode_Command_REMOVE;
   static inline bool Command_IsValid(int value) {
@@ -522,17 +524,17 @@ class ManageNode : public ::google::protobuf::Message {
   inline ::PS::ManageNode_Command cmd() const;
   inline void set_cmd(::PS::ManageNode_Command value);
 
-  // repeated .PS.Node nodes = 2;
-  inline int nodes_size() const;
-  inline void clear_nodes();
-  static const int kNodesFieldNumber = 2;
-  inline const ::PS::Node& nodes(int index) const;
-  inline ::PS::Node* mutable_nodes(int index);
-  inline ::PS::Node* add_nodes();
+  // repeated .PS.Node node = 2;
+  inline int node_size() const;
+  inline void clear_node();
+  static const int kNodeFieldNumber = 2;
+  inline const ::PS::Node& node(int index) const;
+  inline ::PS::Node* mutable_node(int index);
+  inline ::PS::Node* add_node();
   inline const ::google::protobuf::RepeatedPtrField< ::PS::Node >&
-      nodes() const;
+      node() const;
   inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
-      mutable_nodes();
+      mutable_node();
 
   // @@protoc_insertion_point(class_scope:PS.ManageNode)
  private:
@@ -541,7 +543,7 @@ class ManageNode : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::PS::Node > nodes_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Node > node_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -1710,29 +1712,29 @@ inline void ManageNode::set_cmd(::PS::ManageNode_Command value) {
   cmd_ = value;
 }
 
-// repeated .PS.Node nodes = 2;
-inline int ManageNode::nodes_size() const {
-  return nodes_.size();
+// repeated .PS.Node node = 2;
+inline int ManageNode::node_size() const {
+  return node_.size();
 }
-inline void ManageNode::clear_nodes() {
-  nodes_.Clear();
+inline void ManageNode::clear_node() {
+  node_.Clear();
 }
-inline const ::PS::Node& ManageNode::nodes(int index) const {
-  return nodes_.Get(index);
+inline const ::PS::Node& ManageNode::node(int index) const {
+  return node_.Get(index);
 }
-inline ::PS::Node* ManageNode::mutable_nodes(int index) {
-  return nodes_.Mutable(index);
+inline ::PS::Node* ManageNode::mutable_node(int index) {
+  return node_.Mutable(index);
 }
-inline ::PS::Node* ManageNode::add_nodes() {
-  return nodes_.Add();
+inline ::PS::Node* ManageNode::add_node() {
+  return node_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::PS::Node >&
-ManageNode::nodes() const {
-  return nodes_;
+ManageNode::node() const {
+  return node_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
-ManageNode::mutable_nodes() {
-  return &nodes_;
+ManageNode::mutable_node() {
+  return &node_;
 }
 
 // -------------------------------------------------------------------

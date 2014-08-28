@@ -29,7 +29,7 @@ void Init() {
     my_node += "SCHEDULER";
     id = "H";
   } else if (my_rank < nclient + 1) {
-    my_node += "CLIENT";
+    my_node += "WORKER";
     id = "W" + std::to_string(my_rank - 1);
   } else if (my_rank < nclient + nserver + 1) {
     my_node += "SERVER";

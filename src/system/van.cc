@@ -7,13 +7,17 @@ namespace PS {
 // #define _DEBUG_VAN_
 // static string van_filter = "";
 
-DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
+DEFINE_string(my_node, "", "my node");
+DEFINE_string(scheduler, "", "the scheduler node");
+DEFINE_string(server_master, "", "the master of servers");
 DEFINE_bool(compress_message, true, "");
 
 void Van::init() {
   my_node_ = parseNode(FLAGS_my_node);
-  context_ = zmq_ctx_new ();
-  // TODO is it useful?
+  scheduler_ = parseNode(FLAGS_scheduler);
+
+  context_ = zmq_ctx_new();
+  // TODO the following does not work...
   // zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
   // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
   // LL << "ZMQ_MAX_SOCKETS: " << zmq_ctx_get(context_, ZMQ_MAX_SOCKETS);
@@ -21,6 +25,7 @@ void Van::init() {
   CHECK(context_ != NULL) << "create 0mq context failed";
   bind();
   connect(my_node_);
+  connect(scheduler_);
 
 #ifdef _DEBUG_VAN_
   debug_out_.open("van_"+my_node_.id());
@@ -66,8 +71,8 @@ Status Van::connect(Node const& node) {
   zmq_setsockopt (sender, ZMQ_IDENTITY, my_id.data(), my_id.size());
 
   // TODO is it useful?
-   // uint64_t hwm = 5000000;
-   // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
+  // uint64_t hwm = 5000000;
+  // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
   // connect
   string addr = "tcp://" + address(node);

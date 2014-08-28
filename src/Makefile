@@ -1,8 +1,8 @@
 CC = g++
 # CC = clang
 
-# OPT = -O3 -ggdb
-OPT = -O0 -ggdb
+OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -123,7 +123,7 @@ $(LIB)/libps.a: $(OBJS) #gtest
 # 	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -Wl,-rpath=../lib  -o $@
 
 $(BIN)/ps: ps.cc $(LIB)/libps.a
-	$(MPICC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
 
 $(BIN)/ps_mpi: ps_mpi.cc $(LIB)/libps.a
 	$(MPICC) $(CFLAGS) ps_mpi.cc $(LDFLAGS) -o $@

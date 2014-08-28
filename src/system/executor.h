@@ -72,7 +72,7 @@ class Executor {
 
   Customer& obj() { return obj_; }
   Node& myNode() { return my_node_; }
-  bool isWorker() { return my_node_.role() == Node::CLIENT; }
+  bool isWorker() { return my_node_.role() == Node::WORKER; }
   bool isServer() { return my_node_.role() == Node::SERVER; }
 
   Message& activeMessage() { return active_msg_; }
