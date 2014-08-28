@@ -38,7 +38,7 @@ if [ -z ${my_ip} ]; then
     exit -1
 fi
 
-my_port=$(( ${port} + ${my_rank} ))
+my_port=$(( ${network_port} + ${my_rank} ))
 
 # rank 0 : scheduler
 # rank 1 to num_servers : server nodes

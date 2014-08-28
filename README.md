@@ -16,7 +16,7 @@ industrial-level problems. It is a joint project by
   [glogs](https://code.google.com/p/google-glog/),
   [gtest](https://code.google.com/p/googletest/),
   [protobuf](https://code.google.com/p/protobuf/), [zlib](), [snappy](),
-  [eigen3]() and optional [mpi](). We provide
+  [eigen3](). We provide
   [install.sh](https://github.com/mli/parameter_server_third_party) to build
   them from sources automatically.
 
@@ -94,24 +94,14 @@ TODO
 
 ## Run the parameter server
 
-One way to start the system is using `mpirun`. The other ways such as starting
-via `ssh` or via resource manager e.g. `yarn` are in progress.
+### Run on local machine
 
-An sample command to start the parameter server
-```
-mpirun -np 4 ./ps_mpi -num_servers 1 -num_workers 2 -num_threads 1 -interface lo0 -app ../config/rcv1_l1lr.config
-```
+See `script/local.sh`
 
-The arguments:
-- -np: the number of processes created by `mpirun`. It should >= num_workers +
-num_servers + 1 (the scheduler). Use `-hostfile` to specify the machines.
-- -interface: the network interface, run `ifconfig` to find the available
-  network interfaces
-- -num_workers: the number of worker nodes. Each one will get a part of training
-  data
-- -num_servers: the number of server nodes. Each one will get a part of the
-  model.
-- -num_threads: how many threads one work will use
-- -app: the application configuration
+### Start by `mpirun`
 
-Use `./ps_mpi --help` to see more options.
+Run `script/mpi_root.sh` at the root machine. An example configuration is in `config/mpi.conf`.
+
+### Start by `yarn`
+
+In progress.

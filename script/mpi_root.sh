@@ -8,7 +8,7 @@ if [ -z ${my_ip} ]; then
     exit -1
 fi
 
-root_node="role:SCHEDULER,hostname:'${my_ip}',port:${port},id:'H'"
+root_node="role:SCHEDULER,hostname:'${my_ip}',port:${network_port},id:'H'"
 np=$((${num_workers} + ${num_servers} + 1))
 
 if [ -z ${hostfile} ]; then
