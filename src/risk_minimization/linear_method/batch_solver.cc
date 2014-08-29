@@ -37,8 +37,7 @@ void BatchSolver::run() {
       }
     }
   }
-  fprintf(stderr, "features are partitioned into %lu blocks\n",
-  fea_blocks_.size());
+  LI << "features are partitioned into " << fea_blocks_.size() << " blocks",
 
   // a simple block order
   block_order_.clear();
@@ -50,7 +49,7 @@ void BatchSolver::run() {
   prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
   taskpool(kActiveGroup)->submitAndWait(prepare);
   init_sys_time_ = total_timer_.get();
-  fprintf(stderr, "loaded data... in %.3f sec\n", init_sys_time_);
+  LI << "loaded data... in " << init_sys_time_ << " sec";
 
   runIteration();
 
@@ -66,14 +65,14 @@ void BatchSolver::run() {
 
 
   if (app_cf_.has_validation_data()) {
-    fprintf(stderr, "evaluate with %lu validation examples\n",
-            g_validation_info_[0].row().end());
+    LI << "evaluate with " << g_validation_info_[0].row().end()
+       << " validation examples\n";
     Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
     active->submitAndWait(test, [this, &validation_auc](){
         mergeAUC(&validation_auc); });
-    fprintf(stderr, "evaluation accuracy: %f,\tauc: %f\n",
-            validation_auc.accuracy(0), validation_auc.evaluate());
+    LI << "evaluation accuracy: " << validation_auc.accuracy(0)
+       << ", auc: " << validation_auc.evaluate();
 
     // auto active = taskpool(kActiveGroup);
     // Task save_dense_data = newTask(RiskMinCall::SAVE_AS_DENSE);
@@ -115,7 +114,7 @@ void BatchSolver::runIteration() {
 
     double rel = global_progress_[iter].relative_objv();
     if (rel > 0 && rel <= cf.epsilon()) {
-      fprintf(stderr, "stopped: relative objective <= %.1e\n", cf.epsilon());
+      LI << "stopped: relative objective <= " << cf.epsilon();
       break;
     }
   }
@@ -254,8 +253,7 @@ void BatchSolver::saveModel(const Message& msg) {
     // TODO use the model_file in msg
     std::string file = "../output/" + w_->name() + "_" + exec_.myNode().id();
     if (output.file_size() > 0) file = output.file(0) + file;
-    fprintf(stderr, "%s writes model to %s\n",
-            exec_.myNode().id().data(), file.data());
+    LI << exec_.myNode().id() << " writes model to " << file;
     std::ofstream out(file);
     CHECK(out.good());
     for (size_t i = 0; i < w_->key().size(); ++i) {

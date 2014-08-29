@@ -50,7 +50,7 @@ void App::stop() {
   pool->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
   usleep(800);
-  fprintf(stderr, "system stopped\n");
+  LI << "system stopped\n";
 }
 
 // void App::requestNodes() {

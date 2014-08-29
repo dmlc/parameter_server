@@ -9,7 +9,7 @@ namespace LM {
 void BlockCoordDescL1LR::runIteration() {
   CHECK_EQ(app_cf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(app_cf_.penalty().type(), PenaltyConfig::L1);
-  fprintf(stderr, "train l_1 logistic regression by block coordinate descent\n");
+  LI << "train l_1 logistic regression by block coordinate descent";
 
   auto block_cf = app_cf_.block_solver();
   KKT_filter_threshold_ = 1e20;
@@ -53,13 +53,12 @@ void BlockCoordDescL1LR::runIteration() {
 
     double rel = global_progress_[iter].relative_objv();
     if (rel > 0 && rel <= block_cf.epsilon()) {
-      fprintf(stderr, "stopped: relative objective <= %.1e\n",
-              block_cf.epsilon());
+      LI << "stopped: relative objective <= " << block_cf.epsilon();
       break;
     }
   }
   if (iter == block_cf.max_pass_of_data()) {
-    fprintf(stderr, "reached maximal %d data passes\n", block_cf.max_pass_of_data());
+    LI << "reached maximal " << block_cf.max_pass_of_data() << " data passes";
   }
 }
 

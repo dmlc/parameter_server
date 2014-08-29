@@ -41,6 +41,7 @@ inline InstanceInfo readInstanceInfo(const DataConfig& config) {
       f.clear_file();
       f.add_file(config.file(i) + ".info");
       InstanceInfo tmp;
+      readFileToProtoOrDie(f, &tmp);
       info = mergeInstanceInfo(info, tmp);
     }
   } else {
@@ -78,20 +79,7 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
 template<typename V>
 MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
   // load info
-  std::vector<RecordReader> readers;
-  InstanceInfo info;
-  for (int i = 0; i < data.file_size(); ++i) {
-    auto f = data; f.clear_file();
-    f.add_file(data.file(i));
-    File *in = File::openOrDie(f, "r");
-
-    RecordReader r(in);
-    InstanceInfo ins;
-    CHECK(r.ReadProtocolMessage(&ins));
-    info = mergeInstanceInfo(info, ins);
-    readers.push_back(r);
-  }
-  // LL << info.DebugString();
+  InstanceInfo info = readInstanceInfo(data);
 
   // allocate data
   SArray<V> label(info.num_ins());
@@ -106,7 +94,11 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
   // file data
   uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
   Instance record;
-  for (auto& r : readers) {
+  for (int i = 0; i < data.file_size(); ++i) {
+    auto f = data; f.clear_file();
+    f.add_file(data.file(i) + ".recordio");
+    File *in = File::openOrDie(f, "r");
+    RecordReader r(in);
     while (r.ReadProtocolMessage(&record)) {
       label[label_pos++] = record.label();
       int n = record.fea_id_size();
@@ -117,6 +109,7 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
       offset[offset_pos+1] = offset[offset_pos] + n;
       offset_pos ++;
     }
+    in->close();
   }
   CHECK_EQ(offset_pos+1, offset.size());
   CHECK_EQ(index_pos, index.size());

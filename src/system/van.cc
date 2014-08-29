@@ -235,8 +235,7 @@ void Van::statistic() {
   auto s = FLAGS_compress_message ? send_compressed_ : send_uncompressed_;
   auto r = FLAGS_compress_message ? recv_compressed_ : recv_uncompressed_;
 
-  printf("%s sent %.1f Mb, received %.1f Mb\n",
-         my_node_.id().c_str(), mb(s), mb(r));
+  LI << my_node_.id() << " sent " << mb(s) << " Mb, received " << mb(r) << " Mb";
   // printf("%s sent %.1f Mb, saved %.1f%%; received %.1f Mb, saved %.1f%%\n",
   //        my_node_.id().c_str(), mb(s), 100 - 100.0 * mb(s) / mb(send_uncompressed_),
   //        mb(r), 100 - 100.0 * mb(r) / mb(recv_uncompressed_));
