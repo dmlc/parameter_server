@@ -74,7 +74,7 @@ size_t File::size() {
 
 // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
 
-bool File::Close() {
+bool File::close() {
   if (gz_f_) {
     if (gzclose(gz_f_) == Z_OK) {
       gz_f_ = NULL;
@@ -94,16 +94,16 @@ bool File::Close() {
   return true;
 }
 
-size_t File::Read(void* const buf, size_t size) {
+size_t File::read(void* const buf, size_t size) {
   return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
 }
 
-size_t File::Write(const void* const buf, size_t size) {
+size_t File::write(const void* const buf, size_t size) {
   return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
 }
 
 
-char* File::ReadLine(char* const output, uint64 max_length) {
+char* File::readLine(char* const output, uint64 max_length) {
   return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
 }
 
@@ -113,7 +113,7 @@ bool File::seek(size_t position) {
           fseek(f_, position, SEEK_SET) == 0);
 }
 
-int64 File::ReadToString(std::string* const output, uint64 max_length) {
+int64 File::readToString(std::string* const output, uint64 max_length) {
   CHECK_NOTNULL(output);
   output->clear();
 
@@ -127,7 +127,7 @@ int64 File::ReadToString(std::string* const output, uint64 max_length) {
 
   int64 nread = 0;
   while (needed > 0) {
-    nread = Read(buf.get(), (bufsize < needed ? bufsize : needed));
+    nread = read(buf.get(), (bufsize < needed ? bufsize : needed));
     if (nread > 0) {
       output->append(buf.get(), nread);
       needed -= nread;
@@ -138,8 +138,8 @@ int64 File::ReadToString(std::string* const output, uint64 max_length) {
   return (nread >= 0 ? static_cast<int64>(output->size()) : -1);
 }
 
-size_t File::WriteString(const std::string& line) {
-  return Write(line.c_str(), line.size());
+size_t File::writeString(const std::string& line) {
+  return write(line.c_str(), line.size());
 }
 
 // bool File::WriteLine(const std::string& line) {
@@ -149,17 +149,17 @@ size_t File::WriteString(const std::string& line) {
 
 /////////////////////////////////////////
 
-bool ReadFileToString(const std::string& file_name, std::string* output) {
+bool readFileToString(const std::string& file_name, std::string* output) {
   File* file = File::open(file_name, "r");
   if (file == NULL) return false;
   size_t size = file->size();
-  return (size <= file->ReadToString(output, size*100));
+  return (size <= file->readToString(output, size*100));
 }
 
-bool WriteStringToFile(const std::string& data, const std::string& file_name) {
+bool writeStringToFile(const std::string& data, const std::string& file_name) {
   File* file = File::open(file_name, "w");
   if (file == NULL) return false;
-  return (file->WriteString(data) == data.size() && file->Close());
+  return (file->writeString(data) == data.size() && file->close());
 }
 
 namespace {
@@ -170,9 +170,9 @@ class NoOpErrorCollector : public google::protobuf::io::ErrorCollector {
 }  // namespace
 
 
-bool ReadFileToProto(const std::string& file_name, GProto* proto) {
+bool readFileToProto(const std::string& file_name, GProto* proto) {
   std::string str;
-  if (!ReadFileToString(file_name, &str)) {
+  if (!readFileToString(file_name, &str)) {
     LOG(ERROR) << "Could not read " << file_name;
     return false;
   }
@@ -198,42 +198,42 @@ bool ReadFileToProto(const std::string& file_name, GProto* proto) {
   return false;
 }
 
-bool ReadFileToProto(const DataConfig& file, GProto* proto) {
+bool readFileToProto(const DataConfig& file, GProto* proto) {
 
 }
 
-void ReadFileToProtoOrDie(
+void readFileToProtoOrDie(
     const DataConfig& file, GProto* proto) {
-  CHECK(ReadFileToProto(file, proto));
+  CHECK(readFileToProto(file, proto));
 }
 
-void ReadFileToProtoOrDie(
+void readFileToProtoOrDie(
     const std::string& file_name, GProto* proto) {
-  CHECK(ReadFileToProto(file_name, proto)) << "file_name: " << file_name;
+  CHECK(readFileToProto(file_name, proto)) << "file_name: " << file_name;
 }
 
-bool WriteProtoToASCIIFile(
+bool writeProtoToASCIIFile(
     const GProto& proto, const std::string& file_name) {
   std::string proto_string;
   return google::protobuf::TextFormat::PrintToString(proto, &proto_string) &&
-         WriteStringToFile(proto_string, file_name);
+         writeStringToFile(proto_string, file_name);
 }
 
-void WriteProtoToASCIIFileOrDie(
+void writeProtoToASCIIFileOrDie(
     const GProto& proto, const std::string& file_name) {
-  CHECK(WriteProtoToASCIIFile(proto, file_name)) << "file_name: " << file_name;
+  CHECK(writeProtoToASCIIFile(proto, file_name)) << "file_name: " << file_name;
 }
 
-bool WriteProtoToFile(
+bool writeProtoToFile(
     const GProto& proto, const std::string& file_name) {
   std::string proto_string;
   return proto.AppendToString(&proto_string) &&
-      WriteStringToFile(proto_string, file_name);
+      writeStringToFile(proto_string, file_name);
 }
 
-void WriteProtoToFileOrDie(const GProto& proto,
+void writeProtoToFileOrDie(const GProto& proto,
                            const std::string& file_name) {
-  CHECK(WriteProtoToFile(proto, file_name)) << "file_name: " << file_name;
+  CHECK(writeProtoToFile(proto, file_name)) << "file_name: " << file_name;
 }
 
 // TODO read home from $HDFS_HOME if empty

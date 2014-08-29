@@ -59,7 +59,7 @@ class SparseMatrix : public Matrix<V> {
   string debugString() const;
 
   bool writeToBinFile(string name) const {
-    return (WriteProtoToASCIIFile(info_, name+".info") &&
+    return (writeProtoToASCIIFile(info_, name+".info") &&
             offset_.writeToFile(name+".offset") &&
             index_.writeToFile(name+".index") &&
             (binary() || value_.writeToFile(name+".value")));

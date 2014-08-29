@@ -50,7 +50,7 @@ class DenseMatrix : public Matrix<V> {
   }
 
   virtual bool writeToBinFile(string name) const {
-    return (WriteProtoToASCIIFile(info_, name+".info") && value_.writeToFile(name+".value"));
+    return (writeProtoToASCIIFile(info_, name+".info") && value_.writeToFile(name+".value"));
   }
 
   virtual string debugString() const {

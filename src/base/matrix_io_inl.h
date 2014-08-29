@@ -145,7 +145,7 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
 template<typename V>
 MatrixPtr<V> readMatrixFromBin(SizeR outer_range, const std::string& file) {
   MatrixInfo info;
-  ReadFileToProtoOrDie(file+".info", &info);
+  readFileToProtoOrDie(file+".info", &info);
   if (outer_range == SizeR::all()) {
     if (info.row_major())
       outer_range.copyFrom(info.row());

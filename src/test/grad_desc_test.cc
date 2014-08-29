@@ -5,7 +5,7 @@
 
 using namespace PS;
 TEST(GradientDescent, LogistRegression) {
-  AppConfig cf; ReadFileToProtoOrDie("../test/grad_desc.config", &cf);
+  AppConfig cf; readFileToProtoOrDie("../test/grad_desc.config", &cf);
   MatrixPtrList<double> training = readMatrices<double>(cf.training());
 
   auto X = training[1];

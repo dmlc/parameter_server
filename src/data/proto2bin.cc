@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   using namespace PS;
 
   DataConfig cf;
-  ReadFileToProtoOrDie(FLAGS_input, &cf);
+  readFileToProtoOrDie(FLAGS_input, &cf);
 
   auto cf2 = searchFiles(cf);
   auto data = readMatrices<double>(cf2);

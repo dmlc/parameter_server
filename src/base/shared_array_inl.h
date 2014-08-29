@@ -153,7 +153,7 @@ bool SArray<V>::readFromFile(SizeR range, const string& file_name) {
   resize(range.size());
   if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
   size_t length = range.size() * sizeof(V);
-  return (file->Read(ptr_.get(), length) == length);
+  return (file->read(ptr_.get(), length) == length);
 }
 
 template <typename V>
@@ -177,7 +177,7 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
 
   File* file = File::open(file_name, "w");
   size_t length = range.size() * sizeof(V);
-  return (file->Write(ptr_.get(), length) == length);
+  return (file->write(ptr_.get(), length) == length);
 }
 
 template <typename V>

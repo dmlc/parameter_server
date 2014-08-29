@@ -9,7 +9,7 @@ using namespace PS;
 class AggGradLearnerTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    ReadFileToProtoOrDie("../src/test/aggregated_gradient_test.config", &cf);
+    readFileToProtoOrDie("../src/test/aggregated_gradient_test.config", &cf);
     MatrixPtrList<double> training = readMatrices<double>(cf.training());
     y = training[0];
     X = training[1];

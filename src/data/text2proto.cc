@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   reader.Reload();
 
   auto info = parser.info();
-  WriteProtoToASCIIFileOrDie(info, FLAGS_output+".info");
+  writeProtoToASCIIFileOrDie(info, FLAGS_output+".info");
 
   std::cerr << "written " << info.num_ins()
             << " instances in " <<  t.get()  << " sec." << std::endl;

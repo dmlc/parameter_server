@@ -37,7 +37,7 @@ void Postoffice::run() {
       yellow_pages_.add(myNode());
       nodes_are_ready_.get_future().wait();
       // run the application
-      AppConfig conf; ReadFileToProtoOrDie(FLAGS_app, &conf);
+      AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);
       AppPtr app = App::create(conf);
       yellow_pages_.add(app);
       app->run();

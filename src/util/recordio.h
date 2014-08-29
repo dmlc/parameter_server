@@ -19,20 +19,20 @@ class RecordWriter {
   // Magic number when writing and reading protocol buffers.
 
   explicit RecordWriter(File* const file) : file_(file) { }
-  bool Close() { return file_->Close(); }
+  bool Close() { return file_->close(); }
 
   template <class P> bool WriteProtocolMessage(const P& proto) {
     std::string buffer;
     proto.SerializeToString(&buffer);
     const uint32 buff_size = (uint32) buffer.size();
-    if (file_->Write(&kMagicNumber, sizeof(kMagicNumber)) !=
+    if (file_->write(&kMagicNumber, sizeof(kMagicNumber)) !=
         sizeof(kMagicNumber)) {
       return false;
     }
-    if (file_->Write(&buff_size, sizeof(buff_size)) != sizeof(buff_size)) {
+    if (file_->write(&buff_size, sizeof(buff_size)) != sizeof(buff_size)) {
       return false;
     }
-    if (file_->Write(buffer.c_str(), buff_size) != buff_size) {
+    if (file_->write(buffer.c_str(), buff_size) != buff_size) {
       return false;
     }
     return true;
@@ -47,24 +47,24 @@ class RecordWriter {
 class RecordReader {
  public:
   explicit RecordReader(File* const file) : file_(file) { }
-  bool Close() { return file_->Close(); }
+  bool Close() { return file_->close(); }
 
   template <class P> bool ReadProtocolMessage(P* const proto) {
     uint32 size = 0;
     int magic_number = 0;
 
-    if (file_->Read(&magic_number, sizeof(magic_number)) !=
+    if (file_->read(&magic_number, sizeof(magic_number)) !=
         sizeof(magic_number)) {
       return false;
     }
     if (magic_number != kMagicNumber) {
       return false;
     }
-    if (file_->Read(&size, sizeof(size)) != sizeof(size)) {
+    if (file_->read(&size, sizeof(size)) != sizeof(size)) {
       return false;
     }
     std::unique_ptr<char[]> buffer(new char[size + 1]);
-    if (file_->Read(buffer.get(), size) != size) {
+    if (file_->read(buffer.get(), size) != size) {
       return false;
     }
     proto->ParseFromArray(buffer.get(), size);
