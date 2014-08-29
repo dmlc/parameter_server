@@ -2,7 +2,7 @@
 #include <functional>
 #include "util/strtonum.h"
 #include "util/resource_usage.h"
-#include "base/matrix_io.h"
+#include "base/matrix_io_inl.h"
 
 namespace PS {
 

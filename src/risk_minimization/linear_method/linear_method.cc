@@ -2,7 +2,7 @@
 #include "risk_minimization/learner/learner_factory.h"
 #include "base/range.h"
 #include "util/eigen3.h"
-#include "base/matrix_io.h"
+#include "base/matrix_io_inl.h"
 #include "proto/instance.pb.h"
 #include "base/io.h"
 

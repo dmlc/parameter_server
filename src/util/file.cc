@@ -169,7 +169,8 @@ class NoOpErrorCollector : public google::protobuf::io::ErrorCollector {
 };
 }  // namespace
 
-bool ReadFileToProto(const std::string& file_name, google::protobuf::Message* proto) {
+
+bool ReadFileToProto(const std::string& file_name, GProto* proto) {
   std::string str;
   if (!ReadFileToString(file_name, &str)) {
     LOG(ERROR) << "Could not read " << file_name;
@@ -197,29 +198,40 @@ bool ReadFileToProto(const std::string& file_name, google::protobuf::Message* pr
   return false;
 }
 
-void ReadFileToProtoOrDie(const std::string& file_name, google::protobuf::Message* proto) {
+bool ReadFileToProto(const DataConfig& file, GProto* proto) {
+
+}
+
+void ReadFileToProtoOrDie(
+    const DataConfig& file, GProto* proto) {
+  CHECK(ReadFileToProto(file, proto));
+}
+
+void ReadFileToProtoOrDie(
+    const std::string& file_name, GProto* proto) {
   CHECK(ReadFileToProto(file_name, proto)) << "file_name: " << file_name;
 }
 
-bool WriteProtoToASCIIFile(const google::protobuf::Message& proto,
-                           const std::string& file_name) {
+bool WriteProtoToASCIIFile(
+    const GProto& proto, const std::string& file_name) {
   std::string proto_string;
   return google::protobuf::TextFormat::PrintToString(proto, &proto_string) &&
          WriteStringToFile(proto_string, file_name);
 }
 
-void WriteProtoToASCIIFileOrDie(const google::protobuf::Message& proto,
-                                const std::string& file_name) {
+void WriteProtoToASCIIFileOrDie(
+    const GProto& proto, const std::string& file_name) {
   CHECK(WriteProtoToASCIIFile(proto, file_name)) << "file_name: " << file_name;
 }
 
-bool WriteProtoToFile(const google::protobuf::Message& proto, const std::string& file_name) {
+bool WriteProtoToFile(
+    const GProto& proto, const std::string& file_name) {
   std::string proto_string;
   return proto.AppendToString(&proto_string) &&
-         WriteStringToFile(proto_string, file_name);
+      WriteStringToFile(proto_string, file_name);
 }
 
-void WriteProtoToFileOrDie(const google::protobuf::Message& proto,
+void WriteProtoToFileOrDie(const GProto& proto,
                            const std::string& file_name) {
   CHECK(WriteProtoToFile(proto, file_name)) << "file_name: " << file_name;
 }

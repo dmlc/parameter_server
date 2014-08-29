@@ -1,6 +1,6 @@
 #pragma once
 #include "neural_network/layer.h"
-#include "base/matrix_io.h"
+#include "base/matrix_io_inl.h"
 
 namespace PS {
 namespace NN {

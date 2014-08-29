@@ -1,5 +1,5 @@
 #include "risk_minimization/linear_method/batch_solver.h"
-#include "base/matrix_io.h"
+#include "base/matrix_io_inl.h"
 #include "base/sparse_matrix.h"
 
 namespace PS {

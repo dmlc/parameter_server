@@ -104,17 +104,20 @@ class File {
 bool ReadFileToString(const std::string& file_name, std::string* output);
 bool WriteStringToFile(const std::string& data, const std::string& file_name);
 
-// convenient functions dealing with protobuf
-bool ReadFileToProto(const std::string& file_name, google::protobuf::Message* proto);
-void ReadFileToProtoOrDie(const std::string& file_name, google::protobuf::Message* proto);
+//// convenient functions dealing with protobuf
 
-bool WriteProtoToASCIIFile(const google::protobuf::Message& proto,
-                           const std::string& file_name);
-void WriteProtoToASCIIFileOrDie(const google::protobuf::Message& proto,
-                                const std::string& file_name);
-bool WriteProtoToFile(const google::protobuf::Message& proto, const std::string& file_name);
-void WriteProtoToFileOrDie(const google::protobuf::Message& proto,
-                           const std::string& file_name);
+typedef google::protobuf::Message GProto;
+bool ReadFileToProto(const DataConfig& file, GProto* proto);
+void ReadFileToProtoOrDie(const DataConfig& file, GProto* proto);
+
+bool ReadFileToProto(const std::string& file_name, GProto* proto);
+void ReadFileToProtoOrDie(const std::string& file_name, GProto* proto);
+
+bool WriteProtoToASCIIFile(const GProto& proto, const std::string& file_name);
+void WriteProtoToASCIIFileOrDie(const GProto& proto, const std::string& file_name);
+
+bool WriteProtoToFile(const GProto& proto, const std::string& file_name);
+void WriteProtoToFileOrDie(const GProto& proto, const std::string& file_name);
 
 // return the hadoop fs command
 std::string hadoopFS(const HDFSConfig& conf);
