@@ -37,7 +37,7 @@ void BatchSolver::run() {
       }
     }
   }
-  LI << "features are partitioned into " << fea_blocks_.size() << " blocks",
+  LI << "\tFeatures are partitioned into " << fea_blocks_.size() << " blocks",
 
   // a simple block order
   block_order_.clear();
@@ -49,7 +49,7 @@ void BatchSolver::run() {
   prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
   taskpool(kActiveGroup)->submitAndWait(prepare);
   init_sys_time_ = total_timer_.get();
-  LI << "loaded data... in " << init_sys_time_ << " sec";
+  LI << "\tLoaded data... in " << init_sys_time_ << " sec";
 
   runIteration();
 
@@ -65,13 +65,13 @@ void BatchSolver::run() {
 
 
   if (app_cf_.has_validation_data()) {
-    LI << "evaluate with " << g_validation_info_[0].row().end()
+    LI << "\tEvaluate with " << g_validation_info_[0].row().end()
        << " validation examples\n";
     Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
     active->submitAndWait(test, [this, &validation_auc](){
         mergeAUC(&validation_auc); });
-    LI << "evaluation accuracy: " << validation_auc.accuracy(0)
+    LI << "\tEvaluation accuracy: " << validation_auc.accuracy(0)
        << ", auc: " << validation_auc.evaluate();
 
     // auto active = taskpool(kActiveGroup);
@@ -114,7 +114,7 @@ void BatchSolver::runIteration() {
 
     double rel = global_progress_[iter].relative_objv();
     if (rel > 0 && rel <= cf.epsilon()) {
-      LI << "stopped: relative objective <= " << cf.epsilon();
+      LI << "\tStopped: relative objective <= " << cf.epsilon();
       break;
     }
   }
@@ -253,7 +253,7 @@ void BatchSolver::saveModel(const Message& msg) {
     // TODO use the model_file in msg
     std::string file = "../output/" + w_->name() + "_" + exec_.myNode().id();
     if (output.file_size() > 0) file = output.file(0) + file;
-    LI << exec_.myNode().id() << " writes model to " << file;
+    LI << "\t" << exec_.myNode().id() << " writes model to " << file;
     std::ofstream out(file);
     CHECK(out.good());
     for (size_t i = 0; i < w_->key().size(); ++i) {

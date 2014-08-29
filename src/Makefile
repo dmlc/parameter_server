@@ -33,7 +33,7 @@ endif
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
 -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lmpi -lm -lpthread -lstdc++
 
-GTEST =  -lgtest_main -lgtest
+GTEST = -lgtest_main -lgtest
 
 PROTOS= $(wildcard proto/*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
@@ -54,7 +54,7 @@ SRCS = $(PROTOS_CC) \
 	risk_minimization/linear_method/linear_method.cc \
 	risk_minimization/linear_method/block_solver.cc \
 	risk_minimization/linear_method/batch_solver.cc \
-	risk_minimization/linear_method/block_coord_desc_l1lr.cc
+	risk_minimization/linear_method/block_cd_l1lr.cc
 
 OBJS = $(SRCS:.cc=.o)
 DEPS = $(SRCS:.cc=.d)

@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
-#include "zlib.h"
+// #include "zlib.h"
 #include "util/integral_types.h"
 #include "glog/logging.h"
 #include "proto/config.pb.h"
@@ -61,18 +61,19 @@ class File {
   // Returns the file name.
   std::string filename() const { return name_; }
   // check if it is open
-  bool open() const { return (is_gz_ ? gz_f_ != NULL : f_ != NULL); }
+  bool open() const { return (f_ != NULL); }
  private:
   File(FILE* f_des, const std::string& name)
       : f_(f_des), name_(name) { }
-  File(gzFile gz_des, const std::string& name)
-      : gz_f_(gz_des), name_(name) {
-    is_gz_ = true;
-  }
   FILE* f_ = NULL;
-  gzFile gz_f_ = NULL;
   const std::string name_;
-  bool is_gz_ = false;
+
+  // File(gzFile gz_des, const std::string& name)
+  //     : gz_f_(gz_des), name_(name) {
+  //   is_gz_ = true;
+  // }
+  // gzFile gz_f_ = NULL;
+  // bool is_gz_ = false;
   // Writes a std::string to file and append a "\n".
   // bool WriteLine(const std::string& line);
   // Flushes buffer.
@@ -114,4 +115,5 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory);
 
 // return files matches the regex in *config*
 DataConfig searchFiles(const DataConfig& config);
+
 } // namespace PS

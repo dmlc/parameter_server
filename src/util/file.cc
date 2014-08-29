@@ -21,15 +21,8 @@ File* File::open(const std::string& name, const char* const flag) {
     f = new File(stdout, name);
   } else if (name == "stderr") {
     f = new File(stderr, name);
-  } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
-    gzFile des = gzopen(name.data(), flag);
-    if (des == NULL) {
-      LOG(ERROR) << "cannot open " << name;
-      return NULL;
-    }
-    f = new File(des, name);
   } else {
-    FILE*  des = fopen(name.data(), flag);
+    FILE* des = fopen(name.data(), flag);
     if (des == NULL) {
       LOG(ERROR) << "cannot open " << name;
       return NULL;
@@ -58,9 +51,9 @@ File* File::open(const DataConfig& name,  const char* const flag) {
   }
 }
 File* File::openOrDie(const DataConfig& name,  const char* const flag) {
-File* f = open(name, flag);
-CHECK(f != NULL && f->open());
-return f;
+  File* f = open(name, flag);
+  CHECK(f != NULL && f->open());
+  return f;
 }
 
 size_t File::size(const std::string& name) {
@@ -76,42 +69,29 @@ size_t File::size() {
 // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
 
 bool File::close() {
-  if (gz_f_) {
-    if (gzclose(gz_f_) == Z_OK) {
-      gz_f_ = NULL;
-      return true;
-    } else {
-      return false;
-    }
+  if (fclose(f_) == 0) {
+    f_ = NULL;
+    return true;
+  } else {
+    return false;
   }
-  if (f_) {
-    if (fclose(f_) == 0) {
-      f_ = NULL;
-      return true;
-    } else {
-      return false;
-    }
-  }
-  return true;
 }
 
 size_t File::read(void* const buf, size_t size) {
-  return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
+  return fread(buf, 1, size, f_);
 }
 
 size_t File::write(const void* const buf, size_t size) {
-  return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
+  return fwrite(buf, 1, size, f_);
 }
 
 
 char* File::readLine(char* const output, uint64 max_length) {
-  return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
+  return fgets(output, max_length, f_);
 }
 
 bool File::seek(size_t position) {
-  return (is_gz_ ?
-          gzseek(gz_f_, position, SEEK_SET) == position :
-          fseek(f_, position, SEEK_SET) == 0);
+  return (fseek(f_, position, SEEK_SET) == 0);
 }
 
 int64 File::readToString(std::string* const output, uint64 max_length) {
@@ -331,3 +311,107 @@ DataConfig searchFiles(const DataConfig& config) {
 
 
 } // namespace PS
+
+
+// an old version which support read and write gz files
+
+// File* File::open(const std::string& name, const char* const flag) {
+//   File* f;
+//   if (name == "stdin") {
+//     f = new File(stdin, name);
+//   } else if (name == "stdout") {
+//     f = new File(stdout, name);
+//   } else if (name == "stderr") {
+//     f = new File(stderr, name);
+//   } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
+//     gzFile des = gzopen(name.data(), flag);
+//     if (des == NULL) {
+//       LOG(ERROR) << "cannot open " << name;
+//       return NULL;
+//     }
+//     f = new File(des, name);
+//   } else {
+//     FILE*  des = fopen(name.data(), flag);
+//     if (des == NULL) {
+//       LOG(ERROR) << "cannot open " << name;
+//       return NULL;
+//     }
+//     f = new File(des, name);
+//   }
+//   return f;
+// }
+
+// File* File::openOrDie(const std::string& name, const char* const flag) {
+//   File* f = File::open(name, flag);
+//   CHECK(f != NULL && f->open());
+//   return f;
+// }
+
+// File* File::open(const DataConfig& name,  const char* const flag) {
+//   CHECK_EQ(name.file_size(), 1);
+//   auto filename = name.file(0);
+//   if (name.has_hdfs()) {
+//     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
+//     FILE* des = popen(cmd.c_str(), "r");
+//     auto f = new File(des, filename);
+//     return f;
+//   } else {
+//     return open(filename, flag);
+//   }
+// }
+// File* File::openOrDie(const DataConfig& name,  const char* const flag) {
+// File* f = open(name, flag);
+// CHECK(f != NULL && f->open());
+// return f;
+// }
+
+// size_t File::size(const std::string& name) {
+//   struct stat f_stat;
+//   stat(name.c_str(), &f_stat);
+//   return f_stat.st_size;
+// }
+
+// size_t File::size() {
+//   return File::size(name_);
+// }
+
+// // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
+
+// bool File::close() {
+//   if (gz_f_) {
+//     if (gzclose(gz_f_) == Z_OK) {
+//       gz_f_ = NULL;
+//       return true;
+//     } else {
+//       return false;
+//     }
+//   }
+//   if (f_) {
+//     if (fclose(f_) == 0) {
+//       f_ = NULL;
+//       return true;
+//     } else {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
+
+// size_t File::read(void* const buf, size_t size) {
+//   return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
+// }
+
+// size_t File::write(const void* const buf, size_t size) {
+//   return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
+// }
+
+
+// char* File::readLine(char* const output, uint64 max_length) {
+//   return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
+// }
+
+// bool File::seek(size_t position) {
+//   return (is_gz_ ?
+//           gzseek(gz_f_, position, SEEK_SET) == position :
+//           fseek(f_, position, SEEK_SET) == 0);
+// }

@@ -1,6 +1,6 @@
 #include "system/app.h"
 #include "risk_minimization/linear_method/batch_solver.h"
-#include "risk_minimization/linear_method/block_coord_desc_l1lr.h"
+#include "risk_minimization/linear_method/block_cd_l1lr.h"
 #include "neural_network/sgd_solver.h"
 
 // #include "app/grad_desc.h"
@@ -50,7 +50,7 @@ void App::stop() {
   pool->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
   usleep(800);
-  LI << "system stopped\n";
+  LI << "\tsystem stopped\n";
 }
 
 // void App::requestNodes() {

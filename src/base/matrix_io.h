@@ -11,26 +11,26 @@
 
 namespace PS {
 
-//// handle info
+// handle info //
+// return A + B
 FeatureGroupInfo mergeFeatureGroupInfo(
     const FeatureGroupInfo& A, const FeatureGroupInfo& B);
-
+// return A + B
 InstanceInfo mergeInstanceInfo(
     const InstanceInfo& A, const InstanceInfo& B);
 
 InstanceInfo readInstanceInfo(const DataConfig& config);
-
+// convert the i-th feature group info into matrix info
 template<typename V>
 MatrixInfo readMatrixInfo(const InstanceInfo& info, int i);
 
-//// read from recordio file
-// label, feature_group 1, feature_group 2, ...
-// TODO do not support dense feature group yet...
+// Read from recordio files. Each instance is stored in a protobuf format and
+// placed in a binary file one by one. Return two matrices, label vector and
+// feature matrix
 template<typename V>
 MatrixPtrList<V> readMatricesFromProto(const DataConfig& data);
 
-
-//// read from binary file
+// Read from binary files, which are direct dumps of memory.
 template<typename V>
 MatrixPtr<V> readMatrixFromBin(const std::string& file) {
   return readMatrixFromBin<V>(SizeR::all(), file);
@@ -47,7 +47,11 @@ MatrixPtrList<V> readMatricesFromBin(
   return res;
 }
 
-///// the main entry
+// Read from text files
+template<typename V>
+MatrixPtr<V> readMatricesFromText(const DataConfig& data);
+
+// the main entry
 template<typename V>
 MatrixPtrList<V> readMatrices(const DataConfig& config);
 

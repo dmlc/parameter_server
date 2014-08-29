@@ -38,7 +38,7 @@ void LinearMethod::startSystem() {
   g_fea_range_ = Range<Key>(
       tr_info.fea_group(0).fea_begin(), tr_info.fea_group(0).fea_end());
   g_num_training_ins_ = tr_info.num_ins();
-  LI << "training data info: " << g_num_training_ins_
+  LI << "\ttraining data info: " << g_num_training_ins_
      << " examples with feature range" << g_fea_range_.toString();
 
   DataConfig va_cf;
