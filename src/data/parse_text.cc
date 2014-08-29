@@ -38,7 +38,7 @@ void ParseText::setFormat(TextFormat format) {
       break;
     case DataConfig::ADFEA:
       convertor_ = std::bind(&ParseText::parseAdfea, this, _1, _2);
-      info_.set_fea_type(InstanceInfo::SPARSE);
+      info_.set_fea_type(InstanceInfo::SPARSE_BINARY);
       info_.set_label_type(InstanceInfo::BINARY);
       break;
     default:

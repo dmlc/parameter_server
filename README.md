@@ -93,14 +93,6 @@ TODO
 
 ## Run
 
-### On local machine
-
-See `script/local.sh`
-
-### Start by `mpirun`
-
-Run `script/mpi_root.sh` at the root machine. An example configuration is in `config/mpi.conf`.
-
-### Start by `yarn`
-
-In progress.
+- **On local machine:** See `script/local.sh`
+- **by `mpirun`:** Run `script/mpi_root.sh` at the root machine. An example configuration is in `config/mpi.conf`.
+- **by `yarn`:** In progress.

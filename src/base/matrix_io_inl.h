@@ -102,6 +102,7 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
     while (r.ReadProtocolMessage(&record)) {
       label[label_pos++] = record.label();
       int n = record.fea_id_size();
+      if (!binary) CHECK_EQ(n, record.fea_val_size());
       for (int i = 0; i < n; ++i) {
         index[index_pos++] = record.fea_id(i);
         if (!binary) value[value_pos++] = record.fea_val(i);
