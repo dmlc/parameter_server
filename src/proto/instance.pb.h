@@ -186,14 +186,14 @@ class InstanceInfo : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .PS.InstanceInfo.LabelType label_type = 1;
+  // optional .PS.InstanceInfo.LabelType label_type = 1;
   inline bool has_label_type() const;
   inline void clear_label_type();
   static const int kLabelTypeFieldNumber = 1;
   inline ::PS::InstanceInfo_LabelType label_type() const;
   inline void set_label_type(::PS::InstanceInfo_LabelType value);
 
-  // required .PS.InstanceInfo.FeatureType fea_type = 2;
+  // optional .PS.InstanceInfo.FeatureType fea_type = 2;
   inline bool has_fea_type() const;
   inline void clear_fea_type();
   static const int kFeaTypeFieldNumber = 2;
@@ -482,7 +482,7 @@ class Instance : public ::google::protobuf::Message {
 
 // InstanceInfo
 
-// required .PS.InstanceInfo.LabelType label_type = 1;
+// optional .PS.InstanceInfo.LabelType label_type = 1;
 inline bool InstanceInfo::has_label_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -505,7 +505,7 @@ inline void InstanceInfo::set_label_type(::PS::InstanceInfo_LabelType value) {
   label_type_ = value;
 }
 
-// required .PS.InstanceInfo.FeatureType fea_type = 2;
+// optional .PS.InstanceInfo.FeatureType fea_type = 2;
 inline bool InstanceInfo::has_fea_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }

@@ -13,28 +13,34 @@ void BatchSolver::init() {
 
 
 void BatchSolver::run() {
+  // start the system
   LinearMethod::startSystem();
+
+  // load data
+  Task prepare;
+  prepare.set_type(Task::CALL_CUSTOMER);
+  prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
+  taskpool(kActiveGroup)->submitAndWait(prepare, [this](){
+      InstanceInfo info;
+      CHECK(info.ParseFromString(exec_.lastRecvReply()));
+      g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
+    });
+  size_t num_ins = g_train_ins_info_.num_ins();
+  LI << "\tLoaded " << num_ins << " training instances... in "
+     << total_timer_.get() << " sec";
 
   // evenly partition feature blocks
   CHECK(app_cf_.has_block_solver());
   auto cf = app_cf_.block_solver();
-  if (cf.feature_block_ratio() <= 0) {
-    Range<Key> range(-1, 0);
-    for (const auto& info : g_training_info_)
-      range.setUnion(Range<Key>(info.col()));
-    fea_blocks_.push_back(std::make_pair(-1, range));
-  } else {
-    for (const auto& info : g_training_info_) {
-      CHECK(info.has_nnz_per_row());
-      CHECK(info.has_id());
-      float b = std::round(
-          std::max((float)1.0, info.nnz_per_row() * cf.feature_block_ratio()));
-      int n = std::max((int)b, 1);
-      for (int i = 0; i < n; ++i) {
-        auto block = Range<Key>(info.col()).evenDivide(n, i);
-        if (block.empty()) continue;
-        fea_blocks_.push_back(std::make_pair(info.id(), block));
-      }
+  for (int i = 1; i < g_train_ins_info_.fea_group_size(); ++i) {
+    auto info = g_train_ins_info_.fea_group(i);
+    CHECK(info.has_nnz());
+    double nnz_per_row = (double)info.nnz() / (double)num_ins;
+    int n = std::max((int)std::round(nnz_per_row*cf.feature_block_ratio()), 1);
+    for (int i = 0; i < n; ++i) {
+      auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
+      if (block.empty()) continue;
+      fea_blocks_.push_back(std::make_pair(info.group_id(), block));
     }
   }
   LI << "\tFeatures are partitioned into " << fea_blocks_.size() << " blocks",
@@ -42,14 +48,6 @@ void BatchSolver::run() {
   // a simple block order
   block_order_.clear();
   for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
-
-  // load data
-  Task prepare;
-  prepare.set_type(Task::CALL_CUSTOMER);
-  prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
-  taskpool(kActiveGroup)->submitAndWait(prepare);
-  init_sys_time_ = total_timer_.get();
-  LI << "\tLoaded data... in " << init_sys_time_ << " sec";
 
   runIteration();
 
@@ -65,8 +63,8 @@ void BatchSolver::run() {
 
 
   if (app_cf_.has_validation_data()) {
-    LI << "\tEvaluate with " << g_validation_info_[0].row().end()
-       << " validation examples\n";
+    // LI << "\tEvaluate with " << g_validation_info_[0].row().end()
+    //    << " validation examples\n";
     Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
     active->submitAndWait(test, [this, &validation_auc](){
@@ -87,6 +85,14 @@ void BatchSolver::run() {
   Task save_model = newTask(RiskMinCall::SAVE_MODEL);
   active->submitAndWait(save_model);
 }
+
+// if (cf.feature_block_ratio() <= 0) {
+//   Range<Key> range(-1, 0);
+//   for (const auto& info : g_training_info_)
+//     range.setUnion(Range<Key>(info.col()));
+//   fea_blocks_.push_back(std::make_pair(-1, range));
+// } else {
+// }
 
 void BatchSolver::runIteration() {
   auto cf = app_cf_.block_solver();
@@ -120,9 +126,11 @@ void BatchSolver::runIteration() {
   }
 }
 
-void BatchSolver::prepareData(const Message& msg) {
+InstanceInfo BatchSolver::prepareData(const Message& msg) {
+  InstanceInfo info;
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
+    info = readInstanceInfo(app_cf_.training_data());
     auto training_data = readMatrices<double>(app_cf_.training_data());
     CHECK_EQ(training_data.size(), 2);
     y_ = training_data[0];
@@ -158,10 +166,11 @@ void BatchSolver::prepareData(const Message& msg) {
               Eigen::VectorXd::Random(w_->value().size()) * init.std();
           LL << w_->value().eigenVector().squaredNorm();
         } else {
-          LL << "TOOD";
+          LL << "TOOD load from files";
         }
       });
   }
+  return info;
 }
 
 

@@ -63,9 +63,7 @@ void Postoffice::reply(
   if (!reply_msg.empty()) tk.set_msg(reply_msg);
   tk.set_time(task.time());
 
-  Message re(tk);
-  re.recver = recver;
-  queue(re);
+  Message re(tk); re.recver = recver; queue(re);
 }
 
 void Postoffice::reply(const Message& msg, const string& reply_msg) {

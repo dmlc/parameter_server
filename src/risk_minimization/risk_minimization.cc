@@ -10,15 +10,14 @@ void RiskMinimization::process(Message* msg) {
   switch (getCall(*msg).cmd()) {
     case Call::EVALUATE_PROGRESS: {
       auto prog = evaluateProgress();
-      string reply;
-      prog.SerializeToString(&reply);
-      sys_.reply(msg->sender, msg->task, reply);
-      msg->replied = true;
+      sys_.replyProtocalMessage(msg, prog);
       break;
     }
-    case Call::PREPARE_DATA:
-      prepareData(*msg);
+    case Call::PREPARE_DATA: {
+      auto info = prepareData(*msg);
+      sys_.replyProtocalMessage(msg, info);
       break;
+    }
     case Call::UPDATE_MODEL:
       updateModel(msg);
       break;
@@ -32,10 +31,7 @@ void RiskMinimization::process(Message* msg) {
     case Call::COMPUTE_VALIDATION_AUC: {
       AUCData data;
       computeEvaluationAUC(&data);
-      string reply;
-      data.SerializeToString(&reply);
-      sys_.reply(msg->sender, msg->task, reply);
-      msg->replied = true;
+      sys_.replyProtocalMessage(msg, data);
       break;
     }
     case Call::SAVE_AS_DENSE:

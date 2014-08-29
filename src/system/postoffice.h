@@ -17,17 +17,22 @@ class Postoffice {
   SINGLETON(Postoffice);
   ~Postoffice();
 
-  // run the system
+  // Run the system
   void run();
 
-  // queue a message into the sending buffer, which will be sent by the sending
+  // Queue a message into the sending buffer, which will be sent by the sending
   // thread.
   void queue(const Message& msg);
 
-  // send the reply message for the _task_ from _recver_
-  void reply(const NodeID& recver,
-             const Task& task,
-             const string& reply_msg = string());
+  // reply *task* from *recver* with *reply_msg*
+  void reply(const NodeID& recver, const Task& task, const string& reply_msg);
+
+  // reply message *msg* with protocal message *proto*
+  template <class P> void replyProtocalMessage(Message* msg, const P& proto) {
+    string str; proto.SerializeToString(&str);
+    reply(msg->recver, msg->task, str);
+    msg->replied = true;
+  }
 
   void reply(const Message& msg, const string& reply_msg = string());
 

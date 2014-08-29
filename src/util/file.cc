@@ -5,10 +5,11 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <dirent.h>
+#include <regex>
 
 #include "util/file.h"
 #include "util/split.h"
-#include "base/io.h"
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
@@ -309,6 +310,20 @@ DataConfig searchFiles(const DataConfig& config) {
   return ret;
 }
 
+std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
+  CHECK_GT(data.file_size(), 0) << "empty files" << data.DebugString();
+  CHECK_GE(data.file_size(), num) << "too many partitions";
+  // evenly divide files
+  std::vector<DataConfig> parts;
+  for (int i = 0; i < num; ++i) {
+    DataConfig dc = data; dc.clear_file();
+    for (int j = 0; j < data.file_size(); ++j) {
+      if (j % num == i) dc.add_file(data.file(j));
+    }
+    parts.push_back(dc);
+  }
+  return parts;
+}
 
 } // namespace PS
 

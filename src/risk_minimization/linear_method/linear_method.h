@@ -26,11 +26,6 @@ class LinearMethod : public RiskMinimization {
   PenaltyPtr<double> penalty_;
   shared_ptr<AggGradLearner<double>> learner_;
 
-  // global data information, only available at the scheduler
-  std::vector<MatrixInfo> g_training_info_, g_validation_info_;
-  size_t g_num_training_ins_ = 0;
-  Range<Key> g_fea_range_;
-
 };
 
 } // namespace LM

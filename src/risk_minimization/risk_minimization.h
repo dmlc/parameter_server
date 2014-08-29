@@ -2,6 +2,7 @@
 #include "system/app.h"
 #include "base/matrix.h"
 #include "base/auc.h"
+#include "proto/instance.pb.h"
 
 namespace PS {
 
@@ -11,11 +12,15 @@ class RiskMinimization : public App {
   void mergeProgress(int iter);
   void mergeAUC(AUC* auc);
  protected:
-  virtual void prepareData(const Message& msg) = 0;
+  // load the data, and return the data info
+  virtual InstanceInfo prepareData(const Message& msg) = 0;
+  // update model
   virtual void updateModel(Message* msg) = 0;
+  // compute objective, time, ...
   virtual RiskMinProgress evaluateProgress() = 0;
   virtual void saveModel(const Message& msg) = 0;
   virtual void computeEvaluationAUC(AUCData *data) = 0;
+
   virtual void saveAsDenseData(const Message& msg) { }
 
   void showTime(int iter);

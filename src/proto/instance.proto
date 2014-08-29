@@ -1,6 +1,7 @@
 package PS;
 
 message InstanceInfo {
+  // label type
   enum LabelType {
     // unsupvervised learning
     EMPTY = 1;
@@ -11,17 +12,16 @@ message InstanceInfo {
     // regression
     CONTINUOUS = 4;
   }
-  required LabelType label_type = 1;
-
+  optional LabelType label_type = 1;
+  // feature type
   enum FeatureType {
     DENSE = 1;
     SPARSE = 2;
     SPARSE_BINARY = 3;
   }
-  required FeatureType fea_type = 2;
-
+  optional FeatureType fea_type = 2;
+  // all feature groups, the first one is the union of all rest groups
   repeated FeatureGroupInfo fea_group = 3;
-
   // total number of instances
   optional uint64 num_ins = 4;
 }
@@ -29,11 +29,9 @@ message InstanceInfo {
 message FeatureGroupInfo {
   // group id
   optional int32 group_id = 1;
-
   // the feature ranges for different groups should NOT overlapped
   optional uint64 fea_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
   optional uint64 fea_end = 4;
-
   // total number of non-zero entries
   optional uint64 nnz = 6;
 }
@@ -46,13 +44,10 @@ message Instance {
   // -1, 1 for binary classification, 0,1,2,... for multiclass classfication,
   // real value for regression, and empty for unsupverised learning
   optional float label = 1;
-
   // feature id
   repeated uint64 fea_id = 2;
-
   // feature value
   repeated float fea_val = 3;
-
   // an unique id for this instance. one can add extra information, such as
   // time, into this id
   optional int64 ins_id = 4;

@@ -11,7 +11,7 @@ class BatchSolver : public LinearMethod {
   virtual void run();
 
  protected:
-  virtual void prepareData(const Message& msg);
+  virtual InstanceInfo prepareData(const Message& msg);
   virtual void updateModel(Message* msg);
   virtual void runIteration();
 
@@ -25,9 +25,15 @@ class BatchSolver : public LinearMethod {
   // training data, available at the workers
   MatrixPtr<double> y_, X_;
 
-
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
+
+  // global data information, only available at the scheduler
+  InstanceInfo g_train_ins_info_;
+
+  // std::vector<MatrixInfo> g_training_info_, g_validation_info_;
+  // size_t g_num_training_ins_ = 0;
+  // Range<Key> g_fea_range_;
 
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blocks_;

@@ -48,7 +48,7 @@ void BlockCoordDescL1LR::runIteration() {
 
     double vio = global_progress_[iter].violation();
     KKT_filter_threshold_
-        = vio / (double)g_num_training_ins_
+        = vio / (double)g_train_ins_info_.num_ins()
         * app_cf_.bcd_l1lr().kkt_filter_threshold_ratio();
 
     double rel = global_progress_[iter].relative_objv();
@@ -64,8 +64,8 @@ void BlockCoordDescL1LR::runIteration() {
 
 
 
-void BlockCoordDescL1LR::prepareData(const Message& msg) {
-  BatchSolver::prepareData(msg);
+InstanceInfo BlockCoordDescL1LR::prepareData(const Message& msg) {
+  auto info = BatchSolver::prepareData(msg);
   if (exec_.isWorker()) {
     // dual_ = exp(y.*(X_*w_))
     dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
@@ -76,7 +76,7 @@ void BlockCoordDescL1LR::prepareData(const Message& msg) {
 
   delta_.resize(w_->size());
   delta_.setValue(bcd_l1lr_cf_.delta_init_value());
-
+  return info;
 }
 
 void BlockCoordDescL1LR::updateModel(Message* msg) {

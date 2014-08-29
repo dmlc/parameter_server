@@ -115,5 +115,7 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory);
 
 // return files matches the regex in *config*
 DataConfig searchFiles(const DataConfig& config);
+// evenly parttion the files into *num* parts
+std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
 
 } // namespace PS

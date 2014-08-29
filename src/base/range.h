@@ -10,7 +10,7 @@ typedef Range<size_t> SizeR;
 template<class T>
 class Range {
  public:
-  static Range all() { return Range(0,-1); }
+  static Range all() { return Range(0, (T)-1); }
   Range() : begin_(0), end_(0) { }
 
   template<typename V>
