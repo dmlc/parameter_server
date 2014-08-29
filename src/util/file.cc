@@ -45,18 +45,22 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   return f;
 }
 
-File* File::openOrDie(const DataConfig& name,  const char* const flag) {
+File* File::open(const DataConfig& name,  const char* const flag) {
   CHECK_EQ(name.file_size(), 1);
   auto filename = name.file(0);
   if (name.has_hdfs()) {
     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
     FILE* des = popen(cmd.c_str(), "r");
     auto f = new File(des, filename);
-    CHECK(f != NULL && f->open());
     return f;
   } else {
-    return openOrDie(filename, flag);
+    return open(filename, flag);
   }
+}
+File* File::openOrDie(const DataConfig& name,  const char* const flag) {
+File* f = open(name, flag);
+CHECK(f != NULL && f->open());
+return f;
 }
 
 size_t File::size(const std::string& name) {
@@ -67,9 +71,6 @@ size_t File::size(const std::string& name) {
 
 size_t File::size() {
   return File::size(name_);
-  // struct stat f_stat;
-  // stat(name_.c_str(), &f_stat);
-  // return f_stat.st_size;
 }
 
 // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
@@ -171,11 +172,17 @@ class NoOpErrorCollector : public google::protobuf::io::ErrorCollector {
 
 
 bool readFileToProto(const std::string& file_name, GProto* proto) {
-  std::string str;
-  if (!readFileToString(file_name, &str)) {
-    LOG(ERROR) << "Could not read " << file_name;
-    return false;
-  }
+  DataConfig conf; conf.add_file(file_name);
+  return readFileToProto(conf, proto);
+}
+
+bool readFileToProto(const DataConfig& name, GProto* proto) {
+  File* f = File::open(name, "r");
+  if (f == NULL) return false;
+  size_t size = 100000;
+  if (!name.has_hdfs()) size = f->size();
+  std::string str; f->readToString(&str, size*100);
+
   // Attempt to decode ASCII before deciding binary. Do it in this order because
   // it is much harder for a binary encoding to happen to be a valid ASCII
   // encoding than the other way around. For instance "index: 1\n" is a valid
@@ -194,17 +201,13 @@ bool readFileToProto(const std::string& file_name, GProto* proto) {
   // Re-parse the ASCII, just to show the diagnostics (we could also get them
   // out of the ErrorCollector but this way is easier).
   google::protobuf::TextFormat::ParseFromString(str, proto);
-  LOG(ERROR) << "Could not parse contents of " << file_name;
+  LOG(ERROR) << "Could not parse contents of " << name.DebugString();
   return false;
 }
 
-bool readFileToProto(const DataConfig& file, GProto* proto) {
-
-}
-
 void readFileToProtoOrDie(
-    const DataConfig& file, GProto* proto) {
-  CHECK(readFileToProto(file, proto));
+    const DataConfig& name, GProto* proto) {
+  CHECK(readFileToProto(name, proto));
 }
 
 void readFileToProtoOrDie(

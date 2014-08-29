@@ -22,68 +22,46 @@ class File {
   static File* open(const std::string& name, const char* const flag);
   // If open failed, program will exit.
   static File* openOrDie(const std::string& name, const char* const flag);
-
+  // open the file in "name", support read-only hdfs file
+  static File* open(const DataConfig& name, const char* const flag);
+  // If open failed, program will exit.
   static File* openOrDie(const DataConfig& name, const char* const flag);
-
+  // the size of a file
   static size_t size(const std::string& name);
-
-  // Reads "size" bytes to buff from file, buff should be pre-allocated.
-  size_t read(void* const buff, size_t size);
-
-  // Reads "size" bytes to buff from file, buff should be pre-allocated.
-  // If read failed, program will exit.
-  // void ReadOrDie(void* const buff, size_t size);
-
-  // Reads a line from file to a std::string.
-  // Each line must be no more than max_length bytes
-  char* readLine(char* const output, uint64 max_length);
-
-  // Reads the whole file to a std::string, with a maximum length of 'max_length'.
-  // Returns the number of bytes read.
-  int64 readToString(std::string* const line, uint64 max_length);
-
-  // Writes "size" bytes of buff to file, buff should be pre-allocated.
-  size_t write(const void* const buff, size_t size);
-
-  // Writes "size" bytes of buff to file, buff should be pre-allocated.
-  // If write failed, program will exit.
-  // void WriteOrDie(const void* const buff, size_t size);
-
-  // Writes a std::string to file.
-  size_t writeString(const std::string& line);
-
-  // // Writes a std::string to file and append a "\n".
-  // bool WriteLine(const std::string& line);
-
-  // Closes the file.
-  bool close();
-
-  // Flushes buffer.
-  // bool Flush();
-
-  // Returns file size.
-  size_t size();
-
-  // // current file position
-  // size_t position() {
-  //   return (size_t) ftell(f_);
-  // }
-
-  // seek a position, starting from the head
-  bool seek(size_t position);
-
-  // Returns the file name.
-  std::string filename() const { return name_; }
-
   // Deletes a file.
   static bool remove(const char* const name) { return remove(name) == 0; }
-
   // Tests if a file exists.
   static bool exists(const char* const name) { return access(name, F_OK) == 0; }
 
+  // Reads "size" bytes to buff from file, buff should be pre-allocated.
+  size_t read(void* const buff, size_t size);
+  void readOrDie(void* const buff, size_t size) {
+    CHECK_EQ(read(buff, size), size);
+  }
+  // Reads a line from file to a std::string.
+  // Each line must be no more than max_length bytes
+  char* readLine(char* const output, uint64 max_length);
+  // Reads the whole file to a std::string, with a maximum length of 'max_length'.
+  // Returns the number of bytes read.
+  int64 readToString(std::string* const line, uint64 max_length);
+  // Writes "size" bytes of buff to file, buff should be pre-allocated.
+  size_t write(const void* const buff, size_t size);
+  // If write failed, program will exit.
+  void writeOrDie(const void* const buff, size_t size) {
+    CHECK_EQ(write(buff, size), size);
+  }
+  // Writes a std::string to file.
+  size_t writeString(const std::string& line);
+  // Closes the file.
+  bool close();
+  // Returns file size.
+  size_t size();
+  // seek a position, starting from the head
+  bool seek(size_t position);
+  // Returns the file name.
+  std::string filename() const { return name_; }
   // check if it is open
   bool open() const { return (is_gz_ ? gz_f_ != NULL : f_ != NULL); }
-
  private:
   File(FILE* f_des, const std::string& name)
       : f_(f_des), name_(name) { }
@@ -91,12 +69,18 @@ class File {
       : gz_f_(gz_des), name_(name) {
     is_gz_ = true;
   }
-
   FILE* f_ = NULL;
   gzFile gz_f_ = NULL;
-
   const std::string name_;
   bool is_gz_ = false;
+  // Writes a std::string to file and append a "\n".
+  // bool WriteLine(const std::string& line);
+  // Flushes buffer.
+  // bool Flush();
+  // // current file position
+  // size_t position() {
+  //   return (size_t) ftell(f_);
+  // }
 };
 
 
@@ -106,8 +90,8 @@ class File {
 //// convenient functions dealing with protobuf
 
 typedef google::protobuf::Message GProto;
-bool readFileToProto(const DataConfig& file, GProto* proto);
-void readFileToProtoOrDie(const DataConfig& file, GProto* proto);
+bool readFileToProto(const DataConfig& name, GProto* proto);
+void readFileToProtoOrDie(const DataConfig& name, GProto* proto);
 
 bool readFileToProto(const std::string& file_name, GProto* proto);
 void readFileToProtoOrDie(const std::string& file_name, GProto* proto);
