@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "util/file.h"
-#include "util/hdfs.h"
+#include "util/split.h"
 #include "base/io.h"
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
@@ -45,17 +45,18 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   return f;
 }
 
-File* File::openHDFS(const std::string& name, const HDFSConfig& hdfs) {
-  string cmd = hadoopFS(hdfs) + " -cat " + name;
-FILE* des = popen(cmd.c_str(), "r");
-auto f = new File(des, name);
-  return f;
-}
-
-File* File::openHDFSOrDie(const std::string& name, const HDFSConfig& hdfs) {
-  File* f = File::openHDFS(name, hdfs);
-  CHECK(f != NULL && f->open());
-  return f;
+File* File::openOrDie(const DataConfig& name,  const char* const flag) {
+  CHECK_EQ(name.file_size(), 1);
+  auto filename = name.file(0);
+  if (name.has_hdfs()) {
+    string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
+    FILE* des = popen(cmd.c_str(), "r");
+    auto f = new File(des, filename);
+    CHECK(f != NULL && f->open());
+    return f;
+  } else {
+    return openOrDie(filename, flag);
+  }
 }
 
 size_t File::size(const std::string& name) {
@@ -221,6 +222,96 @@ bool WriteProtoToFile(const google::protobuf::Message& proto, const std::string&
 void WriteProtoToFileOrDie(const google::protobuf::Message& proto,
                            const std::string& file_name) {
   CHECK(WriteProtoToFile(proto, file_name)) << "file_name: " << file_name;
+}
+
+// TODO read home from $HDFS_HOME if empty
+std::string hadoopFS(const HDFSConfig& conf) {
+  return (conf.home() + "/bin/hadoop dfs -D fs.default.name=" + conf.namenode()
+          + " -D hadoop.job.ugi=" + conf.ugi());
+}
+
+
+std::vector<std::string> readFilenamesInDirectory(const std::string& directory) {
+  std::vector<std::string> files;
+  DIR *dir = opendir(directory.c_str());
+  CHECK(dir != NULL) << "failed to open directory " << directory;
+  struct dirent *ent;
+  while ((ent = readdir (dir)) != NULL)
+    files.push_back(string(ent->d_name));
+  closedir (dir);
+  return files;
+}
+
+std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
+  CHECK_EQ(directory.file_size(), 1);
+  auto dirname = directory.file(0);
+  if (!directory.has_hdfs()) {
+    return readFilenamesInDirectory(dirname);
+  }
+  // read hdfs directory
+  std::vector<std::string> files;
+  string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
+  FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
+  char line[10000];
+  while (fgets(line, 10000, des)) {
+    auto ents = split(std::string(line), ' ', true);
+    if (ents.size() != 8) continue;
+    if (ents[0][0] == 'd') continue;
+    files.push_back(ents.back());
+  }
+  pclose(des);
+  return files;
+}
+
+namespace {
+string filename(const string& full) {
+  auto elems = split(full, '/');
+  return elems.empty() ? "" : elems.back();
+}
+string path(const string& full) {
+  auto elems = split(full, '/');
+  if (elems.size() <= 1) return full;
+  elems.pop_back();
+  return join(elems, '/');
+}
+string removeExtension(const string& file) {
+  auto elems = split(file, '.');
+  if (elems.size() <= 1) return file;
+  elems.pop_back();
+  return join(elems, '.');
+}
+}
+
+DataConfig searchFiles(const DataConfig& config) {
+  int n = config.file_size();
+  CHECK_GE(n, 1) << "empty files: " << config.DebugString();
+  std::vector<std::string> matched_files;
+  for (int i = 0; i < n; ++i) {
+    std::regex pattern;
+    try {
+      pattern = std::regex(filename(config.file(i)));
+    } catch (const std::regex_error& e) {
+      CHECK(false) << filename(config.file(i))
+                   << " is not valid (supported) regex, regex_error caught: "
+                   << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
+    }
+    auto dir = config; dir.clear_file();
+    dir.add_file(path(config.file(i)));
+    // match regex
+    auto files = readFilenamesInDirectory(dir);
+    for (auto& f : files) {
+      if (std::regex_match(f, pattern)) {
+        matched_files.push_back(dir.file(0) + "/" + removeExtension(f));
+      }
+    }
+  }
+  // remove duplicate files
+  std::sort(matched_files.begin(), matched_files.end());
+  auto it = std::unique(matched_files.begin(), matched_files.end());
+  matched_files.resize(std::distance(matched_files.begin(), it));
+  DataConfig ret = config; ret.clear_file();
+  for (auto& f : matched_files) ret.add_file(f);
+  return ret;
 }
 
 

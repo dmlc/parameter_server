@@ -125,9 +125,9 @@ bool ParseText::parseAdfea(char* line, Instance* ins) {
   return true;
 }
 
-// convert text format input into binary protobuf format
-//
-// pserver format:
+
+
+// ps format:
 //
 // label; group_id feature[:weight] feature[:weight] ...; groud_id ...; ...
 //

@@ -11,6 +11,7 @@
 
 namespace PS {
 
+////////// handle info //////////
 static FeatureGroupInfo
 mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
   auto C = A;
@@ -38,6 +39,24 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
     *C.add_fea_group() = mergeFeatureGroupInfo(A.fea_group(i), B.fea_group(i));
   }
   return C;
+}
+
+static InstanceInfo readInstanceInfo(const std::vector<std::string>& files) {
+  InstanceInfo info, tmp;
+  for (const auto& f : files) {
+    ReadFileToProtoOrDie(f, &tmp);
+    info = mergeInstanceInfo(info, tmp);
+  }
+  return info;
+}
+
+static InstanceInfo readInstanceInfo(const DataConfig& config) {
+  CHECK_EQ(config.format(), DataConfig::PROTO);
+  std::vector<std::string> files;
+  for (int i = 0; i < config.file_size(); ++i) {
+    files.push_back(config.file(i));
+  }
+  return readInstanceInfo(files);
 }
 
 template<typename V>
@@ -72,10 +91,10 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data) {
   std::vector<RecordReader> readers;
   InstanceInfo info;
   for (int i = 0; i < data.file_size(); ++i) {
-    auto f = data.file(i);
-    File *in = data.has_hdfs() ?
-               File::openHDFSOrDie(f, data.hdfs()) :
-               File::openOrDie(f, "r");
+    auto f = data; f.clear_file();
+    f.add_file(data.file(i));
+    File *in = File::openOrDie(f, "r");
+
     RecordReader r(in);
     InstanceInfo ins;
     CHECK(r.ReadProtocolMessage(&ins));
@@ -226,25 +245,5 @@ MatrixPtrList<V> readMatrices(const DataConfig& config) {
   return MatrixPtrList<V>();
 }
 
-static InstanceInfo readInstanceInfo(const std::vector<std::string>& files) {
-  InstanceInfo info, tmp;
-  for (const auto& f : files) {
-    File* in = File::openOrDie(f, "r");
-    RecordReader r(in);
-    r.ReadProtocolMessage(&tmp);
-    info = mergeInstanceInfo(info, tmp);
-    in->Close();
-  }
-  return info;
-}
-
-static InstanceInfo readInstanceInfo(const DataConfig& config) {
-  CHECK_EQ(config.format(), DataConfig::PROTO);
-  std::vector<std::string> files;
-  for (int i = 0; i < config.file_size(); ++i) {
-    files.push_back(config.file(i));
-  }
-  return readInstanceInfo(files);
-}
 
 } // namespace PS

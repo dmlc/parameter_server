@@ -24,9 +24,7 @@ class File {
   // If open failed, program will exit.
   static File* openOrDie(const std::string& name, const char* const flag);
 
-  // implement by popen(hadoop fs -cat xxx), read only
-  static File* openHDFS(const std::string& name, const HDFSConfig& hdfs);
-  static File* openHDFSOrDie(const std::string& name, const HDFSConfig& hdfs);
+  static File* openOrDie(const DataConfig& name, const char* const flag);
 
   static size_t size(const std::string& name);
 
@@ -118,4 +116,16 @@ bool WriteProtoToFile(const google::protobuf::Message& proto, const std::string&
 void WriteProtoToFileOrDie(const google::protobuf::Message& proto,
                            const std::string& file_name);
 
+// return the hadoop fs command
+std::string hadoopFS(const HDFSConfig& conf);
+
+// return the file names in a directory
+std::vector<std::string> readFilenamesInDirectory(const std::string& directory);
+std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory);
+
+// // locate the i-th file in *config*
+// DataConfig ithFile(const DataConfig& config);
+
+// return files matches the regex in *config*
+DataConfig searchFiles(const DataConfig& config);
 } // namespace PS

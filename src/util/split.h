@@ -1,4 +1,5 @@
 #pragma once
+#include "util/common.h"
 
 namespace PS {
 
@@ -6,8 +7,8 @@ namespace PS {
 // split("one:two::three", ':'); will return 4 items
 
 inline std::vector<std::string>
-split(const string &s, char delim, bool skip_empty = false) {
-  std::vector<string> elems;
+split(const std::string &s, char delim, bool skip_empty = false) {
+  std::vector<std::string> elems;
   std::stringstream ss(s);
   string item;
   while (std::getline(ss, item, delim))
