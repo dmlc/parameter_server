@@ -15,6 +15,14 @@ void SArray<V>::resize(size_t n) {
 }
 
 template <typename V>
+void SArray<V>::reserve(size_t n) {
+  if (capacity_ >= n) { return; }
+  size_t old_size = size_;
+  resize(n);
+  size_ = old_size;
+}
+
+template <typename V>
 template <typename ForwardIt>
 void SArray<V>::copyFrom(const ForwardIt first, const ForwardIt last) {
   size_ = std::distance(first, last);
@@ -72,6 +80,12 @@ bool SArray<V>::operator==(const SArray<W> &rhs) const {
   if (rhs.size() * sizeof(W) != size() * sizeof(V)) return false;
   if (size() == 0) return true;
   return (memcmp(data(), rhs.data(), size() * sizeof(V)) == 0);
+}
+
+template <typename V>
+void SArray<V>::pushBack(const V& val) {
+  if (size_ == capacity_) reserve(size_*2);
+  data_[size_++] = val;
 }
 
 template <typename V>

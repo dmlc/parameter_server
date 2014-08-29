@@ -37,17 +37,9 @@ template<typename V> class SArray {
   // A general but might slower version
   template <typename ForwardIt>
   void copyFrom(const ForwardIt first, const ForwardIt last);
-
   // Copy from a initializer_list
   template <typename W> SArray(const std::initializer_list<W>& list);
   template <typename W> void operator=(const std::initializer_list<W>& list);
-
-  // Replace the current data pointer with data. the memory associated with the
-  // replaced pointer will be released if no other SArray points to it.
-  void reset(V* data, size_t size);
-  // If n <= capacity_, then only change the size. otherwise, append n -
-  // current_size entries (without value initialization)
-  void resize(size_t n);
 
   // Slice a [range.begin(), range.end()) segment, zero-copy
   SArray<V> segment(const Range<size_t>& range) const;
@@ -63,23 +55,49 @@ template<typename V> class SArray {
   // whose entry values are within [bound.begin(), bound.end())
   SizeR findRange (const Range<V>& bound) const;
 
-  // accessors and mutators
+  // Capacity
   size_t size() const { return size_; }
   bool empty() const { return size() == 0; }
-  V* data() const { return data_; }
+  // Replace the current data pointer with data. the memory associated with the
+  // replaced pointer will be released if no other SArray points to it.
+  void reset(V* data, size_t size);
+  // Resizes the array so that it contains n elements.
+  // If n <= capacity_, then only change the size. otherwise, append n -
+  // current_size entries (without value initialization)
+  void resize(size_t n);
+  // Requests that the capacity be at least enough to contain n elements.
+  void reserve(size_t n);
+
+  // Iterators
   V* begin() { return data(); }
   const V* begin() const { return data(); }
   V* end() { return data() + size(); }
   const V* end() const { return data() + size(); }
+
+  // Element access:
   V back() const { CHECK(!empty()); return data_[size_-1]; }
   V front() const { CHECK(!empty()); return data_[0]; }
+  V& operator[] (int i) { return data_[i]; }
+  const V& operator[] (int i) const { return data_[i]; }
+
+  // Modifiers
+  void pushBack(const V& val);
+  void popBack() { if (size_) --size_; }
+  void setValue(V value);
+  // set all entries into 0
+  void setZero() { memset(data_, 0, size_*sizeof(V)); }
+  // set values according to *cf*
+  void setValue(const ParameterInitConfig& cf);
+
+  // Others
   // Assume values are ordered, return the value range.
   Range<V> range() const {
     return (empty() ? Range<V>(0,0) : Range<V>(front(), back()+1));
   }
+  V* data() const { return data_; }
   const shared_ptr<void>& pointer() const { return ptr_; }
-  V& operator[] (int i) { return data_[i]; }
-  const V& operator[] (int i) const { return data_[i]; }
+  // number of non-zero entries
+  size_t nnz() const;
 
   // Compare values
   template <typename W> bool operator==(const SArray<W> &rhs) const;
@@ -93,15 +111,6 @@ template<typename V> class SArray {
   // convert to a dense matrix, zero-copy
   shared_ptr<Matrix<V>> matrix(size_t rows = -1, size_t cols = -1);
 
-  // set all entries into value
-  void setValue(V value);
-  // set all entries into 0
-  void setZero() { memset(data_, 0, size_*sizeof(V)); }
-  // set values according to *cf*
-  void setValue(const ParameterInitConfig& cf);
-  // number of non-zero entries
-  size_t nnz() const;
-
   // Return the compressed array by snappy
   SArray<char> compressTo() const;
   // Uncompress the values from src with size src_size. Before calling this
@@ -114,7 +123,6 @@ template<typename V> class SArray {
   }
   // read the segment [range.begin(), range.end()) from the binary file
   bool readFromFile(SizeR range, const string& file_name);
-
   // write all values into a binary file
   bool writeToFile(const string& file_name) const {
     return writeToFile(SizeR::all(), file_name);
