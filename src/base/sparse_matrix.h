@@ -50,75 +50,11 @@ class SparseMatrix : public Matrix<V> {
   MatrixPtr<V> localize(SArray<Key>* key_map) const {
     I max_key = rowMajor() ? info_.col().end() : info_.row().end();
     return (max_key > (I)kuint32max ?
-            localizeBigKey2(key_map) : localizeSmallKey(key_map));
+            localizeBigKey(key_map) : localizeSmallKey(key_map));
   }
 
   MatrixPtr<V> localizeBigKey(SArray<Key>* key_map) const;
   MatrixPtr<V> localizeSmallKey(SArray<Key>* key_map) const;
-
-  MatrixPtr<V> localizeBigKey2(SArray<Key>* key_map) const {
-    int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
-
-    // find unique keys
-
-    // Timer t; t.start();
-    SArray<I> sorted_index;
-    sorted_index.copyFrom(index_);
-    // std::sort(sorted_index.begin(), sorted_index.end());
-    parallelSort(&sorted_index, num_threads);
-    // LL << sorted_index;
-    // LL << t.getAndRestart();
-
-    key_map->clear();
-    I curr = (I) -1;
-    for (I v : sorted_index) {
-      if (v != curr) { key_map->pushBack((Key)v); curr = v; }
-    }
-    sorted_index.clear();
-    // LL << *key_map;
-    // LL << t.getAndRestart();
-
-    SArray<uint32> new_index(index_.size());
-    {
-      ThreadPool pool(num_threads);
-      // use a large constant, e.g. 6, here. because dense_hash_set/map may have
-      // serious performace issues after inserting too many keys
-      int npart = num_threads * 4;
-      // int npart = 20;
-
-      for (int i = 0; i < npart; ++i) {
-        auto thread_range = key_map->range().evenDivide(npart, i);
-        pool.add([this, thread_range, key_map, &new_index]() {
-            // build the hash map
-            std::unordered_map<I, uint32> map;
-            auto seg = key_map->findRange(thread_range);
-            auto key_seg = key_map->segment(seg);
-            size_t j = 0;
-            for (I k : key_seg) map[k] = (j++) + seg.begin();
-
-            // remap index
-            for (size_t j = 0; j < index_.size(); ++j) {
-              I k = index_[j];
-              if (thread_range.contains(k)) new_index[j] = map[k];
-            }
-          });
-      }
-      pool.startWorkers();
-    }
-
-    // LL << t.getAndRestart();
-    // construct the new matrix
-    auto info = info_;
-    info.set_sizeof_index(sizeof(uint32));
-    SizeR local(0, key_map->size());
-    if (rowMajor())
-      local.to(info.mutable_col());
-    else
-      local.to(info.mutable_row());
-
-    return MatrixPtr<V>(
-        new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
-  }
 
   // debug string
   string debugString() const;
@@ -376,72 +312,43 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeSmallKey(SArray<Key>* key_map) const {
 template<typename I, typename V>
 MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
   int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
-  // use a large constant, e.g. 6, here. because dense_hash_set/map may have
-  // serious performace issues after inserting too many keys
-  int npart = num_threads * 6;
-  // int npart = 20;
 
-  auto range = rowMajor() ? Range<I>(info_.col()) : Range<I>(info_.row());
+  // find unique keys, take 20% time
+  SArray<I> sorted_index;
+  sorted_index.copyFrom(index_);
+  // std::sort(sorted_index.begin(), sorted_index.end());
+  parallelSort(&sorted_index, num_threads);
 
-#if GOOGLE_HASH
-  std::vector<google::dense_hash_set<I>> uniq_keys(npart);
-#else
-  std::vector<std::unordered_set<I>> uniq_keys(npart);
-#endif
-
-  // find unique keys
-  {
-    ThreadPool pool(num_threads);
-    for (int i = 0; i < npart; ++i) {
-      auto thread_range = range.evenDivide(npart, i);
-      pool.add([this, i, thread_range, &uniq_keys](){
-          auto& uk = uniq_keys[i];
-#if GOOGLE_HASH
-          uk.set_empty_key(-1);
-#endif
-          // size_t n = 0;
-          for (I k : index_) if (thread_range.contains(k)) {uk.insert(k);}
-          // LL << n << " " << thread_range;
-        });
-    }
-    pool.startWorkers();
+  key_map->clear();
+  I curr = (I) -1;
+  for (I v : sorted_index) {
+    if (v != curr) { key_map->pushBack((Key)v); curr = v; }
   }
+  sorted_index.clear();
+  // LL << *key_map;
+  // LL << t.getAndRestart();
 
-  std::vector<I> nnz(npart+1);
-  nnz[0] = 0;
-  for (int i = 0; i < npart; ++i) nnz[i+1] += nnz[i] + uniq_keys[i].size();
-
-  key_map->resize(nnz[npart]);
-  SArray<uint32> new_index (index_.size());
+  SArray<uint32> new_index(index_.size());
   {
+    // TODO use a countmin-like approach to accelerate this code block.
     ThreadPool pool(num_threads);
+    // use a large constant, e.g. 6, here. because dense_hash_set/map may have
+    // serious performace issues after inserting too many keys
+    int npart = num_threads * 4;
+    // int npart = 20;
+
     for (int i = 0; i < npart; ++i) {
-      auto thread_range = range.evenDivide(npart, i);
-      pool.add([this, i, thread_range, key_map, &nnz, &uniq_keys, &new_index]() {
-          // order the unique global keys
-          auto& uk = uniq_keys[i];
-          std::vector<I> ordered_keys(uk.size());
-          size_t j = 0;
-          for (auto it = uk.begin(); it != uk.end(); ++it) ordered_keys[j++] = *it;
-          std::sort(ordered_keys.begin(), ordered_keys.end());
-          uk.clear();
-
-          // construct the key map
-          uint32 local_key = nnz[i];
-#if GOOGLE_HASH
-          google::dense_hash_map<I, uint32> map;
-          map.set_empty_key(-1);
-#else
+      auto thread_range = key_map->range().evenDivide(npart, i);
+      pool.add([this, thread_range, key_map, &new_index]() {
+          // build the hash map, takes 40% time. the speed of unordered_map is
+          // comparable to google::dense_hash_map (tested in gcc4.8).
           std::unordered_map<I, uint32> map;
-#endif
+          auto seg = key_map->findRange(thread_range);
+          auto key_seg = key_map->segment(seg);
+          size_t j = 0;
+          for (I k : key_seg) map[k] = (j++) + seg.begin();
 
-          for (uint32 i = 0; i < ordered_keys.size(); ++i) {
-            auto key = ordered_keys[i];
-            map[key] = local_key;
-            (*key_map)[local_key++] = static_cast<Key>(key);
-          }
-
-          // remap index
+          // remap index, takes 40% time
           for (size_t j = 0; j < index_.size(); ++j) {
             I k = index_[j];
             if (thread_range.contains(k)) new_index[j] = map[k];
@@ -450,7 +357,9 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
     }
     pool.startWorkers();
   }
+  // LL << t.getAndRestart();
 
+  // construct the new matrix
   auto info = info_;
   info.set_sizeof_index(sizeof(uint32));
   SizeR local(0, key_map->size());
@@ -459,7 +368,8 @@ MatrixPtr<V> SparseMatrix<I,V>::localizeBigKey(SArray<Key>* key_map) const {
   else
     local.to(info.mutable_row());
 
-  return MatrixPtr<V>(new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
+  return MatrixPtr<V>(
+      new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
 }
 
 // debug

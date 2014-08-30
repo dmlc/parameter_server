@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/common.h"
-#include <sparsehash/dense_hash_map>
+// #include <sparsehash/dense_hash_map>
 
 namespace PS {
 namespace NN {
@@ -21,7 +21,8 @@ struct Parameter {
   MatrixPtr<V> gradient;
   MatrixPtr<V> hession;
 
-  google::dense_hash_map<Key, std::vector<V>> spa_value;
+  // google::dense_hash_map<Key, std::vector<V>> spa_value;
+  std::unordered_map<Key, std::vector<V>> spa_value;
 
 
 };
