@@ -28,7 +28,7 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i);
 // placed in a binary file one by one. Return two matrices, label vector and
 // feature matrix
 template<typename V>
-MatrixPtrList<V> readMatricesFromProto(const DataConfig& data);
+MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* info);
 
 // Read from binary files, which are direct dumps of memory.
 template<typename V>
@@ -49,11 +49,13 @@ MatrixPtrList<V> readMatricesFromBin(
 
 // Read from text files
 template<typename V>
-MatrixPtr<V> readMatricesFromText(const DataConfig& data);
+MatrixPtrList<V> readMatricesFromText(const DataConfig& data, InstanceInfo* info) {
+  return MatrixPtrList<V>();
+}
 
 // the main entry
 template<typename V>
-MatrixPtrList<V> readMatrices(const DataConfig& config);
+MatrixPtrList<V> readMatrices(const DataConfig& data, InstanceInfo* info = nullptr);
 
 
 } // namespace PS

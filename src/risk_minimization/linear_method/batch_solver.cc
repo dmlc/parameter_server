@@ -132,8 +132,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
   InstanceInfo info;
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    info = readInstanceInfo(app_cf_.training_data());
-    auto training_data = readMatrices<double>(app_cf_.training_data());
+    auto training_data = readMatrices<double>(app_cf_.training_data(), &info);
     CHECK_EQ(training_data.size(), 2);
     y_ = training_data[0];
     X_ = training_data[1]->localize(&(w_->key()));
@@ -159,9 +158,8 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // LL << myNodeID() << " received keys";
         if (w_->key().empty()) {
-          // avoid empty keys, it may bring problems
+          // avoid empty keyset, it may bring problems
           w_->key().pushBack(exec_.myNode().key().begin());
-          // LL << w_->key();
         }
         w_->value().resize(w_->key().size());
         auto init = app_cf_.init_w();
