@@ -67,6 +67,7 @@ template<typename V> class SArray {
   void resize(size_t n);
   // Requests that the capacity be at least enough to contain n elements.
   void reserve(size_t n);
+  void clear() { reset(nullptr, 0); }
 
   // Iterators
   V* begin() { return data(); }

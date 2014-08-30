@@ -9,6 +9,7 @@
 
 #include "util/common.h"
 #include "util/threadpool.h"
+#include "util/parallel_sort.h"
 #include "base/matrix.h"
 #include "base/shared_array.h"
 #include "base/range.h"
@@ -49,11 +50,75 @@ class SparseMatrix : public Matrix<V> {
   MatrixPtr<V> localize(SArray<Key>* key_map) const {
     I max_key = rowMajor() ? info_.col().end() : info_.row().end();
     return (max_key > (I)kuint32max ?
-            localizeBigKey(key_map) : localizeSmallKey(key_map));
+            localizeBigKey2(key_map) : localizeSmallKey(key_map));
   }
 
   MatrixPtr<V> localizeBigKey(SArray<Key>* key_map) const;
   MatrixPtr<V> localizeSmallKey(SArray<Key>* key_map) const;
+
+  MatrixPtr<V> localizeBigKey2(SArray<Key>* key_map) const {
+    int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
+
+    // find unique keys
+
+    // Timer t; t.start();
+    SArray<I> sorted_index;
+    sorted_index.copyFrom(index_);
+    // std::sort(sorted_index.begin(), sorted_index.end());
+    parallelSort(&sorted_index, num_threads);
+    // LL << sorted_index;
+    // LL << t.getAndRestart();
+
+    key_map->clear();
+    I curr = (I) -1;
+    for (I v : sorted_index) {
+      if (v != curr) { key_map->pushBack((Key)v); curr = v; }
+    }
+    sorted_index.clear();
+    // LL << *key_map;
+    // LL << t.getAndRestart();
+
+    SArray<uint32> new_index(index_.size());
+    {
+      ThreadPool pool(num_threads);
+      // use a large constant, e.g. 6, here. because dense_hash_set/map may have
+      // serious performace issues after inserting too many keys
+      int npart = num_threads * 4;
+      // int npart = 20;
+
+      for (int i = 0; i < npart; ++i) {
+        auto thread_range = key_map->range().evenDivide(npart, i);
+        pool.add([this, thread_range, key_map, &new_index]() {
+            // build the hash map
+            std::unordered_map<I, uint32> map;
+            auto seg = key_map->findRange(thread_range);
+            auto key_seg = key_map->segment(seg);
+            size_t j = 0;
+            for (I k : key_seg) map[k] = (j++) + seg.begin();
+
+            // remap index
+            for (size_t j = 0; j < index_.size(); ++j) {
+              I k = index_[j];
+              if (thread_range.contains(k)) new_index[j] = map[k];
+            }
+          });
+      }
+      pool.startWorkers();
+    }
+
+    // LL << t.getAndRestart();
+    // construct the new matrix
+    auto info = info_;
+    info.set_sizeof_index(sizeof(uint32));
+    SizeR local(0, key_map->size());
+    if (rowMajor())
+      local.to(info.mutable_col());
+    else
+      local.to(info.mutable_row());
+
+    return MatrixPtr<V>(
+        new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
+  }
 
   // debug string
   string debugString() const;

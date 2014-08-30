@@ -41,6 +41,7 @@ class Timer {
   void stop() { time_ += toc(tp_); }
   void reset() { time_ = 0; }
   double get() { return toc(tp_) + time_; }
+  double getAndRestart() { double t = get(); reset(); start(); return t; }
  private:
   system_clock::time_point tp_ = tic();
   double time_ = 0;

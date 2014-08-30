@@ -25,17 +25,17 @@ class SparseMatrixTest : public ::testing::Test {
 //   data[1]->writeToBinFile("x");
 // }
 
-TEST_F(SparseMatrixTest, LoadFromRecordIO) {
-  std::vector<string> files(1, "../data/rcv1.recordio");
+// TEST_F(SparseMatrixTest, LoadFromRecordIO) {
+//   std::vector<string> files(1, "../data/rcv1.recordio");
 
-  auto data = readMatricesFromProto<double>(files);
-  auto Y = data[1];
-  // Y->writeToBinFile("tmp");
-  for (int i = 0; i < 10; ++i) {
-    Vec w = Vec::Random(X->cols());
-    EXPECT_LE( (*X * w - *Y * w).norm(), 1e-3);
-  }
-}
+//   auto data = readMatricesFromProto<double>(files);
+//   auto Y = data[1];
+//   // Y->writeToBinFile("tmp");
+//   for (int i = 0; i < 10; ++i) {
+//     Vec w = Vec::Random(X->cols());
+//     EXPECT_LE( (*X * w - *Y * w).norm(), 1e-3);
+//   }
+// }
 
 TEST_F(SparseMatrixTest, Times) {
   Vec a = Vec::Ones(47236) * 2;
@@ -71,7 +71,7 @@ TEST_F(SparseMatrixTest, Localize) {
 
 TEST_F(SparseMatrixTest, LocalizeBigKey) {
   SArray<Key> key;
-  auto Y = std::static_pointer_cast<SM>(X)->localizeBigKey(&key);
+  auto Y = std::static_pointer_cast<SM>(X)->localizeBigKey2(&key);
   EXPECT_EQ((int)Y->cols(), 44504);
 
   size_t sk = 0;
