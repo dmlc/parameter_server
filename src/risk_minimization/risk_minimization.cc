@@ -9,6 +9,7 @@ void RiskMinimization::process(Message* msg) {
   typedef RiskMinCall Call;
   switch (getCall(*msg).cmd()) {
     case Call::EVALUATE_PROGRESS: {
+      // LL << myNodeID();
       auto prog = evaluateProgress();
       sys_.replyProtocalMessage(msg, prog);
       break;

@@ -165,6 +165,7 @@ SArray<V> SArray<V>::setUnion(const SArray<V>& other) const {
 
 template <typename V>
 SizeR SArray<V>::findRange (const Range<V>& bound) const {
+  if (empty()) return SizeR(0,0);
   CHECK(bound.valid());
   auto lb = std::lower_bound(begin(), end(), bound.begin());
   auto ub = std::lower_bound(begin(), end(), bound.end());

@@ -89,6 +89,7 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
   }
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
+  // LL << local_range;
 
   if (exec_.isWorker()) {
     busy_timer_.start();
@@ -116,8 +117,8 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
       });
   } else {
     // aggregate local gradients, then update model via soft-shrinkage
+    if (local_range.empty()) return;
     w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-        if (local_range.empty()) return;
         auto data = w_->received(time);
         CHECK_EQ(data.size(), 2);
         CHECK_EQ(local_range, data[0].first);

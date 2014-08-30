@@ -23,6 +23,7 @@ void BatchSolver::run() {
   taskpool(kActiveGroup)->submitAndWait(prepare, [this](){
       InstanceInfo info;
       CHECK(info.ParseFromString(exec_.lastRecvReply()));
+      // LL << info.DebugString();
       g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
     });
   size_t num_ins = g_train_ins_info_.num_ins();
@@ -142,7 +143,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     // sync keys and fetch initial value of w_
     SArrayList<double> empty;
     std::promise<void> promise;
-    w_->roundTripForWorker(time, w_->key().range(), empty, [this, &promise](int t) {
+    w_->roundTripForWorker(time, Range<Key>::all(), empty, [this, &promise](int t) {
         auto data = w_->received(t);
         CHECK_EQ(data.size(), 1);
         CHECK_EQ(w_->key().size(), data[0].first.size());
@@ -156,7 +157,6 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // LL << myNodeID() << " received keys";
-        // init w by 0
         w_->value().resize(w_->key().size());
         auto init = app_cf_.init_w();
         if (init.type() == ParameterInitConfig::ZERO) {
@@ -229,7 +229,6 @@ void BatchSolver::updateModel(Message* msg) {
         learner_->update(aggregated_gradient, arg, w_->segment(local_range));
       });
   }
-
 }
 
 RiskMinProgress BatchSolver::evaluateProgress() {

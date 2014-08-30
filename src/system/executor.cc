@@ -242,7 +242,8 @@ void Executor::run() {
           Lock l(w->mu_);
           auto it = w->pending_msgs_.find(t);
           CHECK(it != w->pending_msgs_.end())
-              << " " << w->id() <<  " didn't find pending msg " << t << my_node_.id();
+              << " " << w->id() <<  " didn't find pending msg " << t
+              << ", I'm " << my_node_.id();
           o_recver = it->second.original_recver;
           w->pending_msgs_.erase(it);
         }

@@ -30,7 +30,7 @@ class Postoffice {
   // reply message *msg* with protocal message *proto*
   template <class P> void replyProtocalMessage(Message* msg, const P& proto) {
     string str; proto.SerializeToString(&str);
-    reply(msg->recver, msg->task, str);
+    reply(msg->sender, msg->task, str);
     msg->replied = true;
   }
 
