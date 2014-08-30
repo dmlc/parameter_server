@@ -217,8 +217,7 @@ void Executor::run() {
 
       if (req) {
         // if has been marked as finished, then mark it on in_task_; otherwise, the
-        // user program need to set in_task_. see example in
-        // LinearBlockIterator::updateModel when calling w_->roundTripForWorker
+        // user program need to set in_task_.
         if (active_msg_.finished) {
           w->incoming_task_.finish(t);
           notify();

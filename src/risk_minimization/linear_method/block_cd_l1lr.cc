@@ -14,24 +14,28 @@ void BlockCoordDescL1LR::runIteration() {
   auto block_cf = app_cf_.block_solver();
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
-
+  bool random_blk_order = block_cf.random_feature_block_order();
+  if (!random_blk_order) {
+    LI << "\tRandomized block order often acclerates the convergence.";
+  }
   // iterating
   auto pool = taskpool(kActiveGroup);
   int time = pool->time();
   int tau = block_cf.max_block_delay();
   int iter = 0;
   for (; iter < block_cf.max_pass_of_data(); ++iter) {
-    if (block_cf.random_feature_block_order())
+    if (random_blk_order) {
       std::random_shuffle(block_order_.begin(), block_order_.end());
+    }
     for (int b : block_order_)  {
       Task update = newTask(RiskMinCall::UPDATE_MODEL);
       update.set_wait_time(time - tau);
       auto cmd = setCall(&update);
       if (b == block_order_[0]) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
-      }
-      if (reset_kkt_filter) {
-        cmd->set_kkt_filter_reset(true);
+        if (reset_kkt_filter) {
+          cmd->set_kkt_filter_reset(true);
+        }
       }
       fea_blocks_[b].second.to(cmd->mutable_key());
       cmd->set_feature_group_id(fea_blocks_[b].first);
@@ -42,8 +46,6 @@ void BlockCoordDescL1LR::runIteration() {
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
         eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
-    // pool->waitOutgoingTask(time);
-
     showProgress(iter);
 
     double vio = global_progress_[iter].violation();
@@ -53,8 +55,14 @@ void BlockCoordDescL1LR::runIteration() {
 
     double rel = global_progress_[iter].relative_objv();
     if (rel > 0 && rel <= block_cf.epsilon()) {
-      LI << "\tStopped: relative objective <= " << block_cf.epsilon();
-      break;
+      if (reset_kkt_filter) {
+        LI << "\tStopped: relative objective <= " << block_cf.epsilon();
+        break;
+      } else {
+        reset_kkt_filter = true;
+      }
+    } else {
+      reset_kkt_filter = false;
     }
   }
   if (iter == block_cf.max_pass_of_data()) {
@@ -86,6 +94,10 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
   if (call.has_kkt_filter_threshold()) {
     KKT_filter_threshold_ = call.kkt_filter_threshold();
     violation_ = 0;
+  }
+  if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
+    // KKT_filter_threshold_ = 1e20;
+    active_set_.fill(true);
   }
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);

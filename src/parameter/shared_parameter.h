@@ -160,7 +160,7 @@ void SharedParameter<K,V>::process(Message* msg) {
 
         getValue(&re);
 
-        sys_.queue(re);
+        sys_.queue(taskpool(re.recver)->cacheKeySender(re));
         // do not let the system double reply it
         msg->replied = true;
       } else {
@@ -181,7 +181,7 @@ void SharedParameter<K,V>::process(Message* msg) {
 
         getReplica(range, &re);
 
-        LL << re;
+        LL << re;  // TODO cache key?
         sys_.queue(re);
         // do not let the system double reply it
         msg->replied = true;

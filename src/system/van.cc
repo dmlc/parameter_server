@@ -4,7 +4,7 @@
 #include "base/shared_array_inl.h"
 
 namespace PS {
-// #define _DEBUG_VAN_
+#define _DEBUG_VAN_
 // static string van_filter = "";
 
 DEFINE_string(my_node, "", "my node");
@@ -155,7 +155,7 @@ Status Van::send(const Message& msg) {
   // if (msg.recver == "U0")
   //   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #ifdef _DEBUG_VAN_
-  debug_out_ << my_node_.id() << ">>>: " << msg.shortDebugString()<< std::endl;
+  debug_out_ << ">>>: " << msg.shortDebugString()<< std::endl;
 #endif
   // if (msg.task.time() == 22)
   // LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
@@ -221,7 +221,7 @@ Status Van::recv(Message *msg) {
   //     msg->task.vector().cmd() == CallVec::DUPLICATE)
     // LL << *msg;
 #ifdef _DEBUG_VAN_
-  debug_out_ << my_node_.id() << "<<<: " << msg->shortDebugString() << std::endl;
+  debug_out_ << "<<<: " << msg->shortDebugString() << std::endl;
 #endif
 
   // if (msg->task.time() == 1442)
