@@ -84,7 +84,7 @@ bool SArray<V>::operator==(const SArray<W> &rhs) const {
 
 template <typename V>
 void SArray<V>::pushBack(const V& val) {
-  if (size_ == capacity_) reserve(size_*2);
+  if (size_ == capacity_) reserve(size_*2+5);
   data_[size_++] = val;
 }
 

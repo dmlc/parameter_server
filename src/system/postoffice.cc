@@ -36,7 +36,7 @@ void Postoffice::run() {
       // get all node information
       yellow_pages_.add(myNode());
       nodes_are_ready_.get_future().wait();
-      LI << "\tconnected " << FLAGS_num_servers << " servers and "
+      LI << "\tConnected " << FLAGS_num_servers << " servers and "
          << FLAGS_num_workers << " workers";
       // run the application
       AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);

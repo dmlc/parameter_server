@@ -89,17 +89,18 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
   }
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
-  // LL << local_range;
 
   if (exec_.isWorker()) {
     busy_timer_.start();
     auto local_grads = computeGradients(local_range);
     busy_timer_.stop();
 
+    // this task is not finished until get the model updates from servers
     msg->finished = false;
-    auto d = *msg;
+    auto sender = msg->sender;
+    auto task = msg->task;
     w_->roundTripForWorker(time, global_range, local_grads,
-                           [this, local_range, d] (int time) {
+                           [this, local_range, task, sender] (int time) {
         // update dual variable
         busy_timer_.start();
         if (!local_range.empty()) {
@@ -111,14 +112,14 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
         }
         busy_timer_.stop();
 
-        taskpool(d.sender)->finishIncomingTask(d.task.time());
-        sys_.reply(d);
-        // LL << myNodeID() << " done " << d.task.time();
+        // task finished, reply the scheduler
+        taskpool(sender)->finishIncomingTask(task.time());
+        sys_.reply(sender, task);
       });
   } else {
     // aggregate local gradients, then update model via soft-shrinkage
-    if (local_range.empty()) return;
     w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
+        if (local_range.empty()) return;
         auto data = w_->received(time);
         CHECK_EQ(data.size(), 2);
         CHECK_EQ(local_range, data[0].first);

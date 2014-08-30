@@ -27,8 +27,9 @@ void BatchSolver::run() {
       g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
     });
   size_t num_ins = g_train_ins_info_.num_ins();
+  init_sys_time_ = total_timer_.get();
   LI << "\tLoaded " << num_ins << " training instances... in "
-     << total_timer_.get() << " sec";
+     << init_sys_time_ << " sec";
 
   // evenly partition feature blocks
   CHECK(app_cf_.has_block_solver());
@@ -157,6 +158,11 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // LL << myNodeID() << " received keys";
+        if (w_->key().empty()) {
+          // avoid empty keys, it may bring problems
+          w_->key().pushBack(exec_.myNode().key().begin());
+          // LL << w_->key();
+        }
         w_->value().resize(w_->key().size());
         auto init = app_cf_.init_w();
         if (init.type() == ParameterInitConfig::ZERO) {
@@ -194,8 +200,10 @@ void BatchSolver::updateModel(Message* msg) {
     }
 
     msg->finished = false;
-    auto d = *msg;
-    w_->roundTripForWorker(time, global_range, local_grads, [this, X, local_range, d] (int time) {
+    auto sender = msg->sender;
+    auto task = msg->task;
+    w_->roundTripForWorker(time, global_range, local_grads,
+                           [this, X, local_range, sender, task] (int time) {
         Lock l(mu_);
         busy_timer_.start();
 
@@ -212,8 +220,9 @@ void BatchSolver::updateModel(Message* msg) {
         }
 
         busy_timer_.stop();
-        taskpool(d.sender)->finishIncomingTask(d.task.time());
-        sys_.reply(d);
+
+        taskpool(sender)->finishIncomingTask(task.time());
+        sys_.reply(sender, task);
         // LL << myNodeID() << " done " << d.task.time();
       });
   } else {

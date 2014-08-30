@@ -25,7 +25,7 @@ class Postoffice {
   void queue(const Message& msg);
 
   // reply *task* from *recver* with *reply_msg*
-  void reply(const NodeID& recver, const Task& task, const string& reply_msg);
+  void reply(const NodeID& recver, const Task& task, const string& reply_msg = string());
 
   // reply message *msg* with protocal message *proto*
   template <class P> void replyProtocalMessage(Message* msg, const P& proto) {
