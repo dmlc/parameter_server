@@ -4,8 +4,7 @@
 #include "base/shared_array_inl.h"
 
 namespace PS {
-#define _DEBUG_VAN_
-// static string van_filter = "";
+// #define _DEBUG_VAN_
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_string(scheduler, "", "the scheduler node");
@@ -50,7 +49,6 @@ void Van::bind() {
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
 #ifdef _DEBUG_VAN_
-  // if (van_filter.empty || van_filter==my_node_.id())
   // LL << my_node_.id() << ": binds address " << addr;
 #endif
 }
@@ -113,19 +111,11 @@ Status Van::send(const Message& msg) {
       data.push_back(m.compressTo());
       task.add_uncompressed_size(m.size());
     }
-    for (int i = 0; i < data.size(); ++i) {
-      send_uncompressed_ += task.uncompressed_size(i);
-      send_compressed_ += data[i].size();
-      // LL << task.uncompressed_size(i) << " " << data[i].size();
-    }
   } else {
     if (has_key) data.push_back(msg.key);
     for (auto& m : msg.value) {
       if (m.empty()) continue;
       data.push_back(m);
-    }
-    for (int i = 0; i < data.size(); ++i) {
-      send_uncompressed_ += data[i].size();
     }
   }
 
@@ -139,26 +129,22 @@ Status Van::send(const Message& msg) {
   if (zmq_send(socket, str.c_str(), str.size(), tag) != str.size())
     return Status::NetError(
         "failed to send mailer to node " + (id) + zmq_strerror(errno));
-  send_head_ += str.size();
+  data_sent_ += str.size();
 
   // send key and value
   for (int i = 0; i < data.size(); ++i) {
     const auto& raw = data[i];
     if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
-    if (zmq_send(socket, raw.data(), raw.size(), tag) != raw.size())
+    if (zmq_send(socket, raw.data(), raw.size(), tag) != raw.size()) {
       return Status::NetError(
-          "failed to send mailer to node " + (id) +
-          zmq_strerror(errno));
+          "failed to send mailer to node " + (id) + zmq_strerror(errno));
+    }
+    data_sent_ += raw.size();
   }
 
-  // my_node_.id() == "S29" &&
-  // if (msg.recver == "U0")
-  //   LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
 #ifdef _DEBUG_VAN_
   debug_out_ << ">>>: " << msg.shortDebugString()<< std::endl;
 #endif
-  // if (msg.task.time() == 22)
-  // LL << my_node_.id() << ">>>: " << msg.shortDebugString()<<"\n";
   return Status::OK();
 }
 
@@ -170,13 +156,14 @@ Status Van::recv(Message *msg) {
   for (int i = 0; ; ++i) {
     zmq_msg_t zmsg;
     CHECK(zmq_msg_init(&zmsg) == 0) << zmq_strerror(errno);
-    if (zmq_msg_recv(&zmsg, receiver_, 0) == -1)
+    if (zmq_msg_recv(&zmsg, receiver_, 0) == -1) {
       return Status::NetError(
           "recv message failed: " + std::string(zmq_strerror(errno)));
+    }
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
-
+    data_received_ += size;
     if (i == 0) {
       // identify
       sender = id(std::string(buf, size));
@@ -186,7 +173,6 @@ Status Van::recv(Message *msg) {
       // task
       CHECK(msg->task.ParseFromString(std::string(buf, size)))
           << "parse string failed";
-      recv_head_ += size;
     } else {
       // key and value
       SArray<char> data;
@@ -196,17 +182,11 @@ Status Van::recv(Message *msg) {
         CHECK_GT(n, i - 2);
         data.resize(msg->task.uncompressed_size(i-2)+16);
         data.uncompressFrom(buf, size);
-
-        recv_compressed_ += size;
-        recv_uncompressed_ += data.size();
       } else {
         // data are not compressed
         // data = SArray<char>(buf, buf+size);
         data.copyFrom(buf, size);
-
-        recv_uncompressed_ += size;
       }
-
       if (i == 2 && msg->task.has_key()) {
         msg->key = data;
       } else {
@@ -217,28 +197,19 @@ Status Van::recv(Message *msg) {
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
-  // if (msg->task.type() == Task::CALL_CUSTOMER && msg->task.has_vector() &&
-  //     msg->task.vector().cmd() == CallVec::DUPLICATE)
-    // LL << *msg;
 #ifdef _DEBUG_VAN_
   debug_out_ << "<<<: " << msg->shortDebugString() << std::endl;
 #endif
 
-  // if (msg->task.time() == 1442)
-  // LL << my_node_.id() << "<<<: " << msg->shortDebugString();
   return Status::OK();;
 }
 
 void Van::statistic() {
   if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
-  auto mb = [](size_t x) { return  (x * 10 / 1000000) / 10.0; };
-  auto s = FLAGS_compress_message ? send_compressed_ : send_uncompressed_;
-  auto r = FLAGS_compress_message ? recv_compressed_ : recv_uncompressed_;
+  auto gb = [](size_t x) { return  x / 1e9; };
 
-  LI << "\t" << my_node_.id() << " sent " << mb(s) << " Mb, received " << mb(r) << " Mb";
-  // printf("%s sent %.1f Mb, saved %.1f%%; received %.1f Mb, saved %.1f%%\n",
-  //        my_node_.id().c_str(), mb(s), 100 - 100.0 * mb(s) / mb(send_uncompressed_),
-  //        mb(r), 100 - 100.0 * mb(r) / mb(recv_uncompressed_));
+  LI << "\t" << my_node_.id() << " sent " << gb(data_sent_)
+     << " Gbyte, received " << gb(data_received_) << " Gbyte";
 }
 
 } // namespace PS

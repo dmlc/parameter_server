@@ -33,6 +33,7 @@ class BlockCoordDescL1LR : public BatchSolver {
 
   // snappy has good compression rate on 0xffff..ff, it is nan for double
   const double kInactiveValue_ = *((double*)&kuint64max);
+  // const double kInactiveValue_ = 0;
 
   double KKT_filter_threshold_;
   double violation_;

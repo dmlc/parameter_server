@@ -186,6 +186,7 @@ void BlockCoordDescL1LR::computeGradients(
     if (!active_set_.test(k)) {
       index += n;
       if (!binary) value += n;
+      G[j] = U[j] = kInactiveValue_;
       continue;
     }
     double g = 0, u = 0;
