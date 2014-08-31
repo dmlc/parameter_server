@@ -11,15 +11,14 @@
 
 namespace PS {
 
-// handle info //
-// return A + B
+// return A \union B
 FeatureGroupInfo mergeFeatureGroupInfo(
     const FeatureGroupInfo& A, const FeatureGroupInfo& B);
-// return A + B
+
+// return A \union B
 InstanceInfo mergeInstanceInfo(
     const InstanceInfo& A, const InstanceInfo& B);
 
-InstanceInfo readInstanceInfo(const DataConfig& config);
 // convert the i-th feature group info into matrix info
 template<typename V>
 MatrixInfo readMatrixInfo(const InstanceInfo& info, int i);
@@ -28,7 +27,7 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i);
 // placed in a binary file one by one. Return two matrices, label vector and
 // feature matrix
 template<typename V>
-MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* info);
+bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat);
 
 // Read from binary files, which are direct dumps of memory.
 template<typename V>
@@ -49,13 +48,21 @@ MatrixPtrList<V> readMatricesFromBin(
 
 // Read from text files
 template<typename V>
-MatrixPtrList<V> readMatricesFromText(const DataConfig& data, InstanceInfo* info) {
-  return MatrixPtrList<V>();
+bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
+  // TODO. The basic idea: use ParseText::toProto to convert text lines into
+  // protobuf format (save them in disk if necessary), then add into matrix by
+  // SArray::pushBack() (no need to know the size at the begining)
+  //
+  return false;
 }
 
-// the main entry
+// Read matrices from local disk or hdfs in binary, protobuf, or text formats
 template<typename V>
-MatrixPtrList<V> readMatrices(const DataConfig& data, InstanceInfo* info = nullptr);
+bool readMatrices(const DataConfig& data, MatrixPtrList<V>* mat);
+
+// Read or die
+template<typename V>
+MatrixPtrList<V> readMatricesOrDie(const DataConfig& data);
 
 
 } // namespace PS

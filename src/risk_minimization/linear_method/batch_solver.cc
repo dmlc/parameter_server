@@ -129,10 +129,9 @@ void BatchSolver::runIteration() {
 }
 
 InstanceInfo BatchSolver::prepareData(const Message& msg) {
-  InstanceInfo info;
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    auto training_data = readMatrices<double>(app_cf_.training_data(), &info);
+    auto training_data = readMatricesOrDie<double>(app_cf_.training_data());
     CHECK_EQ(training_data.size(), 2);
     y_ = training_data[0];
     X_ = training_data[1]->localize(&(w_->key()));
@@ -154,6 +153,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     // LL << myNodeID() << " received w";
     dual_.resize(X_->rows());
     dual_.eigenVector() = *X_ * w_->value().eigenVector();
+    return y_->info().ins_info();
   } else {
     w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
         // LL << myNodeID() << " received keys";
@@ -174,7 +174,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
         }
       });
   }
-  return info;
+  return InstanceInfo();
 }
 
 
@@ -292,7 +292,7 @@ void BatchSolver::showProgress(int iter) {
 void BatchSolver::computeEvaluationAUC(AUCData *data) {
   if (!exec_.isWorker()) return;
   CHECK(app_cf_.has_validation_data());
-  auto validation_data = readMatrices<double>(app_cf_.validation_data());
+  auto validation_data = readMatricesOrDie<double>(app_cf_.validation_data());
   CHECK_EQ(validation_data.size(), 2);
 
   y_ = validation_data[0];

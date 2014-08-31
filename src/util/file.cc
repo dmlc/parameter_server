@@ -45,6 +45,10 @@ File* File::open(const DataConfig& name,  const char* const flag) {
   if (name.has_hdfs()) {
     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
     FILE* des = popen(cmd.c_str(), "r");
+    if (des == NULL) {
+      LOG(ERROR) << "cannot open " << name.DebugString();
+      return NULL;
+    }
     auto f = new File(des, filename);
     return f;
   } else {

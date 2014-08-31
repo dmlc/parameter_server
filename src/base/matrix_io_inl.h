@@ -33,23 +33,6 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
   return C;
 }
 
-inline InstanceInfo readInstanceInfo(const DataConfig& config) {
-  InstanceInfo info;
-  if (config.format() == DataConfig::PROTO) {
-    auto f = config;
-    for (int i = 0; i < config.file_size(); ++i) {
-      f.clear_file();
-      f.add_file(config.file(i) + ".info");
-      InstanceInfo tmp;
-      readFileToProtoOrDie(f, &tmp);
-      info = mergeInstanceInfo(info, tmp);
-    }
-  } else {
-    CHECK(false) << "TODO";
-  }
-  return info;
-}
-
 template<typename V>
 MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   MatrixInfo f;
@@ -78,20 +61,32 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
 // label, feature_group 1, feature_group 2, ...
 // TODO do not support dense feature group yet...
 template<typename V>
-MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* info) {
+bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat) {
   // load info
-  if (info == nullptr) info = new InstanceInfo();
-  *info = readInstanceInfo(data);
+  InstanceInfo info;
+  for (int i = 0; i < data.file_size(); ++i) {
+    auto f = data; f.clear_file();
+    f.add_file(data.file(i) + ".info");
+    InstanceInfo tmp;
+    if (!readFileToProto(f, &tmp)) {
+      LL << "failed to load instance info from " << f.DebugString();
+      return false;
+    }
+    info = mergeInstanceInfo(info, tmp);
+  }
+  if (info.fea_group_size() <= 1) {
+    LL << "error in info:\n" << info.DebugString();
+    return false;
+  }
 
   // allocate data
-  SArray<V> label(info->num_ins());
-  SArray<size_t> offset(info->num_ins()+1);
+  SArray<V> label(info.num_ins());
+  SArray<size_t> offset(info.num_ins() + 1);
   offset[0] = 0;
-  CHECK_GT(info->fea_group_size(), 1);
-  SArray<uint64> index(info->fea_group(0).nnz());
+  SArray<uint64> index(info.fea_group(0).nnz());
   SArray<V> value;
-  bool binary = info->fea_type() == InstanceInfo::SPARSE_BINARY;
-  if (!binary) value.resize(info->fea_group(0).nnz());
+  bool binary = info.fea_type() == InstanceInfo::SPARSE_BINARY;
+  if (!binary) value.resize(info.fea_group(0).nnz());
 
   // file data
   uint64 offset_pos = 0, index_pos = 0, value_pos = 0, label_pos = 0;
@@ -99,7 +94,8 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* inf
   for (int i = 0; i < data.file_size(); ++i) {
     auto f = data; f.clear_file();
     f.add_file(data.file(i) + ".recordio");
-    File *in = File::openOrDie(f, "r");
+    File *in = File::open(f, "r");
+    if (in == NULL || !in->open()) return false;
     RecordReader r(in);
     while (r.ReadProtocolMessage(&record)) {
       label[label_pos++] = record.label();
@@ -118,21 +114,22 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* inf
   CHECK_EQ(index_pos, index.size());
   CHECK_EQ(value_pos, value.size());
 
-  // construct the matrices
-  MatrixPtrList<V> res;
+  // the label matrix
+  mat->clear();
   MatrixInfo label_info;
-  string label_str = "type: DENSE row_major: true row { begin: 0 end: "
-                     + std::to_string(info->num_ins())
-                     + " } col { begin: 0 end: 1 } nnz: "
-                     + std::to_string(info->num_ins())
-                     + " sizeof_value: " + std::to_string(sizeof(V));
+  string label_str =
+      "type: DENSE row_major: true row { begin: 0 end: "
+      + std::to_string(info.num_ins()) + " } col { begin: 0 end: 1 } nnz: "
+      + std::to_string(info.num_ins()) + " sizeof_value: "
+      + std::to_string(sizeof(V));
   google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
-  res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
+  *label_info.mutable_ins_info() = info;
+  mat->push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
-  MatrixInfo f = readMatrixInfo<V>(*info, 0);
-  res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
-
-  return res;
+  // the feature matrix
+  MatrixInfo f = readMatrixInfo<V>(info, 0);
+  mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
+  return true;
 }
 
 template<typename V>
@@ -198,34 +195,33 @@ MatrixPtr<V> readMatrixFromBin(SizeR outer_range, const std::string& file) {
   return MatrixPtr<V>(nullptr);
 }
 
-// template<typename V>
-// MatrixPtrList<V> readMatricesFromBin(
-//     SizeR outer_range, const std::vector<std::string>& files) {
-//   MatrixPtrList<V> res;
-//   for (auto& f : files) res.push_back(readMatrixFromBin<V>(outer_range, f));
-//   return res;
-// }
-
-template<typename V>
-MatrixPtrList<V> readMatrices(const DataConfig& data, InstanceInfo* info) {
+template<typename V> bool
+readMatrices(const DataConfig& data, MatrixPtrList<V>* mat) {
   switch(data.format()) {
     case DataConfig::BIN: {
-      std::vector<std::string> files;
-      for (int i = 0; i < data.file_size(); ++i) files.push_back(data.file(i));
-      SizeR outer_range = SizeR::all();
-      if (data.has_range()) outer_range.copyFrom(data.range());
-      return readMatricesFromBin<V>(outer_range, files);
+      // std::vector<std::string> files;
+      // for (int i = 0; i < data.file_size(); ++i) files.push_back(data.file(i));
+      // SizeR outer_range = SizeR::all();
+      // if (data.has_range()) outer_range.copyFrom(data.range());
+      // return readMatricesFromBin<V>(outer_range, files);
     }
     case DataConfig::PROTO:
-      return readMatricesFromProto<V>(data, info);
+      return readMatricesFromProto<V>(data, mat);
     case DataConfig::TEXT:
-      return readMatricesFromText<V>(data, info);
-    default:
-      CHECK(false) << "unknonw data format: " << data.DebugString();
+      return readMatricesFromText<V>(data, mat);
+    default: {
+      LL << "unknonw data format: " << data.DebugString();
+    }
   }
-  return MatrixPtrList<V>();
+  return false;
+
 }
 
-
+template<typename V>
+MatrixPtrList<V> readMatricesOrDie(const DataConfig& data) {
+  MatrixPtrList<V> mat;
+  CHECK(readMatrices(data, &mat));
+  return mat;
+}
 
 } // namespace PS
