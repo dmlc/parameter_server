@@ -213,17 +213,14 @@ class MatrixInfo : public ::google::protobuf::Message {
   inline float nnz_per_col() const;
   inline void set_nnz_per_col(float value);
 
-  // repeated .PS.FeatureGroupInfo group_info = 13;
-  inline int group_info_size() const;
-  inline void clear_group_info();
-  static const int kGroupInfoFieldNumber = 13;
-  inline const ::PS::FeatureGroupInfo& group_info(int index) const;
-  inline ::PS::FeatureGroupInfo* mutable_group_info(int index);
-  inline ::PS::FeatureGroupInfo* add_group_info();
-  inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
-      group_info() const;
-  inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
-      mutable_group_info();
+  // optional .PS.InstanceInfo ins_info = 13;
+  inline bool has_ins_info() const;
+  inline void clear_ins_info();
+  static const int kInsInfoFieldNumber = 13;
+  inline const ::PS::InstanceInfo& ins_info() const;
+  inline ::PS::InstanceInfo* mutable_ins_info();
+  inline ::PS::InstanceInfo* release_ins_info();
+  inline void set_allocated_ins_info(::PS::InstanceInfo* ins_info);
 
   // @@protoc_insertion_point(class_scope:PS.MatrixInfo)
  private:
@@ -247,6 +244,8 @@ class MatrixInfo : public ::google::protobuf::Message {
   inline void clear_has_nnz_per_row();
   inline void set_has_nnz_per_col();
   inline void clear_has_nnz_per_col();
+  inline void set_has_ins_info();
+  inline void clear_has_ins_info();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -259,7 +258,7 @@ class MatrixInfo : public ::google::protobuf::Message {
   ::google::protobuf::uint64 nnz_;
   ::google::protobuf::uint32 sizeof_value_;
   float nnz_per_row_;
-  ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo > group_info_;
+  ::PS::InstanceInfo* ins_info_;
   float nnz_per_col_;
 
   mutable int _cached_size_;
@@ -532,29 +531,42 @@ inline void MatrixInfo::set_nnz_per_col(float value) {
   nnz_per_col_ = value;
 }
 
-// repeated .PS.FeatureGroupInfo group_info = 13;
-inline int MatrixInfo::group_info_size() const {
-  return group_info_.size();
+// optional .PS.InstanceInfo ins_info = 13;
+inline bool MatrixInfo::has_ins_info() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void MatrixInfo::clear_group_info() {
-  group_info_.Clear();
+inline void MatrixInfo::set_has_ins_info() {
+  _has_bits_[0] |= 0x00000400u;
 }
-inline const ::PS::FeatureGroupInfo& MatrixInfo::group_info(int index) const {
-  return group_info_.Get(index);
+inline void MatrixInfo::clear_has_ins_info() {
+  _has_bits_[0] &= ~0x00000400u;
 }
-inline ::PS::FeatureGroupInfo* MatrixInfo::mutable_group_info(int index) {
-  return group_info_.Mutable(index);
+inline void MatrixInfo::clear_ins_info() {
+  if (ins_info_ != NULL) ins_info_->::PS::InstanceInfo::Clear();
+  clear_has_ins_info();
 }
-inline ::PS::FeatureGroupInfo* MatrixInfo::add_group_info() {
-  return group_info_.Add();
+inline const ::PS::InstanceInfo& MatrixInfo::ins_info() const {
+  return ins_info_ != NULL ? *ins_info_ : *default_instance_->ins_info_;
 }
-inline const ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >&
-MatrixInfo::group_info() const {
-  return group_info_;
+inline ::PS::InstanceInfo* MatrixInfo::mutable_ins_info() {
+  set_has_ins_info();
+  if (ins_info_ == NULL) ins_info_ = new ::PS::InstanceInfo;
+  return ins_info_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo >*
-MatrixInfo::mutable_group_info() {
-  return &group_info_;
+inline ::PS::InstanceInfo* MatrixInfo::release_ins_info() {
+  clear_has_ins_info();
+  ::PS::InstanceInfo* temp = ins_info_;
+  ins_info_ = NULL;
+  return temp;
+}
+inline void MatrixInfo::set_allocated_ins_info(::PS::InstanceInfo* ins_info) {
+  delete ins_info_;
+  ins_info_ = ins_info;
+  if (ins_info) {
+    set_has_ins_info();
+  } else {
+    clear_has_ins_info();
+  }
 }
 
 

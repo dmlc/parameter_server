@@ -71,6 +71,7 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   f.set_sizeof_index(sizeof(uint64));
   f.set_sizeof_value(sizeof(V));
   f.set_nnz_per_row((double) g.nnz() / (double) info.num_ins());
+  *f.mutable_ins_info() = info;
   return f;
 }
 
@@ -129,9 +130,6 @@ MatrixPtrList<V> readMatricesFromProto(const DataConfig& data, InstanceInfo* inf
   res.push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
 
   MatrixInfo f = readMatrixInfo<V>(*info, 0);
-  for (int i = 1; i < info->fea_group_size(); ++i) {
-    *f.add_group_info() = info->fea_group(i);
-  }
   res.push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 
   return res;

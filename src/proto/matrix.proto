@@ -27,5 +27,6 @@ message MatrixInfo {
   optional float nnz_per_row = 11;
   optional float nnz_per_col = 12;
 
-  repeated FeatureGroupInfo group_info = 13;
+  optional InstanceInfo ins_info = 13;
+  // repeated FeatureGroupInfo group_info = 13;
 }
