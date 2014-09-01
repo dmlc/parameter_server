@@ -221,7 +221,8 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
 
   File* file = File::open(file_name, "w");
   size_t length = range.size() * sizeof(V);
-  return (file->write(ptr_.get(), length) == length);
+  return (file->write(ptr_.get(), length) == length
+          && file->flush() && file->close());
 }
 
 template <typename V>

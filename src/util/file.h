@@ -52,6 +52,8 @@ class File {
   }
   // Writes a std::string to file.
   size_t writeString(const std::string& line);
+  // flush the buffer
+  bool flush();
   // Closes the file.
   bool close();
   // Returns file size.
@@ -77,7 +79,6 @@ class File {
   // Writes a std::string to file and append a "\n".
   // bool WriteLine(const std::string& line);
   // Flushes buffer.
-  // bool Flush();
   // // current file position
   // size_t position() {
   //   return (size_t) ftell(f_);

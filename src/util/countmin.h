@@ -1,6 +1,5 @@
 #pragma once
 
-#define NDEBUG
 #include <vector>
 #include <algorithm>
 #include <functional>

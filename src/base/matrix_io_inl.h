@@ -144,7 +144,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
     MatrixInfo info;
     auto f = ithFile(data, i, ".info");
     if (!readFileToProto(f, &info)) {
-      LL << "failed to load instance info from " << f.DebugString();
+      // DD << "failed to load instance info from " << f.DebugString();
       return false;
     }
     CHECK_EQ(sizeof(V), info.sizeof_value());
@@ -168,7 +168,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
       SArray<V> value;
       auto f = ithFile(data, i, ".value");
       if(!value.readFromFile(data_range, f)) {
-        LL << "failed to read value: " << f.DebugString();
+        // DD << "failed to read value: " << f.DebugString();
         return false;
       }
       info.set_nnz(data_range.size());
@@ -180,7 +180,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
 
       if (!offset.readFromFile(
               SizeR(outer_range.begin(), outer_range.end()+1), f1)) {
-        LL << "failed to read offset: " << f1.DebugString();
+        // DD << "failed to read offset: " << f1.DebugString();
         return false;
       }
       SizeR data_range(offset.front(), offset.back());
@@ -192,7 +192,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
       SArray<char> index;
       auto f2 = ithFile(data, i, ".index");
       if (!index.readFromFile(data_range*index_s, f2)) {
-        LL << "failed to read index: " << f2.DebugString();
+        // DD << "failed to read index: " << f2.DebugString();
         return false;
       }
 
@@ -201,7 +201,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
       if (info.type() == MatrixInfo::SPARSE) {
         auto f3 = ithFile(data, i, ".value");
         if (!value.readFromFile(data_range, f3)) {
-          LL << "failed to read value: " << f3.DebugString();
+          // DD << "failed to read value: " << f3.DebugString();
           return false;
         }
       }
@@ -215,7 +215,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
         mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(
             info, offset, SArray<uint64>(index), value)));
       } else {
-        LL << "unknown index type" << info.DebugString();
+        // DD << "unknown index type" << info.DebugString();
         return false;
       }
     }

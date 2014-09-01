@@ -71,7 +71,7 @@ size_t File::size() {
   return File::size(name_);
 }
 
-// bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
+bool File::flush() { return fflush(f_) == 0; }
 
 bool File::close() {
   if (fclose(f_) == 0) {

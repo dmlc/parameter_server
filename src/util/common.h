@@ -73,6 +73,7 @@ using google::protobuf::TextFormat;
 
 #define LL LOG(ERROR)
 #define LI LOG(ERROR)
+#define DD DLOG(ERROR)
 
 DECLARE_int32(num_threads);
 

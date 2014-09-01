@@ -141,11 +141,10 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
     hit_cache = readMatrices<double>(y_conf, &y_list) &&
                 readMatrices<double>(X_conf, &X_list) &&
                 w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf);
-    LL << hit_cache << y_list.size() << X_list.size() << w_->key().size();
     if (hit_cache) {
       y_ = y_list[0];
       X_ = X_list[0];
-      LL << myNodeID() << " hit cache for " << cache_name;
+      LI << myNodeID() << " hit data cache for " << cache_name;
       return;
     }
   }
@@ -160,9 +159,9 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
 
   // save to local cache
   if (app_cf_.has_local_cache()) {
-    y_->writeToBinFile(y_conf.file(0));
-    X_->writeToBinFile(X_conf.file(0));
-    w_->key().writeToFile(key_conf.file(0));
+    CHECK(y_->writeToBinFile(y_conf.file(0)));
+    CHECK(X_->writeToBinFile(X_conf.file(0)));
+    CHECK(w_->key().writeToFile(key_conf.file(0)));
   }
 }
 
