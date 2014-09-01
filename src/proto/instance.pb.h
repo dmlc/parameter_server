@@ -329,6 +329,13 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 nnz() const;
   inline void set_nnz(::google::protobuf::uint64 value);
 
+  // optional uint64 num_nonempty_ins = 8;
+  inline bool has_num_nonempty_ins() const;
+  inline void clear_num_nonempty_ins();
+  static const int kNumNonemptyInsFieldNumber = 8;
+  inline ::google::protobuf::uint64 num_nonempty_ins() const;
+  inline void set_num_nonempty_ins(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:PS.FeatureGroupInfo)
  private:
   inline void set_has_group_id();
@@ -339,16 +346,19 @@ class FeatureGroupInfo : public ::google::protobuf::Message {
   inline void clear_has_fea_end();
   inline void set_has_nnz();
   inline void clear_has_nnz();
+  inline void set_has_num_nonempty_ins();
+  inline void clear_has_num_nonempty_ins();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint64 fea_begin_;
   ::google::protobuf::uint64 fea_end_;
   ::google::protobuf::uint64 nnz_;
+  ::google::protobuf::uint64 num_nonempty_ins_;
   ::google::protobuf::int32 group_id_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2finstance_2eproto();
   friend void protobuf_AssignDesc_proto_2finstance_2eproto();
@@ -665,6 +675,28 @@ inline ::google::protobuf::uint64 FeatureGroupInfo::nnz() const {
 inline void FeatureGroupInfo::set_nnz(::google::protobuf::uint64 value) {
   set_has_nnz();
   nnz_ = value;
+}
+
+// optional uint64 num_nonempty_ins = 8;
+inline bool FeatureGroupInfo::has_num_nonempty_ins() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void FeatureGroupInfo::set_has_num_nonempty_ins() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void FeatureGroupInfo::clear_has_num_nonempty_ins() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void FeatureGroupInfo::clear_num_nonempty_ins() {
+  num_nonempty_ins_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_nonempty_ins();
+}
+inline ::google::protobuf::uint64 FeatureGroupInfo::num_nonempty_ins() const {
+  return num_nonempty_ins_;
+}
+inline void FeatureGroupInfo::set_num_nonempty_ins(::google::protobuf::uint64 value) {
+  set_has_num_nonempty_ins();
+  num_nonempty_ins_ = value;
 }
 
 // -------------------------------------------------------------------

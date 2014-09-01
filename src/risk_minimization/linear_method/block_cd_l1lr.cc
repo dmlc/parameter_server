@@ -27,18 +27,24 @@ void BlockCoordDescL1LR::runIteration() {
     if (random_blk_order) {
       std::random_shuffle(block_order_.begin(), block_order_.end());
     }
-    for (int b : block_order_)  {
+    auto order = block_order_;
+    if (iter == 0) {
+      order.insert(
+          order.begin(), prior_block_order_.begin(), prior_block_order_.end());
+      // order = prior_block_order_;
+    }
+    for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(RiskMinCall::UPDATE_MODEL);
       update.set_wait_time(time - tau);
       auto cmd = setCall(&update);
-      if (b == block_order_[0]) {
+      if (i == 0) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
         if (reset_kkt_filter) {
           cmd->set_kkt_filter_reset(true);
         }
       }
-      fea_blocks_[b].second.to(cmd->mutable_key());
-      cmd->set_feature_group_id(fea_blocks_[b].first);
+      fea_blocks_[order[i]].second.to(cmd->mutable_key());
+      cmd->set_feature_group_id(fea_blocks_[order[i]].first);
       time = pool->submit(update);
     }
 

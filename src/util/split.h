@@ -18,7 +18,7 @@ split(const std::string &s, char delim, bool skip_empty = false) {
 }
 
 // TODO support bool skip_empty = false
-inline std::string join(const std::vector<std::string> &elems, char delim) {
+inline std::string join(const std::vector<std::string> &elems, const string& delim) {
   std::string str;
   for (int i = 0; i < elems.size() - 1; ++i) {
     str += elems[i] + delim;

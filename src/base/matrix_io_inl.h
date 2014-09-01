@@ -17,6 +17,7 @@ mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
   C.set_fea_begin(std::min(A.fea_begin(), B.fea_begin()));
   C.set_fea_end(std::max(A.fea_end(), B.fea_end()));
   C.set_nnz(A.nnz() + B.nnz());
+  C.set_num_nonempty_ins(A.num_nonempty_ins() + B.num_nonempty_ins());
   return C;
 }
 

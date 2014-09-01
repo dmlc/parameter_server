@@ -272,13 +272,13 @@ string path(const string& full) {
   auto elems = split(full, '/');
   if (elems.size() <= 1) return full;
   elems.pop_back();
-  return join(elems, '/');
+  return join(elems, "/");
 }
 string removeExtension(const string& file) {
   auto elems = split(file, '.');
   if (elems.size() <= 1) return file;
   elems.pop_back();
-  return join(elems, '.');
+  return join(elems, ".");
 }
 }
 

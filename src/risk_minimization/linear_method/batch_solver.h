@@ -33,13 +33,10 @@ class BatchSolver : public LinearMethod {
   // global data information, only available at the scheduler
   InstanceInfo g_train_ins_info_;
 
-  // std::vector<MatrixInfo> g_training_info_, g_validation_info_;
-  // size_t g_num_training_ins_ = 0;
-  // Range<Key> g_fea_range_;
-
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blocks_;
   std::vector<int> block_order_;
+  std::vector<int> prior_block_order_;
 
   // dual_ = X_ * w_
   SArray<double> dual_;

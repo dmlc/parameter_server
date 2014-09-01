@@ -34,7 +34,9 @@ message FeatureGroupInfo {
   optional uint64 fea_end = 4;
   // total number of non-zero entries
   optional uint64 nnz = 6;
+  optional uint64 num_nonempty_ins = 8;
 }
+  // optional uint64 max_num_fea_per_ins = 7;
 
 
 // 1. dense data: fea_id is emtpy

@@ -8,9 +8,27 @@ namespace PS {
 
 bool ParseText::toProto(char* line, Instance* ins) {
   ins->Clear();
-  bool ret = convertor_(line, ins);
+  if (!convertor_(line, ins)) return false;
+
+  // update info
+  uint64 pre_group_id = -1;
+  // uint64 max_num_fea_per_ins = 0;
+  for (int i = 0; i < ins->fea_id_size(); ++i) {
+    uint64 fea_id = ins->fea_id(i);
+    uint64 group_id; decodeGroupID(fea_id, &group_id);
+    auto& ginfo = group_info_[group_id];
+    if (group_id != pre_group_id) {
+      ginfo.set_num_nonempty_ins(ginfo.num_nonempty_ins() + 1);
+      // max_num_fea_per_ins = 0;
+      pre_group_id = group_id;
+    }
+    ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), fea_id));
+    ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), fea_id + 1));
+    // ginfo.set_max_num_fea_per_ins(++max_num_fea_per_ins);
+    ginfo.set_nnz(ginfo.nnz() + 1);
+  }
   info_.set_num_ins(info_.num_ins() + 1);
-  return ret;
+  return true;
 }
 
 InstanceInfo ParseText::info() {
@@ -46,6 +64,7 @@ void ParseText::setFormat(TextFormat format) {
   }
 }
 
+
 // libsvm:
 // label feature_id:weight feature_id:weight feature_id:weight ...
 bool ParseText::parseLibsvm(char* buff, Instance* ins) {
@@ -73,11 +92,7 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
     if (last_idx > idx) return false;
     last_idx = idx;
 
-    auto& ginfo = group_info_[1];
-    ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), idx));
-    ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), idx + 1));
-    ginfo.set_nnz(ginfo.nnz() + 1);
-
+    if (!encode(idx, 0, &idx)) return false;
     ins->add_fea_id(idx);
     ins->add_fea_val(val);
     pch = strtok (NULL, " \t\r\n");
@@ -85,13 +100,12 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
   return true;
 }
 
-
-// adfea:
-// line_id 1 click fea_id:group_id fea_id:group_id ...
+// adfea format:
+// line_id 1 clicked_or_not fea_id:group_id fea_id:group_id ...
+// assume
 bool ParseText::parseAdfea(char* line, Instance* ins) {
   std::vector<uint64> feas;
   uint64 fea_id = 0;
-
   char* tk = strtok (line, " :");
   for (int i = 0; tk != NULL; tk = strtok (NULL, " :"), ++i) {
     uint64 num;
@@ -105,26 +119,14 @@ bool ParseText::parseAdfea(char* line, Instance* ins) {
     } else if (i % 2 == 1) {
       fea_id = num;
     } else {
-      // assume the group_id has format   x...xaaaabbbbcc
-      // and the fea_id                   d...dx........x
-      // then the new feature is          ccbbbbaaaad...d,
-      // so that the feature ranges for different groups are not overlapped
-      if (num >= 1024) return false;
-      uint64 group_id = (num << 62) | ((num & 0x3C) << 56) | ((num & 0x3C0) << 48);
-      fea_id = (fea_id >> 10) | group_id;
-
+      if(!encode(fea_id, num, &fea_id)) return false;
       feas.push_back(fea_id);
-      auto& ginfo = group_info_[num];
-      ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), fea_id));
-      ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), fea_id + 1));
-      ginfo.set_nnz(ginfo.nnz() + 1);
     }
   }
   std::sort(feas.begin(), feas.end());
   for (auto& f : feas) ins->add_fea_id(f);
   return true;
 }
-
 
 
 // ps format:

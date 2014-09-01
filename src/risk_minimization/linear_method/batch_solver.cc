@@ -1,4 +1,5 @@
 #include "risk_minimization/linear_method/batch_solver.h"
+#include "util/split.h"
 #include "base/matrix_io_inl.h"
 #include "base/sparse_matrix.h"
 
@@ -26,30 +27,53 @@ void BatchSolver::run() {
       // LL << info.DebugString();
       g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
     });
-  size_t num_ins = g_train_ins_info_.num_ins();
   init_sys_time_ = total_timer_.get();
-  LI << "\tLoaded " << num_ins << " training instances... in "
+  LI << "\tLoaded " << g_train_ins_info_.num_ins() << " training instances... in "
      << init_sys_time_ << " sec";
 
-  // evenly partition feature blocks
+  // partition feature blocks
   CHECK(app_cf_.has_block_solver());
   auto cf = app_cf_.block_solver();
   for (int i = 1; i < g_train_ins_info_.fea_group_size(); ++i) {
     auto info = g_train_ins_info_.fea_group(i);
     CHECK(info.has_nnz());
-    double nnz_per_row = (double)info.nnz() / (double)num_ins;
-    int n = std::max((int)std::round(nnz_per_row*cf.feature_block_ratio()), 1);
+    CHECK(info.has_num_nonempty_ins());
+    double nnz_per_row = (double)info.nnz() / (double)info.num_nonempty_ins();
+    int n = 1;
+    if (nnz_per_row > 1 + 1e-6) {
+      n = std::max((int)std::ceil(nnz_per_row*cf.feature_block_ratio()), 1);
+    }
     for (int i = 0; i < n; ++i) {
       auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
       if (block.empty()) continue;
       fea_blocks_.push_back(std::make_pair(info.group_id(), block));
     }
   }
-  LI << "\tFeatures are partitioned into " << fea_blocks_.size() << " blocks",
+  LI << "\tFeatures are partitioned into " << fea_blocks_.size() << " blocks";
 
   // a simple block order
-  block_order_.clear();
   for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
+
+  // blocks of important features
+  std::vector<string> hit_blk;
+  for (int i = 0; i < cf.prior_fea_group_size(); ++i) {
+    int group_id = cf.prior_fea_group(i);
+    std::vector<int> tmp;
+    for (int k = 0; k < fea_blocks_.size(); ++k) {
+      if (fea_blocks_[k].first == group_id) tmp.push_back(k);
+    }
+    if (tmp.empty()) continue;
+    hit_blk.push_back(std::to_string(group_id));
+    for (int j = 0; j < cf.num_iter_for_prior_fea_group(); ++j) {
+      if (cf.random_feature_block_order()) {
+        std::random_shuffle(tmp.begin(), tmp.end());
+      }
+      prior_block_order_.insert(prior_block_order_.end(), tmp.begin(), tmp.end());
+    }
+  }
+  if (!hit_blk.empty()) {
+    LI << "\tFirst update feature group: " + join(hit_blk, ", ");
+  }
 
   runIteration();
 

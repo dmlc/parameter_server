@@ -186,12 +186,24 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   inline bool random_feature_block_order() const;
   inline void set_random_feature_block_order(bool value);
 
-  // optional int32 max_pass_of_data = 8 [default = 10];
-  inline bool has_max_pass_of_data() const;
-  inline void clear_max_pass_of_data();
-  static const int kMaxPassOfDataFieldNumber = 8;
-  inline ::google::protobuf::int32 max_pass_of_data() const;
-  inline void set_max_pass_of_data(::google::protobuf::int32 value);
+  // repeated int32 prior_fea_group = 14;
+  inline int prior_fea_group_size() const;
+  inline void clear_prior_fea_group();
+  static const int kPriorFeaGroupFieldNumber = 14;
+  inline ::google::protobuf::int32 prior_fea_group(int index) const;
+  inline void set_prior_fea_group(int index, ::google::protobuf::int32 value);
+  inline void add_prior_fea_group(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      prior_fea_group() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_prior_fea_group();
+
+  // optional int32 num_iter_for_prior_fea_group = 13 [default = 5];
+  inline bool has_num_iter_for_prior_fea_group() const;
+  inline void clear_num_iter_for_prior_fea_group();
+  static const int kNumIterForPriorFeaGroupFieldNumber = 13;
+  inline ::google::protobuf::int32 num_iter_for_prior_fea_group() const;
+  inline void set_num_iter_for_prior_fea_group(::google::protobuf::int32 value);
 
   // optional int32 max_block_delay = 10 [default = 0];
   inline bool has_max_block_delay() const;
@@ -199,6 +211,13 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   static const int kMaxBlockDelayFieldNumber = 10;
   inline ::google::protobuf::int32 max_block_delay() const;
   inline void set_max_block_delay(::google::protobuf::int32 value);
+
+  // optional int32 max_pass_of_data = 8 [default = 10];
+  inline bool has_max_pass_of_data() const;
+  inline void clear_max_pass_of_data();
+  static const int kMaxPassOfDataFieldNumber = 8;
+  inline ::google::protobuf::int32 max_pass_of_data() const;
+  inline void set_max_pass_of_data(::google::protobuf::int32 value);
 
   // optional double epsilon = 11 [default = 0.0001];
   inline bool has_epsilon() const;
@@ -222,10 +241,12 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   inline void clear_has_feature_block_ratio();
   inline void set_has_random_feature_block_order();
   inline void clear_has_random_feature_block_order();
-  inline void set_has_max_pass_of_data();
-  inline void clear_has_max_pass_of_data();
+  inline void set_has_num_iter_for_prior_fea_group();
+  inline void clear_has_num_iter_for_prior_fea_group();
   inline void set_has_max_block_delay();
   inline void clear_has_max_block_delay();
+  inline void set_has_max_pass_of_data();
+  inline void clear_has_max_pass_of_data();
   inline void set_has_epsilon();
   inline void clear_has_epsilon();
   inline void set_has_auc_goodness();
@@ -236,13 +257,15 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int64 minibatch_size_;
   float feature_block_ratio_;
   bool random_feature_block_order_;
-  ::google::protobuf::int32 max_pass_of_data_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > prior_fea_group_;
+  ::google::protobuf::int32 num_iter_for_prior_fea_group_;
   ::google::protobuf::int32 max_block_delay_;
   double epsilon_;
   ::google::protobuf::int64 auc_goodness_;
+  ::google::protobuf::int32 max_pass_of_data_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -1071,37 +1094,62 @@ inline void BlockSolverConfig::set_random_feature_block_order(bool value) {
   random_feature_block_order_ = value;
 }
 
-// optional int32 max_pass_of_data = 8 [default = 10];
-inline bool BlockSolverConfig::has_max_pass_of_data() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+// repeated int32 prior_fea_group = 14;
+inline int BlockSolverConfig::prior_fea_group_size() const {
+  return prior_fea_group_.size();
 }
-inline void BlockSolverConfig::set_has_max_pass_of_data() {
-  _has_bits_[0] |= 0x00000008u;
+inline void BlockSolverConfig::clear_prior_fea_group() {
+  prior_fea_group_.Clear();
 }
-inline void BlockSolverConfig::clear_has_max_pass_of_data() {
-  _has_bits_[0] &= ~0x00000008u;
+inline ::google::protobuf::int32 BlockSolverConfig::prior_fea_group(int index) const {
+  return prior_fea_group_.Get(index);
 }
-inline void BlockSolverConfig::clear_max_pass_of_data() {
-  max_pass_of_data_ = 10;
-  clear_has_max_pass_of_data();
+inline void BlockSolverConfig::set_prior_fea_group(int index, ::google::protobuf::int32 value) {
+  prior_fea_group_.Set(index, value);
 }
-inline ::google::protobuf::int32 BlockSolverConfig::max_pass_of_data() const {
-  return max_pass_of_data_;
+inline void BlockSolverConfig::add_prior_fea_group(::google::protobuf::int32 value) {
+  prior_fea_group_.Add(value);
 }
-inline void BlockSolverConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
-  set_has_max_pass_of_data();
-  max_pass_of_data_ = value;
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+BlockSolverConfig::prior_fea_group() const {
+  return prior_fea_group_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+BlockSolverConfig::mutable_prior_fea_group() {
+  return &prior_fea_group_;
+}
+
+// optional int32 num_iter_for_prior_fea_group = 13 [default = 5];
+inline bool BlockSolverConfig::has_num_iter_for_prior_fea_group() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void BlockSolverConfig::set_has_num_iter_for_prior_fea_group() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void BlockSolverConfig::clear_has_num_iter_for_prior_fea_group() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void BlockSolverConfig::clear_num_iter_for_prior_fea_group() {
+  num_iter_for_prior_fea_group_ = 5;
+  clear_has_num_iter_for_prior_fea_group();
+}
+inline ::google::protobuf::int32 BlockSolverConfig::num_iter_for_prior_fea_group() const {
+  return num_iter_for_prior_fea_group_;
+}
+inline void BlockSolverConfig::set_num_iter_for_prior_fea_group(::google::protobuf::int32 value) {
+  set_has_num_iter_for_prior_fea_group();
+  num_iter_for_prior_fea_group_ = value;
 }
 
 // optional int32 max_block_delay = 10 [default = 0];
 inline bool BlockSolverConfig::has_max_block_delay() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void BlockSolverConfig::set_has_max_block_delay() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void BlockSolverConfig::clear_has_max_block_delay() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void BlockSolverConfig::clear_max_block_delay() {
   max_block_delay_ = 0;
@@ -1115,15 +1163,37 @@ inline void BlockSolverConfig::set_max_block_delay(::google::protobuf::int32 val
   max_block_delay_ = value;
 }
 
+// optional int32 max_pass_of_data = 8 [default = 10];
+inline bool BlockSolverConfig::has_max_pass_of_data() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void BlockSolverConfig::set_has_max_pass_of_data() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void BlockSolverConfig::clear_has_max_pass_of_data() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void BlockSolverConfig::clear_max_pass_of_data() {
+  max_pass_of_data_ = 10;
+  clear_has_max_pass_of_data();
+}
+inline ::google::protobuf::int32 BlockSolverConfig::max_pass_of_data() const {
+  return max_pass_of_data_;
+}
+inline void BlockSolverConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
+  set_has_max_pass_of_data();
+  max_pass_of_data_ = value;
+}
+
 // optional double epsilon = 11 [default = 0.0001];
 inline bool BlockSolverConfig::has_epsilon() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void BlockSolverConfig::set_has_epsilon() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void BlockSolverConfig::clear_has_epsilon() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void BlockSolverConfig::clear_epsilon() {
   epsilon_ = 0.0001;
@@ -1139,13 +1209,13 @@ inline void BlockSolverConfig::set_epsilon(double value) {
 
 // optional int64 auc_goodness = 12 [default = 100000];
 inline bool BlockSolverConfig::has_auc_goodness() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void BlockSolverConfig::set_has_auc_goodness() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void BlockSolverConfig::clear_has_auc_goodness() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void BlockSolverConfig::clear_auc_goodness() {
   auc_goodness_ = GOOGLE_LONGLONG(100000);
