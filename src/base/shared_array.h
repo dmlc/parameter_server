@@ -118,12 +118,10 @@ template<typename V> class SArray {
   // function, you should allocate enough memory first (e.g. call resize(xx))
   void uncompressFrom(const char* src, size_t src_size);
 
-  // read values from a binary file
-  bool readFromFile(const string& file_name, size_t size) {
-    return readFromFile(SizeR(0, size), file_name);
-  }
   // read the segment [range.begin(), range.end()) from the binary file
   bool readFromFile(SizeR range, const string& file_name);
+  bool readFromFile(SizeR range, const DataConfig& file);
+
   // write all values into a binary file
   bool writeToFile(const string& file_name) const {
     return writeToFile(SizeR::all(), file_name);

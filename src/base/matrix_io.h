@@ -31,20 +31,7 @@ bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat);
 
 // Read from binary files, which are direct dumps of memory.
 template<typename V>
-MatrixPtr<V> readMatrixFromBin(const std::string& file) {
-  return readMatrixFromBin<V>(SizeR::all(), file);
-}
-
-template<typename V>
-MatrixPtr<V> readMatrixFromBin(SizeR outer_range, const std::string& file);
-
-template<typename V>
-MatrixPtrList<V> readMatricesFromBin(
-    SizeR outer_range, const std::vector<std::string>& files) {
-  MatrixPtrList<V> res;
-  for (auto& f : files) res.push_back(readMatrixFromBin<V>(outer_range, f));
-  return res;
-}
+bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat);
 
 // Read from text files
 template<typename V>

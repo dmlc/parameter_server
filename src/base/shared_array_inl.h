@@ -183,8 +183,17 @@ void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
 
 template <typename V>
 bool SArray<V>::readFromFile(SizeR range, const string& file_name) {
-  File* file = File::open(file_name, "r");
+  DataConfig data;
+  data.set_format(DataConfig::BIN);
+  data.add_file(file_name);
+  return readFromFile(range, data);
+}
+
+template <typename V>
+bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
   CHECK(!range.empty());
+  File* file = File::open(data, "r");
+  if (file == NULL || !file->open()) return false;
   resize(range.size());
   if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
   size_t length = range.size() * sizeof(V);

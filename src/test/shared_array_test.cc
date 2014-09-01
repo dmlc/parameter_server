@@ -66,14 +66,14 @@ TEST(SArray, range) {
   // EXPECT_EQ(a.findRange(4, 4), d);
 }
 
-TEST(SArray, gz) {
-  SArray<int> a; a.readFromFile("../data/bin/rcv1_X.index", 1498952);
-  SArray<int> b; b.readFromFile("../data/bin_gz/rcv1_X.index.gz", 1498952);
-  // LL << a.eigenVector().sum() << " " << b.eigenVector().sum();
-  EXPECT_EQ(a,b);
+// TEST(SArray, gz) {
+//   SArray<int> a; a.readFromFile("../data/bin/rcv1_X.index", 1498952);
+//   SArray<int> b; b.readFromFile("../data/bin_gz/rcv1_X.index.gz", 1498952);
+//   // LL << a.eigenVector().sum() << " " << b.eigenVector().sum();
+//   EXPECT_EQ(a,b);
 
-  SArray<double> x; x.readFromFile("../data/bin/rcv1_X.value", 1498952);
-  SArray<double> y; y.readFromFile("../data/bin_gz/rcv1_X.value.gz", 1498952);
-  // LL << x.eigenVector().sum() << " " << y.eigenVector().sum();
-  EXPECT_EQ(x,y);
-}
+//   SArray<double> x; x.readFromFile("../data/bin/rcv1_X.value", 1498952);
+//   SArray<double> y; y.readFromFile("../data/bin_gz/rcv1_X.value.gz", 1498952);
+//   // LL << x.eigenVector().sum() << " " << y.eigenVector().sum();
+//   EXPECT_EQ(x,y);
+// }
