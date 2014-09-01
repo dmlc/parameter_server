@@ -17,6 +17,7 @@ message AppConfig {
   // input / output
   optional DataConfig training_data = 10;
   optional DataConfig validation_data = 11;
+  optional DataConfig local_cache = 16;
 
   optional ParameterInitConfig init_w = 13;
 

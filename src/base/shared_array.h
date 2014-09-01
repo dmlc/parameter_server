@@ -129,6 +129,7 @@ template<typename V> class SArray {
   // write the segment [range.begin(), range.end()) into a binary file
   bool writeToFile(SizeR range, const string& file_name) const;
 
+
  private:
   size_t size_ = 0;
   size_t capacity_ = 0;

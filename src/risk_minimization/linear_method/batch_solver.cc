@@ -128,17 +128,50 @@ void BatchSolver::runIteration() {
   }
 }
 
+void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
+  bool hit_cache = false;
+  DataConfig y_conf, X_conf, key_conf;
+  // try to fetch the local cache
+  if (app_cf_.has_local_cache()) {
+    MatrixPtrList<double> y_list, X_list;
+    auto cache = app_cf_.local_cache();
+    y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
+    X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+    key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
+    hit_cache = readMatrices<double>(y_conf, &y_list) &&
+                readMatrices<double>(X_conf, &X_list) &&
+                w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf);
+    LL << hit_cache << y_list.size() << X_list.size() << w_->key().size();
+    if (hit_cache) {
+      y_ = y_list[0];
+      X_ = X_list[0];
+      LL << myNodeID() << " hit cache for " << cache_name;
+      return;
+    }
+  }
+
+  // failed to fetch cache, load from *data*
+  auto list = readMatricesOrDie<double>(data);
+  CHECK_EQ(list.size(), 2);
+  y_ = list[0];
+  X_ = list[1]->localize(&(w_->key()));
+  CHECK_EQ(y_->rows(), X_->rows());
+  if (cache_name == "train") X_ = X_->toColMajor();
+
+  // save to local cache
+  if (app_cf_.has_local_cache()) {
+    y_->writeToBinFile(y_conf.file(0));
+    X_->writeToBinFile(X_conf.file(0));
+    w_->key().writeToFile(key_conf.file(0));
+  }
+}
+
 InstanceInfo BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    auto training_data = readMatricesOrDie<double>(app_cf_.training_data());
-    CHECK_EQ(training_data.size(), 2);
-    y_ = training_data[0];
-    X_ = training_data[1]->localize(&(w_->key()));
-    CHECK_EQ(y_->rows(), X_->rows());
-    if (app_cf_.block_solver().feature_block_ratio() > 0) {
-      X_ = X_->toColMajor();
-    }
+    // load data
+    loadData(app_cf_.training_data(), "train");
+
     // sync keys and fetch initial value of w_
     SArrayList<double> empty;
     std::promise<void> promise;
@@ -291,24 +324,22 @@ void BatchSolver::showProgress(int iter) {
 
 void BatchSolver::computeEvaluationAUC(AUCData *data) {
   if (!exec_.isWorker()) return;
+
+  // load data
   CHECK(app_cf_.has_validation_data());
-  auto validation_data = readMatricesOrDie<double>(app_cf_.validation_data());
-  CHECK_EQ(validation_data.size(), 2);
+  loadData(app_cf_.validation_data(), "valid");
 
-  y_ = validation_data[0];
-  X_ = validation_data[1]->localize(&(w_->key()));
-  CHECK_EQ(y_->rows(), X_->rows());
-
+  // fetch the model
   w_->fetchValueFromServers();
 
-  // w.writeToFile("w");
-
+  // compute auc
   AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
   SArray<double> Xw(X_->rows());
   for (auto& v : w_->value()) if (v != v) v = 0;
   Xw.eigenVector() = *X_ * w_->value().eigenVector();
   auc.compute(y_->value(), Xw, data);
 
+  // w.writeToFile("w");
   // double correct = 0;
   // for (int i = 0; i < Xw.size(); ++i)
   //   if (y_->value()[i] * Xw[i] >= 0) correct += 1;

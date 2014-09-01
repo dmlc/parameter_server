@@ -193,6 +193,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_validation_data();
   inline void set_allocated_validation_data(::PS::DataConfig* validation_data);
 
+  // optional .PS.DataConfig local_cache = 16;
+  inline bool has_local_cache() const;
+  inline void clear_local_cache();
+  static const int kLocalCacheFieldNumber = 16;
+  inline const ::PS::DataConfig& local_cache() const;
+  inline ::PS::DataConfig* mutable_local_cache();
+  inline ::PS::DataConfig* release_local_cache();
+  inline void set_allocated_local_cache(::PS::DataConfig* local_cache);
+
   // optional .PS.ParameterInitConfig init_w = 13;
   inline bool has_init_w() const;
   inline void clear_init_w();
@@ -302,6 +311,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_training_data();
   inline void set_has_validation_data();
   inline void clear_has_validation_data();
+  inline void set_has_local_cache();
+  inline void clear_has_local_cache();
   inline void set_has_init_w();
   inline void clear_has_init_w();
   inline void set_has_model_output();
@@ -331,6 +342,7 @@ class AppConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
   ::PS::DataConfig* training_data_;
   ::PS::DataConfig* validation_data_;
+  ::PS::DataConfig* local_cache_;
   ::PS::ParameterInitConfig* init_w_;
   ::PS::DataConfig* model_output_;
   ::PS::LossConfig* loss_;
@@ -345,7 +357,7 @@ class AppConfig : public ::google::protobuf::Message {
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fapp_2eproto();
   friend void protobuf_AssignDesc_proto_2fapp_2eproto();
@@ -574,15 +586,53 @@ inline void AppConfig::set_allocated_validation_data(::PS::DataConfig* validatio
   }
 }
 
-// optional .PS.ParameterInitConfig init_w = 13;
-inline bool AppConfig::has_init_w() const {
+// optional .PS.DataConfig local_cache = 16;
+inline bool AppConfig::has_local_cache() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void AppConfig::set_has_init_w() {
+inline void AppConfig::set_has_local_cache() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void AppConfig::clear_has_init_w() {
+inline void AppConfig::clear_has_local_cache() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void AppConfig::clear_local_cache() {
+  if (local_cache_ != NULL) local_cache_->::PS::DataConfig::Clear();
+  clear_has_local_cache();
+}
+inline const ::PS::DataConfig& AppConfig::local_cache() const {
+  return local_cache_ != NULL ? *local_cache_ : *default_instance_->local_cache_;
+}
+inline ::PS::DataConfig* AppConfig::mutable_local_cache() {
+  set_has_local_cache();
+  if (local_cache_ == NULL) local_cache_ = new ::PS::DataConfig;
+  return local_cache_;
+}
+inline ::PS::DataConfig* AppConfig::release_local_cache() {
+  clear_has_local_cache();
+  ::PS::DataConfig* temp = local_cache_;
+  local_cache_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_local_cache(::PS::DataConfig* local_cache) {
+  delete local_cache_;
+  local_cache_ = local_cache;
+  if (local_cache) {
+    set_has_local_cache();
+  } else {
+    clear_has_local_cache();
+  }
+}
+
+// optional .PS.ParameterInitConfig init_w = 13;
+inline bool AppConfig::has_init_w() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void AppConfig::set_has_init_w() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void AppConfig::clear_has_init_w() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void AppConfig::clear_init_w() {
   if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
@@ -614,13 +664,13 @@ inline void AppConfig::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
 
 // optional .PS.DataConfig model_output = 15;
 inline bool AppConfig::has_model_output() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void AppConfig::set_has_model_output() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void AppConfig::clear_has_model_output() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void AppConfig::clear_model_output() {
   if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
@@ -652,13 +702,13 @@ inline void AppConfig::set_allocated_model_output(::PS::DataConfig* model_output
 
 // optional .PS.LossConfig loss = 20;
 inline bool AppConfig::has_loss() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void AppConfig::set_has_loss() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void AppConfig::clear_has_loss() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void AppConfig::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LossConfig::Clear();
@@ -690,13 +740,13 @@ inline void AppConfig::set_allocated_loss(::PS::LossConfig* loss) {
 
 // optional .PS.PenaltyConfig penalty = 21;
 inline bool AppConfig::has_penalty() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void AppConfig::set_has_penalty() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void AppConfig::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void AppConfig::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
@@ -728,13 +778,13 @@ inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
 
 // optional .PS.LearningRateConfig learning_rate = 23;
 inline bool AppConfig::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void AppConfig::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void AppConfig::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void AppConfig::clear_learning_rate() {
   if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
@@ -766,13 +816,13 @@ inline void AppConfig::set_allocated_learning_rate(::PS::LearningRateConfig* lea
 
 // optional .PS.LearnerConfig learner = 22;
 inline bool AppConfig::has_learner() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void AppConfig::set_has_learner() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void AppConfig::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void AppConfig::clear_learner() {
   if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
@@ -804,13 +854,13 @@ inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
 
 // optional .PS.BlockSolverConfig block_solver = 24;
 inline bool AppConfig::has_block_solver() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void AppConfig::set_has_block_solver() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void AppConfig::clear_has_block_solver() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void AppConfig::clear_block_solver() {
   if (block_solver_ != NULL) block_solver_->::PS::BlockSolverConfig::Clear();
@@ -842,13 +892,13 @@ inline void AppConfig::set_allocated_block_solver(::PS::BlockSolverConfig* block
 
 // optional .PS.BCDL1LRConfig bcd_l1lr = 25;
 inline bool AppConfig::has_bcd_l1lr() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void AppConfig::set_has_bcd_l1lr() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void AppConfig::clear_has_bcd_l1lr() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void AppConfig::clear_bcd_l1lr() {
   if (bcd_l1lr_ != NULL) bcd_l1lr_->::PS::BCDL1LRConfig::Clear();
@@ -880,13 +930,13 @@ inline void AppConfig::set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr) {
 
 // optional .PS.NN.NetConfig nn_train = 30;
 inline bool AppConfig::has_nn_train() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void AppConfig::set_has_nn_train() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void AppConfig::clear_has_nn_train() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void AppConfig::clear_nn_train() {
   if (nn_train_ != NULL) nn_train_->::PS::NN::NetConfig::Clear();
@@ -918,13 +968,13 @@ inline void AppConfig::set_allocated_nn_train(::PS::NN::NetConfig* nn_train) {
 
 // optional .PS.NN.NetConfig nn_test = 31;
 inline bool AppConfig::has_nn_test() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void AppConfig::set_has_nn_test() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void AppConfig::clear_has_nn_test() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void AppConfig::clear_nn_test() {
   if (nn_test_ != NULL) nn_test_->::PS::NN::NetConfig::Clear();
@@ -956,13 +1006,13 @@ inline void AppConfig::set_allocated_nn_test(::PS::NN::NetConfig* nn_test) {
 
 // optional .PS.NN.SolverConfig nn_solver = 32;
 inline bool AppConfig::has_nn_solver() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void AppConfig::set_has_nn_solver() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void AppConfig::clear_has_nn_solver() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void AppConfig::clear_nn_solver() {
   if (nn_solver_ != NULL) nn_solver_->::PS::NN::SolverConfig::Clear();

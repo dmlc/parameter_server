@@ -22,6 +22,8 @@ class BatchSolver : public LinearMethod {
   void saveModel(const Message& msg);
   void saveAsDenseData(const Message& msg);
 
+  void loadData(const DataConfig& data, const string& cache_name);
+
   // training data, available at the workers
   MatrixPtr<double> y_, X_;
 

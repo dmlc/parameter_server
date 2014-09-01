@@ -25,7 +25,7 @@ File* File::open(const std::string& name, const char* const flag) {
   } else {
     FILE* des = fopen(name.data(), flag);
     if (des == NULL) {
-      LOG(ERROR) << "cannot open " << name;
+      // LOG(ERROR) << "cannot open " << name;
       return NULL;
     }
     f = new File(des, name);
@@ -35,7 +35,7 @@ File* File::open(const std::string& name, const char* const flag) {
 
 File* File::openOrDie(const std::string& name, const char* const flag) {
   File* f = File::open(name, flag);
-  CHECK(f != NULL && f->open());
+  CHECK(f != NULL && f->open()) << "cannot open" << name;
   return f;
 }
 
@@ -46,7 +46,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
     FILE* des = popen(cmd.c_str(), "r");
     if (des == NULL) {
-      LOG(ERROR) << "cannot open " << name.DebugString();
+      // LOG(ERROR) << "cannot open " << name.DebugString();
       return NULL;
     }
     auto f = new File(des, filename);
@@ -57,7 +57,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
 }
 File* File::openOrDie(const DataConfig& name,  const char* const flag) {
   File* f = open(name, flag);
-  CHECK(f != NULL && f->open());
+  CHECK(f != NULL && f->open()) << "cannot open " << name.DebugString();
   return f;
 }
 
