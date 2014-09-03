@@ -22,8 +22,15 @@ File* File::open(const std::string& name, const char* const flag) {
     f = new File(stdout, name);
   } else if (name == "stderr") {
     f = new File(stderr, name);
+  } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
+    gzFile des = gzopen(name.data(), flag);
+    if (des == NULL) {
+      // LOG(ERROR) << "cannot open " << name;
+      return NULL;
+    }
+    f = new File(des, name);
   } else {
-    FILE* des = fopen(name.data(), flag);
+    FILE*  des = fopen(name.data(), flag);
     if (des == NULL) {
       // LOG(ERROR) << "cannot open " << name;
       return NULL;
@@ -35,7 +42,7 @@ File* File::open(const std::string& name, const char* const flag) {
 
 File* File::openOrDie(const std::string& name, const char* const flag) {
   File* f = File::open(name, flag);
-  CHECK(f != NULL && f->open()) << "cannot open" << name;
+  CHECK(f != NULL && f->open());
   return f;
 }
 
@@ -55,6 +62,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     return open(filename, flag);
   }
 }
+
 File* File::openOrDie(const DataConfig& name,  const char* const flag) {
   File* f = open(name, flag);
   CHECK(f != NULL && f->open()) << "cannot open " << name.DebugString();
@@ -71,32 +79,32 @@ size_t File::size() {
   return File::size(name_);
 }
 
-bool File::flush() { return fflush(f_) == 0; }
+bool File::flush() {
+  return (is_gz_ ? gzflush(gz_f_, Z_FINISH) == Z_OK : fflush(f_) == 0);
+}
 
 bool File::close() {
-  if (fclose(f_) == 0) {
-    f_ = NULL;
-    return true;
-  } else {
-    return false;
-  }
+  bool ret = is_gz_ ? gzclose(gz_f_) == Z_OK : fclose(f_) == 0;
+  gz_f_ = NULL; f_ = NULL;
+  return ret;
 }
 
 size_t File::read(void* const buf, size_t size) {
-  return fread(buf, 1, size, f_);
+  return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
 }
 
 size_t File::write(const void* const buf, size_t size) {
-  return fwrite(buf, 1, size, f_);
+  return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
 }
 
-
 char* File::readLine(char* const output, uint64 max_length) {
-  return fgets(output, max_length, f_);
+  return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
 }
 
 bool File::seek(size_t position) {
-  return (fseek(f_, position, SEEK_SET) == 0);
+  return (is_gz_ ?
+          gzseek(gz_f_, position, SEEK_SET) == position :
+          fseek(f_, position, SEEK_SET) == 0);
 }
 
 int64 File::readToString(std::string* const output, uint64 max_length) {
@@ -277,6 +285,7 @@ string path(const string& full) {
 string removeExtension(const string& file) {
   auto elems = split(file, '.');
   if (elems.size() <= 1) return file;
+  if (elems.back() == "gz" && elems.size() > 2) elems.pop_back();
   elems.pop_back();
   return join(elems, ".");
 }
@@ -301,7 +310,8 @@ DataConfig searchFiles(const DataConfig& config) {
     auto files = readFilenamesInDirectory(dir);
     for (auto& f : files) {
       if (std::regex_match(f, pattern)) {
-        matched_files.push_back(dir.file(0) + "/" + removeExtension(f));
+        auto l = config.format() == DataConfig::TEXT ? f : removeExtension(f);
+        matched_files.push_back(dir.file(0) + "/" + l);
       }
     }
   }

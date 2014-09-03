@@ -168,7 +168,7 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
     if (hit_cache) {
       y_ = y_list[0];
       X_ = X_list[0];
-      LI << myNodeID() << " hit data cache for " << cache_name;
+      LI << "\t" << myNodeID() << " hit data cache for " << cache_name;
       return;
     }
   }
@@ -235,6 +235,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
 
 
 void BatchSolver::updateModel(Message* msg) {
+  // FIXME several tiny bugs here...
   int time = msg->task.time() * 10;
   Range<Key> global_range(msg->task.risk().key());
   auto local_range = w_->localRange(global_range);
@@ -297,9 +298,12 @@ void BatchSolver::updateModel(Message* msg) {
 RiskMinProgress BatchSolver::evaluateProgress() {
   RiskMinProgress prog;
   if (exec_.isWorker()) {
+    mu_.lock();
+    busy_timer_.start();
     prog.set_objv(loss_->evaluate({y_, dual_.matrix()}));
     prog.add_busy_time(busy_timer_.get());
     busy_timer_.reset();
+    mu_.unlock();
   } else {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
     prog.set_nnz_w(w_->nnz());

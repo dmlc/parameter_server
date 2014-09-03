@@ -34,14 +34,10 @@ template<typename V>
 bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat);
 
 // Read from text files
+// TODO only support read sparse data now
 template<typename V>
-bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
-  // TODO. The basic idea: use ParseText::toProto to convert text lines into
-  // protobuf format (save them in disk if necessary), then add into matrix by
-  // SArray::pushBack() (no need to know the size at the begining)
-  //
-  return false;
-}
+bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat);
+
 
 // Read matrices from local disk or hdfs in binary, protobuf, or text formats
 template<typename V>

@@ -109,9 +109,12 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
   auto local_range = w_->localRange(global_range);
 
   if (exec_.isWorker()) {
+
+    mu_.lock();
     busy_timer_.start();
     auto local_grads = computeGradients(local_range);
     busy_timer_.stop();
+    mu_.unlock();
 
     // this task is not finished until get the model updates from servers
     msg->finished = false;
@@ -120,15 +123,17 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
     w_->roundTripForWorker(time, global_range, local_grads,
                            [this, local_range, task, sender] (int time) {
         // update dual variable
-        busy_timer_.start();
         if (!local_range.empty()) {
           auto data = w_->received(time);
           CHECK_EQ(data.size(), 1);
           CHECK_EQ(local_range, data[0].first);
           auto new_weight = data[0].second;
+          mu_.lock();
+          busy_timer_.start();
           updateDual(local_range, new_weight);
+          busy_timer_.stop();
+          mu_.unlock();
         }
-        busy_timer_.stop();
 
         // task finished, reply the scheduler
         taskpool(sender)->finishIncomingTask(task.time());
@@ -149,7 +154,6 @@ void BlockCoordDescL1LR::updateModel(Message* msg) {
 }
 
 SArrayList<double> BlockCoordDescL1LR::computeGradients(SizeR local_fea_range) {
-  Lock lk(mu_);
   SArrayList<double> local_grads(2);
   for (int i : {0, 1} ) {
     local_grads[i].resize(local_fea_range.size());
@@ -218,7 +222,6 @@ void BlockCoordDescL1LR::computeGradients(
 
 void BlockCoordDescL1LR::updateDual(
     SizeR local_fea_range, SArray<double> new_weight) {
-  Lock lk(mu_);
   SArray<double> delta_w(new_weight.size());
   for (size_t i = 0; i < new_weight.size(); ++i) {
     size_t j = local_fea_range.begin() + i;

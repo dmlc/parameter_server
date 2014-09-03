@@ -1,6 +1,7 @@
 #pragma once
-
 #include "base/matrix_io.h"
+#include "util/filelinereader.h"
+#include "data/parse_text.h"
 
 namespace PS {
 
@@ -66,6 +67,26 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   return f;
 }
 
+template<typename V>
+void createMatrices(
+    const InstanceInfo& info, SArray<V> label, SArray<size_t> offset,
+    SArray<uint64> index, SArray<V> value, MatrixPtrList<V>* mat) {
+  // the label matrix
+  MatrixInfo label_info;
+  string label_str =
+      "type: DENSE row_major: true row { begin: 0 end: "
+      + std::to_string(info.num_ins()) + " } col { begin: 0 end: 1 } nnz: "
+      + std::to_string(info.num_ins()) + " sizeof_value: "
+      + std::to_string(sizeof(V));
+  google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
+  *label_info.mutable_ins_info() = info;
+  mat->push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
+
+  // the feature matrix
+  MatrixInfo f = readMatrixInfo<V>(info, 0);
+  mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
+}
+
 // label, feature_group 1, feature_group 2, ...
 // TODO do not support dense feature group yet...
 template<typename V>
@@ -120,20 +141,7 @@ bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat) {
   CHECK_EQ(index_pos, index.size());
   CHECK_EQ(value_pos, value.size());
 
-  // the label matrix
-  MatrixInfo label_info;
-  string label_str =
-      "type: DENSE row_major: true row { begin: 0 end: "
-      + std::to_string(info.num_ins()) + " } col { begin: 0 end: 1 } nnz: "
-      + std::to_string(info.num_ins()) + " sizeof_value: "
-      + std::to_string(sizeof(V));
-  google::protobuf::TextFormat::ParseFromString(label_str, &label_info);
-  *label_info.mutable_ins_info() = info;
-  mat->push_back(MatrixPtr<V>(new DenseMatrix<V>(label_info, label)));
-
-  // the feature matrix
-  MatrixInfo f = readMatrixInfo<V>(info, 0);
-  mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
+  createMatrices(info, label, offset, index, value, mat);
   return true;
 }
 
@@ -208,7 +216,6 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
       }
 
       info.set_nnz(data_range.size());
-
       if (index_s == 4) {
         mat->push_back(MatrixPtr<V>(new SparseMatrix<uint32, V>(
             info, offset, SArray<uint32>(index), value)));
@@ -221,6 +228,39 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
       }
     }
   }
+  return true;
+}
+
+template<typename V>
+bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
+  // TODO. multi-thread
+  ParseText parser; parser.setFormat(data.text());
+  Instance ins;
+  SArray<V> label;
+  SArray<size_t> offset; offset.pushBack(0);
+  SArray<uint64> index;
+  SArray<V> value;
+
+  std::function<void(char*)> handle = [&] (char *line) {
+    parser.toProto(line, &ins);
+    for (int i = 0; i < ins.fea_id_size(); ++i) {
+      index.pushBack(ins.fea_id(i));
+    }
+    for (int i = 0; i < ins.fea_val_size(); ++i) {
+      value.pushBack(ins.fea_val(i));
+    }
+    label.pushBack(ins.label());
+    offset.pushBack(offset.back() + ins.fea_id_size());
+  };
+
+  for (int i = 0; i < data.file_size(); ++i) {
+    FileLineReader reader(data.file(i));
+    reader.set_line_callback(handle);
+    reader.Reload();
+  }
+
+  auto info = parser.info();
+  createMatrices(info, label, offset, index, value, mat);
   return true;
 }
 

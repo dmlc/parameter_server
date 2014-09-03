@@ -1,3 +1,4 @@
+#pragma once
 #include "util/common.h"
 #include "proto/instance.pb.h"
 #include "proto/config.pb.h"
