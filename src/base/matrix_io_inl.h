@@ -243,6 +243,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
 
   std::function<void(char*)> handle = [&] (char *line) {
     parser.toProto(line, &ins);
+
     for (int i = 0; i < ins.fea_id_size(); ++i) {
       index.pushBack(ins.fea_id(i));
     }
@@ -261,6 +262,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
 
   auto info = parser.info();
   createMatrices(info, label, offset, index, value, mat);
+
   return true;
 }
 
