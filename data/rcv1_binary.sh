@@ -14,7 +14,7 @@ test=rcv1/test
 mkdir -p $train
 mkdir -p $test
 
-rm $train/* $test/*
+rm -f $train/* $test/*
 
 i=0;
 for f in rcv1_train_*
@@ -24,8 +24,11 @@ do
     then
         dir=$test
     fi
-    ../bin/text2proto -format libsvm -input ${f} -output $dir/part-`printf %03d $i`
+    # text format
+    mv ${f} $dir/part-`printf %03d $i`
+    # protobuf format
+    # ../bin/text2proto -format libsvm -input ${f} -output $dir/part-`printf %03d $i`
     ((i++))
-done
+doe
 
 rm rcv1_train_*

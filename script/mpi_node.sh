@@ -1,6 +1,6 @@
 #!/bin/bash
+# set -x
 
-set -x
 if [ $# -ne 2 ]; then
     echo "usage: ./self scheduler_node mpi.conf"
     exit -1;
@@ -48,10 +48,10 @@ my_port=$(( ${network_port} + ${my_rank} ))
 # rest: unused (backup) nodes
 if (( ${my_rank} == 0 )); then
     my_node=${1}
-elif (( ${my_rank} <= ${num_servers} )); then
-    my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'S${my_rank}'"
+elif (( ${my_rank} <= ${num_workers} )); then
+    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'W${my_rank}'"
 elif (( ${my_rank} <= ${num_servers} + ${num_workers} )); then
-    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'C${my_rank}'"
+    my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'S${my_rank}'"
 else
     my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'U${my_rank}'"
 fi

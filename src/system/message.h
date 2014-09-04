@@ -105,6 +105,7 @@ static AlignedArray<V> match(const SArray<K>& dst_key,
   const K* dst_key_it = dst_key.begin() + range.begin();
   const K* src_key_it = std::lower_bound(src_key.begin(), src_key.end(), *dst_key_it);
   src_val += src_key_it - src_key.begin();
+
   while (dst_key_it != dst_key.end() && src_key_it != src_key.end()) {
     if (*src_key_it < *dst_key_it) {
       ++ src_key_it;

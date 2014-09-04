@@ -38,9 +38,10 @@ class ScopedTimer {
 class Timer {
  public:
   void start() { tp_ = tic(); }
-  void stop() { time_ += toc(tp_); }
+  void restart() { reset(); start(); }
   void reset() { time_ = 0; }
-  double get() { return toc(tp_) + time_; }
+  double stop() { time_ += toc(tp_); return time_; }
+  double get() { return time_; }
   double getAndRestart() { double t = get(); reset(); start(); return t; }
  private:
   system_clock::time_point tp_ = tic();

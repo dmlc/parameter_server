@@ -4,6 +4,19 @@
 
 namespace PS {
 
+
+#define USING_SHARED_PARAMETER                  \
+  using Customer::taskpool;                     \
+  using Customer::myNodeID;                     \
+  using SharedParameter<K,V>::getCall;          \
+  using SharedParameter<K,V>::setCall;          \
+  using SharedParameter<K,V>::myKeyRange;       \
+  using SharedParameter<K,V>::keyRange;         \
+  using SharedParameter<K,V>::sync;             \
+  using SharedParameter<K,V>::t1_;              \
+  using SharedParameter<K,V>::t2_;              \
+  using SharedParameter<K,V>::t3_
+
 // the base class of shared parameters
 template <typename K, typename V>
 class SharedParameter : public Customer {
@@ -46,6 +59,12 @@ class SharedParameter : public Customer {
     return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
   }
 
+  string getTime() {
+    return to_string(timer_.getAndRestart()) + " "
+        + to_string(t1_.getAndRestart()) + " "
+        + to_string(t2_.getAndRestart()) + " "
+        + to_string(t3_.getAndRestart()) + " ";
+  }
  protected:
 
   virtual std::vector<Message> decomposeTemplate(
@@ -113,8 +132,8 @@ class SharedParameter : public Customer {
     return task->mutable_shared_para();
   }
 
+  Timer timer_, t1_, t2_, t3_;
  private:
-
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
 };
@@ -144,6 +163,7 @@ void SharedParameter<K,V>::process(Message* msg) {
   // if (!req && msg->task.type() == Task::REPLY)
   //   return;
 
+  timer_.start();
   switch (getCall(*msg).cmd()) {
     typedef CallSharedPara Call;
 
@@ -196,6 +216,7 @@ void SharedParameter<K,V>::process(Message* msg) {
     default:
       CHECK(false) << "unknow cmd: " << getCall(*msg).ShortDebugString();
   }
+  timer_.stop();
 }
 
 

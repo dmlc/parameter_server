@@ -59,13 +59,7 @@ class KVVector : public SharedParameter<K,V> {
   void setReplica(Message *msg);
   void recoverFrom(Message *msg);
 
-  using Customer::taskpool;
-  using Customer::myNodeID;
-  using SharedParameter<K,V>::getCall;
-  using SharedParameter<K,V>::setCall;
-  using SharedParameter<K,V>::myKeyRange;
-  using SharedParameter<K,V>::keyRange;
-  using SharedParameter<K,V>::sync;
+  USING_SHARED_PARAMETER;
  private:
   SArray<K> key_;
   SArray<V> val_;
@@ -257,7 +251,9 @@ void KVVector<K,V>::getValue(Message* msg) {
   SArray<K> recv_key(msg->key);
   size_t n = 0;
   Range<Key> range = recv_key.range().setUnion(key_.range());
+  t1_.start();
   auto aligned = match(recv_key, key_, val_.data(), range, &n);
+  t1_.stop();
   // LL << "val: " << dbstr(val_.data(), val_.size());
   CHECK_EQ(aligned.second.size(), recv_key.size())
       << recv_key << "\n" << key_;
@@ -268,6 +264,7 @@ void KVVector<K,V>::getValue(Message* msg) {
 template <typename K, typename V>
 void KVVector<K,V>::setValue(Message* msg) {
   Lock l(recved_val_mu_);
+
   SArray<K> recv_key(msg->key);
   Range<K> key_range(msg->task.key_range());
 
@@ -285,16 +282,20 @@ void KVVector<K,V>::setValue(Message* msg) {
     SArray<V> recv_data(msg->value[i]);
     CHECK_EQ(recv_data.size(), recv_key.size());
     size_t n = 0;
+  t2_.start();
     auto aligned = match(key_, recv_key, recv_data.data(), key_range, &n);
+  t2_.stop();
     CHECK_GE(aligned.second.size(), recv_key.size());
     CHECK_EQ(recv_key.size(), n);
 
+  t3_.start();
     if (first) {
       recved_val_[t].push_back(aligned);
     } else {
       CHECK_EQ(aligned.first, recved_val_[t][i].first);
       recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
     }
+    t3_.stop();
   }
 }
 

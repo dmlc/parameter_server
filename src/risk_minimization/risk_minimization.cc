@@ -53,7 +53,8 @@ void RiskMinimization::mergeProgress(int iter) {
   p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
-  p.set_total_time(total_timer_.get());
+  p.set_total_time(timer_.stop());
+  timer_.start();
   p.set_relative_objv(iter==0 ? 1 : global_progress_[iter-1].objv()/p.objv() - 1);
   p.set_violation(std::max(p.violation(), recv.violation()));
   p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
@@ -76,7 +77,7 @@ void RiskMinimization::showTime(int iter) {
   } else {
     auto prog = global_progress_[iter];
     double ttl_t = prog.total_time() - (
-        iter > 0 ? global_progress_[iter-1].total_time() : init_sys_time_);
+        iter > 0 ? global_progress_[iter-1].total_time() : 0);
 
     int n = prog.busy_time_size();
     Eigen::ArrayXd busy_t(n);

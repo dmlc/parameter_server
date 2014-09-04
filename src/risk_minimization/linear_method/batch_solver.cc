@@ -18,6 +18,7 @@ void BatchSolver::run() {
   LinearMethod::startSystem();
 
   // load data
+  timer_.start();
   Task prepare;
   prepare.set_type(Task::CALL_CUSTOMER);
   prepare.mutable_risk()->set_cmd(RiskMinCall::PREPARE_DATA);
@@ -27,9 +28,8 @@ void BatchSolver::run() {
       // LL << info.DebugString();
       g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
     });
-  init_sys_time_ = total_timer_.get();
   LI << "\tLoaded " << g_train_ins_info_.num_ins() << " training instances... in "
-     << init_sys_time_ << " sec";
+     << timer_.stop() << " sec";
 
   // partition feature blocks
   CHECK(app_cf_.has_block_solver());
@@ -75,6 +75,7 @@ void BatchSolver::run() {
     LI << "\tFirst update feature group: " + join(hit_blk, ", ");
   }
 
+  timer_.restart();
   runIteration();
 
   auto active = taskpool(kActiveGroup);
