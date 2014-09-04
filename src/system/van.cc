@@ -49,7 +49,7 @@ void Van::bind() {
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
 #ifdef _DEBUG_VAN_
-  // LL << my_node_.id() << ": binds address " << addr;
+  debug_out_ << my_node_.id() << ": binds address " << addr << std::endl;
 #endif
 }
 
@@ -80,7 +80,7 @@ Status Van::connect(Node const& node) {
   senders_[id] = sender;
 
 #ifdef _DEBUG_VAN_
-  // LL << my_node_.id() << ": connect to " << addr;
+  debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
 #endif
   return Status::OK();
 }

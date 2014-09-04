@@ -15,6 +15,7 @@ ifndef GOOGLE_HASH
 GOOGLE_HASH=1
 endif
 
+# STATIC=1
 THIRD_BIN=$(THIRD)/bin
 THIRD_INC=$(THIRD)/include
 THIRD_LIB=$(THIRD)/lib
@@ -31,7 +32,7 @@ else
 endif
 
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps \
--lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lmpi -lm -lpthread -lstdc++
+-lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lrt -lstdc++
 
 GTEST = -lgtest_main -lgtest
 

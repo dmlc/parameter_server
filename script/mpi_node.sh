@@ -1,38 +1,40 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-    echo "usage: ./self scheduler_node"
+set -x
+if [ $# -ne 2 ]; then
+    echo "usage: ./self scheduler_node mpi.conf"
     exit -1;
 fi
 
 # support mpich and openmpi
 # try mpirun -n 1 env to get all available environment
-if [ -n ${PMI_RANK} ]; then
+if [ ! -z ${PMI_RANK} ]; then
     my_rank=${PMI_RANK}
-elif [ -n ${OMPI_COMM_WORLD_RANK} ]; then
+elif [ ! -z ${OMPI_COMM_WORLD_RANK} ]; then
     my_rank=${OMPI_COMM_WORLD_RANK}
 else
     echo "failed to get my rank id"
     exit -1
 fi
 
-if [ -n ${PMI_SIZE} ]; then
+if [ ! -z ${PMI_SIZE} ]; then
     rank_size=${PMI_SIZE}
-elif [ -n ${OMPI_COMM_WORLD_SIZE}]; then
+elif [ ! -z ${OMPI_COMM_WORLD_SIZE} ]; then
     rank_size=${OMPI_COMM_WORLD_SIZE}
 else
     echo "failed to get the rank size"
     exit -1
 fi
+# echo "$my_rank $rank_size"
 
-source ../config/mpi.conf
+source ${2}
 
 if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
     echo "too small rank size ${rank_size}"
     exit -1
 fi
 
-my_ip=`ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}'`
+my_ip=`ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
 if [ -z ${my_ip} ]; then
     echo "failed to get the ip address"
     exit -1

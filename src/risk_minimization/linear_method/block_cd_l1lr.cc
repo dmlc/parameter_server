@@ -35,7 +35,11 @@ void BlockCoordDescL1LR::runIteration() {
     }
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(RiskMinCall::UPDATE_MODEL);
-      update.set_wait_time(time - tau);
+      if (iter == 0 && i < prior_block_order_.size()) {
+        update.set_wait_time(time);  // force zero delay
+      } else {
+        update.set_wait_time(time - tau);
+      }
       auto cmd = setCall(&update);
       if (i == 0) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);

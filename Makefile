@@ -1,5 +1,5 @@
 all :
-	make -C src
+	make -C src -j8
 clean :
 	make -C src clean
 data :
