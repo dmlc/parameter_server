@@ -28,6 +28,9 @@ message BlockSolverConfig {
   // precision of auc, the larger the better
   optional int64 auc_goodness = 12 [default = 100000];
 
+  // filter features whose number of occurs is less than *filter_fea_freq*
+  optional int32 filter_fea_freq = 15 [default = 4];
+
 }
 
 

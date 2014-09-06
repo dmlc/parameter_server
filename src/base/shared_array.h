@@ -41,6 +41,7 @@ template<typename V> class SArray {
   template <typename W> SArray(const std::initializer_list<W>& list);
   template <typename W> void operator=(const std::initializer_list<W>& list);
 
+
   // Slice a [range.begin(), range.end()) segment, zero-copy
   SArray<V> segment(const Range<size_t>& range) const;
   // Assume all arraies are ordered, return *this \cap other. for example:
@@ -83,6 +84,7 @@ template<typename V> class SArray {
   const V& operator[] (int i) const { return data_[i]; }
 
   // Modifiers
+  void append(const SArray<V>& tail);
   void pushBack(const V& val);
   void popBack() { if (size_) --size_; }
   void setValue(V value);

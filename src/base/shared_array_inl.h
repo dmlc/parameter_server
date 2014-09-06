@@ -235,6 +235,13 @@ SArray<char> SArray<V>::compressTo() const {
   return dest;
 }
 
+template <typename V>
+void SArray<V>::append(const SArray<V>& arr) {
+  auto orig_size = size_;
+  resize(size_ + arr.size());
+  memcpy(data_+orig_size, arr.data(), arr.size()*sizeof(V));
+}
+
 } // namespace PS
 
   // zlib version
@@ -247,9 +254,3 @@ SArray<char> SArray<V>::compressTo() const {
   // CHECK_EQ(ret, Z_OK) << "Compress error occured! Error code: " << ret;
   // dest.resize(dsize);
   // return dest;
-
-  // void append(const SArray<V>& arr) {
-  //   auto orig_size = size_;
-  //   resize(size_ + arr.size());
-  //   memcpy(data_+orig_size, arr.data(), arr.size()*sizeof(V));
-  // }

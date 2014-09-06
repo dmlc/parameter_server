@@ -61,6 +61,15 @@ class SharedParameter : public Customer {
         + to_string(t2_.getAndRestart()) + " "
         + to_string(t3_.getAndRestart()) + " ";
   }
+
+  CallSharedPara getCall(const Message& msg) {
+    CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
+    CHECK(msg.task.has_shared_para());
+    return msg.task.shared_para();
+  }
+  CallSharedPara* setCall(Message *msg) {
+    return setCall(&(msg->task));
+  }
  protected:
 
   virtual std::vector<Message> decomposeTemplate(
@@ -115,14 +124,6 @@ class SharedParameter : public Customer {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
 
-  CallSharedPara getCall(const Message& msg) {
-    CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg.task.has_shared_para());
-    return msg.task.shared_para();
-  }
-  CallSharedPara* setCall(Message *msg) {
-    return setCall(&(msg->task));
-  }
   CallSharedPara* setCall(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
     return task->mutable_shared_para();
@@ -162,11 +163,9 @@ void SharedParameter<K,V>::process(Message* msg) {
   timer_.start();
   switch (getCall(*msg).cmd()) {
     typedef CallSharedPara Call;
-
     case Call::PUSH:
       if (req) setValue(msg);
       break;
-
     case Call::PULL:
       if (req) {
         Message re = *msg;

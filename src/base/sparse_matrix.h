@@ -15,6 +15,9 @@
 #include "base/range.h"
 
 namespace PS {
+template<typename I, typename V> class SparseMatrix;
+template<typename I, typename V>
+using SparseMatrixPtr = std::shared_ptr<SparseMatrix<I, V>>;
 
 // sparse matrix with Yale format
 template<typename I, typename V>

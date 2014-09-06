@@ -860,6 +860,27 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline ::PS::CallSharedPara_Command cmd() const;
   inline void set_cmd(::PS::CallSharedPara_Command value);
 
+  // optional bool add_key = 2;
+  inline bool has_add_key() const;
+  inline void clear_add_key();
+  static const int kAddKeyFieldNumber = 2;
+  inline bool add_key() const;
+  inline void set_add_key(bool value);
+
+  // optional bool add_key_count = 3;
+  inline bool has_add_key_count() const;
+  inline void clear_add_key_count();
+  static const int kAddKeyCountFieldNumber = 3;
+  inline bool add_key_count() const;
+  inline void set_add_key_count(bool value);
+
+  // optional int32 key_freq = 4;
+  inline bool has_key_freq() const;
+  inline void clear_key_freq();
+  static const int kKeyFreqFieldNumber = 4;
+  inline ::google::protobuf::int32 key_freq() const;
+  inline void set_key_freq(::google::protobuf::int32 value);
+
   // repeated .PS.Timestamp backup = 6;
   inline int backup_size() const;
   inline void clear_backup();
@@ -876,14 +897,23 @@ class CallSharedPara : public ::google::protobuf::Message {
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
+  inline void set_has_add_key();
+  inline void clear_has_add_key();
+  inline void set_has_add_key_count();
+  inline void clear_has_add_key_count();
+  inline void set_has_key_freq();
+  inline void clear_has_key_freq();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   int cmd_;
+  bool add_key_;
+  bool add_key_count_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
+  ::google::protobuf::int32 key_freq_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1923,6 +1953,72 @@ inline void CallSharedPara::set_cmd(::PS::CallSharedPara_Command value) {
   assert(::PS::CallSharedPara_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
+}
+
+// optional bool add_key = 2;
+inline bool CallSharedPara::has_add_key() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CallSharedPara::set_has_add_key() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CallSharedPara::clear_has_add_key() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CallSharedPara::clear_add_key() {
+  add_key_ = false;
+  clear_has_add_key();
+}
+inline bool CallSharedPara::add_key() const {
+  return add_key_;
+}
+inline void CallSharedPara::set_add_key(bool value) {
+  set_has_add_key();
+  add_key_ = value;
+}
+
+// optional bool add_key_count = 3;
+inline bool CallSharedPara::has_add_key_count() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void CallSharedPara::set_has_add_key_count() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void CallSharedPara::clear_has_add_key_count() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void CallSharedPara::clear_add_key_count() {
+  add_key_count_ = false;
+  clear_has_add_key_count();
+}
+inline bool CallSharedPara::add_key_count() const {
+  return add_key_count_;
+}
+inline void CallSharedPara::set_add_key_count(bool value) {
+  set_has_add_key_count();
+  add_key_count_ = value;
+}
+
+// optional int32 key_freq = 4;
+inline bool CallSharedPara::has_key_freq() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void CallSharedPara::set_has_key_freq() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void CallSharedPara::clear_has_key_freq() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void CallSharedPara::clear_key_freq() {
+  key_freq_ = 0;
+  clear_has_key_freq();
+}
+inline ::google::protobuf::int32 CallSharedPara::key_freq() const {
+  return key_freq_;
+}
+inline void CallSharedPara::set_key_freq(::google::protobuf::int32 value) {
+  set_has_key_freq();
+  key_freq_ = value;
 }
 
 // repeated .PS.Timestamp backup = 6;

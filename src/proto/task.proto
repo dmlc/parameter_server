@@ -84,10 +84,16 @@ message CallSharedPara {
   }
 
   required Command cmd = 1;
+  optional bool add_key = 2;
+  optional bool add_key_count = 3;
+  optional int32 key_freq = 4;
+
   // required PbRange key = 5;
 
   repeated Timestamp backup = 6;
 
+
+  // optional cjs
   // repeated int32 vec = 7;
 }
 

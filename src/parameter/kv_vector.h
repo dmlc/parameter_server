@@ -2,6 +2,7 @@
 
 #include "Eigen/Dense"
 #include "parameter/shared_parameter.h"
+#include "parameter/frequency_filter.h"
 
 namespace PS {
 
@@ -63,6 +64,7 @@ class KVVector : public SharedParameter<K,V> {
  private:
   SArray<K> key_;
   SArray<V> val_;
+  FreqencyFilter<K> filter_;
 
   std::unordered_map<int, AlignedArrayList<V> > recved_val_;
   std::mutex recved_val_mu_;
@@ -246,9 +248,15 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(Message* msg) {
-  // if (msg->key.empty()) return;
-  CHECK_EQ(key_.size(), val_.size());
   SArray<K> recv_key(msg->key);
+  if (getCall(&msg).has_key_freq()) {
+    SArray<K> filtered_key =
+        filter_->filterKeys(recv_key, getCall(&msg).key_freq());
+    msg->value.push_back(SArray<char>(filtered_key));
+    return;
+  }
+
+  CHECK_EQ(key_.size(), val_.size());
   size_t n = 0;
   Range<Key> range = recv_key.range().setUnion(key_.range());
   t1_.start();
@@ -268,9 +276,28 @@ void KVVector<K,V>::setValue(Message* msg) {
   SArray<K> recv_key(msg->key);
   Range<K> key_range(msg->task.key_range());
 
-  if (msg->value.empty() && !msg->key.empty()) {
+  if (getCall(&msg).add_key()) {
     key_ = key_.setUnion(recv_key);
-    // LL << key_.size();
+    return;
+  }
+  if (getCall(&msg).add_key_count()) {
+    CHECK_EQ(msg->value.size(), 1);
+    SArray<uint32> key_cnt(msg->value[0]);
+    CHECK_EQ(key_cnt.size(), recv_key.size());
+    filter_->addKeys(recv_key, key_cnt);
+    return;
+  }
+  if (getCall(&msg).has_key_freq()) {
+    CHECK_EQ(msg->value.size(), 1);
+    SArray<Key> filtered_key(msg->value[0]);
+    if (filtered_key.empty()) return;
+    if (key_.empty()) key_ = filtered_key;
+    if (key_.front() < filtered_key.front()) {
+      key_.append(filtered_key);
+    } else {
+      filtered_key.append(key_);
+      key_ = filtered_key;
+    }
     return;
   }
 

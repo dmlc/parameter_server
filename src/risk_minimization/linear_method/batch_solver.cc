@@ -190,11 +190,6 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
   }
 
   // failed to fetch cache, load from *data*
-  auto list = readMatricesOrDie<double>(data);
-  CHECK_EQ(list.size(), 2);
-  // LL << list[1]->info().DebugString();
-  y_ = list[0];
-  X_ = list[1]->localize(&(w_->key()));
 
   LL << w_->key().size();
   CHECK_EQ(y_->rows(), X_->rows());
@@ -209,43 +204,84 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
 InstanceInfo BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    // load data
-    loadData(app_cf_.training_data(), "train");
+    bool hit_cache = false;
+    if (app_cf_.has_local_cache()) {
+      hit_cache = loadCache(app_cf_.local_cache(), "train");
+    }
+    SArray<Key> uniq_key;
+    SArray<uint32> key_cnt;
+    SparseMatrixPtr<Key, double> X;
+    if (!hit_cache) {
+      auto list = readMatricesOrDie<double>(app_cf_.training_data());
+      CHECK_EQ(list.size(), 2);
+      y_ = list[0];
+      X = std::static_pointer_cast<SparseMatrix<Key, double>>(list[1]);
+      X->countUniqIndex(&uniq_key, &key_cnt);
+    }
 
-    // sync keys and fetch initial value of w_
-    SArrayList<double> empty;
-    std::promise<void> promise;
-    w_->roundTripForWorker(time, Range<Key>::all(), empty, [this, &promise](int t) {
-        auto data = w_->received(t);
-        CHECK_EQ(data.size(), 1);
-        CHECK_EQ(w_->key().size(), data[0].first.size());
-        w_->value() = data[0].second;
-        promise.set_value();
-      });
-    promise.get_future().wait();
-    // LL << myNodeID() << " received w";
+    // Time 0: send all unique keys with their count to servers
+    Message count;
+    count.key = uniq_key;
+    count.value.push_back(SArray<char>(key_cnt));
+    w_->setCall(&count)->set_add_key_count(true);
+    CHECK_EQ(time, w_->sync(
+        CallSharedPara::PUSH, kServerGroup, Range<Key>::all(), count, time));
+
+    // Time 2: filtering infrequent keys
+    Message filter;
+    filter.key = uniq_key;
+    w_->setCall(&filter)->set_key_freq(app_cf_.block_solver().filter_fea_freq());
+    CHECK(time+2, w_->sync(
+        CallSharedPara::PULL, kServerGroup, Range<Key>::all(), filter, time+2,
+        time+1));
+    w_->taskpool(kServerGroup)->waitOutgoingTask(time + 2);
+
+    // Time 3: send filtered keys to servers
+    Message push_key;
+    push_key.key = w_->key();
+    w_->setCall(&push_key)->set_add_key(true);
+    CHECK(time+3, w_->sync(
+        CallSharedPara::PUSH, kServerGroup, Range<Key>::all(), push_key, time+3));
+
+    // Time 5: fetch initial value of w_
+    Message pull_val;
+    pull_val.key = w_->key();
+    CHECK(time+5, w_->sync(
+        CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_val, time+5,
+        time+4));
+    w_->taskpool(kServerGroup)->waitOutgoingTask(time+5);
+    auto init_w = w_->received(time+5);
+    CHECK_EQ(init_w.size(), 1);
+    CHECK_EQ(w_->key().size(), init_w[0].first.size());
+    w_->value() = init_w[0].second;
+
+    // initial the dual variable
     dual_.resize(X_->rows());
     dual_.eigenVector() = *X_ * w_->value().eigenVector();
     return y_->info().ins_info();
   } else {
-    w_->roundTripForServer(time, Range<Key>::all(), [this](int t){
-        // LL << myNodeID() << " received keys";
-        if (w_->key().empty()) {
-          // avoid empty keyset, it may bring problems
-          w_->key().pushBack(exec_.myNode().key().begin());
-        }
-        w_->value().resize(w_->key().size());
-        auto init = app_cf_.init_w();
-        if (init.type() == ParameterInitConfig::ZERO) {
-          w_->value().setZero();
-        } else if (init.type() == ParameterInitConfig::RANDOM) {
-          w_->value().eigenVector() =
-              Eigen::VectorXd::Random(w_->value().size()) * init.std();
-          LL << w_->value().eigenVector().squaredNorm();
-        } else {
-          LL << "TOOD load from files";
-        }
-      });
+    // Time 0
+    w_->taskpool(kWorkerGroup)->waitIncomingTask(time);
+
+    // Time 1
+    w_->taskpool(kWorkerGroup)->finishIncomingTask(time+1);
+
+    // Time 3
+    w_->taskpool(kWorkerGroup)->waitIncomingTask(time+3);
+
+    // Time 4
+    w_->value().resize(w_->key().size());
+    auto init = app_cf_.init_w();
+    if (init.type() == ParameterInitConfig::ZERO) {
+      w_->value().setZero();
+    } else if (init.type() == ParameterInitConfig::RANDOM) {
+      w_->value().eigenVector() =
+          Eigen::VectorXd::Random(w_->value().size()) * init.std();
+      LL << w_->value().eigenVector().squaredNorm();
+    } else {
+      LL << "TOOD load from files";
+    }
+    w_->taskpool(kWorkerGroup)->finishIncomingTask(time+4);
   }
   return InstanceInfo();
 }

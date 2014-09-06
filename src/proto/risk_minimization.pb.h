@@ -233,6 +233,13 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 auc_goodness() const;
   inline void set_auc_goodness(::google::protobuf::int64 value);
 
+  // optional int32 filter_fea_freq = 15 [default = 4];
+  inline bool has_filter_fea_freq() const;
+  inline void clear_filter_fea_freq();
+  static const int kFilterFeaFreqFieldNumber = 15;
+  inline ::google::protobuf::int32 filter_fea_freq() const;
+  inline void set_filter_fea_freq(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.BlockSolverConfig)
  private:
   inline void set_has_minibatch_size();
@@ -251,6 +258,8 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   inline void clear_has_epsilon();
   inline void set_has_auc_goodness();
   inline void clear_has_auc_goodness();
+  inline void set_has_filter_fea_freq();
+  inline void clear_has_filter_fea_freq();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -261,11 +270,12 @@ class BlockSolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 num_iter_for_prior_fea_group_;
   ::google::protobuf::int32 max_block_delay_;
   double epsilon_;
-  ::google::protobuf::int64 auc_goodness_;
   ::google::protobuf::int32 max_pass_of_data_;
+  ::google::protobuf::int32 filter_fea_freq_;
+  ::google::protobuf::int64 auc_goodness_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -1227,6 +1237,28 @@ inline ::google::protobuf::int64 BlockSolverConfig::auc_goodness() const {
 inline void BlockSolverConfig::set_auc_goodness(::google::protobuf::int64 value) {
   set_has_auc_goodness();
   auc_goodness_ = value;
+}
+
+// optional int32 filter_fea_freq = 15 [default = 4];
+inline bool BlockSolverConfig::has_filter_fea_freq() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void BlockSolverConfig::set_has_filter_fea_freq() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void BlockSolverConfig::clear_has_filter_fea_freq() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void BlockSolverConfig::clear_filter_fea_freq() {
+  filter_fea_freq_ = 4;
+  clear_has_filter_fea_freq();
+}
+inline ::google::protobuf::int32 BlockSolverConfig::filter_fea_freq() const {
+  return filter_fea_freq_;
+}
+inline void BlockSolverConfig::set_filter_fea_freq(::google::protobuf::int32 value) {
+  set_has_filter_fea_freq();
+  filter_fea_freq_ = value;
 }
 
 // -------------------------------------------------------------------
