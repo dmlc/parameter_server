@@ -24,6 +24,7 @@ class CountMin {
         data_[h % n_] += count[i];
         h += delta;
       }
+      // map_[key[i]] += count[i];
     }
   }
 
@@ -36,6 +37,10 @@ class CountMin {
       h += delta;
     }
     return res;
+
+    // auto it = map_.find(key);
+    // if (it == map_.end()) return 0;
+    // return it->second;
   }
 
  private:
@@ -55,6 +60,7 @@ class CountMin {
   }
 
   SArray<uint32> data_;
+  // std::unordered_map<uint64, uint32> map_;
   int n_ = 0;
   int k_ = 1;
 };

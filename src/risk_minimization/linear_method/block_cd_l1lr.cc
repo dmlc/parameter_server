@@ -375,7 +375,7 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
     prog.set_violation(violation_);
     prog.set_nnz_active_set(active_set_.nnz());
   }
-  LL << myNodeID() << ": " << w_->getTime();
+  // LL << myNodeID() << ": " << w_->getTime();
   return prog;
 }
 

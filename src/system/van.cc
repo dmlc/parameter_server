@@ -4,7 +4,7 @@
 #include "base/shared_array_inl.h"
 
 namespace PS {
-#define _DEBUG_VAN_
+// #define _DEBUG_VAN_
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_string(scheduler, "", "the scheduler node");

@@ -357,7 +357,7 @@ MatrixPtr<V> SparseMatrix<I,V>::remapIndex(const SArray<I>& idx_map) const {
     local.to(info.mutable_row());
   }
 
-  LL << curr_o << " " << curr_j;
+  LL << curr_o << " " << local.end() << " " << curr_j;
 
   return MatrixPtr<V>(
       new SparseMatrix<uint32, V>(info, new_offset, new_index, new_value));

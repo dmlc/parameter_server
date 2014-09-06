@@ -358,8 +358,10 @@ decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
       }
       SizeR lr(pos[i], pos[i+1]);
       part.key = key.segment(lr);
-      for (auto& d : msg.value) {
-        part.value.push_back(d.segment(lr * (d.size() / key.size())));
+      if (!key.empty()) {
+        for (auto& d : msg.value) {
+          part.value.push_back(d.segment(lr * (d.size() / key.size())));
+        }
       }
     }
     ret[i] = part;
