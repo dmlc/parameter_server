@@ -57,6 +57,7 @@ template<typename V> class SArray {
 
   // Capacity
   size_t size() const { return size_; }
+  size_t capacity() const { return capacity_; }
   bool empty() const { return size() == 0; }
   // Replace the current data pointer with data. the memory associated with the
   // replaced pointer will be released if no other SArray points to it.

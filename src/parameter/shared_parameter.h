@@ -1,9 +1,6 @@
 #pragma once
-
 #include "system/customer.h"
-
 namespace PS {
-
 
 #define USING_SHARED_PARAMETER                  \
   using Customer::taskpool;                     \
@@ -21,7 +18,6 @@ namespace PS {
 template <typename K, typename V>
 class SharedParameter : public Customer {
  public:
-
   // process a received message, will called by the thread of executor
   void process(Message* msg);
 

@@ -153,23 +153,38 @@ void BatchSolver::runIteration() {
   }
 }
 
+bool BatchSolver::loadCache(const DataConfig& cache_dir, const string& cache_name) {
+  auto y_conf = ithFile(cache_dir, 0, "_" + cache_name + "_y_" + myNodeID());
+  auto X_conf = ithFile(cache_dir, 0, "_" + cache_name + "_X_" + myNodeID());
+  auto key_conf = ithFile(cache_dir, 0, "_" + cache_name + "_key_" + myNodeID());
+  MatrixPtrList<double> y_list, X_list;
+  if (!(readMatrices<double>(y_conf, &y_list) &&
+        readMatrices<double>(X_conf, &X_list) &&
+        w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf))) {
+    return false;
+  }
+  y_ = y_list[0];
+  X_ = X_list[0];
+  LI << "\t" << myNodeID() << " hit cache in " << cache_dir.file(0) << " for " << cache_name;
+
+  return true;
+}
+
+
+void BatchSolver::saveCache(const DataConfig& cache, const string& cache_name) {
+  auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
+  auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+  auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
+  CHECK(y_->writeToBinFile(y_conf.file(0)));
+  CHECK(X_->writeToBinFile(X_conf.file(0)));
+  CHECK(w_->key().writeToFile(key_conf.file(0)));
+}
+
 void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
   bool hit_cache = false;
-  DataConfig y_conf, X_conf, key_conf;
   // try to fetch the local cache
   if (app_cf_.has_local_cache()) {
-    MatrixPtrList<double> y_list, X_list;
-    auto cache = app_cf_.local_cache();
-    y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
-    X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
-    key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-    hit_cache = readMatrices<double>(y_conf, &y_list) &&
-                readMatrices<double>(X_conf, &X_list) &&
-                w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf);
-    if (hit_cache) {
-      y_ = y_list[0];
-      X_ = X_list[0];
-      LI << "\t" << myNodeID() << " hit data cache for " << cache_name;
+    if (loadCache(app_cf_.local_cache(), cache_name)) {
       return;
     }
   }
@@ -177,16 +192,17 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
   // failed to fetch cache, load from *data*
   auto list = readMatricesOrDie<double>(data);
   CHECK_EQ(list.size(), 2);
+  // LL << list[1]->info().DebugString();
   y_ = list[0];
   X_ = list[1]->localize(&(w_->key()));
+
+  LL << w_->key().size();
   CHECK_EQ(y_->rows(), X_->rows());
   if (cache_name == "train") X_ = X_->toColMajor();
 
   // save to local cache
   if (app_cf_.has_local_cache()) {
-    CHECK(y_->writeToBinFile(y_conf.file(0)));
-    CHECK(X_->writeToBinFile(X_conf.file(0)));
-    CHECK(w_->key().writeToFile(key_conf.file(0)));
+    saveCache(app_cf_.local_cache(), cache_name);
   }
 }
 

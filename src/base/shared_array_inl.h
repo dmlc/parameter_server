@@ -69,7 +69,7 @@ template <typename V>
 template <typename W>
 void SArray<V>::operator=(const SArray<W>& arr) {
   size_ = arr.size() * sizeof(W) / sizeof(V);
-  capacity_ = size_;
+  capacity_ = arr.capacity();
   data_ = reinterpret_cast<V*>(arr.data());
   ptr_ = arr.pointer();
 }
