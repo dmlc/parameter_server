@@ -43,9 +43,9 @@ int main(int argc, char *argv[]) {
 
   Timer t; t.start();
   reader.Reload();
-
   auto info = parser.info();
   writeProtoToASCIIFileOrDie(info, FLAGS_output+".info");
+  t.stop();
 
   std::cerr << "written " << info.num_ins()
             << " instances in " <<  t.get()  << " sec." << std::endl;

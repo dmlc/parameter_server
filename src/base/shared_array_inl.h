@@ -159,7 +159,6 @@ SArray<V> SArray<V>::setUnion(const SArray<V>& other) const {
   V* last = std::set_union(
       begin(), end(), other.begin(), other.end(), result.begin());
   result.size_ = last - result.begin();
-  result.capacity_ = result.size_;
   return result;
 }
 
@@ -237,6 +236,8 @@ SArray<char> SArray<V>::compressTo() const {
 
 template <typename V>
 void SArray<V>::append(const SArray<V>& arr) {
+  if (arr.empty()) return;
+  LL << size_ << " " << arr.size();
   auto orig_size = size_;
   resize(size_ + arr.size());
   memcpy(data_+orig_size, arr.data(), arr.size()*sizeof(V));

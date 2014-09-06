@@ -1,17 +1,31 @@
 #pragma once
-#include "system/customer.h"
+#include "util/countmin.h"
+#include "system/postoffice.h"
+
 namespace PS {
 
 template<typename K>
 class FreqencyFilter {
  public:
-  void addKeys(const SArray<K>& key, const SArray<uint32>& count) { }
+  // add unique keys with their key count
+  void addKeys(const SArray<K>& key, const SArray<uint32>& count) {
+    if (key.empty()) return;
+    if (count_.capacity() == 0) {
+      count_.resize(key.size() * FLAGS_num_workers * 10, 2);
+    }
+    count_.bulkInsert(key, count);
+  }
 
-  SArray<K> filterKeys(const SArray<K>& key, int freqency) { }
-
+  // filter keys using the threadhold *freqency*
+  SArray<K> filterKeys(const SArray<K>& key, int freqency) const {
+    SArray<K> filtered_key;
+    for (auto k : key) {
+      if (count_.query(k) > freqency) filtered_key.pushBack(k);
+    }
+    return filtered_key;
+  }
  private:
-  // TODO implement by countmin to save memory
-  SArray<K> key_;
-  SArray<uint32> count_;
+  CountMin count_;
 };
+
 }

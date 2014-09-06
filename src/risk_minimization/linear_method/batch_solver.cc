@@ -181,7 +181,6 @@ void BatchSolver::saveCache(const DataConfig& cache, const string& cache_name) {
 }
 
 void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
-  bool hit_cache = false;
   // try to fetch the local cache
   if (app_cf_.has_local_cache()) {
     if (loadCache(app_cf_.local_cache(), cache_name)) {
@@ -205,9 +204,9 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
     bool hit_cache = false;
-    if (app_cf_.has_local_cache()) {
-      hit_cache = loadCache(app_cf_.local_cache(), "train");
-    }
+    // if (app_cf_.has_local_cache()) {
+    //   hit_cache = loadCache(app_cf_.local_cache(), "train");
+    // }
     SArray<Key> uniq_key;
     SArray<uint32> key_cnt;
     SparseMatrixPtr<Key, double> X;
@@ -224,50 +223,58 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     count.key = uniq_key;
     count.value.push_back(SArray<char>(key_cnt));
     w_->setCall(&count)->set_add_key_count(true);
-    CHECK_EQ(time, w_->sync(
-        CallSharedPara::PUSH, kServerGroup, Range<Key>::all(), count, time));
+    CHECK_EQ(time, w_->push(kServerGroup, Range<Key>::all(), count, time));
+    LL << "time 1";
 
     // Time 2: filtering infrequent keys
     Message filter;
     filter.key = uniq_key;
     w_->setCall(&filter)->set_key_freq(app_cf_.block_solver().filter_fea_freq());
-    CHECK(time+2, w_->sync(
-        CallSharedPara::PULL, kServerGroup, Range<Key>::all(), filter, time+2,
-        time+1));
+    CHECK_EQ(time+2, w_->pull(
+        kServerGroup, Range<Key>::all(), filter, time+2, time+1));
     w_->taskpool(kServerGroup)->waitOutgoingTask(time + 2);
+    LL << "time 2: " << w_->key().size();
 
     // Time 3: send filtered keys to servers
     Message push_key;
     push_key.key = w_->key();
     w_->setCall(&push_key)->set_add_key(true);
-    CHECK(time+3, w_->sync(
-        CallSharedPara::PUSH, kServerGroup, Range<Key>::all(), push_key, time+3));
+    CHECK_EQ(time+3, w_->push(kServerGroup, Range<Key>::all(), push_key, time+3));
+    LL << "time 3:";
 
     // Time 5: fetch initial value of w_
     Message pull_val;
     pull_val.key = w_->key();
-    CHECK(time+5, w_->sync(
-        CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_val, time+5,
-        time+4));
+    CHECK_EQ(time+5, w_->pull(kServerGroup, Range<Key>::all(), pull_val, time+5, time+4));
     w_->taskpool(kServerGroup)->waitOutgoingTask(time+5);
+    LL << "time 5:";
+
     auto init_w = w_->received(time+5);
     CHECK_EQ(init_w.size(), 1);
     CHECK_EQ(w_->key().size(), init_w[0].first.size());
     w_->value() = init_w[0].second;
 
+    LL << w_->value().size();
+
+    X_ = X->remapIndex(w_->key())->toColMajor();
+
+
     // initial the dual variable
     dual_.resize(X_->rows());
     dual_.eigenVector() = *X_ * w_->value().eigenVector();
+
+    LL << dual_.size();
     return y_->info().ins_info();
   } else {
     // Time 0
     w_->taskpool(kWorkerGroup)->waitIncomingTask(time);
-
+    LL << "S time 1";
     // Time 1
     w_->taskpool(kWorkerGroup)->finishIncomingTask(time+1);
 
     // Time 3
     w_->taskpool(kWorkerGroup)->waitIncomingTask(time+3);
+    LL << "S time 3";
 
     // Time 4
     w_->value().resize(w_->key().size());
@@ -283,6 +290,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     }
     w_->taskpool(kWorkerGroup)->finishIncomingTask(time+4);
   }
+
   return InstanceInfo();
 }
 

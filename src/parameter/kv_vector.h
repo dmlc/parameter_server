@@ -249,9 +249,9 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 template <typename K, typename V>
 void KVVector<K,V>::getValue(Message* msg) {
   SArray<K> recv_key(msg->key);
-  if (getCall(&msg).has_key_freq()) {
+  if (getCall(*msg).has_key_freq()) {
     SArray<K> filtered_key =
-        filter_->filterKeys(recv_key, getCall(&msg).key_freq());
+        filter_.filterKeys(recv_key, getCall(*msg).key_freq());
     msg->value.push_back(SArray<char>(filtered_key));
     return;
   }
@@ -271,37 +271,36 @@ void KVVector<K,V>::getValue(Message* msg) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(Message* msg) {
-  Lock l(recved_val_mu_);
+
+  // LL << msg->task.DebugString();
+  // LL << getCall(*msg).has_key_freq();
+  if (getCall(*msg).has_key_freq()) {
+    if (msg->value.empty()) return;
+    CHECK_EQ(msg->value.size(), 1);
+    SArray<Key> filtered_key(msg->value[0]);
+    key_ = key_.setUnion(filtered_key);
+    return;
+  }
 
   SArray<K> recv_key(msg->key);
+  if (recv_key.empty()) return;
+
   Range<K> key_range(msg->task.key_range());
 
-  if (getCall(&msg).add_key()) {
+  if (getCall(*msg).add_key()) {
     key_ = key_.setUnion(recv_key);
     return;
   }
-  if (getCall(&msg).add_key_count()) {
+  if (getCall(*msg).add_key_count()) {
     CHECK_EQ(msg->value.size(), 1);
     SArray<uint32> key_cnt(msg->value[0]);
     CHECK_EQ(key_cnt.size(), recv_key.size());
-    filter_->addKeys(recv_key, key_cnt);
-    return;
-  }
-  if (getCall(&msg).has_key_freq()) {
-    CHECK_EQ(msg->value.size(), 1);
-    SArray<Key> filtered_key(msg->value[0]);
-    if (filtered_key.empty()) return;
-    if (key_.empty()) key_ = filtered_key;
-    if (key_.front() < filtered_key.front()) {
-      key_.append(filtered_key);
-    } else {
-      filtered_key.append(key_);
-      key_ = filtered_key;
-    }
+    filter_.addKeys(recv_key, key_cnt);
     return;
   }
 
   int t = msg->task.time();
+  Lock l(recved_val_mu_);
   bool first = recved_val_.count(t) == 0;
 
   // LL << "recv push" << msg->debugString();
@@ -335,8 +334,9 @@ decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
 
   SArray<K> key(msg.key);
   pos.reserve(n);
-  for (auto k : partition)
+  for (auto k : partition) {
     pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
+  }
 
   // split the message
   Message part = msg;
@@ -345,24 +345,24 @@ decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
     part.clearData();
     if (Range<K>(partition[i], partition[i+1]).setIntersection(
             Range<K>(msg.task.key_range())).empty()) {
-      // mark as do_not_send, because the remote node does not maintain this key range
+      // the remote node does not maintain this key range. mark this message as
+      // valid, which will be not actually sent
       part.valid = false;
-      // LL << myNodeID() << " " << part.shortDebugString() << " " << i;
     } else {
       part.valid = true;
-      if (pos[i] == -1)
+      if (pos[i] == -1) {
         pos[i] = std::lower_bound(key.begin(), key.end(), partition[i]) - key.begin();
-      if (pos[i+1] == -1)
+      }
+      if (pos[i+1] == -1) {
         pos[i+1] = std::lower_bound(key.begin(), key.end(), partition[i+1]) - key.begin();
+      }
       SizeR lr(pos[i], pos[i+1]);
       part.key = key.segment(lr);
       for (auto& d : msg.value) {
-        SArray<V> data(d);
-        part.value.push_back(SArray<char>(data.segment(lr)));
+        part.value.push_back(d.segment(lr * (d.size() / key.size())));
       }
     }
     ret[i] = part;
-    // LL << ret[i].debugString();
   }
   return ret;
 }

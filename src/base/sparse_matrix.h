@@ -289,12 +289,15 @@ MatrixPtr<V> SparseMatrix<I,V>::remapIndex(const SArray<I>& idx_map) const {
 
   // a hashmap solution, often uses 2x times than countUniqIndex
   // TODO use a countmin-like approach to accelerate this code block.
+  // TODO new_index is too large... not memory efficient
   SArray<uint32> new_index(index_.size());
+  new_index.setValue(-1);
   {
     ThreadPool pool(num_threads);
     // use a large constant, e.g. 6, here. because dense_hash_set/map may have
     // serious performace issues after inserting too many keys
     int npart = num_threads * 4;
+
     for (int i = 0; i < npart; ++i) {
       auto thread_range = idx_map.range().evenDivide(npart, i);
       pool.add([this, thread_range, &idx_map, &new_index]() {
@@ -318,19 +321,46 @@ MatrixPtr<V> SparseMatrix<I,V>::remapIndex(const SArray<I>& idx_map) const {
     }
     pool.startWorkers();
   }
-  // LL << t.getAndRestart();
 
   // construct the new matrix
+  bool bin = binary();
+  size_t curr_j = 0, curr_o = 0;
+  SArray<size_t> new_offset(offset_.size());
+  SArray<V> new_value(value_.size());
+  new_offset[0] = 0;
+  for (size_t i = 0; i < offset_.size() - 1; ++i) {
+    size_t n = 0;
+    for (size_t j = offset_[i]; j < offset_[i+1]; ++j) {
+      if (new_index[j] == -1) continue;
+      ++ n;
+      if (!bin) new_value[curr_j] = value_[j];
+      new_index[curr_j++] = new_index[j];
+    }
+    if (n) {
+      new_offset[curr_o+1] = new_offset[curr_o] + n;
+      ++ curr_o;
+    }
+  }
+  new_offset.resize(curr_o+1);
+  new_index.resize(curr_j);
+  if (!bin) new_value.resize(curr_j);
+
   auto info = info_;
   info.set_sizeof_index(sizeof(uint32));
+  info.set_nnz(new_index.size());
   SizeR local(0, idx_map.size());
-  if (rowMajor())
+  if (rowMajor()) {
+    SizeR(0, curr_o).to(info.mutable_row());
     local.to(info.mutable_col());
-  else
+  } else {
+    SizeR(0, curr_o).to(info.mutable_col());
     local.to(info.mutable_row());
+  }
+
+  LL << curr_o << " " << curr_j;
 
   return MatrixPtr<V>(
-      new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
+      new SparseMatrix<uint32, V>(info, new_offset, new_index, new_value));
 }
 
 // debug

@@ -55,6 +55,21 @@ class SharedParameter : public Customer {
     return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
   }
 
+  int pull(const NodeID& dest, Range<K> key_range, Message data,
+           int time = -1, int wait_time = -1,
+           Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
+    return sync(CallSharedPara::PULL, dest, key_range, data, time, wait_time,
+                recv_handle, fin_handle, no_wait);
+  }
+
+  int push(const NodeID& dest, Range<K> key_range, Message data,
+           int time = -1, int wait_time = -1,
+           Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
+    return sync(CallSharedPara::PUSH, dest, key_range, data, time, wait_time,
+                recv_handle, fin_handle, no_wait);
+  }
+
+
   string getTime() {
     return to_string(timer_.getAndRestart()) + " "
         + to_string(t1_.getAndRestart()) + " "
