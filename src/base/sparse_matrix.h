@@ -259,6 +259,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
 template<typename I, typename V>
 void SparseMatrix<I,V>::countUniqIndex(
     SArray<I>* uniq_idx, SArray<uint32>* idx_cnt) const {
+  CHECK(!index_.empty());
   int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
 
   SArray<I> sorted_index;
@@ -269,17 +270,24 @@ void SparseMatrix<I,V>::countUniqIndex(
   uniq_idx->clear();
   if (idx_cnt) idx_cnt->clear();
 
-  I curr = (I) -1;
+  I curr = sorted_index[0];
   uint32 cnt = 0;
   for (I v : sorted_index) {
     ++ cnt;
     if (v != curr) {
-      uniq_idx->pushBack(v);
+      uniq_idx->pushBack(curr);
       curr = v;
       if (idx_cnt) idx_cnt->pushBack(cnt);
-      cnt = 1;
+      cnt = 0;
     }
   }
+  if (!uniq_idx->empty()) {
+    uniq_idx->pushBack(curr);
+    if (idx_cnt) idx_cnt->pushBack(cnt);
+  }
+  // index_.writeToFile("index");
+  // uniq_idx->writeToFile("uniq");
+  // idx_cnt->writeToFile("cnt");
 }
 
 template<typename I, typename V>

@@ -17,6 +17,7 @@ void BatchSolver::run() {
   // start the system
   LinearMethod::startSystem();
 
+  LI << app_cf_.ShortDebugString();
   // load data
   timer_.start();
   Task prepare;
@@ -224,12 +225,12 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     count.value.push_back(SArray<char>(key_cnt));
     w_->setCall(&count)->set_add_key_count(true);
     CHECK_EQ(time, w_->push(kServerGroup, Range<Key>::all(), count, time));
-    LL << myNodeID() << " local key " << uniq_key.size();
+    // LL << myNodeID() << " local key " << uniq_key.size();
 
     size_t fk = 0;
     for (auto k : key_cnt)
       if (k > app_cf_.block_solver().filter_fea_freq()) ++ fk;
-    LL << myNodeID() << " filter by local " << fk;
+    // LL << myNodeID() << " filter by local " << fk;
 
     // Time 2: filtering infrequent keys
     Message filter;
@@ -238,7 +239,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     CHECK_EQ(time+2, w_->pull(
         kServerGroup, Range<Key>::all(), filter, time+2, time+1));
     w_->taskpool(kServerGroup)->waitOutgoingTask(time + 2);
-    LL << myNodeID() << " filtered key " << w_->key().size();
+    // LL << myNodeID() << " filtered key " << w_->key().size();
 
     if (!hit_cache) {
       X_ = X->remapIndex(w_->key())->toColMajor();

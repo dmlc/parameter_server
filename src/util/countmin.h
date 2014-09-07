@@ -8,39 +8,39 @@ class CountMin {
  public:
   int capacity() const { return n_; }
   void resize(int n, int k) {
-    n_ = std::max(n, 64);
-    data_.resize(n_);
-    data_.setZero();
-    k_ = std::min(30, std::max(1, k));
+    // n_ = std::max(n, 64);
+    // data_.resize(n_);
+    // data_.setZero();
+    // k_ = std::min(30, std::max(1, k));
   }
 
   void bulkInsert(const SArray<uint64>& key, const SArray<uint32>& count) {
-    CHECK_GT(n_, 0);
+    // CHECK_GT(n_, 0);
     CHECK_EQ(key.size(), count.size());
     for (size_t i = 0; i < key.size(); ++i) {
-      uint32 h = hash(key[i]);
-      const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
-      for (int j = 0; j < k_; ++j) {
-        data_[h % n_] += count[i];
-        h += delta;
-      }
-      // map_[key[i]] += count[i];
+    //   uint32 h = hash(key[i]);
+    //   const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    //   for (int j = 0; j < k_; ++j) {
+    //     data_[h % n_] += count[i];
+    //     h += delta;
+    //   }
+      map_[key[i]] += count[i];
     }
   }
 
   uint32 query(const uint64& key) const {
-    uint32 res = kuint32max;
-    uint32 h = hash(key);
-    const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
-    for (int j = 0; j < k_; ++j) {
-      res = std::min(res, data_[h % n_]);
-      h += delta;
-    }
-    return res;
+    // uint32 res = kuint32max;
+    // uint32 h = hash(key);
+    // const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    // for (int j = 0; j < k_; ++j) {
+    //   res = std::min(res, data_[h % n_]);
+    //   h += delta;
+    // }
+    // return res;
 
-    // auto it = map_.find(key);
-    // if (it == map_.end()) return 0;
-    // return it->second;
+    auto it = map_.find(key);
+    if (it == map_.end()) return 0;
+    return it->second;
   }
 
  private:
@@ -60,7 +60,7 @@ class CountMin {
   }
 
   SArray<uint32> data_;
-  // std::unordered_map<uint64, uint32> map_;
+  std::unordered_map<uint64, uint32> map_;
   int n_ = 0;
   int k_ = 1;
 };
