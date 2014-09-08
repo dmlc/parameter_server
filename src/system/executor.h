@@ -63,7 +63,7 @@ class Executor {
     return it->second;
   }
 
-  Keys& partition(const NodeID& k) {
+  const KeyList& partition(const NodeID& k) {
     Lock l(node_mu_);
     auto it = node_key_partition_.find(k);
     CHECK(it != node_key_partition_.end()) << "unkonw node group: " << k;
@@ -100,7 +100,7 @@ class Executor {
 
   std::unordered_map<NodeID, RNodePtr> nodes_;
   std::unordered_map<NodeID, RNodePtrList> node_groups_;
-  std::unordered_map<NodeID, Keys> node_key_partition_;
+  std::unordered_map<NodeID, KeyList> node_key_partition_;
   std::mutex node_mu_;
 
   Node my_node_;

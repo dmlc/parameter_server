@@ -52,13 +52,15 @@ namespace PS {
 // uint128, we need to change proto/range.proto to string type, because uint64
 // is the largest integer type supported by protobuf
 typedef uint64 Key;
-typedef std::vector<Key> Keys;
+typedef std::vector<Key> KeyList;
 
 // profobuf. if we want to larger ones, such as uint128, we need to typedef uint64 Key;
 
 typedef std::lock_guard<std::mutex> Lock;
 
 using std::string;
+typedef std::vector<std::string> StringList;
+
 using std::shared_ptr;
 using std::unique_ptr;
 using std::pair;

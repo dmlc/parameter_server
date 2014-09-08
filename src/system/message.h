@@ -8,21 +8,18 @@ namespace PS {
 
 // typedef size_t NodeID;
 typedef string NodeID;
+struct Message;
+typedef std::vector<Message> MessageList;
 
 struct Message {
   Message() { }
   explicit Message(const Task& tk) : task(tk) { }
-
   // content will be sent over network
   Task task;
   SArray<char> key;
-  std::vector<SArray<char> > value;
-
+  std::vector<SArray<char>> value;
+  // metadata used for local process/node
   NodeID sender, recver, original_recver;
-
-  // true if it is the first massege received in the time specified in task
-  // bool first = false;
-
   // true if this message has been replied
   bool replied = false;
   // true if the task asscociated with this message if finished.
@@ -30,10 +27,8 @@ struct Message {
   // an inivalid message will not be sent, instead, the postoffice will fake a
   // reply message. see Postoffice::queue()
   bool valid = true;
-
   // set it to be true to stop the sending thread of Postoffice.
   bool terminate = false;
-
   // clear the data, but keep all metadata
   void clearData() {
     key = SArray<char>();

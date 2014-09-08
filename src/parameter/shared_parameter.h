@@ -9,74 +9,46 @@ namespace PS {
   using SharedParameter<K,V>::setCall;          \
   using SharedParameter<K,V>::myKeyRange;       \
   using SharedParameter<K,V>::keyRange;         \
-  using SharedParameter<K,V>::sync;             \
-  using SharedParameter<K,V>::t1_;              \
-  using SharedParameter<K,V>::t2_;              \
-  using SharedParameter<K,V>::t3_
+  using SharedParameter<K,V>::sync
 
 // the base class of shared parameters
 template <typename K, typename V>
 class SharedParameter : public Customer {
  public:
-  // process a received message, will called by the thread of executor
-  void process(Message* msg);
-
-  std::vector<Message> decompose(const Message& msg, const Keys& partition);
-
+  // Submit a task into *dest* and return the timestamp associated with this
+  // task. If *time* != -1, then will set the timestamp of this task into *time*
+  // rather than an auto-generated time. *wait_time* is the timestamp of the
+  // task this submitted task must wait. No wait if it is -1.  *recv_handle*
+  // will be called if anythings goes back from the destination node. When
+  // called, this task has not been marked as finished. If could be called
+  // multiple time when the destination node is a node group.  *fin_handle*
+  // will be called when this task has been finished. If the dest node is a node
+  // group, then it means replies from all nodes in this group have been
+  // received.
   typedef std::function<void()> Fn;
-  // return the timestamp of the sending message
-  int sync(
-      // Push, pull, ...
-      CallSharedPara_Command cmd,
-      // densitination node
-      const NodeID& dest,
-      // global key range
-      Range<K> range,
-      // must has key_ and (may empty) value_, all other entries are optional
-      Message msg,
-      // optional argments: the timestamp of this task, if -1 then the sytem
-      // will automaitically assign a timestamp
-      int time = -1,
-      // the timestamp of the task this task must wait
-      int wait_time = -1,
-      // Will be called if anythings goes back from the dest node but before
-      // this task has been marked as finished
-      Fn recv_handle = Fn(),
-      // Will be called this task has been finished. if the dest node is a
-      // group, then it means I have received data from all nodes in this group
-      Fn fin_handle = Fn(),
-      // block or non-block
-      bool no_wait = true) {
+  int sync(CallSharedPara_Command cmd, const NodeID& dest, Range<K> key_range,
+           Message msg, int time = -1, int wait_time = -1, Fn recv_handle = Fn(),
+           Fn fin_handle = Fn(), bool no_wait = true) {
     setCall(&(msg.task))->set_cmd(cmd);
-    range.to(msg.task.mutable_key_range());
+    key_range.to(msg.task.mutable_key_range());
     if (time >= 0) msg.task.set_time(time);
     msg.task.set_wait_time(wait_time);
-
     return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
   }
-
+  // see *sync*
   int pull(const NodeID& dest, Range<K> key_range, Message data,
            int time = -1, int wait_time = -1,
            Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
     return sync(CallSharedPara::PULL, dest, key_range, data, time, wait_time,
                 recv_handle, fin_handle, no_wait);
   }
-
+  // see *sync*
   int push(const NodeID& dest, Range<K> key_range, Message data,
            int time = -1, int wait_time = -1,
            Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
     return sync(CallSharedPara::PUSH, dest, key_range, data, time, wait_time,
                 recv_handle, fin_handle, no_wait);
   }
-
-
-  string getTime() {
-    return to_string(timer_.getAndRestart()) + " "
-        + to_string(t1_.getAndRestart()) + " "
-        + to_string(t2_.getAndRestart()) + " "
-        + to_string(t3_.getAndRestart()) + " ";
-  }
-
   CallSharedPara getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
     CHECK(msg.task.has_shared_para());
@@ -85,30 +57,23 @@ class SharedParameter : public Customer {
   CallSharedPara* setCall(Message *msg) {
     return setCall(&(msg->task));
   }
+  // process a received message, will called by the thread of executor
+  void process(Message* msg);
  protected:
-
-  virtual std::vector<Message> decomposeTemplate(
-      const Message& msg, const std::vector<K>& partition) = 0;
-
   // fill the values specified by the key lists in msg
   virtual void getValue(Message* msg) = 0;
-
   // set the received KV pairs into my data strcuture
   virtual void setValue(Message* msg) = 0;
-
   // the message contains the backup KV pairs sent by the master node of the key
   // segment to its replica node. merge these pairs into my replica, say
   // replica_[msg->sender] = ...
   virtual void setReplica(Message *msg) = 0; // { CHECK(false); }
-
   // retrieve the replica. a new server node replacing a dead server will first
   // ask for the dead's replica node for the data
   virtual void getReplica(Range<K> range, Message *msg)  = 0; // {CHECK(false);  }
-
   // a new server node fill its own datastructure via the the replica data from
   // the dead's replica node
   virtual void recoverFrom(Message *msg) = 0; // { CHECK(false); }
-
   // recover from a replica node
   void recover(Range<K> range) {
     // TODO recover from checkpoint
@@ -133,49 +98,22 @@ class SharedParameter : public Customer {
   Range<K> myKeyRange() {
     return keyRange(Customer::myNodeID());
   }
-
   // query the key range of a node
   Range<K> keyRange(const NodeID& id) {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
-
   CallSharedPara* setCall(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
     return task->mutable_shared_para();
   }
-
-  Timer timer_, t1_, t2_, t3_;
  private:
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
 };
 
 template <typename K, typename V>
-std::vector<Message> SharedParameter<K,V>::decompose(
-    const Message& msg, const Keys& partition) {
-  auto cmd = getCall(msg).cmd();
-  if (cmd == CallSharedPara::PUSH_REPLICA ||
-      cmd == CallSharedPara::PULL_REPLICA) {
-    return Customer::decompose(msg, partition);
-  }
-
-  CHECK(std::is_sorted(partition.begin(), partition.end()));
-  auto kr = Range<K>(msg.task.key_range());
-  std::vector<K> keys;
-  keys.reserve(partition.size());
-  for (auto k : partition)
-    keys.push_back(std::max(kr.begin(), std::min(kr.end(), (K)k)));
-
-  return decomposeTemplate(msg, keys);
-}
-
-template <typename K, typename V>
 void SharedParameter<K,V>::process(Message* msg) {
   double req = msg->task.request();
-  // if (!req && msg->task.type() == Task::REPLY)
-  //   return;
-
-  timer_.start();
   switch (getCall(*msg).cmd()) {
     typedef CallSharedPara Call;
     case Call::PUSH:
@@ -184,24 +122,18 @@ void SharedParameter<K,V>::process(Message* msg) {
     case Call::PULL:
       if (req) {
         Message re = *msg;
-        // re.value.clear();
-        std::swap(re.sender, re.recver);
         re.task.set_request(false);
-
+        std::swap(re.sender, re.recver);
         getValue(&re);
-
         sys_.queue(taskpool(re.recver)->cacheKeySender(re));
-        // do not let the system double reply it
         msg->replied = true;
       } else {
         setValue(msg);
       }
       break;
-
     case Call::PUSH_REPLICA:
       if (req) setReplica(msg);
       break;
-
     case Call::PULL_REPLICA: {
       auto range = Range<K>(msg->task.key_range());
       if (req) {
@@ -226,9 +158,7 @@ void SharedParameter<K,V>::process(Message* msg) {
     default:
       CHECK(false) << "unknow cmd: " << getCall(*msg).ShortDebugString();
   }
-  timer_.stop();
 }
-
 
 
 } // namespace PS

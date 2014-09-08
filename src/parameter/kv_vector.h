@@ -14,6 +14,7 @@ class KVVector : public SharedParameter<K,V> {
 
   SArray<K>& key() { return key_; }
   SArray<V>& value() { return val_; }
+
   // find the local positions of a global key range
   SizeR localRange (const Range<K>& global_range) {
     return key_.findRange(global_range);
@@ -51,9 +52,8 @@ class KVVector : public SharedParameter<K,V> {
   // # of nnz entries
   size_t nnz() const { return val_.nnz(); }
 
-  // implement the virtual functions of SharedParameter
-  std::vector<Message> decomposeTemplate(
-      const Message& msg, const std::vector<K>& partition);
+  // implement the virtual functions required
+  MessageList decompose(const Message& msg, const KeyList& partition);
   void getValue(Message* msg);
   void setValue(Message* msg);
   void getReplica(Range<K> range, Message *msg);
@@ -259,9 +259,7 @@ void KVVector<K,V>::getValue(Message* msg) {
   CHECK_EQ(key_.size(), val_.size());
   size_t n = 0;
   Range<Key> range = recv_key.range().setUnion(key_.range());
-  t1_.start();
   auto aligned = match(recv_key, key_, val_.data(), range, &n);
-  t1_.stop();
   // LL << "val: " << dbstr(val_.data(), val_.size());
   CHECK_EQ(aligned.second.size(), recv_key.size())
       << recv_key << "\n" << key_;
@@ -308,63 +306,56 @@ void KVVector<K,V>::setValue(Message* msg) {
     SArray<V> recv_data(msg->value[i]);
     CHECK_EQ(recv_data.size(), recv_key.size());
     size_t n = 0;
-  t2_.start();
     auto aligned = match(key_, recv_key, recv_data.data(), key_range, &n);
-  t2_.stop();
     CHECK_GE(aligned.second.size(), recv_key.size());
     CHECK_EQ(recv_key.size(), n);
 
-  t3_.start();
     if (first) {
       recved_val_[t].push_back(aligned);
     } else {
       CHECK_EQ(aligned.first, recved_val_[t][i].first);
       recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
     }
-    t3_.stop();
   }
 }
 
 // partition is a sorted key ranges
 template <typename K, typename V>
-std::vector<Message> KVVector<K,V>::
-decomposeTemplate(const Message& msg, const std::vector<K>& partition) {
-  size_t n = partition.size();
-  std::vector<size_t> pos(n, -1);
+MessageList KVVector<K,V>::decompose(const Message& msg, const KeyList& sep) {
+  auto cmd = getCall(msg).cmd();
+  if (cmd == CallSharedPara::PUSH_REPLICA ||
+      cmd == CallSharedPara::PULL_REPLICA || msg.key.empty()) {
+    return Customer::decompose(msg, sep);
+  }
 
+  // find the positions in msg.key
+  size_t n = sep.size();
+  std::vector<size_t> pos; pos.reserve(n-1);
   SArray<K> key(msg.key);
-  pos.reserve(n);
-  for (auto k : partition) {
+  Range<K> msg_key_range(msg.task.key_range());
+  for (auto p : sep) {
+    K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
     pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
   }
 
-  // split the message
-  Message part = msg;
-  std::vector<Message> ret(n-1);
+  // split the message according to *pos*
+  Message slice = msg;
+  MessageList ret(n-1);
   for (int i = 0; i < n-1; ++i) {
-    part.clearData();
-    if (Range<K>(partition[i], partition[i+1]).setIntersection(
-            Range<K>(msg.task.key_range())).empty()) {
+    slice.clearData();
+    if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
       // valid, which will be not actually sent
-      part.valid = false;
+      slice.valid = false;
     } else {
-      part.valid = true;
-      if (pos[i] == -1) {
-        pos[i] = std::lower_bound(key.begin(), key.end(), partition[i]) - key.begin();
-      }
-      if (pos[i+1] == -1) {
-        pos[i+1] = std::lower_bound(key.begin(), key.end(), partition[i+1]) - key.begin();
-      }
+      slice.valid = true;
       SizeR lr(pos[i], pos[i+1]);
-      part.key = key.segment(lr);
-      if (!key.empty()) {
-        for (auto& d : msg.value) {
-          part.value.push_back(d.segment(lr * (d.size() / key.size())));
-        }
+      slice.key = key.segment(lr);
+      for (auto& val : msg.value) {
+        slice.value.push_back(val.segment(lr*(val.size()/key.size())));
       }
     }
-    ret[i] = part;
+    ret[i] = slice;
   }
   return ret;
 }

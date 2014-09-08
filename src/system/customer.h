@@ -1,52 +1,43 @@
 #pragma once
-
 #include "util/common.h"
 #include "system/message.h"
 #include "system/postoffice.h"
 #include "system/executor.h"
-
 namespace PS {
 
-// An object shared by several nodes. This object is identified by an unique
-// string name
+// An object shared across multiple nodes.
 class Customer {
  public:
   Customer() : sys_(Postoffice::instance()), exec_(*this) {
     exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
   }
-
   // process a message received from a remote node
   virtual void process(Message* msg) = 0;
-
-  // given the partition keys (k_1, k_2, ..., k_n), decompose the message into
-  // n-1 messages such that the i-th message containing only keys and values in
-  // the key range [k_i, k_{i+1})
-  virtual std::vector<Message>
-  decompose(const Message& msg, const Keys& partition) {
-    return std::vector<Message>(partition.size()-1, msg);
+  // Given the partition keys (k_1, k_2, ..., k_n), which are ordered, decompose
+  // the message into n-1 messages such that the i-th message containing only
+  // keys and values in the key range [k_i, k_{i+1}).
+  virtual MessageList decompose(const Message& msg, const KeyList& partition) {
+    // in default, copy the message n-1 times
+    return MessageList(partition.size()-1, msg);
   }
-
-  void stop() {
-    exec_.stop();
-    exec_thread_->join();
-  }
+  // join the execution thread
+  void stop() { exec_.stop(); exec_thread_->join(); }
 
   // unique name of this customer
   const string& name() const { return name_; }
   string& name() { return name_; }
-
   // the uique node id running this customer
   NodeID myNodeID() { return exec_.myNode().id(); }
-
+  // return the executor
   Executor& exec() { return exec_; }
+  // return the remote_note by using its name
   RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
-
   // all child customer names
-  const std::vector<string>& children() const { return child_customers_; }
+  const StringList& children() const { return child_customers_; }
 
  protected:
   string name_;
-  std::vector<string> child_customers_;
+  StringList child_customers_;
   Postoffice& sys_;
   Executor exec_;
   unique_ptr<std::thread> exec_thread_;

@@ -17,7 +17,6 @@ void BatchSolver::run() {
   // start the system
   LinearMethod::startSystem();
 
-  LI << app_cf_.ShortDebugString();
   // load data
   timer_.start();
   Task prepare;
@@ -188,10 +187,8 @@ void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
       return;
     }
   }
-
   // failed to fetch cache, load from *data*
-
-  LL << w_->key().size();
+  // LL << w_->key().size();
   CHECK_EQ(y_->rows(), X_->rows());
   if (cache_name == "train") X_ = X_->toColMajor();
 
