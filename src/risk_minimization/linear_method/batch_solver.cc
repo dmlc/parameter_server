@@ -79,16 +79,6 @@ void BatchSolver::run() {
   runIteration();
 
   auto active = taskpool(kActiveGroup);
-
-  // Task save_dense_data = newTask(RiskMinCall::SAVE_AS_DENSE);
-  // auto mut_data = setCall(&save_dense_data);
-  // mut_data->set_name(name()+"_train");
-  // for (const auto& info : global_training_info_) {
-  //   Range<Key>(info.col()).to(mut_data->add_reduce_range());
-  // }
-  // active->submitAndWait(save_dense_data);
-
-
   if (app_cf_.has_validation_data()) {
     // LI << "\tEvaluate with " << g_validation_info_[0].row().end()
     //    << " validation examples\n";
@@ -98,28 +88,11 @@ void BatchSolver::run() {
         mergeAUC(&validation_auc); });
     LI << "\tEvaluation accuracy: " << validation_auc.accuracy(0)
        << ", auc: " << validation_auc.evaluate();
-
-    // auto active = taskpool(kActiveGroup);
-    // Task save_dense_data = newTask(RiskMinCall::SAVE_AS_DENSE);
-    // auto mut_data = setCall(&save_dense_data);
-    // mut_data->set_name(name()+"_test");
-    // for (const auto& info : global_training_info_) {
-    //   Range<Key>(info.col()).to(mut_data->add_reduce_range());
-    // }
-    // active->submitAndWait(save_dense_data);
   }
 
   Task save_model = newTask(RiskMinCall::SAVE_MODEL);
   active->submitAndWait(save_model);
 }
-
-// if (cf.feature_block_ratio() <= 0) {
-//   Range<Key> range(-1, 0);
-//   for (const auto& info : g_training_info_)
-//     range.setUnion(Range<Key>(info.col()));
-//   fea_blocks_.push_back(std::make_pair(-1, range));
-// } else {
-// }
 
 void BatchSolver::runIteration() {
   auto cf = app_cf_.block_solver();
@@ -169,7 +142,6 @@ bool BatchSolver::loadCache(const DataConfig& cache_dir, const string& cache_nam
 
   return true;
 }
-
 
 void BatchSolver::saveCache(const DataConfig& cache, const string& cache_name) {
   auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());

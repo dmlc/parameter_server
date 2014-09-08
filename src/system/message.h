@@ -30,15 +30,13 @@ struct Message {
   // set it to be true to stop the sending thread of Postoffice.
   bool terminate = false;
   // clear the data, but keep all metadata
-  void clearData() {
+  void clearKeyAndValue() {
     key = SArray<char>();
     value.clear();
   }
-  template <typename V>
-  void addValue(const SArray<V>& val) {
+  template <typename V> void addValue(const SArray<V>& val) {
     value.push_back(SArray<char>(val));
   }
-
   string shortDebugString() const {
     std::stringstream ss;
     ss << sender << "=>" << recver;
@@ -50,7 +48,6 @@ struct Message {
     ss << "[task]:" << task.ShortDebugString();
     return ss.str();
   }
-
   string debugString() const {
     std::stringstream ss;
     ss << "[message]: " << sender << "=>" << recver
@@ -77,6 +74,7 @@ static Message replyTemplate(const Message& msg) {
 template <typename V> using AlignedArray = std::pair<SizeR, SArray<V>>;
 template <typename V> using AlignedArrayList = std::vector<AlignedArray<V>>;
 
+// TODO multithread version
 template <typename K, typename V>
 static AlignedArray<V> match(const SArray<K>& dst_key,
                              const SArray<K>& src_key,

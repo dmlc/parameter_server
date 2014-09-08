@@ -47,9 +47,9 @@ message Instance {
   // real value for regression, and empty for unsupverised learning
   optional float label = 1;
   // feature id
-  repeated uint64 fea_id = 2;
+  repeated uint64 fea_id = 2 [packed=true];
   // feature value
-  repeated float fea_val = 3;
+  repeated float fea_val = 3 [packed=true];;
   // an unique id for this instance. one can add extra information, such as
   // time, into this id
   optional int64 ins_id = 4;

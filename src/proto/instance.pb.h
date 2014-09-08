@@ -430,7 +430,7 @@ class Instance : public ::google::protobuf::Message {
   inline float label() const;
   inline void set_label(float value);
 
-  // repeated uint64 fea_id = 2;
+  // repeated uint64 fea_id = 2 [packed = true];
   inline int fea_id_size() const;
   inline void clear_fea_id();
   static const int kFeaIdFieldNumber = 2;
@@ -442,7 +442,7 @@ class Instance : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
       mutable_fea_id();
 
-  // repeated float fea_val = 3;
+  // repeated float fea_val = 3 [packed = true];
   inline int fea_val_size() const;
   inline void clear_fea_val();
   static const int kFeaValFieldNumber = 3;
@@ -471,7 +471,9 @@ class Instance : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > fea_id_;
+  mutable int _fea_id_cached_byte_size_;
   ::google::protobuf::RepeatedField< float > fea_val_;
+  mutable int _fea_val_cached_byte_size_;
   ::google::protobuf::int64 ins_id_;
   float label_;
 
@@ -725,7 +727,7 @@ inline void Instance::set_label(float value) {
   label_ = value;
 }
 
-// repeated uint64 fea_id = 2;
+// repeated uint64 fea_id = 2 [packed = true];
 inline int Instance::fea_id_size() const {
   return fea_id_.size();
 }
@@ -750,7 +752,7 @@ Instance::mutable_fea_id() {
   return &fea_id_;
 }
 
-// repeated float fea_val = 3;
+// repeated float fea_val = 3 [packed = true];
 inline int Instance::fea_val_size() const {
   return fea_val_.size();
 }
