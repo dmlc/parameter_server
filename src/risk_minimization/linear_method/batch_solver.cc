@@ -126,10 +126,12 @@ void BatchSolver::runIteration() {
   }
 }
 
-bool BatchSolver::loadCache(const DataConfig& cache_dir, const string& cache_name) {
-  auto y_conf = ithFile(cache_dir, 0, "_" + cache_name + "_y_" + myNodeID());
-  auto X_conf = ithFile(cache_dir, 0, "_" + cache_name + "_X_" + myNodeID());
-  auto key_conf = ithFile(cache_dir, 0, "_" + cache_name + "_key_" + myNodeID());
+bool BatchSolver::loadCache(const string& cache_name) {
+  if (!app_cf_.has_local_cache()) return false;
+  auto cache = app_cf_.local_cache();
+  auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
+  auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+  auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
   MatrixPtrList<double> y_list, X_list;
   if (!(readMatrices<double>(y_conf, &y_list) &&
         readMatrices<double>(X_conf, &X_list) &&
@@ -138,45 +140,26 @@ bool BatchSolver::loadCache(const DataConfig& cache_dir, const string& cache_nam
   }
   y_ = y_list[0];
   X_ = X_list[0];
-  LI << "\t" << myNodeID() << " hit cache in " << cache_dir.file(0) << " for " << cache_name;
-
+  LI << "\t" << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
   return true;
 }
 
-void BatchSolver::saveCache(const DataConfig& cache, const string& cache_name) {
+bool BatchSolver::saveCache(const string& cache_name) {
+  if (!app_cf_.has_local_cache()) return false;
+  auto cache = app_cf_.local_cache();
   auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
   auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
   auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  CHECK(y_->writeToBinFile(y_conf.file(0)));
-  CHECK(X_->writeToBinFile(X_conf.file(0)));
-  CHECK(w_->key().writeToFile(key_conf.file(0)));
+  return (y_->writeToBinFile(y_conf.file(0)) &&
+          X_->writeToBinFile(X_conf.file(0)) &&
+          w_->key().writeToFile(key_conf.file(0)));
 }
 
-void BatchSolver::loadData(const DataConfig& data, const string& cache_name) {
-  // try to fetch the local cache
-  if (app_cf_.has_local_cache()) {
-    if (loadCache(app_cf_.local_cache(), cache_name)) {
-      return;
-    }
-  }
-  // failed to fetch cache, load from *data*
-  // LL << w_->key().size();
-  CHECK_EQ(y_->rows(), X_->rows());
-  if (cache_name == "train") X_ = X_->toColMajor();
-
-  // save to local cache
-  if (app_cf_.has_local_cache()) {
-    saveCache(app_cf_.local_cache(), cache_name);
-  }
-}
 
 InstanceInfo BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
-    bool hit_cache = false;
-    if (app_cf_.has_local_cache()) {
-      hit_cache = loadCache(app_cf_.local_cache(), "train");
-    }
+    bool hit_cache = loadCache("train");
     SArray<Key> uniq_key;
     SArray<uint32> key_cnt;
     SparseMatrixPtr<Key, double> X;
@@ -201,7 +184,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     //   if (k > app_cf_.block_solver().filter_fea_freq()) ++ fk;
     // LL << myNodeID() << " filter by local " << fk;
 
-    // Time 2: filtering infrequent keys
+    // Time 2: filter tail features
     Message filter;
     filter.key = uniq_key;
     w_->setCall(&filter)->set_key_freq(app_cf_.block_solver().tail_feature_count());
@@ -212,9 +195,7 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
 
     if (!hit_cache) {
       X_ = X->remapIndex(w_->key())->toColMajor();
-      if (app_cf_.has_local_cache()) {
-        saveCache(app_cf_.local_cache(), "train");
-      }
+      saveCache("train");
     }
 
     // Time 3: send filtered keys to servers
@@ -389,7 +370,15 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
 
   // load data
   CHECK(app_cf_.has_validation_data());
-  loadData(app_cf_.validation_data(), "valid");
+  if (!loadCache("valid")) {
+    auto list = readMatricesOrDie<double>(app_cf_.training_data());
+    CHECK_EQ(list.size(), 2);
+    y_ = list[0];
+    auto X = std::static_pointer_cast<SparseMatrix<Key, double>>(list[1]);
+    X->countUniqIndex(&w_->key());
+    X_ = X->remapIndex(w_->key());
+    saveCache("valid");
+  }
 
   // fetch the model
   w_->fetchValueFromServers();
@@ -412,24 +401,24 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   // LL << auc.evaluate();
 }
 
-void BatchSolver::saveAsDenseData(const Message& msg) {
-  if (!exec_.isWorker()) return;
-  auto call = RiskMinimization::getCall(msg);
-  int n = call.reduce_range_size();
-  if (n == 0) return;
-  if (X_->rowMajor()) {
-    X_ = X_->toColMajor();
-  }
-  DenseMatrix<double> Xw(X_->rows(), n, false);
-  for (int i = 0; i < n; ++i) {
-    auto lr = w_->localRange(Range<Key>(call.reduce_range(i)));
-    Xw.colBlock(SizeR(i, i+1))->eigenArray() =
-        *(X_->colBlock(lr)) * w_->segment(lr).eigenVector();
-  }
+// void BatchSolver::saveAsDenseData(const Message& msg) {
+//   if (!exec_.isWorker()) return;
+//   auto call = RiskMinimization::getCall(msg);
+//   int n = call.reduce_range_size();
+//   if (n == 0) return;
+//   if (X_->rowMajor()) {
+//     X_ = X_->toColMajor();
+//   }
+//   DenseMatrix<double> Xw(X_->rows(), n, false);
+//   for (int i = 0; i < n; ++i) {
+//     auto lr = w_->localRange(Range<Key>(call.reduce_range(i)));
+//     Xw.colBlock(SizeR(i, i+1))->eigenArray() =
+//         *(X_->colBlock(lr)) * w_->segment(lr).eigenVector();
+//   }
 
-  Xw.writeToBinFile(call.name()+"_Xw");
-  y_->writeToBinFile(call.name()+"_y");
-}
+//   Xw.writeToBinFile(call.name()+"_Xw");
+//   y_->writeToBinFile(call.name()+"_y");
+// }
 
 
 

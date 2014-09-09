@@ -324,7 +324,7 @@ template <typename K, typename V>
 MessageList KVVector<K,V>::decompose(const Message& msg, const KeyList& sep) {
   auto cmd = getCall(msg).cmd();
   if (cmd == CallSharedPara::PUSH_REPLICA ||
-      cmd == CallSharedPara::PULL_REPLICA || msg.key.empty()) {
+      cmd == CallSharedPara::PULL_REPLICA) {
     return Customer::decompose(msg, sep);
   }
 
@@ -348,11 +348,13 @@ MessageList KVVector<K,V>::decompose(const Message& msg, const KeyList& sep) {
       // valid, which will be not actually sent
       slice.valid = false;
     } else {
-      slice.valid = true;
-      SizeR lr(pos[i], pos[i+1]);
-      slice.key = key.segment(lr);
-      for (auto& val : msg.value) {
-        slice.value.push_back(val.segment(lr*(val.size()/key.size())));
+      slice.valid = true;  // must set true, otherwise this slice might not be sent
+      if (!key.empty()) {  // void be divided by 0
+        SizeR lr(pos[i], pos[i+1]);
+        slice.key = key.segment(lr);
+        for (auto& val : msg.value) {
+          slice.value.push_back(val.segment(lr*(val.size()/key.size())));
+        }
       }
     }
     ret[i] = slice;

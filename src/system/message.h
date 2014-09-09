@@ -39,13 +39,13 @@ struct Message {
   }
   string shortDebugString() const {
     std::stringstream ss;
-    ss << sender << "=>" << recver;
+    ss << "T: " << task.time() << ", " << sender << "=>" << recver;
     if (!original_recver.empty()) ss << "(" << original_recver << ")";
-    ss << ", T: " << task.time() << ", wait_T: " << task.wait_time()
-       << ", " << key.size() << " keys, [" << value.size() << "] value: ";
+    ss << " wait_T: " << task.wait_time()
+       << ", " << key.size() << " keys, " << value.size() << " value:";
     for (const auto& x: value)
-      ss << x.size() << " ";
-    ss << "[task]:" << task.ShortDebugString();
+      ss << " " << x.size();
+    ss << ", task:" << task.ShortDebugString();
     return ss.str();
   }
   string debugString() const {

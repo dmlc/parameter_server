@@ -4,7 +4,7 @@
 #include "base/shared_array_inl.h"
 
 namespace PS {
-// #define _DEBUG_VAN_
+// #define DEBUG_VAN
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_string(scheduler, "", "the scheduler node");
@@ -26,7 +26,7 @@ void Van::init() {
   connect(my_node_);
   connect(scheduler_);
 
-#ifdef _DEBUG_VAN_
+#ifdef DEBUG_VAN
   debug_out_.open("van_"+my_node_.id());
 #endif
 }
@@ -48,7 +48,7 @@ void Van::bind() {
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-#ifdef _DEBUG_VAN_
+#ifdef DEBUG_VAN
   debug_out_ << my_node_.id() << ": binds address " << addr << std::endl;
 #endif
 }
@@ -79,7 +79,7 @@ Status Van::connect(Node const& node) {
         "connect to " + addr + " failed: " + zmq_strerror(errno));
   senders_[id] = sender;
 
-#ifdef _DEBUG_VAN_
+#ifdef DEBUG_VAN
   debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
 #endif
   return Status::OK();
@@ -142,8 +142,8 @@ Status Van::send(const Message& msg) {
     data_sent_ += raw.size();
   }
 
-#ifdef _DEBUG_VAN_
-  debug_out_ << ">>>: " << msg.shortDebugString()<< std::endl;
+#ifdef DEBUG_VAN
+  debug_out_ << msg.shortDebugString()<< std::endl;
 #endif
   return Status::OK();
 }
@@ -197,8 +197,8 @@ Status Van::recv(Message *msg) {
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
-#ifdef _DEBUG_VAN_
-  debug_out_ << "<<<: " << msg->shortDebugString() << std::endl;
+#ifdef DEBUG_VAN
+  debug_out_ << msg->shortDebugString() << std::endl;
 #endif
 
   return Status::OK();;

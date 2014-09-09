@@ -20,29 +20,28 @@ class BatchSolver : public LinearMethod {
 
   void computeEvaluationAUC(AUCData *data);
   void saveModel(const Message& msg);
-  void saveAsDenseData(const Message& msg);
+  // void saveAsDenseData(const Message& msg);
 
-  bool loadCache(const DataConfig& cache, const string& cache_name);
-  void saveCache(const DataConfig& cache, const string& cache_name);
+  bool loadCache(const string& cache_name);
+  bool saveCache(const string& cache_name);
 
-  void loadData(const DataConfig& data, const string& cache_name);
-
-  // training data, available at the workers
-  MatrixPtr<double> y_, X_;
+  // void loadData(const DataConfig& data, const string& cache_name);
 
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
-
-  // global data information, only available at the scheduler
-  InstanceInfo g_train_ins_info_;
 
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blocks_;
   std::vector<int> block_order_;
   std::vector<int> prior_block_order_;
 
+  // global data information, only available at the scheduler
+  InstanceInfo g_train_ins_info_;
+  // training data, available at the workers
+  MatrixPtr<double> y_, X_;
   // dual_ = X_ * w_
   SArray<double> dual_;
+
   std::mutex mu_;
 };
 
