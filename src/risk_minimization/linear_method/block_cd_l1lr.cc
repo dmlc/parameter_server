@@ -136,7 +136,7 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     pull_msg->key = local_key;
     global_range.to(pull_msg->task.mutable_key_range());
     // the callback of update the local dual variable
-    pull_msg->fin_handle = [this, local_range, time, &msg] () {
+    pull_msg->fin_handle = [this, local_range, time, msg] () {
       if (!local_range.empty()) {
         auto data = w_->received(time+2);
         CHECK_EQ(data.size(), 1); CHECK_EQ(local_range, data[0].first);
@@ -374,7 +374,6 @@ void BlockCoordDescL1LR::showProgress(int iter) {
 RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
   RiskMinProgress prog;
   if (exec_.isWorker()) {
-    LL << "xx";
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
     busy_timer_.restart();
@@ -393,7 +392,6 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
     prog.set_nnz_active_set(active_set_.nnz());
   }
   // LL << myNodeID() << ": " << w_->getTime();
-  LL << prog.DebugString();
   return prog;
 }
 

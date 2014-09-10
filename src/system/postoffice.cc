@@ -65,6 +65,9 @@ void Postoffice::reply(
 
 void Postoffice::queue(const MessagePtr& msg) {
   if (msg->valid) {
+    // do a copy here
+    // MessagePtr m(new Message(*msg));
+    // sending_queue_.push(m);
     sending_queue_.push(msg);
   } else {
     // do not send, fake a reply mesage
