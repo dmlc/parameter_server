@@ -13,10 +13,15 @@ typedef std::shared_ptr<Message> MessagePtr;
 typedef std::vector<Message> MessageList;
 
 struct Message {
-  Message(int time, int wait_time = -1) {
+  const static int kInvalidTime = -1;
+  // If *time* != -1, then will set the timestamp of this task into *time*
+  // rather than an auto-generated time. *wait_time* is the timestamp of the
+  // task this submitted task must wait. No wait if it is -1.
+  Message(const NodeID& dest, int time, int wait_time = kInvalidTime) : recver(dest) {
     task.set_time(time);
     task.set_wait_time(wait_time);
   }
+
   Message() { }
   explicit Message(const Task& tk) : task(tk) { }
   // task, key, and value will be sent over network. while the rest are only
@@ -27,6 +32,7 @@ struct Message {
   SArray<char> key;
   // the according lists of values
   std::vector<SArray<char>> value;
+
   // sender node id
   NodeID sender;
   // receiver node id
@@ -35,6 +41,7 @@ struct Message {
   // the server group (kServerGroup), then the message going to a particular
   // server will have kServerGroup as its *original_recver*
   NodeID original_recver;
+
   // true if this message has been replied, to avoid double reply
   bool replied = false;
   // true if the task asscociated with this message has been finished.
@@ -44,14 +51,35 @@ struct Message {
   bool valid = true;
   // set it to be true to stop the sending thread of Postoffice.
   bool terminate = false;
-  // clear the data, but keep all metadata
-  void clearKeyAndValue() {
-    key = SArray<char>();
-    value.clear();
+  // wait or not when submit this message
+  bool wait = false;
+
+  typedef std::function<void()> Callback;
+  // *recv_handle* will be called if anythings goes back from the destination
+  // node. When called, this task has not been marked as finished. If could be
+  // called multiple time when the destination node is a node group.
+  Callback recv_handle;
+  // *fin_handle* will be called when this task has been finished. If the dest
+  // node is a node group, then it means replies from all nodes in this group
+  // have been received.
+  Callback fin_handle;
+
+  // add the key list and the lists of values
+  template <typename K, typename V>
+  void addKV(const SArray<K>& k, const std::initializer_list<SArray<V>>& v) {
+    key = SArray<char>(k);
+    for (const auto& w : v) addValue(w);
   }
   template <typename V> void addValue(const SArray<V>& val) {
     value.push_back(SArray<char>(val));
   }
+  // clear the keys and values
+  void clearKV() {
+    key = SArray<char>();
+    value.clear();
+  }
+
+  // debug
   std::string shortDebugString() const;
   std::string debugString() const;
 };

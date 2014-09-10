@@ -16,15 +16,7 @@ template <typename K, typename V>
 class SharedParameter : public Customer {
  public:
   // Submit a task into *dest* and return the timestamp associated with this
-  // task. If *time* != -1, then will set the timestamp of this task into *time*
-  // rather than an auto-generated time. *wait_time* is the timestamp of the
-  // task this submitted task must wait. No wait if it is -1.  *recv_handle*
-  // will be called if anythings goes back from the destination node. When
-  // called, this task has not been marked as finished. If could be called
-  // multiple time when the destination node is a node group.  *fin_handle*
-  // will be called when this task has been finished. If the dest node is a node
-  // group, then it means replies from all nodes in this group have been
-  // received.
+  // task.
 
   typedef std::function<void()> Fn;
   int sync(CallSharedPara_Command cmd, const NodeID& dest, Range<K> key_range,
@@ -52,18 +44,29 @@ class SharedParameter : public Customer {
                 recv_handle, fin_handle, no_wait);
   }
 
-
-  typedef std::function<void()> F;
-  int sync(const NodeID& dest, MessagePtr msg, F recv_f = F(), F fin_f = F()) {
+  // convenient wrappers of functions in remote_node.h
+  int sync(MessagePtr msg) {
     CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
     if (!msg->task.has_key_range()) Range<K>::all().to(msg->task.mutable_key_range());
-    return taskpool(dest)->submit(*msg, recv_f, recv_f);
+    return taskpool(msg->recver)->submit(
+        *msg, msg->recv_handle, msg->fin_handle, !msg->wait);
+  }
+  int push(MessagePtr msg) {
+    set(msg)->set_cmd(CallSharedPara::PUSH);
+    return sync(msg);
+  }
+  int pull(MessagePtr msg) {
+    set(msg)->set_cmd(CallSharedPara::PULL);
+    return sync(msg);
   }
 
-  int push(const NodeID& dest, MessagePtr msg, F recv_f = F(), F fin_f = F()) {
-    set(msg)->set_cmd(CallSharedPara::PUSH);
-    return sync(dest, msg, recv_f, fin_f);
+  void wait(const NodeID& node, int time) {
+    taskpool(node)->waitIncomingTask(time);
   }
+  void finish(const NodeID& node, int time) {
+    taskpool(node)->finishIncomingTask(time);
+  }
+
 
   CallSharedPara getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);

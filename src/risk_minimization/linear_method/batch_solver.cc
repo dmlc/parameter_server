@@ -159,6 +159,7 @@ bool BatchSolver::saveCache(const string& cache_name) {
 InstanceInfo BatchSolver::prepareData(const Message& msg) {
   int time = msg.task.time() * 10;
   if (exec_.isWorker()) {
+    // load local training data
     bool hit_cache = loadCache("train");
     SArray<Key> uniq_key;
     SArray<uint32> key_cnt;
@@ -172,37 +173,17 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     }
 
     // Time 0: send all unique keys with their count to servers
-
-
-    // Message count;
-    // count.key = uniq_key;
-    // count.value.push_back(SArray<char>(key_cnt));
-    // w_->setCall(&count)->set_add_key_count(true);
-    // CHECK_EQ(time, w_->push(kServerGroup, Range<Key>::all(), count, time));
-
-    MessagePtr count(new Message(time));
-    count->key = uniq_key;
-    count->addValue(key_cnt);
-    // count->value.push_back(SArray<char>(key_cnt));
+    MessagePtr count(new Message(kServerGroup, time));
+    count->addKV(uniq_key, {key_cnt});
     w_->set(count)->set_add_key_count(true);
-    w_->push(kServerGroup, count);
-
-
-    // LL << myNodeID() << " local key " << uniq_key.size();
-
-    // size_t fk = 0;
-    // for (auto k : key_cnt)
-    //   if (k > app_cf_.block_solver().filter_fea_freq()) ++ fk;
-    // LL << myNodeID() << " filter by local " << fk;
+    CHECK_EQ(time, w_->push(count));
 
     // Time 2: filter tail features
-    Message filter;
-    filter.key = uniq_key;
-    w_->setCall(&filter)->set_key_freq(app_cf_.block_solver().tail_feature_count());
-    CHECK_EQ(time+2, w_->pull(
-        kServerGroup, Range<Key>::all(), filter, time+2, time+1));
-    w_->taskpool(kServerGroup)->waitOutgoingTask(time + 2);
-    // LL << myNodeID() << " filtered key " << w_->key().size();
+    MessagePtr filter(new Message(kServerGroup, time+2, time+1));
+    filter->key = uniq_key;
+    w_->set(filter)->set_key_freq(app_cf_.block_solver().tail_feature_count());
+    filter->wait = true;
+    CHECK_EQ(time+2, w_->pull(filter));
 
     if (!hit_cache) {
       X_ = X->remapIndex(w_->key())->toColMajor();
@@ -210,51 +191,42 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     }
 
     // Time 3: send filtered keys to servers
-    Message push_key;
-    push_key.key = w_->key();
-    w_->setCall(&push_key)->set_add_key(true);
-    CHECK_EQ(time+3, w_->push(kServerGroup, Range<Key>::all(), push_key, time+3));
+    MessagePtr push_key(new Message(kServerGroup, time+3));
+    push_key->key = w_->key();
+    w_->set(push_key)->set_add_key(true);
+    CHECK_EQ(time+3, w_->push(push_key));
 
     // Time 5: fetch initial value of w_
-    Message pull_val;
-    pull_val.key = w_->key();
-    CHECK_EQ(time+5, w_->pull(kServerGroup, Range<Key>::all(), pull_val, time+5, time+4));
-    w_->taskpool(kServerGroup)->waitOutgoingTask(time+5);
+    MessagePtr pull_val(new Message(kServerGroup, time+5, time+4));
+    pull_val->key = w_->key();
+    pull_val->wait = true;
+    CHECK_EQ(time+5, w_->pull(pull_val));
 
+    // set the value of w_
     auto init_w = w_->received(time+5);
     CHECK_EQ(init_w.size(), 1);
     CHECK_EQ(w_->key().size(), init_w[0].first.size());
     w_->value() = init_w[0].second;
 
-    // initial the dual variable
+    // set the local variable
     dual_.resize(X_->rows());
     dual_.eigenVector() = *X_ * w_->value().eigenVector();
 
     return y_->info().ins_info();
   } else {
-    // Time 0
-    w_->taskpool(kWorkerGroup)->waitIncomingTask(time);
-    // LL << "S time 1";
-    // Time 1
-    w_->taskpool(kWorkerGroup)->finishIncomingTask(time+1);
+    // Time 0: aggregate unfiltered keys from all workers
+    w_->wait(kWorkerGroup, time);
 
-    // Time 3
-    w_->taskpool(kWorkerGroup)->waitIncomingTask(time+3);
-    // LL << "S time 3";
+    // Time 1: doing nothing
+    w_->finish(kWorkerGroup, time+1);
 
-    // Time 4
+    // Time 3: aggregate filtered keys from all workers
+    w_->wait(kWorkerGroup, time+3);
+
+    // Time 4: initial value of w_
     w_->value().resize(w_->key().size());
-    auto init = app_cf_.init_w();
-    if (init.type() == ParameterInitConfig::ZERO) {
-      w_->value().setZero();
-    } else if (init.type() == ParameterInitConfig::RANDOM) {
-      w_->value().eigenVector() =
-          Eigen::VectorXd::Random(w_->value().size()) * init.std();
-      LL << w_->value().eigenVector().squaredNorm();
-    } else {
-      LL << "TOOD load from files";
-    }
-    w_->taskpool(kWorkerGroup)->finishIncomingTask(time+4);
+    w_->value().setValue(app_cf_.init_w());
+    w_->finish(kWorkerGroup, time+4);
   }
 
   return InstanceInfo();

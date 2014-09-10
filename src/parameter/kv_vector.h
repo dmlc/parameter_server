@@ -342,7 +342,7 @@ MessageList KVVector<K,V>::decompose(const Message& msg, const KeyList& sep) {
   Message slice = msg;
   MessageList ret(n-1);
   for (int i = 0; i < n-1; ++i) {
-    slice.clearKeyAndValue();
+    slice.clearKV();
     if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
       // valid, which will be not actually sent

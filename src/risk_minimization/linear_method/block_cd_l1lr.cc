@@ -340,7 +340,7 @@ void BlockCoordDescL1LR::showKKTFilter(int iter) {
     fprintf(stderr, "+---------------------");
   } else {
     auto prog = global_progress_[iter];
-    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, prog.nnz_active_set());
+    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, (uint64)prog.nnz_active_set());
   }
 }
 
