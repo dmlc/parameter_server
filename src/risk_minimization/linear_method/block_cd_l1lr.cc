@@ -120,12 +120,25 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     busy_timer_.stop();
     mu_.unlock();
 
-    // it is not finished until get the model updates from servers
-    msg->finished = false;
+
+    // time 0: push local gradients
+    MessagePtr push_msg(new Message(kServerGroup, time));
+    auto local_key = w_->key().segment(local_range);
+    push_msg->addKV(local_key, local_gradients);
+    global_range.to(push_msg->task.mutable_key_range());
+    CHECK_EQ(time, w_->push(push_msg));
+
+    // time 1: servers do update, none of my business
+
+    // time 2: pull the updated model from servers
+    msg->finished = false; // not finished until model updates are pulled
+    MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
+    pull_msg->key = local_key;
+    global_range.to(pull_msg->task.mutable_key_range());
     // the callback of update the local dual variable
-    Message::Callback updt_dual = [this, local_range, time, &msg] () {
+    pull_msg->fin_handle = [this, local_range, time, &msg] () {
       if (!local_range.empty()) {
-        auto data = w_->received(time);
+        auto data = w_->received(time+2);
         CHECK_EQ(data.size(), 1); CHECK_EQ(local_range, data[0].first);
         auto new_weight = data[0].second;
         mu_.lock();
@@ -138,20 +151,6 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
       taskpool(msg->sender)->finishIncomingTask(msg->task.time());
       sys_.reply(msg->sender, msg->task);
     };
-
-    // time 0: push local gradients
-    MessagePtr push_msg(new Message(kServerGroup, time));
-    auto local_key = w_->key().segment(local_range);
-    push_msg->addKV(local_key, local_gradients);
-    global_range.to(push_msg->task.mutable_key_range());
-    CHECK_EQ(time, w_->push(push_msg));
-
-    // time 1: servers do update, none of my business
-    // time 2:
-    MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
-    pull_msg->key = local_key;
-    pull_msg->fin_handle = updt_dual;
-    global_range.to(pull_msg->task.mutable_key_range());
     CHECK_EQ(time+2, w_->pull(pull_msg));
   } else if (IamServer()) {
     // none of my bussiness

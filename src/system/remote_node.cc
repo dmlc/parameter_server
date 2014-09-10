@@ -17,7 +17,6 @@ int RNode::submit(const MessagePtr& msg) {
     Lock l(mu_);
     if (task.has_time()) {
       time_ = std::max(task.time(), time_);
-      LL << time_;
     } else {
       // choose a timestamp
       if (role() == Node::GROUP) {
@@ -27,7 +26,6 @@ int RNode::submit(const MessagePtr& msg) {
         }
       }
       task.set_time(++time_);
-      LL << time_;
     }
     if (msg->fin_handle) msg_finish_handle_[task.time()] = msg->fin_handle;
   }
@@ -51,7 +49,6 @@ int RNode::submit(const MessagePtr& msg) {
       // a terminate confirm message will not get replied
       // if (task.type() != Task::TERMINATE_CONFIRM)
       w->pending_msgs_[t] = msgs[i];
-      LL << exec_.myNodeID() << " " << w->id() << " " << t;
       if (msg->recv_handle) w->msg_receive_handle_[t] = msg->recv_handle;
     }
     sys_.queue(w->cacheKeySender(msgs[i]));

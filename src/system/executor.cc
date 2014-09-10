@@ -175,7 +175,6 @@ void Executor::run() {
             << sender->id() << " on time " << t;
         original_recver_id = it->second->original_recver;
         sender->pending_msgs_.erase(it);
-        LL << myNodeID() << " erase " << sender->id() << " on time " << t;
       }
       // run the finishing callback if necessary
       auto o_recver = rnode(original_recver_id);
