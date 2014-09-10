@@ -77,6 +77,8 @@ void Postoffice::queue(const MessagePtr& msg) {
     tk.set_type(Task::REPLY);
     tk.set_time(msg->task.time());
     MessagePtr reply(new Message(tk));
+    reply->sender = msg->recver;
+    reply->recver = msg->sender;
     yellow_pages_.customer(tk.customer())->exec().accept(reply);
   }
 }

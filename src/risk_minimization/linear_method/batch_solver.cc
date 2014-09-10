@@ -175,7 +175,6 @@ InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
     // Time 0: send all unique keys with their count to servers
     MessagePtr count(new Message(kServerGroup, time));
     count->addKV(uniq_key, {key_cnt});
-    LL << count->key.size();
     w_->set(count)->set_add_key_count(true);
     CHECK_EQ(time, w_->push(count));
 

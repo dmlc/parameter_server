@@ -194,7 +194,8 @@ void Executor::run() {
 
 void Executor::accept(const MessagePtr& msg) {
   Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender); CHECK(sender) << myNodeID() << ": " << msg->sender ;
+  auto sender = rnode(msg->sender);
+  CHECK(sender) << myNodeID() << ": " << msg->valid << " .. " << msg->shortDebugString();
   recved_msgs_.push_back(sender->cacheKeyRecver(msg));
   dag_cond_.notify_one();
 }
