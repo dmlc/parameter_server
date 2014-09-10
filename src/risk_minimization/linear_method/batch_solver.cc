@@ -228,71 +228,10 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     w_->value().setValue(app_cf_.init_w());
     w_->finish(kWorkerGroup, time+4);
   }
-
   return InstanceInfo();
 }
 
 
-void BatchSolver::updateModel(Message* msg) {
-  // FIXME several tiny bugs here...
-  int time = msg->task.time() * 10;
-  Range<Key> global_range(msg->task.risk().key());
-  auto local_range = w_->localRange(global_range);
-
-  if (exec_.isWorker()) {
-    auto X = X_->colBlock(local_range);
-
-    SArrayList<double> local_grads(2);
-    local_grads[0].resize(local_range.size());
-    local_grads[1].resize(local_range.size());
-    AggGradLearnerArg arg;
-    {
-      Lock l(mu_);
-      busy_timer_.start();
-      learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
-      busy_timer_.stop();
-    }
-
-    msg->finished = false;
-    auto sender = msg->sender;
-    auto task = msg->task;
-    w_->roundTripForWorker(time, global_range, local_grads,
-                           [this, X, local_range, sender, task] (int time) {
-        Lock l(mu_);
-        busy_timer_.start();
-
-        if (!local_range.empty()) {
-          auto data = w_->received(time);
-
-          CHECK_EQ(data.size(), 1);
-          CHECK_EQ(local_range, data[0].first);
-          auto new_w = data[0].second;
-
-          auto delta = new_w.eigenVector() - w_->segment(local_range).eigenVector();
-          dual_.eigenVector() += *X * delta;
-          w_->segment(local_range).eigenVector() = new_w.eigenVector();
-        }
-
-        busy_timer_.stop();
-
-        taskpool(sender)->finishIncomingTask(task.time());
-        sys_.reply(sender, task);
-        // LL << myNodeID() << " done " << d.task.time();
-      });
-  } else {
-    // aggregate local gradients, then update model
-    w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-        SArrayList<double> aggregated_gradient;
-        for (auto& d : w_->received(time)) {
-          CHECK_EQ(local_range, d.first);
-          aggregated_gradient.push_back(d.second);
-        }
-        AggGradLearnerArg arg;
-        arg.set_learning_rate(app_cf_.learning_rate().eta());
-        learner_->update(aggregated_gradient, arg, w_->segment(local_range));
-      });
-  }
-}
 
 RiskMinProgress BatchSolver::evaluateProgress() {
   RiskMinProgress prog;
@@ -404,6 +343,66 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
 // }
 
 
+void BatchSolver::updateModel(Message* msg) {
+  // FIXME several tiny bugs here...
+  // int time = msg->task.time() * 10;
+  // Range<Key> global_range(msg->task.risk().key());
+  // auto local_range = w_->localRange(global_range);
+
+  // if (exec_.isWorker()) {
+  //   auto X = X_->colBlock(local_range);
+
+  //   SArrayList<double> local_grads(2);
+  //   local_grads[0].resize(local_range.size());
+  //   local_grads[1].resize(local_range.size());
+  //   AggGradLearnerArg arg;
+  //   {
+  //     Lock l(mu_);
+  //     busy_timer_.start();
+  //     learner_->compute({y_, X, dual_.matrix()}, arg, local_grads);
+  //     busy_timer_.stop();
+  //   }
+
+  //   msg->finished = false;
+  //   auto sender = msg->sender;
+  //   auto task = msg->task;
+  //   w_->roundTripForWorker(time, global_range, local_grads,
+  //                          [this, X, local_range, sender, task] (int time) {
+  //       Lock l(mu_);
+  //       busy_timer_.start();
+
+  //       if (!local_range.empty()) {
+  //         auto data = w_->received(time);
+
+  //         CHECK_EQ(data.size(), 1);
+  //         CHECK_EQ(local_range, data[0].first);
+  //         auto new_w = data[0].second;
+
+  //         auto delta = new_w.eigenVector() - w_->segment(local_range).eigenVector();
+  //         dual_.eigenVector() += *X * delta;
+  //         w_->segment(local_range).eigenVector() = new_w.eigenVector();
+  //       }
+
+  //       busy_timer_.stop();
+
+  //       taskpool(sender)->finishIncomingTask(task.time());
+  //       sys_.reply(sender, task);
+  //       // LL << myNodeID() << " done " << d.task.time();
+  //     });
+  // } else {
+  //   // aggregate local gradients, then update model
+  //   w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
+  //       SArrayList<double> aggregated_gradient;
+  //       for (auto& d : w_->received(time)) {
+  //         CHECK_EQ(local_range, d.first);
+  //         aggregated_gradient.push_back(d.second);
+  //       }
+  //       AggGradLearnerArg arg;
+  //       arg.set_learning_rate(app_cf_.learning_rate().eta());
+  //       learner_->update(aggregated_gradient, arg, w_->segment(local_range));
+  //     });
+  // }
+}
 
 } // namespace LM
 } // namespace PS

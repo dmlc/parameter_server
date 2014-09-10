@@ -18,31 +18,31 @@ class SharedParameter : public Customer {
   // Submit a task into *dest* and return the timestamp associated with this
   // task.
 
-  typedef std::function<void()> Fn;
-  int sync(CallSharedPara_Command cmd, const NodeID& dest, Range<K> key_range,
-           Message msg, int time = -1, int wait_time = -1, Fn recv_handle = Fn(),
-           Fn fin_handle = Fn(), bool no_wait = true) {
-    setCall(&(msg.task))->set_cmd(cmd);
-    key_range.to(msg.task.mutable_key_range());
-    if (time >= 0) msg.task.set_time(time);
-    msg.task.set_wait_time(wait_time);
-    return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
-  }
+  // typedef std::function<void()> Fn;
+  // int sync(CallSharedPara_Command cmd, const NodeID& dest, Range<K> key_range,
+  //          Message msg, int time = -1, int wait_time = -1, Fn recv_handle = Fn(),
+  //          Fn fin_handle = Fn(), bool no_wait = true) {
+  //   setCall(&(msg.task))->set_cmd(cmd);
+  //   key_range.to(msg.task.mutable_key_range());
+  //   if (time >= 0) msg.task.set_time(time);
+  //   msg.task.set_wait_time(wait_time);
+  //   return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
+  // }
 
-  // see *sync*
-  int pull(const NodeID& dest, Range<K> key_range, Message data,
-           int time = -1, int wait_time = -1,
-           Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
-    return sync(CallSharedPara::PULL, dest, key_range, data, time, wait_time,
-                recv_handle, fin_handle, no_wait);
-  }
-  // see *sync*
-  int push(const NodeID& dest, Range<K> key_range, Message data,
-           int time = -1, int wait_time = -1,
-           Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
-    return sync(CallSharedPara::PUSH, dest, key_range, data, time, wait_time,
-                recv_handle, fin_handle, no_wait);
-  }
+  // // see *sync*
+  // int pull(const NodeID& dest, Range<K> key_range, Message data,
+  //          int time = -1, int wait_time = -1,
+  //          Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
+  //   return sync(CallSharedPara::PULL, dest, key_range, data, time, wait_time,
+  //               recv_handle, fin_handle, no_wait);
+  // }
+  // // see *sync*
+  // int push(const NodeID& dest, Range<K> key_range, Message data,
+  //          int time = -1, int wait_time = -1,
+  //          Fn recv_handle = Fn(), Fn fin_handle = Fn(), bool no_wait = true) {
+  //   return sync(CallSharedPara::PUSH, dest, key_range, data, time, wait_time,
+  //               recv_handle, fin_handle, no_wait);
+  // }
 
   // convenient wrappers of functions in remote_node.h
   int sync(MessagePtr msg) {
@@ -66,7 +66,6 @@ class SharedParameter : public Customer {
   void finish(const NodeID& node, int time) {
     taskpool(node)->finishIncomingTask(time);
   }
-
 
   CallSharedPara getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);

@@ -2,11 +2,6 @@
 #include "risk_minimization/linear_method/batch_solver.h"
 #include "risk_minimization/linear_method/block_cd_l1lr.h"
 #include "neural_network/sgd_solver.h"
-
-// #include "app/grad_desc.h"
-// #include "app/block_prox_grad.h"
-// #include "app/sketch.h"
-
 namespace PS {
 
 DEFINE_bool(test_fault_tol, false, "");

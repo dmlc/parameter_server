@@ -3,51 +3,6 @@
 #include <thread>
 namespace PS {
 
-void Executor::replace(const Node& dead, const Node& live) {
-  auto dead_id = dead.id();
-  auto live_id = live.id();
-  if (live_id == my_node_.id()) return;
-
-  // FIXME update kLiveGroup
-  // modify
-  auto ptr = nodes_[dead_id];
-  CHECK(ptr.get() != nullptr);
-  Lock l(ptr->mu_);
-  ptr->node_ = live;
-
-  // insert the live
-  {
-    Lock l2(node_mu_);
-    nodes_[live_id] = ptr;
-    node_groups_[live_id] = node_groups_[dead_id];
-    node_key_partition_[live_id] = node_key_partition_[dead_id];
-
-    // remove the dead
-    CHECK(dead.role() != Node::GROUP);
-    nodes_.erase(dead_id);
-    node_groups_.erase(dead_id);
-    node_key_partition_.erase(dead_id);
-
-    // LL << my_node_.id() << ": " << obj_.name() << "'s node info is updated";
-  }
-
-  // resent unfinished tasks
-  ptr->clearCache();
-  if (ptr->pending_msgs_.size() > 0) {
-    bool first = true;
-    for (auto& it : ptr->pending_msgs_) {
-      auto& msg = it.second;
-      msg.recver = live_id;
-      if (first) msg.task.set_wait_time(RNode::kInvalidTime);
-      first = false;
-      ptr->sys_.queue(ptr->cacheKeySender(msg));
-      // LL << my_node_.id() << ": resent " << msg;
-    }
-    LL << my_node_.id() << ": re-sent " << ptr->pending_msgs_.size()
-       << " pnending messages to " << live_id;
-  }
-}
-
 void Executor::init(const std::vector<Node>& nodes) {
   // insert virtual group nodes
   for (auto id : {
@@ -127,17 +82,14 @@ void Executor::add(const Node& node) {
   CHECK_EQ(nodes_.count(id), 0);
   if (id == Postoffice::instance().myNode().id())
     my_node_ = node;
-
   RNodePtr w(new RNode(node, *this));
   nodes_[id] = w;
 
   auto role = node.role();
-
   if (role != Node::GROUP) {
     node_groups_[id] = RNodePtrList({w});
     node_groups_[kLiveGroup].push_back(w);
   }
-
   if (role == Node::WORKER) {
     node_groups_[kWorkerGroup].push_back(w);
     node_groups_[kActiveGroup].push_back(w);
@@ -147,24 +99,13 @@ void Executor::add(const Node& node) {
   }
 }
 
-// void Executor::remove(const Node& node) {
-//   auto id = node.id();
-//   CHECK_NE(nodes_.count(id), 0);
-//   CHECK_NE(id, my_node_.id());
-
-//   auto role = node.role();
-//   if (role != Node::GROUP)
-//     node_groups_.erase[id] = WorkerGroup({w});
-// }
-
 string Executor::lastRecvReply() {
-  CHECK(!active_msg_.task.request());
-  CHECK_EQ(active_msg_.task.type(), Task::REPLY);
-  return active_msg_.task.msg();
+  CHECK(!active_msg_->task.request());
+  CHECK_EQ(active_msg_->task.type(), Task::REPLY);
+  return active_msg_->task.msg();
 }
 
-// a naive implementation of DAG execution engine. It may has performance
-// problem, do profile later TODO.
+// a simple implementation of the DAG execution engine.
 void Executor::run() {
   while (!done_) {
     bool do_process = false;
@@ -172,109 +113,137 @@ void Executor::run() {
       std::unique_lock<std::mutex> lk(recved_msg_mu_);
       // pickup a message with dependency satisfied
       for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
-        int wait_time = it->task.wait_time();
-        auto w = rnode(it->sender);
-        if (!w) {
-          LL << my_node_.id() << ": " << it->sender
-             << " does not exist, ignore\n" << *it;
+        auto& msg = *it;
+        int wait_time = msg->task.wait_time();
+        auto sender = rnode(msg->sender);
+        if (!sender) {
+          LL << my_node_.id() << ": " << msg->sender
+             << " does not exist, ignore\n" << msg->debugString();
           recved_msgs_.erase(it);
           break;
         }
-        if (!it->task.request() ||  // TODO rethink about it
-            wait_time <= RNode::kInvalidTime ||
-            w->tryWaitIncomingTask(wait_time)) {
-          // if (it->task.type() != Task::REPLY &&
-          //     worker(it->sender)->in_task_.hasFinished(it->task.time()))
-          //   LL << it->debugString();
+        if (!msg->task.request() ||  // ack message
+            wait_time <= Message::kInvalidTime ||  // no dependency constraint
+            sender->tryWaitIncomingTask(wait_time)) {   // dependency constraint satisfied
           do_process = true;
-          active_msg_ = *it;
+          active_msg_ = msg;
           recved_msgs_.erase(it);
           break;
         }
       }
-      if (!do_process) {
-        dag_cond_.wait(lk);
-        // if (dag_cond_.wait_for(lk, std::chrono::seconds(5)) == std::cv_status::timeout) {
-        //   LL << node().id() << " " << obj_.name() << ": timeout, recved #msg " << recved_msgs_.size();
-        // }
-        continue;
-      }
+      if (!do_process) { dag_cond_.wait(lk); continue; }
     }
-    // if (!do_process) continue;
-
-      // process the picked message
-      bool req = active_msg_.task.request();
-      auto w = rnode(active_msg_.sender);
-      int t = active_msg_.task.time();
-
-      if (req) { w->incoming_task_.start(t); }
-
-      if (active_msg_.task.type() == Task::REPLY)
+    // process the picked message
+    bool req = active_msg_->task.request();
+    int t = active_msg_->task.time();
+    auto sender = rnode(active_msg_->sender);
+    // mark it as been started in the task tracker
+    if (req) sender->incoming_task_.start(t);
+    // call user program to process this message if necessary
+    if (active_msg_->task.type() == Task::REPLY) {
         CHECK(!req) << "reply message should with request == false";
-      else
-        // call user program to process this message
-        obj_.process(&active_msg_);
-
-      if (req) {
-        // if has been marked as finished, then mark it on in_task_; otherwise, the
-        // user program need to set in_task_.
-        if (active_msg_.finished) {
-          w->incoming_task_.finish(t);
-          notify();
-          // reply an empty ack message if it has not been replied yet
-          if (!active_msg_.replied) w->sys_.reply(active_msg_);
-        }
-      } else {
-        RNode::Callback h;
+    } else {
+      obj_.process(active_msg_);
+    }
+    if (req) {
+      // if this message is finished, then mark it in the task tracker,
+      // otherwise, it is the user program's job to mark it.
+      if (active_msg_->finished) {
+        sender->incoming_task_.finish(t);
+        notify();
+        // reply an empty ack message if it has not been replied yet
+        if (!active_msg_->replied) sender->sys_.reply(active_msg_);
+      }
+    } else {
+      // run the receiving callback if necessary
+      Message::Callback h;
+      {
+        Lock lk(sender->mu_);
+        auto b = sender->msg_receive_handle_.find(t);
+        if (b != sender->msg_receive_handle_.end()) h = b->second;
+      }
+      if (h) h();
+      // mark this out going task as finished
+      sender->outgoing_task_.finish(t);
+      // find the original receiver, such as the server group (all_servers)
+      NodeID original_recver_id;
+      {
+        Lock l(sender->mu_);
+        auto it = sender->pending_msgs_.find(t);
+        CHECK(it != sender->pending_msgs_.end())
+            << my_node_.id() << ": there is no message has been sent to "
+            << sender->id();
+        original_recver_id = it->second->original_recver;
+        sender->pending_msgs_.erase(it);
+      }
+      // run the finishing callback if necessary
+      auto o_recver = rnode(original_recver_id);
+      if (o_recver->tryWaitOutgoingTask(t)) {
+        Message::Callback h;
         {
-          Lock lk(w->mu_);
-          auto b = w->msg_receive_handle_.find(t);
-          if (b != w->msg_receive_handle_.end()) h = b->second;
+          Lock lk(o_recver->mu_);
+          auto a = o_recver->msg_finish_handle_.find(t);
+          if (a != o_recver->msg_finish_handle_.end()) h = a->second;
         }
         if (h) h();
-
-        w->outgoing_task_.finish(t);
-
-        // the original receiver, such as the server group (all_servers)
-        NodeID o_recver;
-        {
-          Lock l(w->mu_);
-          auto it = w->pending_msgs_.find(t);
-          CHECK(it != w->pending_msgs_.end())
-              << " " << w->id() <<  " didn't find pending msg " << t
-              << ", I'm " << my_node_.id();
-          o_recver = it->second.original_recver;
-          w->pending_msgs_.erase(it);
-        }
-
-        auto o_w = rnode(o_recver);
-        // LL << obj_.sid() << " try wait t " << t << ": " << o_w->tryWaitOutTask(t);
-        if (o_w->tryWaitOutgoingTask(t)) {
-          RNode::Callback h;
-          {
-            Lock lk(o_w->mu_);
-            auto a = o_w->msg_finish_handle_.find(t);
-            if (a != o_w->msg_finish_handle_.end()) h = a->second;
-          }
-          if (h) h();
-          // if (t % 10 == 2 && !h && node().id() != "H") LL << node().id() << " " << t;
-        }
       }
-    // }
+    }
   }
 }
 
-void Executor::accept(const Message& msg) {
-  Lock l(recved_msg_mu_);
-  auto w = rnode(msg.sender);
-  recved_msgs_.push_back(w->cacheKeyRecver(msg));
-  // notify();
-  dag_cond_.notify_one();
 
-  // TODO sort it by priority
-  // if (msg.task.priority() > 0)
-  // recved_msgs_.push_front(msg);
-  // else
+void Executor::accept(const MessagePtr& msg) {
+  Lock l(recved_msg_mu_);
+  auto sender = rnode(msg->sender); CHECK(!w);
+  recved_msgs_.push_back(sender->cacheKeyRecver(msg));
+  dag_cond_.notify_one();
 }
+
+void Executor::replace(const Node& dead, const Node& live) {
+  // TODO
+  // auto dead_id = dead.id();
+  // auto live_id = live.id();
+  // if (live_id == my_node_.id()) return;
+
+  // // FIXME update kLiveGroup
+  // // modify
+  // auto ptr = nodes_[dead_id];
+  // CHECK(ptr.get() != nullptr);
+  // Lock l(ptr->mu_);
+  // ptr->node_ = live;
+
+  // // insert the live
+  // {
+  //   Lock l2(node_mu_);
+  //   nodes_[live_id] = ptr;
+  //   node_groups_[live_id] = node_groups_[dead_id];
+  //   node_key_partition_[live_id] = node_key_partition_[dead_id];
+
+  //   // remove the dead
+  //   CHECK(dead.role() != Node::GROUP);
+  //   nodes_.erase(dead_id);
+  //   node_groups_.erase(dead_id);
+  //   node_key_partition_.erase(dead_id);
+
+  //   // LL << my_node_.id() << ": " << obj_.name() << "'s node info is updated";
+  // }
+
+  // // resent unfinished tasks
+  // ptr->clearCache();
+  // if (ptr->pending_msgs_.size() > 0) {
+  //   bool first = true;
+  //   for (auto& it : ptr->pending_msgs_) {
+  //     auto& msg = it.second;
+  //     msg.recver = live_id;
+  //     if (first) msg.task.set_wait_time(RNode::kInvalidTime);
+  //     first = false;
+  //     ptr->sys_.queue(ptr->cacheKeySender(msg));
+  //     // LL << my_node_.id() << ": resent " << msg;
+  //   }
+  //   LL << my_node_.id() << ": re-sent " << ptr->pending_msgs_.size()
+  //      << " pnending messages to " << live_id;
+  // }
+}
+
 
 } // namespace PS

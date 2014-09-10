@@ -10,7 +10,7 @@ typedef std::string NodeID;
 
 struct Message;
 typedef std::shared_ptr<Message> MessagePtr;
-typedef std::vector<Message> MessageList;
+typedef std::vector<MessagePtr> MessagePtrList;
 
 struct Message {
   const static int kInvalidTime = -1;
@@ -21,7 +21,6 @@ struct Message {
     task.set_time(time);
     task.set_wait_time(wait_time);
   }
-
   Message() { }
   explicit Message(const Task& tk) : task(tk) { }
   // task, key, and value will be sent over network. while the rest are only

@@ -53,7 +53,7 @@ class KVVector : public SharedParameter<K,V> {
   size_t nnz() const { return val_.nnz(); }
 
   // implement the virtual functions required
-  MessageList decompose(const Message& msg, const KeyList& partition);
+  MessagePtrList slice(const MessagePtr& msg, const KeyList& seg);
   void getValue(Message* msg);
   void setValue(Message* msg);
   void getReplica(Range<K> range, Message *msg);

@@ -12,14 +12,15 @@ class Customer {
     exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
   }
   // process a message received from a remote node
-  virtual void process(Message* msg) = 0;
-  // Given the partition keys (k_1, k_2, ..., k_n), which are ordered, decompose
-  // the message into n-1 messages such that the i-th message containing only
-  // keys and values in the key range [k_i, k_{i+1}).
-  virtual MessageList decompose(const Message& msg, const KeyList& partition) {
+  virtual void process(const MessagePtr& msg) = 0;
+  // *seg* are ordered keys (k_1, k_2, ..., k_n), slice message *msg* into n-1
+  // messages such that the i-th message containing only keys and values in the
+  // key range [k_i, k_{i+1}).
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& seg) {
     // in default, copy the message n-1 times
-    return MessageList(partition.size()-1, msg);
+    return MessagePtrList(partition.size()-1, msg);
   }
+
   // join the execution thread
   void stop() { exec_.stop(); exec_thread_->join(); }
 
