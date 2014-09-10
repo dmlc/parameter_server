@@ -19,7 +19,7 @@ class Van {
   Status connect(Node const& node);
 
   Status send(const Message& msg);
-  Status recv(Message* msg);
+  Status recv(const MessagePtr& msg);
 
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };

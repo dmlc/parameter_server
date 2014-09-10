@@ -84,15 +84,15 @@ struct Message {
 };
 
 
-// an reply message, with empty body and task
-static Message replyTemplate(const Message& msg) {
-  Message reply;
-  reply.sender = msg.recver;
-  reply.recver = msg.sender;
-  reply.task.set_customer(msg.task.customer());
-  reply.task.set_request(false);
-  return reply;
-}
+// // an reply message, with empty body and task
+// static Message replyTemplate(const Message& msg) {
+//   Message reply;
+//   reply.sender = msg.recver;
+//   reply.recver = msg.sender;
+//   reply.task.set_customer(msg.task.customer());
+//   reply.task.set_request(false);
+//   return reply;
+// }
 
 template <typename V> using AlignedArray = std::pair<SizeR, SArray<V>>;
 template <typename V> using AlignedArrayList = std::vector<AlignedArray<V>>;

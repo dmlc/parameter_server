@@ -17,21 +17,18 @@ DEFINE_string(node_file, "./nodes", "node information");
 
 Postoffice::~Postoffice() {
   recving_->join();
-  Message stop; stop.terminate = true; queue(stop);
+  MessagePtr stop(new Message()); stop->terminate = true; queue(stop);
   sending_->join();
 }
 
+// TODO run a console if it is a Node::MANAGER
 void Postoffice::run() {
   // omp_set_dynamic(0);
   // omp_set_num_threads(FLAGS_num_threads);
   yellow_pages_.init();
   recving_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
-
   switch(myNode().role()) {
-    // case Node::MANAGER:
-    //   // TODO run a console
-    //   break;
     case Node::SCHEDULER: {
       // get all node information
       yellow_pages_.add(myNode());
@@ -63,53 +60,43 @@ void Postoffice::reply(
   tk.set_type(Task::REPLY);
   if (!reply_msg.empty()) tk.set_msg(reply_msg);
   tk.set_time(task.time());
-
-  Message re(tk); re.recver = recver; queue(re);
+  MessagePtr re(new Message(tk)); re->recver = recver; queue(re);
 }
 
-void Postoffice::reply(const Message& msg, const string& reply_msg) {
-  if (!msg.task.request()) return;
-  Message re = replyTemplate(msg);
-  re.task.set_type(Task::REPLY);
-  if (!reply_msg.empty())
-    re.task.set_msg(reply_msg);
-  re.task.set_time(msg.task.time());
-  queue(re);
-}
-
-void Postoffice::queue(const Message& msg) {
-  if (msg.valid) {
+void Postoffice::queue(const MessagePtr& msg) {
+  if (msg->valid) {
     sending_queue_.push(msg);
   } else {
     // do not send, fake a reply mesage
-    Message re = replyTemplate(msg);
-    re.task.set_type(Task::REPLY);
-    re.task.set_time(msg.task.time());
-    yellow_pages_.customer(re.task.customer())->exec().accept(re);
+    Task tk;
+    tk.set_customer(msg->task.customer());
+    tk.set_request(false);
+    tk.set_type(Task::REPLY);
+    tk.set_time(msg->task.time());
+    MessagePtr reply(new Message(tk));
+    yellow_pages_.customer(tk.customer())->exec().accept(reply);
   }
 }
 
 //  TODO fault tolerance, check if node info has been changed
 void Postoffice::send() {
-  Message msg;
+  MessagePtr msg;
   while (true) {
     sending_queue_.wait_and_pop(msg);
-    if (msg.terminate) break;
-    Status stat = yellow_pages_.van().send(msg);
+    if (msg->terminate) break;
+    Status stat = yellow_pages_.van().send(*msg);
     if (!stat.ok()) {
-      LL << "sending " << msg.debugString() << " failed\n"
-         << "error: " << stat.ToString();
+      LL << "sending " << msg->debugString() << " failed. error: " << stat.ToString();
     }
   }
 }
 
 void Postoffice::recv() {
-  Message msg;
+  MessagePtr msg;
   while (true) {
-    auto stat = yellow_pages_.van().recv(&msg);
-    // if (!stat.ok()) break;
+    auto stat = yellow_pages_.van().recv(msg);
     CHECK(stat.ok()) << stat.ToString();
-    auto& tk = msg.task;
+    auto& tk = msg->task;
     if (tk.request() && tk.type() == Task::TERMINATE) {
       yellow_pages_.van().statistic();
       done_ = true;
@@ -126,7 +113,7 @@ void Postoffice::recv() {
     }
     auto ptr = yellow_pages_.customer(tk.customer());
     if (ptr != nullptr) ptr->exec().finish(msg);
-    reply(msg);
+    reply(msg->sender, msg->task);
   }
 }
 
@@ -146,7 +133,6 @@ void Postoffice::manageNode(const Task& tk) {
   for (int i = 0; i < mng.node_size(); ++i) {
     nodes.push_back(mng.node(i));
   }
-
   auto obj = yellow_pages_.customer(tk.customer());
   switch (mng.cmd()) {
     case ManageNode::ADD:
@@ -156,7 +142,6 @@ void Postoffice::manageNode(const Task& tk) {
         nodes_are_ready_.set_value();
       }
       break;
-
     case ManageNode::INIT:
       for (auto n : nodes) yellow_pages_.add(n);
       if (obj != nullptr) {
@@ -165,7 +150,6 @@ void Postoffice::manageNode(const Task& tk) {
           yellow_pages_.customer(c)->exec().init(nodes);
       }
       break;
-
     case ManageNode::REPLACE:
       CHECK_EQ(nodes.size(), 2);
       obj->exec().replace(nodes[0], nodes[1]);
@@ -176,7 +160,6 @@ void Postoffice::manageNode(const Task& tk) {
     default:
       CHECK(false) << " unknow command " << mng.cmd();
   }
-
 }
 
 void Postoffice::addMyNode(const string& name, const Node& recver) {
@@ -188,8 +171,8 @@ void Postoffice::addMyNode(const string& name, const Node& recver) {
   mng_node->set_cmd(ManageNode::ADD);
   *(mng_node->add_node()) = myNode();
 
-  Message msg(task);
-  msg.recver = recver.id();
+  MessagePtr msg(new Message(task));
+  msg->recver = recver.id();
   queue(msg);
 }
 

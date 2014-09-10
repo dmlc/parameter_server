@@ -127,7 +127,7 @@ MessagePtr RNode::cacheKeyRecver(const MessagePtr& msg) {
     cache.first = sig;
     cache.second = ret->key;
   } else {
-    CHECK_EQ(sig, cache.first) << msg.debugString();
+    CHECK_EQ(sig, cache.first) << msg->debugString();
     ret->key = cache.second;
   }
   return ret;

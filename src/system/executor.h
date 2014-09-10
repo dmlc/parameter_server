@@ -34,8 +34,8 @@ class Executor {
   void stop() { done_ = true; notify(); }
 
   void finish(const MessagePtr& msg) {
-    int t = msg.task.time();
-    rnode(msg.sender)->finishIncomingTask(t);
+    int t = msg->task.time();
+    rnode(msg->sender)->finishIncomingTask(t);
   }
 
   // query nodes
@@ -78,7 +78,7 @@ class Executor {
  private:
   Customer& obj_;
   // Temporal buffer for received messages
-  std::list<MessagePtr> recved_msg_;
+  std::list<MessagePtr> recved_msgs_;
   std::mutex recved_msg_mu_;
   // the message is going to be processed or is the last one be processed
   MessagePtr active_msg_;

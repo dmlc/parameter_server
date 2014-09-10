@@ -13,12 +13,12 @@ class Customer {
   }
   // process a message received from a remote node
   virtual void process(const MessagePtr& msg) = 0;
-  // *seg* are ordered keys (k_1, k_2, ..., k_n), slice message *msg* into n-1
-  // messages such that the i-th message containing only keys and values in the
-  // key range [k_i, k_{i+1}).
-  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& seg) {
+  // *sep* are ordered key seperators (k_1, k_2, ..., k_n), this functin slices
+  // the message *msg* into n-1 messages such that the i-th one contains
+  // only keys and values in the key range [k_i, k_{i+1}).
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
     // in default, copy the message n-1 times
-    return MessagePtrList(partition.size()-1, msg);
+    return MessagePtrList(sep.size()-1, msg);
   }
 
   // join the execution thread

@@ -35,7 +35,7 @@ class SGDSolver : public Solver {
     }
   }
 
-  void process(Message* msg) { }
+  void process(const MessagePtr& msg) { }
  protected:
   std::map<string, MatrixPtr<real>> past_grads_;
 };

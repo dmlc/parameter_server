@@ -152,7 +152,8 @@ void Executor::run() {
         sender->incoming_task_.finish(t);
         notify();
         // reply an empty ack message if it has not been replied yet
-        if (!active_msg_->replied) sender->sys_.reply(active_msg_);
+        if (!active_msg_->replied)
+          sender->sys_.reply(active_msg_->sender, active_msg_->task);
       }
     } else {
       // run the receiving callback if necessary
@@ -194,7 +195,7 @@ void Executor::run() {
 
 void Executor::accept(const MessagePtr& msg) {
   Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender); CHECK(!w);
+  auto sender = rnode(msg->sender); CHECK(!sender);
   recved_msgs_.push_back(sender->cacheKeyRecver(msg));
   dag_cond_.notify_one();
 }

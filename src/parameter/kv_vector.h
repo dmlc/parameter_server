@@ -53,12 +53,12 @@ class KVVector : public SharedParameter<K,V> {
   size_t nnz() const { return val_.nnz(); }
 
   // implement the virtual functions required
-  MessagePtrList slice(const MessagePtr& msg, const KeyList& seg);
-  void getValue(Message* msg);
-  void setValue(Message* msg);
-  void getReplica(Range<K> range, Message *msg);
-  void setReplica(Message *msg);
-  void recoverFrom(Message *msg);
+  MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
+  void getValue(const MessagePtr& msg);
+  void setValue(const MessagePtr& msg);
+  void setReplica(const MessagePtr& msg);
+  void getReplica(const Range<K>& range, const MessagePtr& msg);
+  void recoverFrom(const MessagePtr& msg);
 
   USING_SHARED_PARAMETER;
  private:
@@ -81,9 +81,7 @@ class KVVector : public SharedParameter<K,V> {
 };
 
 template <typename K, typename V>
-void KVVector<K, V>::getReplica(Range<K> range, Message *msg) {
-  // Range<K> kr(sp_->getCall(*msg).key());
-  // auto kr = sp_->keyRange(msg->recver);
+void KVVector<K, V>::getReplica(const Range<K>& range, const MessagePtr& msg) {
   auto it = replica_.find(range);
   CHECK(it != replica_.end())
       << myNodeID() << " does not backup for " << msg->sender
@@ -100,16 +98,15 @@ void KVVector<K, V>::getReplica(Range<K> range, Message *msg) {
   }
 
   // timestamp
-  auto arg = setCall(msg);
   for (auto& v : rep.clock) {
-    auto sv = arg->add_backup();
+    auto sv = set(msg)->add_backup();
     sv->set_sender(v.first);
     sv->set_time(v.second);
   }
 }
 
 template <typename K, typename V>
-void KVVector<K, V>::setReplica(Message *msg) {
+void KVVector<K, V>::setReplica(const MessagePtr& msg) {
   auto recved_key = SArray<K>(msg->key);
   auto recved_val = SArray<V>(msg->value[0]);
   auto kr = keyRange(msg->sender);
@@ -134,15 +131,14 @@ void KVVector<K, V>::setReplica(Message *msg) {
   //    << norm(recved_val.vec(), 1) << " " << recved_val.size();
 
   // timestamp
-  auto arg = getCall(*msg);
-  for (int i = 0; i < arg.backup_size(); ++i)
-    it->second.addTime(arg.backup(i));
+  auto arg = get(msg);
+  for (int i = 0; i < arg.backup_size(); ++i) it->second.addTime(arg.backup(i));
 }
 
 template <typename K, typename V>
-void KVVector<K, V>::recoverFrom(Message *msg) {
+void KVVector<K, V>::recoverFrom(const MessagePtr& msg) {
   // data
-  auto arg = getCall(*msg);
+  auto arg = get(msg);
   Range<K> range(msg->task.key_range());
   CHECK_EQ(range, myKeyRange());
   key_ = msg->key;
@@ -163,77 +159,78 @@ void KVVector<K, V>::recoverFrom(Message *msg) {
 template <typename K, typename V>
 void KVVector<K, V>::roundTripForWorker (
     int time, const Range<K>& range, const SArrayList<V>& push_value, Fn callback) {
-  auto lr = localRange(range);
-  Message push_msg, pull_msg;
+  // auto lr = localRange(range);
+  // Message push_msg, pull_msg;
 
-  // time 0 : push
-  push_msg.key = key_.segment(lr);
-  for (auto& val : push_value) {
-    if (val.size() == 0) break;
-    CHECK_EQ(lr.size(), val.size());
-    push_msg.value.push_back(SArray<char>(val));
-  }
-  time = sync(CallSharedPara::PUSH, kServerGroup, range, push_msg, time);
+  // // time 0 : push
+  // push_msg.key = key_.segment(lr);
+  // for (auto& val : push_value) {
+  //   if (val.size() == 0) break;
+  //   CHECK_EQ(lr.size(), val.size());
+  //   push_msg.value.push_back(SArray<char>(val));
+  // }
+  // time = sync(CallSharedPara::PUSH, kServerGroup, range, push_msg, time);
 
-  // time 1 : servers do update
+  // // time 1 : servers do update
 
-  // time 2 : pull
-  pull_msg.key = key_.segment(lr);
-  sync(CallSharedPara::PULL, kServerGroup, range, pull_msg, time+2,
-       time+1, []{}, [time, callback]{ callback(time+2); });
+  // // time 2 : pull
+  // pull_msg.key = key_.segment(lr);
+  // sync(CallSharedPara::PULL, kServerGroup, range, pull_msg, time+2,
+  //      time+1, []{}, [time, callback]{ callback(time+2); });
 }
 
 template <typename K, typename V>
 void KVVector<K, V>::roundTripForServer(
     int time, const Range<K>& range, Fn update) {
-  auto wk = taskpool(kWorkerGroup);
-  // none of my bussiness
-  if (!key_.empty() && range.setIntersection(key_.range()).empty()) {
-    // cl->finishInTask(cl->incrClock(3));
-    return;
-  }
+  // auto wk = taskpool(kWorkerGroup);
+  // // none of my bussiness
+  // if (!key_.empty() && range.setIntersection(key_.range()).empty()) {
+  //   // cl->finishInTask(cl->incrClock(3));
+  //   return;
+  // }
 
-  wk->waitIncomingTask(time);
-  update(time);
-  backup(kWorkerGroup, time+1, range);
+  // wk->waitIncomingTask(time);
+  // update(time);
+  // backup(kWorkerGroup, time+1, range);
 
-  // time 1: mark it as finished so that all blocked pulls can be started
-  wk->finishIncomingTask(time+1);
+  // // time 1: mark it as finished so that all blocked pulls can be started
+  // wk->finishIncomingTask(time+1);
 }
 
 template <typename K, typename V>
 void KVVector<K, V>::backup(const NodeID& sender, int time, const Range<K>& range) {
-  if (FLAGS_num_replicas == 0) return;
+  // TODO
+  // if (FLAGS_num_replicas == 0) return;
 
-  // data
-  auto local_range = localRange(range);
-  Message msg;
-  msg.key = key_.segment(local_range);
-  msg.addValue(val_.segment(local_range));
+  // // data
+  // auto local_range = localRange(range);
+  // Message msg;
+  // msg.key = key_.segment(local_range);
+  // msg.addValue(val_.segment(local_range));
 
-  // timestamp
-  auto arg = setCall(&msg);
-  auto vc = arg->add_backup();
-  vc->set_time(time);
-  vc->set_sender(sender);
+  // // timestamp
+  // auto arg = setCall(&msg);
+  // auto vc = arg->add_backup();
+  // vc->set_time(time);
+  // vc->set_sender(sender);
 
-  time = sync(CallSharedPara::PUSH_REPLICA, kReplicaGroup, range, msg);
-  taskpool(kReplicaGroup)->waitOutgoingTask(time);
+  // time = sync(CallSharedPara::PUSH_REPLICA, kReplicaGroup, range, msg);
+  // taskpool(kReplicaGroup)->waitOutgoingTask(time);
 
-  // also save the timestamp in local, in case if my replica node dead, he
-  // will request theose timestampes
-  replica_[myKeyRange()].addTime(*vc);
+  // // also save the timestamp in local, in case if my replica node dead, he
+  // // will request theose timestampes
+  // replica_[myKeyRange()].addTime(*vc);
 }
 
 template <typename K, typename V>
 void KVVector<K, V>::fetchValueFromServers() {
-  Message pull_msg; pull_msg.key = key_;
-  int time = sync(
-      CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
-  taskpool(kServerGroup)->waitOutgoingTask(time);
-  auto recv = received(time);
-  val_ = recv[0].second;
-  CHECK_EQ(val_.size(), key_.size());
+  // Message pull_msg; pull_msg.key = key_;
+  // int time = sync(
+  //     CallSharedPara::PULL, kServerGroup, Range<Key>::all(), pull_msg);
+  // taskpool(kServerGroup)->waitOutgoingTask(time);
+  // auto recv = received(time);
+  // val_ = recv[0].second;
+  // CHECK_EQ(val_.size(), key_.size());
 }
 
 template <typename K, typename V>
@@ -247,11 +244,11 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 }
 
 template <typename K, typename V>
-void KVVector<K,V>::getValue(Message* msg) {
+void KVVector<K,V>::getValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
-  if (getCall(*msg).has_key_freq()) {
+  if (get(msg).has_key_freq()) {
     SArray<K> filtered_key =
-        filter_.filterKeys(recv_key, getCall(*msg).key_freq());
+        filter_.filterKeys(recv_key, get(msg).key_freq());
     msg->value.push_back(SArray<char>(filtered_key));
     return;
   }
@@ -268,11 +265,8 @@ void KVVector<K,V>::getValue(Message* msg) {
 }
 
 template <typename K, typename V>
-void KVVector<K,V>::setValue(Message* msg) {
-
-  // LL << msg->task.DebugString();
-  // LL << getCall(*msg).has_key_freq();
-  if (getCall(*msg).has_key_freq()) {
+void KVVector<K,V>::setValue(const MessagePtr& msg) {
+  if (get(msg).has_key_freq()) {
     if (msg->value.empty()) return;
     CHECK_EQ(msg->value.size(), 1);
     SArray<Key> filtered_key(msg->value[0]);
@@ -285,11 +279,11 @@ void KVVector<K,V>::setValue(Message* msg) {
 
   Range<K> key_range(msg->task.key_range());
 
-  if (getCall(*msg).add_key()) {
+  if (get(msg).add_key()) {
     key_ = key_.setUnion(recv_key);
     return;
   }
-  if (getCall(*msg).add_key_count()) {
+  if (get(msg).add_key_count()) {
     CHECK_EQ(msg->value.size(), 1);
     SArray<uint32> key_cnt(msg->value[0]);
     CHECK_EQ(key_cnt.size(), recv_key.size());
@@ -321,43 +315,42 @@ void KVVector<K,V>::setValue(Message* msg) {
 
 // partition is a sorted key ranges
 template <typename K, typename V>
-MessageList KVVector<K,V>::decompose(const Message& msg, const KeyList& sep) {
-  auto cmd = getCall(msg).cmd();
+MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
+  auto cmd = get(msg).cmd();
   if (cmd == CallSharedPara::PUSH_REPLICA ||
       cmd == CallSharedPara::PULL_REPLICA) {
-    return Customer::decompose(msg, sep);
+    return Customer::slice(msg, sep);
   }
 
   // find the positions in msg.key
   size_t n = sep.size();
   std::vector<size_t> pos; pos.reserve(n-1);
-  SArray<K> key(msg.key);
-  Range<K> msg_key_range(msg.task.key_range());
+  SArray<K> key(msg->key);
+  Range<K> msg_key_range(msg->task.key_range());
   for (auto p : sep) {
     K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
     pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
   }
 
   // split the message according to *pos*
-  Message slice = msg;
-  MessageList ret(n-1);
+  MessagePtrList ret(n-1);
   for (int i = 0; i < n-1; ++i) {
-    slice.clearKV();
+    MessagePtr piece(new Message(*msg));
     if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
       // valid, which will be not actually sent
-      slice.valid = false;
+      piece->valid = false;
     } else {
-      slice.valid = true;  // must set true, otherwise this slice might not be sent
+      piece->valid = true;  // must set true, otherwise this piece might not be sent
       if (!key.empty()) {  // void be divided by 0
         SizeR lr(pos[i], pos[i+1]);
-        slice.key = key.segment(lr);
-        for (auto& val : msg.value) {
-          slice.value.push_back(val.segment(lr*(val.size()/key.size())));
+        piece->key = key.segment(lr);
+        for (auto& val : msg->value) {
+          piece->addValue(val.segment(lr*(val.size()/key.size())));
         }
       }
     }
-    ret[i] = slice;
+    ret[i] = piece;
   }
   return ret;
 }

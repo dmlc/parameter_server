@@ -10,6 +10,7 @@ DEFINE_string(my_node, "", "my node");
 DEFINE_string(scheduler, "", "the scheduler node");
 DEFINE_string(server_master, "", "the master of servers");
 DEFINE_bool(compress_message, true, "");
+DEFINE_bool(print_van, false, "");
 
 void Van::init() {
   my_node_ = parseNode(FLAGS_my_node);
@@ -26,14 +27,13 @@ void Van::init() {
   connect(my_node_);
   connect(scheduler_);
 
-#ifdef DEBUG_VAN
-  debug_out_.open("van_"+my_node_.id());
-#endif
+  if (FLAGS_print_van) {
+    debug_out_.open("van_"+my_node_.id());
+  }
 }
 
 void Van::destroy() {
-  for (auto& it : senders_)
-    zmq_close (it.second);
+  for (auto& it : senders_) zmq_close (it.second);
   zmq_close (receiver_);
   zmq_ctx_destroy (context_);
 }
@@ -48,9 +48,9 @@ void Van::bind() {
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-#ifdef DEBUG_VAN
-  debug_out_ << my_node_.id() << ": binds address " << addr << std::endl;
-#endif
+  if (FLAGS_print_van) {
+    debug_out_ << my_node_.id() << ": binds address " << addr << std::endl;
+  }
 }
 
 Status Van::connect(Node const& node) {
@@ -79,9 +79,9 @@ Status Van::connect(Node const& node) {
         "connect to " + addr + " failed: " + zmq_strerror(errno));
   senders_[id] = sender;
 
-#ifdef DEBUG_VAN
-  debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
-#endif
+  if (FLAGS_print_van) {
+    debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
+  }
   return Status::OK();
 }
 
@@ -142,14 +142,14 @@ Status Van::send(const Message& msg) {
     data_sent_ += raw.size();
   }
 
-#ifdef DEBUG_VAN
-  debug_out_ << msg.shortDebugString()<< std::endl;
-#endif
+  if (FLAGS_print_van) {
+    debug_out_ << msg.shortDebugString()<< std::endl;
+  }
   return Status::OK();
 }
 
 // TODO Zero copy
-Status Van::recv(Message *msg) {
+Status Van::recv(const MessagePtr& msg) {
   msg->key = SArray<char>();
   msg->value.clear();
   NodeID sender;
@@ -197,10 +197,9 @@ Status Van::recv(Message *msg) {
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
-#ifdef DEBUG_VAN
-  debug_out_ << msg->shortDebugString() << std::endl;
-#endif
-
+  if (FLAGS_print_van) {
+    debug_out_ << msg->shortDebugString() << std::endl;
+  }
   return Status::OK();;
 }
 
