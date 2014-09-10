@@ -11,8 +11,8 @@ class BlockCoordDescL1LR : public BatchSolver {
  public:
  protected:
   virtual void runIteration();
-  virtual InstanceInfo prepareData(const Message& msg);
-  virtual void updateModel(Message* msg);
+  virtual InstanceInfo prepareData(const MessagePtr& msg);
+  virtual void updateModel(const MessagePtr& msg);
 
   SArrayList<double> computeGradients(SizeR local_fea_range);
   void updateDual(SizeR local_fea_range, SArray<double> new_weight);

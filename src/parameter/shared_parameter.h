@@ -67,6 +67,12 @@ class SharedParameter : public Customer {
     taskpool(node)->finishIncomingTask(time);
   }
 
+  CallSharedPara get(const MessagePtr& msg) {
+    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+    CHECK(msg->task.has_shared_para());
+    return msg->task.shared_para();
+  }
+
   CallSharedPara getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
     CHECK(msg.task.has_shared_para());
@@ -85,19 +91,19 @@ class SharedParameter : public Customer {
 
  protected:
   // fill the values specified by the key lists in msg
-  virtual void getValue(Message* msg) = 0;
+  virtual void getValue(MessagePtr msg) = 0;
   // set the received KV pairs into my data strcuture
-  virtual void setValue(Message* msg) = 0;
+  virtual void setValue(MessagePtr msg) = 0;
   // the message contains the backup KV pairs sent by the master node of the key
   // segment to its replica node. merge these pairs into my replica, say
   // replica_[msg->sender] = ...
-  virtual void setReplica(Message *msg) = 0; // { CHECK(false); }
+  virtual void setReplica(MessagePtr msg) = 0; // { CHECK(false); }
   // retrieve the replica. a new server node replacing a dead server will first
   // ask for the dead's replica node for the data
-  virtual void getReplica(Range<K> range, Message *msg)  = 0; // {CHECK(false);  }
+  virtual void getReplica(Range<K> range, MessagePtr msg)  = 0; // {CHECK(false);  }
   // a new server node fill its own datastructure via the the replica data from
   // the dead's replica node
-  virtual void recoverFrom(Message *msg) = 0; // { CHECK(false); }
+  virtual void recoverFrom(MessagePtr msg) = 0; // { CHECK(false); }
   // recover from a replica node
   void recover(Range<K> range) {
     // TODO recover from checkpoint
@@ -137,20 +143,20 @@ class SharedParameter : public Customer {
 };
 
 template <typename K, typename V>
-void SharedParameter<K,V>::process(Message* msg) {
+void SharedParameter<K,V>::process(const MessagePtr& msg) {
   double req = msg->task.request();
-  switch (getCall(*msg).cmd()) {
+  switch (get(msg).cmd()) {
     typedef CallSharedPara Call;
     case Call::PUSH:
       if (req) setValue(msg);
       break;
     case Call::PULL:
       if (req) {
-        Message re = *msg;
-        re.task.set_request(false);
-        std::swap(re.sender, re.recver);
-        getValue(&re);
-        sys_.queue(taskpool(re.recver)->cacheKeySender(re));
+        MessagePtr reply(new Message(msg));
+        reply->task.set_request(false);
+        std::swap(reply->sender, reply->recver);
+        getValue(reply);
+        sys_.queue(taskpool(reply->recver)->cacheKeySender(reply));
         msg->replied = true;
       } else {
         setValue(msg);
@@ -160,28 +166,29 @@ void SharedParameter<K,V>::process(Message* msg) {
       if (req) setReplica(msg);
       break;
     case Call::PULL_REPLICA: {
-      auto range = Range<K>(msg->task.key_range());
-      if (req) {
-        Message re = *msg;
-        std::swap(re.sender, re.recver);
-        re.task.set_request(false);
+      // FIXME
+      // auto range = Range<K>(msg->task.key_range());
+      // if (req) {
+      //   Message re = *msg;
+      //   std::swap(re.sender, re.recver);
+      //   re.task.set_request(false);
 
-        getReplica(range, &re);
+      //   getReplica(range, &re);
 
-        LL << re;  // TODO cache key?
-        sys_.queue(re);
-        // do not let the system double reply it
-        msg->replied = true;
-      } else {
-        if (range == myKeyRange()) {
-          recoverFrom(msg);
-        } else {
-          setReplica(msg);
-        }
-      }
+      //   LL << re;  // TODO cache key?
+      //   sys_.queue(re);
+      //   // do not let the system double reply it
+      //   msg->replied = true;
+      // } else {
+      //   if (range == myKeyRange()) {
+      //     recoverFrom(msg);
+      //   } else {
+      //     setReplica(msg);
+      //   }
+      // }
     } break;
     default:
-      CHECK(false) << "unknow cmd: " << getCall(*msg).ShortDebugString();
+      CHECK(false) << "unknow cmd: " << get(msg).ShortDebugString();
   }
 }
 

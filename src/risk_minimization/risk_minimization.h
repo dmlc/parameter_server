@@ -8,29 +8,29 @@ namespace PS {
 
 class RiskMinimization : public App {
  public:
-  void process(Message* msg);
+  void process(const MessagePtr& msg);
   void mergeProgress(int iter);
   void mergeAUC(AUC* auc);
  protected:
   // load the data, and return the data info
-  virtual InstanceInfo prepareData(const Message& msg) = 0;
+  virtual InstanceInfo prepareData(const MessagePtr& msg) = 0;
   // update model
-  virtual void updateModel(Message* msg) = 0;
+  virtual void updateModel(const MessagePtr& msg) = 0;
   // compute objective, time, ...
   virtual RiskMinProgress evaluateProgress() = 0;
-  virtual void saveModel(const Message& msg) = 0;
+  virtual void saveModel(const MessagePtr& msg) = 0;
   virtual void computeEvaluationAUC(AUCData *data) = 0;
 
-  virtual void saveAsDenseData(const Message& msg) { }
+  // virtual void saveAsDenseData(const Message& msg) { }
 
   void showTime(int iter);
   void showObjective(int iter);
   void showNNZ(int iter);
 
-  static RiskMinCall getCall(const Message& msg) {
-    CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg.task.has_risk());
-    return msg.task.risk();
+  static RiskMinCall get(const MessagePtr& msg) {
+    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+    CHECK(msg->task.has_risk());
+    return msg->task.risk();
   }
 
   static RiskMinCall* setCall(Task *task) {
@@ -42,6 +42,7 @@ class RiskMinimization : public App {
     Task task; setCall(&task)->set_cmd(cmd);
     return task;
   }
+
   // progress of all iterations, only valid for the scheduler
   std::map<int, RiskMinProgress> global_progress_;
 

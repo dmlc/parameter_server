@@ -82,7 +82,7 @@ void BlockCoordDescL1LR::runIteration() {
 
 
 
-InstanceInfo BlockCoordDescL1LR::prepareData(const Message& msg) {
+InstanceInfo BlockCoordDescL1LR::prepareData(const MessagePtr& msg) {
   auto info = BatchSolver::prepareData(msg);
   if (exec_.isWorker()) {
     // dual_ = exp(y.*(X_*w_))
@@ -97,7 +97,7 @@ InstanceInfo BlockCoordDescL1LR::prepareData(const Message& msg) {
   return info;
 }
 
-void BlockCoordDescL1LR::updateModel(Message* msg) {
+void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
   CHECK_GT(FLAGS_num_threads, 0);
   auto time = msg->task.time() * 10;
   auto call = msg->task.risk();

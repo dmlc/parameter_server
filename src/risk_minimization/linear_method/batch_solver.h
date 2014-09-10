@@ -11,15 +11,15 @@ class BatchSolver : public LinearMethod {
   virtual void run();
 
  protected:
-  virtual InstanceInfo prepareData(const Message& msg);
-  virtual void updateModel(Message* msg);
+  virtual InstanceInfo prepareData(const MessagePtr& msg);
+  virtual void updateModel(const MessagePtr& msg);
   virtual void runIteration();
 
   virtual RiskMinProgress evaluateProgress();
   virtual void showProgress(int iter);
 
   void computeEvaluationAUC(AUCData *data);
-  void saveModel(const Message& msg);
+  void saveModel(const MessagePtr& msg);
   // void saveAsDenseData(const Message& msg);
 
   bool loadCache(const string& cache_name);

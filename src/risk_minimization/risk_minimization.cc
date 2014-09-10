@@ -5,9 +5,9 @@
 
 namespace PS {
 
-void RiskMinimization::process(Message* msg) {
+void RiskMinimization::process(const MessagePtr& msg) {
   typedef RiskMinCall Call;
-  switch (getCall(*msg).cmd()) {
+  switch (get(msg).cmd()) {
     case Call::EVALUATE_PROGRESS: {
       // LL << myNodeID();
       auto prog = evaluateProgress();
@@ -15,7 +15,7 @@ void RiskMinimization::process(Message* msg) {
       break;
     }
     case Call::PREPARE_DATA: {
-      auto info = prepareData(*msg);
+      auto info = prepareData(msg);
       sys_.replyProtocalMessage(msg, info);
       break;
     }
@@ -23,7 +23,7 @@ void RiskMinimization::process(Message* msg) {
       updateModel(msg);
       break;
     case Call::SAVE_MODEL:
-      saveModel(*msg);
+      saveModel(msg);
       break;
     case Call::RECOVER:
       // FIXME
@@ -35,11 +35,11 @@ void RiskMinimization::process(Message* msg) {
       sys_.replyProtocalMessage(msg, data);
       break;
     }
-    case Call::SAVE_AS_DENSE:
-      saveAsDenseData(*msg);
-      break;
+    // case Call::SAVE_AS_DENSE:
+    //   saveAsDenseData(*msg);
+    //   break;
     default:
-      CHECK(false) << "unknown cmd: " << getCall(*msg).cmd();
+      CHECK(false) << "unknown cmd: " << get(msg).cmd();
   }
 }
 

@@ -2,6 +2,18 @@
 
 namespace PS {
 
+Message::Message(const NodeID& dest, int time, int wait_time)
+    : recver(dest) {
+  task.set_time(time);
+  task.set_wait_time(wait_time);
+}
+
+Message::Message(const Message& msg)
+    : task(msg.task), sender(msg.sender), recver(msg.recver),
+      original_recver(msg.original_recver), replied(msg.replied),
+      finished(msg.finished), valid(msg.valid), terminate(msg.terminate),
+      wait(msg.wait), recv_handle(msg.recv_handle), fin_handle(msg.fin_handle) { }
+
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   ss << "T: " << task.time() << ", " << sender << "=>" << recver;

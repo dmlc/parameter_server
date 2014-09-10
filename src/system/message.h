@@ -17,12 +17,12 @@ struct Message {
   // If *time* != -1, then will set the timestamp of this task into *time*
   // rather than an auto-generated time. *wait_time* is the timestamp of the
   // task this submitted task must wait. No wait if it is -1.
-  Message(const NodeID& dest, int time, int wait_time = kInvalidTime) : recver(dest) {
-    task.set_time(time);
-    task.set_wait_time(wait_time);
-  }
   Message() { }
+  Message(const NodeID& dest, int time, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
+  // copy all entries excepts for keys and values
+  explicit Message(const Message& msg);
+
   // task, key, and value will be sent over network. while the rest are only
   // used by local process/node.
   // a protobuf header, see proto/task.proto

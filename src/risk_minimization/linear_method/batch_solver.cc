@@ -156,8 +156,8 @@ bool BatchSolver::saveCache(const string& cache_name) {
 }
 
 
-InstanceInfo BatchSolver::prepareData(const Message& msg) {
-  int time = msg.task.time() * 10;
+InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
+  int time = msg->task.time() * 10;
   if (exec_.isWorker()) {
     // load local training data
     bool hit_cache = loadCache("train");
@@ -250,7 +250,7 @@ RiskMinProgress BatchSolver::evaluateProgress() {
   return prog;
 }
 
-void BatchSolver::saveModel(const Message& msg) {
+void BatchSolver::saveModel(const MessagePtr& msg) {
   if (!exec_.isServer()) return;
   if (!app_cf_.has_model_output()) return;
 
@@ -343,7 +343,7 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
 // }
 
 
-void BatchSolver::updateModel(Message* msg) {
+void BatchSolver::updateModel(const MessagePtr& msg) {
   // FIXME several tiny bugs here...
   // int time = msg->task.time() * 10;
   // Range<Key> global_range(msg->task.risk().key());

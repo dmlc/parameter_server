@@ -33,28 +33,19 @@ class RNode {
   // submit a message (task + data) to this remote node from the local
   // node. return the timestamp of this task
   int submit(const MessagePtr& msg);
-
-  int submit(const Task& task) {
+  int submit(const Task& task, const Message::Callback& recv_handle = Message::Callback()) {
     MessagePtr msg(new Message(task));
+    msg->recv_handle = recv_handle;
     return submit(msg);
   }
 
-  // int submit(
-  //     Message msg, Callback received = Callback(), Callback finished = Callback()) {
-  //   return submit(msg, received, finished, true);
-  // }
-  // int submitAndWait(
-  //     Message msg, Callback received = Callback(), Callback finished = Callback()) {
-  //   return submit(msg, received, finished, false);
-  // }
-  // int submit(
-  //     Task task, Callback received = Callback(), Callback finished = Callback()) {
-  //   return submit(Message(task), received, finished, true);
-  // }
-  // int submitAndWait(
-  //     Task task, Callback received = Callback(), Callback finished = Callback()) {
-  //   return submit(Message(task), received, finished, false);
-  // }
+  int submitAndWait(const Task& task, const Message::Callback& recv_handle = Message::Callback()) {
+    MessagePtr msg(new Message(task));
+    msg->recv_handle = recv_handle;
+    msg->wait = true;
+    return submit(msg);
+  }
+
 
   // cache the keys, return the message with keys removed but filled with a
   // key signature when *FLAGS_key_cache* is true
@@ -76,9 +67,7 @@ class RNode {
   void finishOutgoingTask(int time);
   void finishIncomingTask(int time);
 
-  // TODO lock guard?
-  int incrClock(int delta = 1) { time_ += delta; return time_; }
-  int time() { return incrClock(0); }
+  int time() { Lock l(mu_); return time_; }
  private:
   DISALLOW_COPY_AND_ASSIGN(RNode);
   Postoffice& sys_;
