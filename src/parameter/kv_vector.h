@@ -171,7 +171,7 @@ void KVVector<K, V>::roundTripForWorker (
   // }
   // time = sync(CallSharedPara::PUSH, kServerGroup, range, push_msg, time);
 
-  // // time 1 : servers do update
+  // // time 1 :
 
   // // time 2 : pull
   // pull_msg.key = key_.segment(lr);

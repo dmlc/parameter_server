@@ -18,7 +18,7 @@ class BatchSolver : public LinearMethod {
   virtual void showProgress(int iter);
 
   void computeEvaluationAUC(AUCData *data);
-  void saveModel(const MessagePtr& msg);
+  void saveModel(const MessageCPtr& msg);
   // void saveAsDenseData(const Message& msg);
 
   bool loadCache(const string& cache_name);

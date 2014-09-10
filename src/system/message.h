@@ -10,6 +10,7 @@ typedef std::string NodeID;
 
 struct Message;
 typedef std::shared_ptr<Message> MessagePtr;
+typedef std::shared_ptr<const Message> MessageCPtr;
 typedef std::vector<MessagePtr> MessagePtrList;
 
 struct Message {
@@ -69,6 +70,12 @@ struct Message {
     key = SArray<char>(k);
     for (const auto& w : v) addValue(w);
   }
+  template <typename K, typename V>
+  void addKV(const SArray<K>& k, const SArrayList<V>& v) {
+    key = SArray<char>(k);
+    for (const auto& w : v) addValue(w);
+  }
+
   template <typename V> void addValue(const SArray<V>& val) {
     value.push_back(SArray<char>(val));
   }

@@ -30,8 +30,12 @@ class Customer {
   // unique name of this customer
   const string& name() const { return name_; }
   string& name() { return name_; }
+
   // the uique node id running this customer
-  NodeID myNodeID() { return exec_.myNodeID(); }
+  NodeID myNodeID() { return exec_.myNode().id(); }
+  bool IamWorker() { return exec_.myNode().role() == Node::WORKER; }
+  bool IamServer() { return exec_.myNode().role() == Node::SERVER; }
+
   // return the executor
   Executor& exec() { return exec_; }
   // return the remote_note by using its name

@@ -112,48 +112,65 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
   Range<Key> global_range(call.key());
   auto local_range = w_->localRange(global_range);
 
-  if (exec_.isWorker()) {
-
+  if (IamWorker()) {
+    // compute local gradients
     mu_.lock();
     busy_timer_.start();
-    auto local_grads = computeGradients(local_range);
+    auto local_gradients = computeGradients(local_range);
     busy_timer_.stop();
     mu_.unlock();
 
-    // this task is not finished until get the model updates from servers
+    // it is not finished until get the model updates from servers
     msg->finished = false;
-    auto sender = msg->sender;
-    auto task = msg->task;
-    w_->roundTripForWorker(time, global_range, local_grads,
-                           [this, local_range, task, sender] (int time) {
-        // update dual variable
-        if (!local_range.empty()) {
-          auto data = w_->received(time);
-          CHECK_EQ(data.size(), 1);
-          CHECK_EQ(local_range, data[0].first);
-          auto new_weight = data[0].second;
-          mu_.lock();
-          busy_timer_.start();
-          updateDual(local_range, new_weight);
-          busy_timer_.stop();
-          mu_.unlock();
-        }
-
-        // task finished, reply the scheduler
-        taskpool(sender)->finishIncomingTask(task.time());
-        sys_.reply(sender, task);
-      });
-  } else {
-    // aggregate local gradients, then update model via soft-shrinkage
-    w_->roundTripForServer(time, global_range, [this, local_range] (int time) {
-        if (local_range.empty()) return;
+    // the callback of update the local dual variable
+    Message::Callback updt_dual = [this, local_range, time, &msg] () {
+      if (!local_range.empty()) {
         auto data = w_->received(time);
-        CHECK_EQ(data.size(), 2);
-        CHECK_EQ(local_range, data[0].first);
-        CHECK_EQ(local_range, data[1].first);
+        CHECK_EQ(data.size(), 1); CHECK_EQ(local_range, data[0].first);
+        auto new_weight = data[0].second;
+        mu_.lock();
+        busy_timer_.start();
+        updateDual(local_range, new_weight);
+        busy_timer_.stop();
+        mu_.unlock();
+      }
+      // now finished, reply the scheduler
+      taskpool(msg->sender)->finishIncomingTask(msg->task.time());
+      sys_.reply(msg->sender, msg->task);
+    };
 
-        updateWeight(local_range, data[0].second, data[1].second);
-      });
+    // time 0: push local gradients
+    MessagePtr push_msg(new Message(kServerGroup, time));
+    auto local_key = w_->key().segment(local_range);
+    push_msg->addKV(local_key, local_gradients);
+    global_range.to(push_msg->task.mutable_key_range());
+    CHECK_EQ(time, w_->push(push_msg));
+
+    // time 1: servers do update, none of my business
+    // time 2:
+    MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
+    pull_msg->key = local_key;
+    pull_msg->fin_handle = updt_dual;
+    global_range.to(pull_msg->task.mutable_key_range());
+    CHECK_EQ(time+2, w_->pull(pull_msg));
+  } else if (IamServer()) {
+    // none of my bussiness
+    if (w_->myKeyRange().setIntersection(global_range).empty()) return;
+
+    // time 0: aggregate all workers' local gradients
+    w_->wait(kWorkerGroup, time);
+
+    // time 1: update model
+    if (!local_range.empty()) {
+      auto data = w_->received(time);
+      CHECK_EQ(data.size(), 2);
+      CHECK_EQ(local_range, data[0].first);
+      CHECK_EQ(local_range, data[1].first);
+      updateWeight(local_range, data[0].second, data[1].second);
+    }
+    w_->finish(kWorkerGroup, time+1);
+
+    // time 2: let the workers pull from me
   }
 }
 

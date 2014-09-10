@@ -34,6 +34,8 @@ class App : public Customer {
   Timer busy_timer_;
   Timer total_timer_;
 
+  // double busy_time_ = 0;
+
   // shut down server S0, and evoke R0 to replace S0
   void testFaultTolerance(Task recover);
 };

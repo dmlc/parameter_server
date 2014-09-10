@@ -251,7 +251,7 @@ RiskMinProgress BatchSolver::evaluateProgress() {
   return prog;
 }
 
-void BatchSolver::saveModel(const MessagePtr& msg) {
+void BatchSolver::saveModel(const MessageCPtr& msg) {
   if (!exec_.isServer()) return;
   if (!app_cf_.has_model_output()) return;
 
