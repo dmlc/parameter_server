@@ -175,6 +175,7 @@ InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
     // Time 0: send all unique keys with their count to servers
     MessagePtr count(new Message(kServerGroup, time));
     count->addKV(uniq_key, {key_cnt});
+    LL << count->key.size();
     w_->set(count)->set_add_key_count(true);
     CHECK_EQ(time, w_->push(count));
 
@@ -264,9 +265,9 @@ void BatchSolver::saveModel(const MessagePtr& msg) {
 
   if (output.format() == DataConfig::TEXT) {
     // TODO use the model_file in msg
-    std::string file = "../output/" + w_->name() + "_" + exec_.myNode().id();
+    std::string file = "../output/" + w_->name() + "_" + myNodeID();
     if (output.file_size() > 0) file = output.file(0) + file;
-    LI << "\t" << exec_.myNode().id() << " writes model to " << file;
+    LI << "\t" << myNodeID() << " writes model to " << file;
     std::ofstream out(file);
     CHECK(out.good());
     for (size_t i = 0; i < w_->key().size(); ++i) {

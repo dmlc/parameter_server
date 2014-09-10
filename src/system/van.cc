@@ -4,7 +4,6 @@
 #include "base/shared_array_inl.h"
 
 namespace PS {
-// #define DEBUG_VAN
 
 DEFINE_string(my_node, "", "my node");
 DEFINE_string(scheduler, "", "the scheduler node");
@@ -87,33 +86,33 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // TODO socket is not thread safe!
-Status Van::send(const Message& msg) {
+Status Van::send(const MessagePtr& msg) {
 
   // find the socket
-  NodeID id = msg.recver;
+  NodeID id = msg->recver;
   auto it = senders_.find(id);
   if (it == senders_.end())
     return Status::NotFound("there is no socket to node " + (id));
   void *socket = it->second;
 
   // fill data
-  auto task = msg.task;
+  auto task = msg->task;
   task.clear_uncompressed_size();
-  bool has_key = !msg.key.empty();
+  bool has_key = !msg->key.empty();
   std::vector<SArray<char> > data;
   if (FLAGS_compress_message) {
     if (has_key) {
-      data.push_back(msg.key.compressTo());
-      task.add_uncompressed_size(msg.key.size());
+      data.push_back(msg->key.compressTo());
+      task.add_uncompressed_size(msg->key.size());
     }
-    for (auto& m : msg.value) {
+    for (auto& m : msg->value) {
       if (m.empty()) continue;
       data.push_back(m.compressTo());
       task.add_uncompressed_size(m.size());
     }
   } else {
-    if (has_key) data.push_back(msg.key);
-    for (auto& m : msg.value) {
+    if (has_key) data.push_back(msg->key);
+    for (auto& m : msg->value) {
       if (m.empty()) continue;
       data.push_back(m);
     }
@@ -143,7 +142,7 @@ Status Van::send(const Message& msg) {
   }
 
   if (FLAGS_print_van) {
-    debug_out_ << msg.shortDebugString()<< std::endl;
+    debug_out_ << msg->shortDebugString()<< std::endl;
   }
   return Status::OK();
 }

@@ -54,7 +54,6 @@ SRCS = $(PROTOS_CC) \
 	data/parse_text.cc \
 	risk_minimization/risk_minimization.cc \
 	risk_minimization/linear_method/linear_method.cc \
-	risk_minimization/linear_method/block_solver.cc \
 	risk_minimization/linear_method/batch_solver.cc \
 	risk_minimization/linear_method/block_cd_l1lr.cc
 

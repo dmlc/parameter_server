@@ -342,6 +342,7 @@ MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
       piece->valid = false;
     } else {
       piece->valid = true;  // must set true, otherwise this piece might not be sent
+      piece->clearKV();
       if (!key.empty()) {  // void be divided by 0
         SizeR lr(pos[i], pos[i+1]);
         piece->key = key.segment(lr);

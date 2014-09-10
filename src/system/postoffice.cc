@@ -84,7 +84,7 @@ void Postoffice::send() {
   while (true) {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;
-    Status stat = yellow_pages_.van().send(*msg);
+    Status stat = yellow_pages_.van().send(msg);
     if (!stat.ok()) {
       LL << "sending " << msg->debugString() << " failed. error: " << stat.ToString();
     }
@@ -92,8 +92,8 @@ void Postoffice::send() {
 }
 
 void Postoffice::recv() {
-  MessagePtr msg;
   while (true) {
+    MessagePtr msg(new Message());
     auto stat = yellow_pages_.van().recv(msg);
     CHECK(stat.ok()) << stat.ToString();
     auto& tk = msg->task;

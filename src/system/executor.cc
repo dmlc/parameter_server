@@ -80,8 +80,7 @@ void Executor::init(const std::vector<Node>& nodes) {
 void Executor::add(const Node& node) {
   auto id = node.id();
   CHECK_EQ(nodes_.count(id), 0);
-  if (id == Postoffice::instance().myNode().id())
-    my_node_ = node;
+  if (id == Postoffice::instance().myNode().id()) my_node_ = node;
   RNodePtr w(new RNode(node, *this));
   nodes_[id] = w;
 
@@ -172,10 +171,11 @@ void Executor::run() {
         Lock l(sender->mu_);
         auto it = sender->pending_msgs_.find(t);
         CHECK(it != sender->pending_msgs_.end())
-            << my_node_.id() << ": there is no message has been sent to "
-            << sender->id();
+            << myNodeID() << ": there is no message has been sent to "
+            << sender->id() << " on time " << t;
         original_recver_id = it->second->original_recver;
         sender->pending_msgs_.erase(it);
+        LL << myNodeID() << " erase " << sender->id() << " on time " << t;
       }
       // run the finishing callback if necessary
       auto o_recver = rnode(original_recver_id);
@@ -195,7 +195,7 @@ void Executor::run() {
 
 void Executor::accept(const MessagePtr& msg) {
   Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender); CHECK(!sender);
+  auto sender = rnode(msg->sender); CHECK(sender) << myNodeID() << ": " << msg->sender ;
   recved_msgs_.push_back(sender->cacheKeyRecver(msg));
   dag_cond_.notify_one();
 }

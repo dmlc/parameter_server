@@ -58,7 +58,7 @@ class Executor {
     CHECK(it != node_key_partition_.end()) << "unkonw node group: " << k;
     return it->second;
   }
-  Node& myNode() { return my_node_; }
+  NodeID myNodeID() { return my_node_.id(); }
   bool isWorker() { return my_node_.role() == Node::WORKER; }
   bool isServer() { return my_node_.role() == Node::SERVER; }
 

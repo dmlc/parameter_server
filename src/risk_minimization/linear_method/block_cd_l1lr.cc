@@ -358,6 +358,7 @@ void BlockCoordDescL1LR::showProgress(int iter) {
 RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
   RiskMinProgress prog;
   if (exec_.isWorker()) {
+    LL << "xx";
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
     busy_timer_.restart();
@@ -376,6 +377,7 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
     prog.set_nnz_active_set(active_set_.nnz());
   }
   // LL << myNodeID() << ": " << w_->getTime();
+  LL << prog.DebugString();
   return prog;
 }
 

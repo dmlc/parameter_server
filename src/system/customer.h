@@ -17,8 +17,11 @@ class Customer {
   // the message *msg* into n-1 messages such that the i-th one contains
   // only keys and values in the key range [k_i, k_{i+1}).
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
-    // in default, copy the message n-1 times
-    return MessagePtrList(sep.size()-1, msg);
+    // in default, copy the message n-1 times (without the key and values)
+    int m = sep.size()-1;
+    MessagePtrList ret; ret.reserve(m);
+    for (int i = 0; i < m; ++i) ret.emplace_back(MessagePtr(new Message(*msg)));
+    return ret;
   }
 
   // join the execution thread
@@ -28,7 +31,7 @@ class Customer {
   const string& name() const { return name_; }
   string& name() { return name_; }
   // the uique node id running this customer
-  NodeID myNodeID() { return exec_.myNode().id(); }
+  NodeID myNodeID() { return exec_.myNodeID(); }
   // return the executor
   Executor& exec() { return exec_; }
   // return the remote_note by using its name

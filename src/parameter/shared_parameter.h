@@ -5,10 +5,8 @@ namespace PS {
 #define USING_SHARED_PARAMETER                  \
   using Customer::taskpool;                     \
   using Customer::myNodeID;                     \
-  using SharedParameter<K,V>::getCall;          \
   using SharedParameter<K,V>::get;              \
   using SharedParameter<K,V>::set;              \
-  using SharedParameter<K,V>::setCall;          \
   using SharedParameter<K,V>::myKeyRange;       \
   using SharedParameter<K,V>::keyRange;         \
   using SharedParameter<K,V>::sync
@@ -31,7 +29,6 @@ class SharedParameter : public Customer {
     set(msg)->set_cmd(CallSharedPara::PULL);
     return sync(msg);
   }
-
   void wait(const NodeID& node, int time) {
     taskpool(node)->waitIncomingTask(time);
   }
@@ -39,26 +36,17 @@ class SharedParameter : public Customer {
     taskpool(node)->finishIncomingTask(time);
   }
 
-  CallSharedPara get(const MessagePtr& msg) {
-    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg->task.has_shared_para());
-    return msg->task.shared_para();
-  }
-
-  CallSharedPara getCall(const Message& msg) {
-    CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg.task.has_shared_para());
-    return msg.task.shared_para();
-  }
-  CallSharedPara* setCall(Message *msg) {
-    return setCall(&(msg->task));
-  }
   // process a received message, will called by the thread of executor
   void process(const MessagePtr& msg);
 
   CallSharedPara* set(MessagePtr msg) {
     msg->task.set_type(Task::CALL_CUSTOMER);
     return msg->task.mutable_shared_para();
+  }
+  CallSharedPara get(const MessagePtr& msg) {
+    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+    CHECK(msg->task.has_shared_para());
+    return msg->task.shared_para();
   }
 
  protected:
@@ -87,10 +75,10 @@ class SharedParameter : public Customer {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
 
-  CallSharedPara* setCall(Task *task) {
-    task->set_type(Task::CALL_CUSTOMER);
-    return task->mutable_shared_para();
-  }
+  // CallSharedPara* set(Task *task) {
+  //   task->set_type(Task::CALL_CUSTOMER);
+  //   return task->mutable_shared_para();
+  // }
  private:
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
@@ -150,21 +138,22 @@ template <typename K, typename V>
 void SharedParameter<K,V>::recover(Range<K> range) {
   // TODO recover from checkpoint
 
-  CHECK_GT(FLAGS_num_replicas, 0);
-  Task task;
-  auto arg = setCall(&task);
-  arg->set_cmd(CallSharedPara::PULL_REPLICA);
-  range.to(arg->mutable_key());
+  // CHECK_GT(FLAGS_num_replicas, 0);
+  // Task task;
+  // task.set_type(Task::CALL_CUSTOMER);
+  // auto arg = task.mutable_shared_para();
+  // arg->set_cmd(CallSharedPara::PULL_REPLICA);
+  // range.to(arg->mutable_key());
 
-  auto slave = exec_.group(kReplicaGroup)[0];
-  slave->submitAndWait(task);
+  // auto slave = exec_.group(kReplicaGroup)[0];
+  // slave->submitAndWait(task);
 
-  for (auto owner : exec_.group(kOwnerGroup)) {
-    LL << "ask for " << owner->id() << " for replica";
-    keyRange(owner->id()).to(arg->mutable_key());
-    owner->submitAndWait(task);
-    LL << "done";
-  }
+  // for (auto owner : exec_.group(kOwnerGroup)) {
+  //   LL << "ask for " << owner->id() << " for replica";
+  //   keyRange(owner->id()).to(arg->mutable_key());
+  //   owner->submitAndWait(task);
+  //   LL << "done";
+  // }
 }
 
 } // namespace PS

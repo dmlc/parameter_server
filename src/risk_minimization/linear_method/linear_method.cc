@@ -56,8 +56,10 @@ void LinearMethod::startSystem() {
   }
 
   // create the app on all other machines
-  int time = 0, k = 0;
+  int time = 1;  // time 0 is used for
+  int k = 0;
   start.mutable_mng_app()->set_cmd(ManageApp::ADD);
+  start.set_time(time);
   for (auto& w : exec_.group(kActiveGroup)) {
     auto cf = app_cf_;
     cf.clear_training_data();
@@ -73,30 +75,6 @@ void LinearMethod::startSystem() {
   }
   taskpool(kActiveGroup)->waitOutgoingTask(time);
 }
-
-  // InstanceInfo tr_info = readInstanceInfo(tr_cf);
-  // for (int i = 1; i < tr_info.fea_group_size(); ++i) {
-  //   g_training_info_.push_back(readMatrixInfo<double>(tr_info, i));
-  // }
-  // g_fea_range_ = Range<Key>(
-  //     tr_info.fea_group(0).fea_begin(), tr_info.fea_group(0).fea_end());
-  // g_num_training_ins_ = tr_info.num_ins();
-  // LI << "\ttraining data info: " << g_num_training_ins_
-  //    << " examples with feature range" << g_fea_range_.toString();
-
-  // DataConfig va_cf;
-  // if (app_cf_.has_validation_data()) {
-  //   va_cf = searchFiles(app_cf_.validation_data());
-  //   InstanceInfo va_info = readInstanceInfo(va_cf);
-  //   for (int i = 1; i < va_info.fea_group_size(); ++i) {
-  //     g_validation_info_.push_back(readMatrixInfo<double>(va_info, i));
-  //   }
-  //   g_fea_range_ = g_fea_range_.setUnion(
-  //       Range<Key>(va_info.fea_group(0).fea_begin(),
-  //                  va_info.fea_group(0).fea_end()));
-  // }
-
-
 
 } // namespace LM
 } // namespace PS

@@ -1,6 +1,5 @@
 #pragma once
-
-#include "risk_minimization/linear_method/block_solver.h"
+#include "risk_minimization/linear_method/linear_method.h"
 
 namespace PS {
 namespace LM {

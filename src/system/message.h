@@ -21,7 +21,7 @@ struct Message {
   Message(const NodeID& dest, int time, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
   // copy all entries excepts for keys and values
-  explicit Message(const Message& msg);
+  // explicit Message(const Message& msg);
 
   // task, key, and value will be sent over network. while the rest are only
   // used by local process/node.
