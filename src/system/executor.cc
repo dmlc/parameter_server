@@ -12,24 +12,16 @@ void Executor::init(const std::vector<Node>& nodes) {
     node.set_id(id);
     add(node);
   }
-
   // insert real node
   for (auto& node : nodes) add(node);
-
   // sort the node in each group by its key range
   for (auto& it : node_groups_) {
     if (nodes_[it.first]->role() != Node::GROUP) continue;
-    // LL << it.second.size();
-    // for (auto x : it.second) LL << x->node_.DebugString();
-
     std::sort(it.second.begin(), it.second.end(), [](const RNodePtr& a, const RNodePtr& b) {
-        // LL << a->node_.DebugString();
-        // LL << b->node_.DebugString();
         return a->keyRange().begin() < b->keyRange().begin();
       });
   }
-
-  // construct replica group and owner group (just after me)
+  // construct replica group and owner group (just after my_node_)
   if (my_node_.role() == Node::SERVER) {
     int my_pos = 0;
     auto servers = group(kServerGroup);
@@ -40,9 +32,7 @@ void Executor::init(const std::vector<Node>& nodes) {
     }
     CHECK_LT(my_pos, n);
 
-    int nrep = FLAGS_num_replicas;
-    CHECK_LT(nrep, n);
-
+    int nrep = FLAGS_num_replicas; CHECK_LT(nrep, n);
     for (int i = 1; i <= nrep; ++i) {
       // the replica group is just before me
       node_groups_[kReplicaGroup].push_back(
@@ -51,18 +41,12 @@ void Executor::init(const std::vector<Node>& nodes) {
       node_groups_[kOwnerGroup].push_back(
           servers[my_pos + i < n ? my_pos + i : my_pos + i - n]);
     }
-
-    // if (FLAGS_num_servers > 1)
-    //   LL << my_node_.id() << ": rep " << node_groups_[kReplicaGroup][0]->id()
-    //      << ", own " << node_groups_[kOwnerGroup][0]->id();
-
     // make an empty group otherwise
     if (nrep <= 0) {
       node_groups_[kReplicaGroup].clear();
       node_groups_[kOwnerGroup].clear();
     }
   }
-
   // store the key ranges in each group
   for (auto& it : node_groups_) {
     auto& partition = node_key_partition_[it.first];
@@ -73,8 +57,6 @@ void Executor::init(const std::vector<Node>& nodes) {
     partition.push_back(
         it.second.size() > 0 ? it.second.back()->keyRange().end() : 0);
   }
-
-  // LL << my_node_.id() << ": " << obj_.name() << " is ready";
 }
 
 void Executor::add(const Node& node) {
@@ -171,7 +153,7 @@ void Executor::run() {
         Lock l(sender->mu_);
         auto it = sender->pending_msgs_.find(t);
         CHECK(it != sender->pending_msgs_.end())
-            << myNodeID() << ": there is no message has been sent to "
+            << myNode().id() << ": there is no message has been sent to "
             << sender->id() << " on time " << t;
         original_recver_id = it->second->original_recver;
         sender->pending_msgs_.erase(it);
@@ -194,8 +176,7 @@ void Executor::run() {
 
 void Executor::accept(const MessagePtr& msg) {
   Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender);
-  CHECK(sender) << myNodeID() << ": " << msg->valid << " .. " << msg->shortDebugString();
+  auto sender = rnode(msg->sender); CHECK(sender) << msg->shortDebugString();
   recved_msgs_.push_back(sender->cacheKeyRecver(msg));
   dag_cond_.notify_one();
 }

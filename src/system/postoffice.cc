@@ -63,11 +63,8 @@ void Postoffice::reply(
   MessagePtr re(new Message(tk)); re->recver = recver; queue(re);
 }
 
-void Postoffice::queue(const MessagePtr& msg) {
+void Postoffice::queue(const MessageCPtr& msg) {
   if (msg->valid) {
-    // do a copy here
-    // MessagePtr m(new Message(*msg));
-    // sending_queue_.push(m);
     sending_queue_.push(msg);
   } else {
     // do not send, fake a reply mesage
@@ -85,7 +82,7 @@ void Postoffice::queue(const MessagePtr& msg) {
 
 //  TODO fault tolerance, check if node info has been changed
 void Postoffice::send() {
-  MessagePtr msg;
+  MessageCPtr msg;
   while (true) {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;

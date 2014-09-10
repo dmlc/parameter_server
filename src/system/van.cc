@@ -86,7 +86,7 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // TODO socket is not thread safe!
-Status Van::send(const MessagePtr& msg) {
+Status Van::send(const MessageCPtr& msg) {
 
   // find the socket
   NodeID id = msg->recver;
@@ -206,7 +206,7 @@ void Van::statistic() {
   if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
   auto gb = [](size_t x) { return  x / 1e9; };
 
-  LI << "\t" << my_node_.id() << " sent " << gb(data_sent_)
+  LI << my_node_.id() << " sent " << gb(data_sent_)
      << " Gbyte, received " << gb(data_received_) << " Gbyte";
 }
 

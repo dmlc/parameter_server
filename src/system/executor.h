@@ -60,9 +60,9 @@ class Executor {
   }
   const Node& myNode() { return my_node_; }
 
-  NodeID myNodeID() { return my_node_.id(); }
-  bool isWorker() { return my_node_.role() == Node::WORKER; }
-  bool isServer() { return my_node_.role() == Node::SERVER; }
+  // NodeID myNodeID() { return my_node_.id(); }
+  // bool isWorker() { return my_node_.role() == Node::WORKER; }
+  // bool isServer() { return my_node_.role() == Node::SERVER; }
 
   // maintain nodes
   void add(const Node& node);

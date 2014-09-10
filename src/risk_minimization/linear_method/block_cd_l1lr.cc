@@ -9,14 +9,14 @@ namespace LM {
 void BlockCoordDescL1LR::runIteration() {
   CHECK_EQ(app_cf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(app_cf_.penalty().type(), PenaltyConfig::L1);
-  LI << "\tTrain l_1 logistic regression by block coordinate descent";
+  LI << "Train l_1 logistic regression by block coordinate descent";
 
   auto block_cf = app_cf_.block_solver();
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
   bool random_blk_order = block_cf.random_feature_block_order();
   if (!random_blk_order) {
-    LI << "\tRandomized block order often acclerates the convergence.";
+    LI << "Randomized block order often acclerates the convergence.";
   }
   // iterating
   auto pool = taskpool(kActiveGroup);
@@ -66,7 +66,7 @@ void BlockCoordDescL1LR::runIteration() {
     double rel = global_progress_[iter].relative_objv();
     if (rel > 0 && rel <= block_cf.epsilon()) {
       if (reset_kkt_filter) {
-        LI << "\tStopped: relative objective <= " << block_cf.epsilon();
+        LI << "Stopped: relative objective <= " << block_cf.epsilon();
         break;
       } else {
         reset_kkt_filter = true;
@@ -76,7 +76,7 @@ void BlockCoordDescL1LR::runIteration() {
     }
   }
   if (iter == block_cf.max_pass_of_data()) {
-    LI << "\tReached maximal " << block_cf.max_pass_of_data() << " data passes";
+    LI << "Reached maximal " << block_cf.max_pass_of_data() << " data passes";
   }
 }
 
@@ -84,7 +84,7 @@ void BlockCoordDescL1LR::runIteration() {
 
 InstanceInfo BlockCoordDescL1LR::prepareData(const MessagePtr& msg) {
   auto info = BatchSolver::prepareData(msg);
-  if (exec_.isWorker()) {
+  if (IamWorker()) {
     // dual_ = exp(y.*(X_*w_))
     dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
   }
@@ -373,7 +373,7 @@ void BlockCoordDescL1LR::showProgress(int iter) {
 
 RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
   RiskMinProgress prog;
-  if (exec_.isWorker()) {
+  if (IamWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
     busy_timer_.restart();

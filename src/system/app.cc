@@ -45,22 +45,8 @@ void App::stop() {
   pool->submit(terminate);
   // terminate.set_type(Task::TERMINATE_CONFIRM);
   usleep(800);
-  LI << "\tsystem stopped\n";
+  LI << "System stopped\n";
 }
-
-// void App::requestNodes() {
-//   std::ifstream in(FLAGS_node_file);
-//   CHECK(in.good()) << "fail to read " << FLAGS_node_file;
-//   // int c = 0, s = 0;
-//   nodes_.clear();
-//   string str;
-//   while (in) {
-//     std::getline(in, str);
-//     if (str.empty()) continue;
-//     auto node = Van::parseNode(str);
-//     nodes_[node.id()] = node;
-//   }
-// }
 
 void App::testFaultTolerance(Task recover) {
   CHECK_GT(FLAGS_num_replicas, 0);

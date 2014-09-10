@@ -28,7 +28,7 @@ void BatchSolver::run() {
       // LL << info.DebugString();
       g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info);
     });
-  LI << "\tLoaded " << g_train_ins_info_.num_ins() << " training instances... in "
+  LI << "Loaded " << g_train_ins_info_.num_ins() << " training instances... in "
      << timer_.stop() << " sec";
 
   // partition feature blocks
@@ -49,7 +49,7 @@ void BatchSolver::run() {
       fea_blocks_.push_back(std::make_pair(info.group_id(), block));
     }
   }
-  LI << "\tFeatures are partitioned into " << fea_blocks_.size() << " blocks";
+  LI << "Features are partitioned into " << fea_blocks_.size() << " blocks";
 
   // a simple block order
   for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
@@ -72,7 +72,7 @@ void BatchSolver::run() {
     }
   }
   if (!hit_blk.empty()) {
-    LI << "\tFirst update feature group: " + join(hit_blk, ", ");
+    LI << "First update feature group: " + join(hit_blk, ", ");
   }
 
   timer_.restart();
@@ -140,7 +140,7 @@ bool BatchSolver::loadCache(const string& cache_name) {
   }
   y_ = y_list[0];
   X_ = X_list[0];
-  LI << "\t" << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
+  LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
   return true;
 }
 
@@ -158,7 +158,7 @@ bool BatchSolver::saveCache(const string& cache_name) {
 
 InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
   int time = msg->task.time() * 10;
-  if (exec_.isWorker()) {
+  if (IamWorker()) {
     // load local training data
     bool hit_cache = loadCache("train");
     SArray<Key> uniq_key;
@@ -213,7 +213,7 @@ InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
     dual_.eigenVector() = *X_ * w_->value().eigenVector();
 
     return y_->info().ins_info();
-  } else {
+  } else if (IamServer()) {
     // Time 0: aggregate unfiltered keys from all workers
     w_->wait(kWorkerGroup, time);
 
@@ -235,14 +235,14 @@ InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
 
 RiskMinProgress BatchSolver::evaluateProgress() {
   RiskMinProgress prog;
-  if (exec_.isWorker()) {
+  if (IamWorker()) {
     mu_.lock();
     busy_timer_.start();
     prog.set_objv(loss_->evaluate({y_, dual_.matrix()}));
     prog.add_busy_time(busy_timer_.get());
     busy_timer_.reset();
     mu_.unlock();
-  } else {
+  } else if (IamServer()) {
     if (penalty_) prog.set_objv(penalty_->evaluate(w_->value().matrix()));
     prog.set_nnz_w(w_->nnz());
   }
@@ -251,7 +251,7 @@ RiskMinProgress BatchSolver::evaluateProgress() {
 }
 
 void BatchSolver::saveModel(const MessageCPtr& msg) {
-  if (!exec_.isServer()) return;
+  if (!IamServer()) return;
   if (!app_cf_.has_model_output()) return;
 
   auto output = app_cf_.model_output();
@@ -288,7 +288,7 @@ void BatchSolver::showProgress(int iter) {
 }
 
 void BatchSolver::computeEvaluationAUC(AUCData *data) {
-  if (!exec_.isWorker()) return;
+  if (!IamWorker()) return;
 
   // load data
   CHECK(app_cf_.has_validation_data());
