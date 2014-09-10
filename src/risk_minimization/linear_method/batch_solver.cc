@@ -172,11 +172,22 @@ InstanceInfo BatchSolver::prepareData(const Message& msg) {
     }
 
     // Time 0: send all unique keys with their count to servers
-    Message count;
-    count.key = uniq_key;
-    count.value.push_back(SArray<char>(key_cnt));
-    w_->setCall(&count)->set_add_key_count(true);
-    CHECK_EQ(time, w_->push(kServerGroup, Range<Key>::all(), count, time));
+
+
+    // Message count;
+    // count.key = uniq_key;
+    // count.value.push_back(SArray<char>(key_cnt));
+    // w_->setCall(&count)->set_add_key_count(true);
+    // CHECK_EQ(time, w_->push(kServerGroup, Range<Key>::all(), count, time));
+
+    MessagePtr count(new Message(time));
+    count->key = uniq_key;
+    count->addValue(key_cnt);
+    // count->value.push_back(SArray<char>(key_cnt));
+    w_->set(count)->set_add_key_count(true);
+    w_->push(kServerGroup, count);
+
+
     // LL << myNodeID() << " local key " << uniq_key.size();
 
     // size_t fk = 0;

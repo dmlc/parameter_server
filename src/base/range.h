@@ -10,7 +10,6 @@ typedef Range<size_t> SizeR;
 template<class T>
 class Range {
  public:
-  static Range all() { return Range(0, (T)-1); }
   Range() : begin_(0), end_(0) { }
 
   template<typename V>
@@ -71,6 +70,11 @@ class Range {
 
   std::string toString() const {
     return ("["+std::to_string(begin_)+","+std::to_string(end_)+")");
+  }
+
+  static Range all() {
+    CHECK_GT((T)-1, 0) << "it is a not unsigned integer";
+    return Range(0, (T)-1);
   }
  private:
   T begin_;

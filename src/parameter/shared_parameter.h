@@ -25,6 +25,7 @@ class SharedParameter : public Customer {
   // will be called when this task has been finished. If the dest node is a node
   // group, then it means replies from all nodes in this group have been
   // received.
+
   typedef std::function<void()> Fn;
   int sync(CallSharedPara_Command cmd, const NodeID& dest, Range<K> key_range,
            Message msg, int time = -1, int wait_time = -1, Fn recv_handle = Fn(),
@@ -35,6 +36,7 @@ class SharedParameter : public Customer {
     msg.task.set_wait_time(wait_time);
     return taskpool(dest)->submit(msg, recv_handle, fin_handle, no_wait);
   }
+
   // see *sync*
   int pull(const NodeID& dest, Range<K> key_range, Message data,
            int time = -1, int wait_time = -1,
@@ -49,6 +51,20 @@ class SharedParameter : public Customer {
     return sync(CallSharedPara::PUSH, dest, key_range, data, time, wait_time,
                 recv_handle, fin_handle, no_wait);
   }
+
+
+  typedef std::function<void()> F;
+  int sync(const NodeID& dest, MessagePtr msg, F recv_f = F(), F fin_f = F()) {
+    CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
+    if (!msg->task.has_key_range()) Range<K>::all().to(msg->task.mutable_key_range());
+    return taskpool(dest)->submit(*msg, recv_f, recv_f);
+  }
+
+  int push(const NodeID& dest, MessagePtr msg, F recv_f = F(), F fin_f = F()) {
+    set(msg)->set_cmd(CallSharedPara::PUSH);
+    return sync(dest, msg, recv_f, fin_f);
+  }
+
   CallSharedPara getCall(const Message& msg) {
     CHECK_EQ(msg.task.type(), Task::CALL_CUSTOMER);
     CHECK(msg.task.has_shared_para());
@@ -59,6 +75,12 @@ class SharedParameter : public Customer {
   }
   // process a received message, will called by the thread of executor
   void process(Message* msg);
+
+  CallSharedPara* set(MessagePtr msg) {
+    msg->task.set_type(Task::CALL_CUSTOMER);
+    return msg->task.mutable_shared_para();
+  }
+
  protected:
   // fill the values specified by the key lists in msg
   virtual void getValue(Message* msg) = 0;
@@ -102,6 +124,7 @@ class SharedParameter : public Customer {
   Range<K> keyRange(const NodeID& id) {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
+
   CallSharedPara* setCall(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
     return task->mutable_shared_para();

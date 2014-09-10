@@ -6,23 +6,38 @@
 
 namespace PS {
 
-// typedef size_t NodeID;
-typedef string NodeID;
+typedef std::string NodeID;
+
 struct Message;
+typedef std::shared_ptr<Message> MessagePtr;
 typedef std::vector<Message> MessageList;
 
 struct Message {
+  Message(int time, int wait_time = -1) {
+    task.set_time(time);
+    task.set_wait_time(wait_time);
+  }
   Message() { }
   explicit Message(const Task& tk) : task(tk) { }
-  // content will be sent over network
+  // task, key, and value will be sent over network. while the rest are only
+  // used by local process/node.
+  // a protobuf header, see proto/task.proto
   Task task;
+  // a list of keys
   SArray<char> key;
+  // the according lists of values
   std::vector<SArray<char>> value;
-  // metadata used for local process/node
-  NodeID sender, recver, original_recver;
-  // true if this message has been replied
+  // sender node id
+  NodeID sender;
+  // receiver node id
+  NodeID recver;
+  // the original receiver node id. for example, when a worker send a message to
+  // the server group (kServerGroup), then the message going to a particular
+  // server will have kServerGroup as its *original_recver*
+  NodeID original_recver;
+  // true if this message has been replied, to avoid double reply
   bool replied = false;
-  // true if the task asscociated with this message if finished.
+  // true if the task asscociated with this message has been finished.
   bool finished = true;
   // an inivalid message will not be sent, instead, the postoffice will fake a
   // reply message. see Postoffice::queue()
@@ -37,29 +52,10 @@ struct Message {
   template <typename V> void addValue(const SArray<V>& val) {
     value.push_back(SArray<char>(val));
   }
-  string shortDebugString() const {
-    std::stringstream ss;
-    ss << "T: " << task.time() << ", " << sender << "=>" << recver;
-    if (!original_recver.empty()) ss << "(" << original_recver << ")";
-    ss << " wait_T: " << task.wait_time()
-       << ", " << key.size() << " keys, " << value.size() << " value:";
-    for (const auto& x: value)
-      ss << " " << x.size();
-    ss << ", task:" << task.ShortDebugString();
-    return ss.str();
-  }
-  string debugString() const {
-    std::stringstream ss;
-    ss << "[message]: " << sender << "=>" << recver
-       << "(" << original_recver << ")\n"
-       << "[task]:" << task.ShortDebugString()
-       << "\n[key]:" << key.size()
-       << "\n[" << value.size() << " value]: ";
-    for (const auto& x: value)
-      ss << x.size() << " ";
-    return ss.str();
-  }
+  std::string shortDebugString() const;
+  std::string debugString() const;
 };
+
 
 // an reply message, with empty body and task
 static Message replyTemplate(const Message& msg) {
@@ -119,46 +115,31 @@ static AlignedArray<V> match(const SArray<K>& dst_key,
 
 
 
-template <typename K, typename V>
-Message slice(const Message& msg, const Range<K>& gr) {
-  SArray<K> key(msg.key);
-  SizeR lr = key.findRange(gr);
-  // if (lr.empty()) {
-  //   Message ret;
-  //   ret.valid = false;
-  //   return ret;
-  // }
+// template <typename K, typename V>
+// Message slice(const Message& msg, const Range<K>& gr) {
+//   SArray<K> key(msg.key);
+//   SizeR lr = key.findRange(gr);
+//   // if (lr.empty()) {
+//   //   Message ret;
+//   //   ret.valid = false;
+//   //   return ret;
+//   // }
 
-  Message ret = msg;
-  ret.task.set_has_key(true);
-  ret.key = key.segment(lr);
-  ret.value.clear();
-  for (auto& d : msg.value) {
-    SArray<V> data(d);
-    ret.value.push_back(SArray<char>(data.segment(lr)));
-  }
-  if (lr.empty()) ret.valid = false;
-  return ret;
-}
-
-// template <typename V>
-// struct AlignedSArray {
-//   SizeR local;
-//   std::vector<SArray<V> > data;
-// };
-
-// AlignedSArray<V> merge(const SArray<K> key, const Message& msg) {
-//   AlignedSArray<V> res;
-
+//   Message ret = msg;
+//   ret.task.set_has_key(true);
+//   ret.key = key.segment(lr);
+//   ret.value.clear();
+//   for (auto& d : msg.value) {
+//     SArray<V> data(d);
+//     ret.value.push_back(SArray<char>(data.segment(lr)));
+//   }
+//   if (lr.empty()) ret.valid = false;
+//   return ret;
 // }
 
-// template <typename T> void add(const SArray<T> value) {
-//   value_.push_back(SArray<char>(value));
-// }
 
 inline std::ostream& operator<<(std::ostream& os, const Message& msg) {
   return (os << msg.shortDebugString());
 }
-
 
 } // namespace PS

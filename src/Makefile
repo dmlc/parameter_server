@@ -45,6 +45,7 @@ SRCS = $(PROTOS_CC) \
 	util/filelinereader.cc \
 	util/threadpool.cc \
 	system/van.cc \
+	system/message.cc \
 	system/postoffice.cc \
 	system/yellow_pages.cc \
 	system/remote_node.cc \
