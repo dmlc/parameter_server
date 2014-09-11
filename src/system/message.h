@@ -15,14 +15,9 @@ typedef std::vector<MessagePtr> MessagePtrList;
 
 struct Message {
   const static int kInvalidTime = -1;
-  // If *time* != -1, then will set the timestamp of this task into *time*
-  // rather than an auto-generated time. *wait_time* is the timestamp of the
-  // task this submitted task must wait. No wait if it is -1.
   Message() { }
   Message(const NodeID& dest, int time, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
-  // copy all entries excepts for keys and values
-  // explicit Message(const Message& msg);
 
   // task, key, and value will be sent over network. while the rest are only
   // used by local process/node.
@@ -91,26 +86,14 @@ struct Message {
 };
 
 
-// // an reply message, with empty body and task
-// static Message replyTemplate(const Message& msg) {
-//   Message reply;
-//   reply.sender = msg.recver;
-//   reply.recver = msg.sender;
-//   reply.task.set_customer(msg.task.customer());
-//   reply.task.set_request(false);
-//   return reply;
-// }
-
 template <typename V> using AlignedArray = std::pair<SizeR, SArray<V>>;
 template <typename V> using AlignedArrayList = std::vector<AlignedArray<V>>;
 
 // TODO multithread version
 template <typename K, typename V>
-static AlignedArray<V> match(const SArray<K>& dst_key,
-                             const SArray<K>& src_key,
-                             V* src_val,
-                             Range<K> src_key_range,
-                             size_t* matched) {
+static AlignedArray<V> match(
+    const SArray<K>& dst_key, const SArray<K>& src_key, V* src_val,
+    Range<K> src_key_range, size_t* matched) {
   // if (src_key_range == Range<K>::all())
   //   src_key_range = src_key.range();
   *matched = 0;
@@ -146,31 +129,6 @@ static AlignedArray<V> match(const SArray<K>& dst_key,
   }
   return std::make_pair(range, value);
 }
-
-
-
-// template <typename K, typename V>
-// Message slice(const Message& msg, const Range<K>& gr) {
-//   SArray<K> key(msg.key);
-//   SizeR lr = key.findRange(gr);
-//   // if (lr.empty()) {
-//   //   Message ret;
-//   //   ret.valid = false;
-//   //   return ret;
-//   // }
-
-//   Message ret = msg;
-//   ret.task.set_has_key(true);
-//   ret.key = key.segment(lr);
-//   ret.value.clear();
-//   for (auto& d : msg.value) {
-//     SArray<V> data(d);
-//     ret.value.push_back(SArray<char>(data.segment(lr)));
-//   }
-//   if (lr.empty()) ret.valid = false;
-//   return ret;
-// }
-
 
 inline std::ostream& operator<<(std::ostream& os, const Message& msg) {
   return (os << msg.shortDebugString());

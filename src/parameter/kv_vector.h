@@ -11,10 +11,9 @@ namespace PS {
 template <typename K, typename V>
 class KVVector : public SharedParameter<K,V> {
  public:
-
+  // keys and values
   SArray<K>& key() { return key_; }
   SArray<V>& value() { return val_; }
-
   // find the local positions of a global key range
   SizeR localRange (const Range<K>& global_range) {
     return key_.findRange(global_range);
@@ -26,17 +25,6 @@ class KVVector : public SharedParameter<K,V> {
 
   // fetch the values of *key()* from the servers
   void fetchValueFromServers();
-
-  // push values into servers, waiting the servers aggregated the data, and then
-  // pull the values and call *callback*
-  typedef std::function<void(int)> Fn;
-  void roundTripForWorker (
-      int time, const Range<K>& range = Range<K>::all(),
-      const SArrayList<V>& push_value = SArrayList<V>(), Fn callback = Fn());
-
-  // aggregate the data from all worker, call *update*
-  void roundTripForServer(
-      int time, const Range<K>& range = Range<K>::all(), Fn update = Fn());
 
   // return the data received at time t, then *delete* it
   AlignedArrayList<V> received(int t);
@@ -155,47 +143,6 @@ void KVVector<K, V>::recoverFrom(const MessagePtr& msg) {
   }
 }
 
-
-template <typename K, typename V>
-void KVVector<K, V>::roundTripForWorker (
-    int time, const Range<K>& range, const SArrayList<V>& push_value, Fn callback) {
-  // auto lr = localRange(range);
-  // Message push_msg, pull_msg;
-
-  // // time 0 : push
-  // push_msg.key = key_.segment(lr);
-  // for (auto& val : push_value) {
-  //   if (val.size() == 0) break;
-  //   CHECK_EQ(lr.size(), val.size());
-  //   push_msg.value.push_back(SArray<char>(val));
-  // }
-  // time = sync(CallSharedPara::PUSH, kServerGroup, range, push_msg, time);
-
-  // // time 1 :
-
-  // // time 2 : pull
-  // pull_msg.key = key_.segment(lr);
-  // sync(CallSharedPara::PULL, kServerGroup, range, pull_msg, time+2,
-  //      time+1, []{}, [time, callback]{ callback(time+2); });
-}
-
-template <typename K, typename V>
-void KVVector<K, V>::roundTripForServer(
-    int time, const Range<K>& range, Fn update) {
-  // auto wk = taskpool(kWorkerGroup);
-  // // none of my bussiness
-  // if (!key_.empty() && range.setIntersection(key_.range()).empty()) {
-  //   // cl->finishInTask(cl->incrClock(3));
-  //   return;
-  // }
-
-  // wk->waitIncomingTask(time);
-  // update(time);
-  // backup(kWorkerGroup, time+1, range);
-
-  // // time 1: mark it as finished so that all blocked pulls can be started
-  // wk->finishIncomingTask(time+1);
-}
 
 template <typename K, typename V>
 void KVVector<K, V>::backup(const NodeID& sender, int time, const Range<K>& range) {

@@ -74,11 +74,6 @@ class SharedParameter : public Customer {
   Range<K> keyRange(const NodeID& id) {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
-
-  // CallSharedPara* set(Task *task) {
-  //   task->set_type(Task::CALL_CUSTOMER);
-  //   return task->mutable_shared_para();
-  // }
  private:
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;

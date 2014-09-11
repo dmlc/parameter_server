@@ -303,7 +303,14 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   }
 
   // fetch the model
-  w_->fetchValueFromServers();
+  MessagePtr pull_msg(new Message(kServerGroup, Message::kInvalidTime));
+  pull_msg->key = w_->key();
+  pull_msg->wait = true;
+  int time = w_->pull(pull_msg);
+  w_->value() = w_->received(time)[0].second;
+  CHECK_EQ(w_->key().size(), w_->value().size());
+
+  // w_->fetchValueFromServers();
 
   // compute auc
   AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
