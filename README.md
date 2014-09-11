@@ -6,7 +6,7 @@ industrial-level problems. It is a joint project by
 
 ## How to install
 
-### Requirements:
+### Requirements
 - Compiler: gcc >= 4.7.2 (prefer >=4.9) or llvm >= 3.4
 - OS: tested on Ubuntu 12.10, 13.10, 14.04, RHEL 4U3, Mac OS X 10.9
 - Dependent libraries: [zeromq](http://zeromq.org/),
@@ -14,9 +14,9 @@ industrial-level problems. It is a joint project by
   [glogs](https://code.google.com/p/google-glog/),
   [gtest](https://code.google.com/p/googletest/),
   [protobuf](https://code.google.com/p/protobuf/), [zlib](), [snappy](),
-  [eigen3](). We provide
+  [eigen3](). You can use
   [install.sh](https://github.com/mli/parameter_server_third_party) to build
-  them from sources automatically.
+  them from sources.
 
 ### Build the system
 ```
@@ -27,14 +27,14 @@ cd third_party && ./install.sh
 cd .. && make -j8
 ```
 
-Several options are available for building:
+Options for building:
 
-- depended libraries are available in other place
+- depended libraries are available in somewhere
 ```
 export THIRD=/usr/local && make -j8
 ```
 
-- statically linking all libraries:
+- statical linking
 ```
 export STATIC=1 && make -j8
 ```
