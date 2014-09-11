@@ -1,6 +1,5 @@
 #!/bin/bash
 # set -x
-
 if [ $# -ne 2 ]; then
     echo "usage: ./self scheduler_node mpi.conf"
     exit -1;
