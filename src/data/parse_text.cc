@@ -6,50 +6,12 @@
 
 namespace PS {
 
-bool ParseText::toProto(char* line, Instance* ins) {
-  ins->Clear();
-  if (!convertor_(line, ins)) return false;
-
-  // update info
-  uint64 pre_group_id = -1;
-  // uint64 max_num_fea_per_ins = 0;
-  for (int i = 0; i < ins->fea_id_size(); ++i) {
-    uint64 fea_id = ins->fea_id(i);
-    uint64 group_id; decodeGroupID(fea_id, &group_id);
-    auto& ginfo = group_info_[group_id];
-    if (group_id != pre_group_id) {
-      ginfo.set_num_nonempty_ins(ginfo.num_nonempty_ins() + 1);
-      // max_num_fea_per_ins = 0;
-      pre_group_id = group_id;
-    }
-    ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), fea_id));
-    ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), fea_id + 1));
-    // ginfo.set_max_num_fea_per_ins(++max_num_fea_per_ins);
-    ginfo.set_nnz(ginfo.nnz() + 1);
-  }
-  info_.set_num_ins(info_.num_ins() + 1);
-  return true;
-}
-
-InstanceInfo ParseText::info() {
-  info_.clear_fea_group();
-  FeatureGroupInfo g;
-  for (auto& it : group_info_) {
-    g = mergeFeatureGroupInfo(g, it.second);
-  }
-  g.set_group_id(-1);
-  *info_.add_fea_group() = g;
-  for (auto& it : group_info_) {
-    it.second.set_group_id(it.first);
-    *info_.add_fea_group() = it.second;
-  }
-  return info_;
-}
-
-void ParseText::setFormat(TextFormat format) {
+ParseText::ParseText(TextFormat format, bool ignore_feature_group = false) {
+  ignore_fea_grp_ = ignore_feature_group;
   using namespace std::placeholders;
   switch (format) {
     case DataConfig::LIBSVM:
+      ignore_fea_grp_ = true;
       convertor_ = std::bind(&ParseText::parseLibsvm, this, _1, _2);
       info_.set_fea_type(InstanceInfo::SPARSE);
       info_.set_label_type(InstanceInfo::BINARY);
@@ -64,9 +26,50 @@ void ParseText::setFormat(TextFormat format) {
   }
 }
 
+bool ParseText::toProto(char* line, Instance* ins) {
+  // convert to protobuf format
+  ins->Clear(); if (!convertor_(line, ins)) return false;
+  ++ num_ins_;
+  nnz_ele_ += ins->fea_id_size();
+
+  // update info
+  if (ignore_fea_grp_) return true;
+  if (ins->grp_id_size() != ins->fea_id_size()) return false;
+  int32 pre_grp_id = -1;
+  for (int i = 0; i < ins->fea_id_size(); ++i) {
+    int32 grp_id = ins->grp_id(i);
+    auto& ginfo = grp_info_[grp_id];
+    if (grp_id != pre_grp_id) {
+      ginfo.set_nnz_ins(ginfo.nnz_ins() + 1);
+      pre_grp_id = grp_id;
+    }
+    // ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), fea_id));
+    // ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), fea_id + 1));
+    ginfo.set_nnz_ele(ginfo.nnz_ele() + 1);
+  }
+  return true;
+}
+
+InstanceInfo ParseText::info() {
+  info_.clear_fea_group();
+  if (ignore_fea_grp_) {
+    grp_info_[0].set_id(0);
+    grp_info_[0].set_nnz_ele(nnz_ele_);
+    grp_info_[0].set_nnz_ins(num_ins_);
+  }
+  for (auto& it : grp_info_) {
+    it.second.set_id(it.first);
+    *info_.add_fea_grp() = it.second;
+  }
+  return info_;
+}
 
 // libsvm:
-// label feature_id:weight feature_id:weight feature_id:weight ...
+//
+//   label feature_id:weight feature_id:weight feature_id:weight ...
+//
+// assume feature_ids are ordered
+
 bool ParseText::parseLibsvm(char* buff, Instance* ins) {
   char * pch = strtok (buff, " \t\r\n");
   uint64 idx, last_idx=0;
@@ -101,8 +104,10 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
 }
 
 // adfea format:
-// line_id 1 clicked_or_not fea_id:group_id fea_id:group_id ...
-// assume
+//
+//   line_id 1 clicked_or_not fea_id:group_id fea_id:group_id ...
+//
+// same group_ids are appear together, but not necesary be ordered
 bool ParseText::parseAdfea(char* line, Instance* ins) {
   std::vector<uint64> feas;
   uint64 fea_id = 0;
@@ -113,23 +118,20 @@ bool ParseText::parseAdfea(char* line, Instance* ins) {
     if (i == 0) {
       ins->set_ins_id(num);
     } else if (i == 1) {
-      // skip
+      // skip,
     } else if (i == 2) {
       ins->set_label(num > 0 ? 1 : -1);
     } else if (i % 2 == 1) {
-      fea_id = num;
+      ins->add_fea_id(num);
     } else {
-      if(!encode(fea_id, num, &fea_id)) return false;
-      feas.push_back(fea_id);
+      if (!ignore_fea_grp_) ins->add_grp_id((int32)num);
     }
   }
-  std::sort(feas.begin(), feas.end());
-  for (auto& f : feas) ins->add_fea_id(f);
   return true;
 }
 
 
-// ps format:
+// ps format: TODO
 //
 // label; group_id feature[:weight] feature[:weight] ...; groud_id ...; ...
 //
