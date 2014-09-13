@@ -29,37 +29,23 @@ ParseText::ParseText(TextFormat format, bool ignore_feature_group = false) {
 bool ParseText::toProto(char* line, Instance* ins) {
   // convert to protobuf format
   ins->Clear(); if (!convertor_(line, ins)) return false;
-  ++ num_ins_;
-  nnz_ele_ += ins->fea_id_size();
-
   // update info
-  if (ignore_fea_grp_) return true;
-  if (ins->grp_id_size() != ins->fea_id_size()) return false;
-  int32 pre_grp_id = -1;
-  for (int i = 0; i < ins->fea_id_size(); ++i) {
-    int32 grp_id = ins->grp_id(i);
-    auto& ginfo = grp_info_[grp_id];
-    if (grp_id != pre_grp_id) {
-      ginfo.set_nnz_ins(ginfo.nnz_ins() + 1);
-      pre_grp_id = grp_id;
-    }
-    // ginfo.set_fea_begin(std::min((uint64)ginfo.fea_begin(), fea_id));
-    // ginfo.set_fea_end(std::max((uint64)ginfo.fea_end(), fea_id + 1));
-    ginfo.set_nnz_ele(ginfo.nnz_ele() + 1);
+  for (int i = 0; i < ins->fea_grp_size(); ++i) {
+    int grp_id = ins->fea_grp(i).grp_id();
+    if (grp_id >= kGrpIDmax) return false;
+    auto& info = grp_info_[grp_id];
+    info.set_nnz_ins(info.nnz_ins() + 1);
+    info.set_nnz_ele(info.nnz_ele() + ins->fea_grp(i).fea_id_size());
   }
+  // ++ num_ins_;
   return true;
 }
 
 InstanceInfo ParseText::info() {
   info_.clear_fea_group();
-  if (ignore_fea_grp_) {
-    grp_info_[0].set_id(0);
-    grp_info_[0].set_nnz_ele(nnz_ele_);
-    grp_info_[0].set_nnz_ins(num_ins_);
-  }
-  for (auto& it : grp_info_) {
-    it.second.set_id(it.first);
-    *info_.add_fea_grp() = it.second;
+  // info_.set_num_ins(num_ins_);
+  for (int i = 0; i < kGrpIDmax; ++i) {
+    if (grp_info_[i].has_grp_id()) *info_.add_fea_grp() = grp_info_[i];
   }
   return info_;
 }
@@ -84,6 +70,8 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
   }
   pch = strtok (NULL, " \t\r\n");
 
+  auto grp = ins->add_fea_grp();
+  grp->set_grp_id(0);
   while (pch != NULL) {
     char *it;
     for (it = pch; *it != ':' && *it != 0; it ++);
@@ -96,8 +84,8 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
     last_idx = idx;
 
     if (!encode(idx, 0, &idx)) return false;
-    ins->add_fea_id(idx);
-    ins->add_fea_val(val);
+    grp->add_fea_id(idx);
+    grp->add_fea_val(val);
     pch = strtok (NULL, " \t\r\n");
   }
   return true;
@@ -105,26 +93,36 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
 
 // adfea format:
 //
-//   line_id 1 clicked_or_not fea_id:group_id fea_id:group_id ...
+//   line_id 1 clicked_or_not fea_id:grp_id fea_id:grp_id ...
 //
-// same group_ids are appear together, but not necesary be ordered
+// same group_ids should appear together, but not necesary be ordered
 bool ParseText::parseAdfea(char* line, Instance* ins) {
   std::vector<uint64> feas;
-  uint64 fea_id = 0;
+  uint64 fea_id;
+  int pre_grp_id = -1;
+  FeatureGroup* grp = nullptr;
+
   char* tk = strtok (line, " :");
   for (int i = 0; tk != NULL; tk = strtok (NULL, " :"), ++i) {
     uint64 num;
-    if (!strtou64(tk, &num)) return false;
     if (i == 0) {
-      ins->set_ins_id(num);
+      // skip it the ins id
     } else if (i == 1) {
-      // skip,
+      // skip, it is 1
     } else if (i == 2) {
-      ins->set_label(num > 0 ? 1 : -1);
+      int32 label;
+      if (!strtoi32(tk, &label)) return fal;se
+      ins->set_label(label > 0 ? 1 : -1);
     } else if (i % 2 == 1) {
-      ins->add_fea_id(num);
+      if (!strtou64(tk, &fea_id)) return false;
     } else {
-      if (!ignore_fea_grp_) ins->add_grp_id((int32)num);
+      int grp_id = 0;
+      if (!ignore_fea_grp_ && !strtoi32(tk, &grp_id)) return false;
+      if (grp_id != pre_grp_id) {
+        grp = ins->add_fea_grp();
+        grp->set_grp_id(grp_id);
+      }
+      grp->add_fea_id(fea_id);
     }
   }
   return true;

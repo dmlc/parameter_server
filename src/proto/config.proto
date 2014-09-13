@@ -22,6 +22,8 @@ message DataConfig {
   optional HDFSConfig hdfs = 5;
   // only valid for the binary format
   optional PbRange range = 4;
+  // ignore the feature group information
+  optional bool ignore_fea_grp = 6;
 }
 
 message ParameterInitConfig {

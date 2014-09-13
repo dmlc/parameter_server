@@ -12,10 +12,6 @@
 namespace PS {
 
 // return A \union B
-FeatureGroupInfo mergeFeatureGroupInfo(
-    const FeatureGroupInfo& A, const FeatureGroupInfo& B);
-
-// return A \union B
 InstanceInfo mergeInstanceInfo(
     const InstanceInfo& A, const InstanceInfo& B);
 
@@ -38,8 +34,8 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat);
 template<typename V>
 bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat);
 
-
-// Read matrices from local disk or hdfs in binary, protobuf, or text formats
+// Read matrices from local disk or hdfs in binary, protobuf, or text formats,
+// return a list of matrices: label, fea_grp_0, fea_grp_1, ...
 template<typename V>
 bool readMatrices(const DataConfig& data, MatrixPtrList<V>* mat);
 
