@@ -297,6 +297,13 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_range();
   inline void set_allocated_range(::PS::PbRange* range);
 
+  // optional bool ignore_fea_grp = 6;
+  inline bool has_ignore_fea_grp() const;
+  inline void clear_ignore_fea_grp();
+  static const int kIgnoreFeaGrpFieldNumber = 6;
+  inline bool ignore_fea_grp() const;
+  inline void set_ignore_fea_grp(bool value);
+
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
   inline void set_has_format();
@@ -307,6 +314,8 @@ class DataConfig : public ::google::protobuf::Message {
   inline void clear_has_hdfs();
   inline void set_has_range();
   inline void clear_has_range();
+  inline void set_has_ignore_fea_grp();
+  inline void clear_has_ignore_fea_grp();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -315,9 +324,10 @@ class DataConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> file_;
   ::PS::HDFSConfig* hdfs_;
   ::PS::PbRange* range_;
+  bool ignore_fea_grp_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1011,6 +1021,28 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
   } else {
     clear_has_range();
   }
+}
+
+// optional bool ignore_fea_grp = 6;
+inline bool DataConfig::has_ignore_fea_grp() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void DataConfig::set_has_ignore_fea_grp() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void DataConfig::clear_has_ignore_fea_grp() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void DataConfig::clear_ignore_fea_grp() {
+  ignore_fea_grp_ = false;
+  clear_has_ignore_fea_grp();
+}
+inline bool DataConfig::ignore_fea_grp() const {
+  return ignore_fea_grp_;
+}
+inline void DataConfig::set_ignore_fea_grp(bool value) {
+  set_has_ignore_fea_grp();
+  ignore_fea_grp_ = value;
 }
 
 // -------------------------------------------------------------------

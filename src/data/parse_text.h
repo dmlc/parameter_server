@@ -5,7 +5,7 @@
 
 namespace PS {
 
-static const kGrpIDmax = 4096;
+static const int kGrpIDmax = 4096;
 
 class ParseText {
  public:
@@ -20,7 +20,7 @@ class ParseText {
   InstanceInfo info_;
   FeatureGroupInfo grp_info_[kGrpIDmax];
   bool ignore_fea_grp_;
-  // size_t num_ins_ = 0;
+  size_t num_ins_ = 0;
 
   typedef std::function<bool(char*, Instance*)> Convertor;
   Convertor convertor_;

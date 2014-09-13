@@ -34,11 +34,11 @@ void BatchSolver::run() {
   // partition feature blocks
   CHECK(app_cf_.has_block_solver());
   auto cf = app_cf_.block_solver();
-  for (int i = 1; i < g_train_ins_info_.fea_group_size(); ++i) {
-    auto info = g_train_ins_info_.fea_group(i);
-    CHECK(info.has_nnz());
-    CHECK(info.has_num_nonempty_ins());
-    double nnz_per_row = (double)info.nnz() / (double)info.num_nonempty_ins();
+  for (int i = 1; i < g_train_ins_info_.fea_grp_size(); ++i) {
+    auto info = g_train_ins_info_.fea_grp(i);
+    CHECK(info.has_nnz_ele());
+    CHECK(info.has_nnz_ins());
+    double nnz_per_row = (double)info.nnz_ele() / (double)info.nnz_ins();
     int n = 1;
     if (nnz_per_row > 1 + 1e-6) {
       n = std::max((int)std::ceil(nnz_per_row*cf.feature_block_ratio()), 1);
@@ -46,7 +46,7 @@ void BatchSolver::run() {
     for (int i = 0; i < n; ++i) {
       auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
       if (block.empty()) continue;
-      fea_blocks_.push_back(std::make_pair(info.group_id(), block));
+      fea_blocks_.push_back(std::make_pair(info.grp_id(), block));
     }
   }
   LI << "Features are partitioned into " << fea_blocks_.size() << " blocks";
@@ -57,13 +57,13 @@ void BatchSolver::run() {
   // blocks of important features
   std::vector<string> hit_blk;
   for (int i = 0; i < cf.prior_fea_group_size(); ++i) {
-    int group_id = cf.prior_fea_group(i);
+    int grp_id = cf.prior_fea_group(i);
     std::vector<int> tmp;
     for (int k = 0; k < fea_blocks_.size(); ++k) {
-      if (fea_blocks_[k].first == group_id) tmp.push_back(k);
+      if (fea_blocks_[k].first == grp_id) tmp.push_back(k);
     }
     if (tmp.empty()) continue;
-    hit_blk.push_back(std::to_string(group_id));
+    hit_blk.push_back(std::to_string(grp_id));
     for (int j = 0; j < cf.num_iter_for_prior_fea_group(); ++j) {
       if (cf.random_feature_block_order()) {
         std::random_shuffle(tmp.begin(), tmp.end());

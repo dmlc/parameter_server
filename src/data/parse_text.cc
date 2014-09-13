@@ -6,7 +6,7 @@
 
 namespace PS {
 
-ParseText::ParseText(TextFormat format, bool ignore_feature_group = false) {
+ParseText::ParseText(TextFormat format, bool ignore_feature_group) {
   ignore_fea_grp_ = ignore_feature_group;
   using namespace std::placeholders;
   switch (format) {
@@ -34,18 +34,26 @@ bool ParseText::toProto(char* line, Instance* ins) {
     int grp_id = ins->fea_grp(i).grp_id();
     if (grp_id >= kGrpIDmax) return false;
     auto& info = grp_info_[grp_id];
+    for (int j = 0; j < ins->fea_grp(i).fea_id_size(); ++j) {
+      uint64 fea_id = ins->fea_grp(i).fea_id(j);
+      info.set_fea_begin(std::min((uint64)info.fea_begin(), fea_id));
+      info.set_fea_end(std::max((uint64)info.fea_end(), fea_id + 1));
+    }
     info.set_nnz_ins(info.nnz_ins() + 1);
     info.set_nnz_ele(info.nnz_ele() + ins->fea_grp(i).fea_id_size());
   }
-  // ++ num_ins_;
+  ++ num_ins_;
   return true;
 }
 
 InstanceInfo ParseText::info() {
-  info_.clear_fea_group();
-  // info_.set_num_ins(num_ins_);
+  info_.clear_fea_grp();
+  info_.set_num_ins(num_ins_);
   for (int i = 0; i < kGrpIDmax; ++i) {
-    if (grp_info_[i].has_grp_id()) *info_.add_fea_grp() = grp_info_[i];
+    if (grp_info_[i].has_grp_id()) {
+      *info_.add_fea_grp() = grp_info_[i];
+      info_.set_nnz_ele(info_.nnz_ele() + grp_info_[i].nnz_ele());
+    }
   }
   return info_;
 }
@@ -83,7 +91,6 @@ bool ParseText::parseLibsvm(char* buff, Instance* ins) {
     if (last_idx > idx) return false;
     last_idx = idx;
 
-    if (!encode(idx, 0, &idx)) return false;
     grp->add_fea_id(idx);
     grp->add_fea_val(val);
     pch = strtok (NULL, " \t\r\n");
@@ -104,14 +111,13 @@ bool ParseText::parseAdfea(char* line, Instance* ins) {
 
   char* tk = strtok (line, " :");
   for (int i = 0; tk != NULL; tk = strtok (NULL, " :"), ++i) {
-    uint64 num;
     if (i == 0) {
       // skip it the ins id
     } else if (i == 1) {
       // skip, it is 1
     } else if (i == 2) {
       int32 label;
-      if (!strtoi32(tk, &label)) return fal;se
+      if (!strtoi32(tk, &label)) return false;
       ins->set_label(label > 0 ? 1 : -1);
     } else if (i % 2 == 1) {
       if (!strtou64(tk, &fea_id)) return false;

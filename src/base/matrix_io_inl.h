@@ -38,6 +38,8 @@ mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
     auto G = A.fea_grp(i);
     G.set_nnz_ins(G.nnz_ins() + B.fea_grp(i).nnz_ins());
     G.set_nnz_ele(G.nnz_ele() + B.fea_grp(i).nnz_ele());
+    G.set_fea_begin(std::min(G.fea_begin(), B.fea_grp(i).fea_begin()));
+    G.set_fea_end(std::max(G.fea_end(), B.fea_grp(i).fea_end()));
     *C.add_fea_grp() = G;
   }
   return C;
@@ -92,10 +94,10 @@ void addLabel(const InstanceInfo& info, SArray<V> label, MatrixPtrList<V>* mat) 
 //   mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(f, offset, index, value)));
 // }
 
-// // label, feature_group 1, feature_group 2, ...
-// // TODO do not support dense feature group yet...
-// template<typename V>
-// bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat) {
+// label, feature_group 1, feature_group 2, ...
+// TODO do not support dense feature group yet...
+template<typename V>
+bool readMatricesFromProto(const DataConfig& data, MatrixPtrList<V>* mat) {
 //   // load info
 //   InstanceInfo info;
 //   for (int i = 0; i < data.file_size(); ++i) {
@@ -147,8 +149,8 @@ void addLabel(const InstanceInfo& info, SArray<V> label, MatrixPtrList<V>* mat) 
 //   CHECK_EQ(value_pos, value.size());
 
 //   createMatrices(info, label, offset, index, value, mat);
-//   return true;
-// }
+  return false;
+}
 
 template<typename V>
 bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
@@ -260,20 +262,20 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
       const auto& grp = ins.fea_grp(i);
       CHECK_LT(grp.grp_id(), kGrpIDmax);
       auto& slot = slots[grp.grp_id()];
-      int fea_size = fea_grp.fea_id_size();
+      int fea_size = grp.fea_id_size();
       for (int j = 0; j < fea_size; ++j) {
-        slot.row_idx.pushBack(grp.fea_id(j));
+        slot.col_idx.pushBack(grp.fea_id(j));
         if (grp.fea_val_size() == fea_size) slot.val.pushBack(grp.fea_val(j));
       }
       slot.row_idx.pushBack(num_ins);
       slot.row_siz.pushBack(fea_size);
     }
     ++ num_ins;
-  }
+  };
 
   for (int i = 0; i < data.file_size(); ++i) {
     FileLineReader reader(data.file(i));
-    reader.set_line_callback(handle);
+    // reader.set_line_callback(handle);
     reader.Reload();
   }
   auto info = parser.info();
@@ -300,7 +302,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
     // construct the fea group matrix
     MatrixInfo f = readMatrixInfo<V>(info, grp_num);
     mat->push_back(MatrixPtr<V>(
-        new SparseMatrix<uint64, V>(f, offset, slot.idx, slot.val)));
+        new SparseMatrix<uint64, V>(f, offset, slot.col_idx, slot.val)));
     ++ grp_num;
     slot.row_idx.clear();
     slot.row_siz.clear();

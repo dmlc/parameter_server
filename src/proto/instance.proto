@@ -7,8 +7,8 @@ message FeatureGroupInfo {
   optional uint64 nnz_ele = 5;
   // total number of non-zero instance, (non-empty rows)
   optional uint64 nnz_ins = 6;
-  // optional uint64 fea_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
-  // optional uint64 fea_end = 4;
+  optional uint64 fea_begin = 3 [default = 0xFFFFFFFFFFFFFFFF];
+  optional uint64 fea_end = 4;
 }
 
 message InstanceInfo {
@@ -33,11 +33,10 @@ message InstanceInfo {
   optional FeatureType fea_type = 2;
   // all feature groups, the first one is the union of all rest groups
   repeated FeatureGroupInfo fea_grp = 3;
-
-  // // total number of instances
-  // optional uint64 num_ins = 4;
-  // // total number of non-zero elemenets
-  // optional uint64 nnz_ele = 5;
+  // total number of instances
+  optional uint64 num_ins = 4;
+  // total number of non-zero elemenets
+  optional uint64 nnz_ele = 5;
 }
 
 message FeatureGroup {
@@ -57,7 +56,7 @@ message Instance {
   // real value for regression, and empty for unsupverised learning
   optional float label = 1;
   // feature groups
-  optional FeatureGroup fea_grp = 2;
+  repeated FeatureGroup fea_grp = 2;
   // an unique id for this instance. one can add extra information, such as
   // time, into this id
   optional int64 ins_id = 3;
