@@ -85,7 +85,7 @@ Status Van::connect(Node const& node) {
 }
 
 // TODO use zmq_msg_t to allow zero_copy send
-// TODO socket is not thread safe!
+// btw, it is not thread safe
 Status Van::send(const MessageCPtr& msg) {
 
   // find the socket

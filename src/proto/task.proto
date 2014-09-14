@@ -21,19 +21,19 @@ message Task {
 
   optional int32 time = 4;
   optional int32 wait_time = 5 [default = -1];
-  // optional string wait_group = 6;
 
   // the higher the more important,
-  optional int32 priority = 6 [default = 0];
+  // optional int32 priority = 6 [default = 0];
 
   // if or not there is the key list
   optional bool has_key = 7 [default = false];
+  // the key range of this task
   optional PbRange key_range = 8;
+  // signature of the key lists, used to identity the key cache
   optional uint32 key_signature = 9;
 
   // set values if data are compressed, empty means data are not compressed
   repeated uint64 uncompressed_size = 10;
-  // optional bool is_compressed = 8 [default = false];
 
   // general task
   optional bytes msg = 101;
@@ -79,22 +79,19 @@ message CallSharedPara {
   enum Command {
     PUSH = 1;
     PULL = 2;
-    PUSH_REPLICA = 3;
-    PULL_REPLICA = 4;
   }
+  required Command cmd= 1;
 
-  required Command cmd = 1;
-  optional bool add_key = 2;
-  optional bool add_key_count = 3;
-  optional int32 key_freq = 4;
+  // key namespace
+  optional int32 channel = 2;
 
-  // required PbRange key = 5;
+  optional bool insert_key_freq = 3;
+  optional int32 query_key_freq = 4;
+  // optional bool add_key = 2;
 
+  // it's a replica request
+  optional bool replica = 5;
   repeated Timestamp backup = 6;
-
-
-  // optional cjs
-  // repeated int32 vec = 7;
 }
 
 message CallSketch {
