@@ -10,7 +10,10 @@ class BatchSolver : public LinearMethod {
   virtual void run();
 
  protected:
-  virtual InstanceInfo prepareData(const MessagePtr& msg);
+  static const int kPace = 10;
+
+  virtual int loadData(const MessageCPtr& msg, InstanceInfo* info);
+  virtual void preprocessData(const MessageCPtr& msg);
   virtual void updateModel(const MessagePtr& msg);
   virtual void runIteration();
 
@@ -19,16 +22,14 @@ class BatchSolver : public LinearMethod {
 
   void computeEvaluationAUC(AUCData *data);
   void saveModel(const MessageCPtr& msg);
-  // void saveAsDenseData(const Message& msg);
 
   bool loadCache(const string& cache_name);
   bool saveCache(const string& cache_name);
 
-  // void loadData(const DataConfig& data, const string& cache_name);
-
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
 
+  // feature block info, only available at the scheduler
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blocks_;
   std::vector<int> block_order_;
@@ -36,8 +37,10 @@ class BatchSolver : public LinearMethod {
 
   // global data information, only available at the scheduler
   InstanceInfo g_train_ins_info_;
+
   // training data, available at the workers
-  MatrixPtr<double> y_, X_;
+  MatrixPtrList<double> train_data_;
+  std::map<int, int> grp_map_;
   // dual_ = X_ * w_
   SArray<double> dual_;
 
@@ -47,3 +50,5 @@ class BatchSolver : public LinearMethod {
 
 } // namespace LM
 } // namespace PS
+
+  // void saveAsDenseData(const Message& msg);

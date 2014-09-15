@@ -65,9 +65,6 @@ class Matrix {
   // (nearly) non-copy matrix transpose
   virtual MatrixPtr<V> trans() const = 0;
 
-  // convert global index into local index (0,1,2,3...) and return the key map
-  virtual MatrixPtr<V> localize(SArray<Key>* key_map) const = 0;
-
   // alter between row-major storage and column-major storage
   MatrixPtr<V> toRowMajor() {
     return (rowMajor() ? MatrixPtr<V>(this, [](Matrix<V>* p){}) : alterStorage());

@@ -12,7 +12,6 @@ void BatchSolver::init() {
   sys_.yp().add(std::static_pointer_cast<Customer>(w_));
 }
 
-
 void BatchSolver::run() {
   // start the system
   LinearMethod::startSystem();
@@ -127,111 +126,136 @@ void BatchSolver::runIteration() {
 }
 
 bool BatchSolver::loadCache(const string& cache_name) {
-  if (!app_cf_.has_local_cache()) return false;
-  auto cache = app_cf_.local_cache();
-  auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
-  auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
-  auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  MatrixPtrList<double> y_list, X_list;
-  if (!(readMatrices<double>(y_conf, &y_list) &&
-        readMatrices<double>(X_conf, &X_list) &&
-        w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf))) {
-    return false;
-  }
-  y_ = y_list[0];
-  X_ = X_list[0];
+  // if (!app_cf_.has_local_cache()) return false;
+  // auto cache = app_cf_.local_cache();
+  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
+  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+  // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
+  // MatrixPtrList<double> y_list, X_list;
+  // if (!(readMatrices<double>(y_conf, &y_list) &&
+  //       readMatrices<double>(X_conf, &X_list) &&
+  //       w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf))) {
+  //   return false;
+  // }
+  // y_ = y_list[0];
+  // X_[0] = X_list[0];
   LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
   return true;
 }
 
 bool BatchSolver::saveCache(const string& cache_name) {
-  if (!app_cf_.has_local_cache()) return false;
-  auto cache = app_cf_.local_cache();
-  auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
-  auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
-  auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  return (y_->writeToBinFile(y_conf.file(0)) &&
-          X_->writeToBinFile(X_conf.file(0)) &&
-          w_->key().writeToFile(key_conf.file(0)));
+  // if (!app_cf_.has_local_cache()) return false;
+  // auto cache = app_cf_.local_cache();
+  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
+  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+  // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
+  // return (y_->writeToBinFile(y_conf.file(0)) &&
+  //         X_[0]->writeToBinFile(X_conf.file(0)) &&
+  //         w_->key().writeToFile(key_conf.file(0)));
 }
 
 
-InstanceInfo BatchSolver::prepareData(const MessagePtr& msg) {
-  int time = msg->task.time() * 10;
-  if (IamWorker()) {
-    // load local training data
-    bool hit_cache = loadCache("train");
-    SArray<Key> uniq_key;
-    SArray<uint32> key_cnt;
-    SparseMatrixPtr<Key, double> X;
-    if (!hit_cache) {
-      auto list = readMatricesOrDie<double>(app_cf_.training_data());
-      CHECK_EQ(list.size(), 2);
-      y_ = list[0];
-      X = std::static_pointer_cast<SparseMatrix<Key, double>>(list[1]);
-      X->countUniqIndex(&uniq_key, &key_cnt);
-    }
-
-    // Time 0: send all unique keys with their count to servers
-    MessagePtr count(new Message(kServerGroup, time));
-    count->addKV(uniq_key, {key_cnt});
-    w_->set(count)->set_add_key_count(true);
-    CHECK_EQ(time, w_->push(count));
-
-    // Time 2: filter tail features
-    MessagePtr filter(new Message(kServerGroup, time+2, time+1));
-    filter->key = uniq_key;
-    w_->set(filter)->set_key_freq(app_cf_.block_solver().tail_feature_count());
-    filter->wait = true;
-    CHECK_EQ(time+2, w_->pull(filter));
-
-    if (!hit_cache) {
-      X_ = X->remapIndex(w_->key())->toColMajor();
-      saveCache("train");
-    }
-
-    // Time 3: send filtered keys to servers
-    MessagePtr push_key(new Message(kServerGroup, time+3));
-    push_key->key = w_->key();
-    w_->set(push_key)->set_add_key(true);
-    CHECK_EQ(time+3, w_->push(push_key));
-
-    // Time 5: fetch initial value of w_
-    MessagePtr pull_val(new Message(kServerGroup, time+5, time+4));
-    pull_val->key = w_->key();
-    pull_val->wait = true;
-    CHECK_EQ(time+5, w_->pull(pull_val));
-
-    // set the value of w_
-    auto init_w = w_->received(time+5);
-    CHECK_EQ(init_w.size(), 1);
-    CHECK_EQ(w_->key().size(), init_w[0].first.size());
-    w_->value() = init_w[0].second;
-
-    // set the local variable
-    dual_.resize(X_->rows());
-    dual_.eigenVector() = *X_ * w_->value().eigenVector();
-
-    return y_->info().ins_info();
-  } else if (IamServer()) {
-    // Time 0: aggregate unfiltered keys from all workers
-    w_->wait(kWorkerGroup, time);
-
-    // Time 1: doing nothing
-    w_->finish(kWorkerGroup, time+1);
-
-    // Time 3: aggregate filtered keys from all workers
-    w_->wait(kWorkerGroup, time+3);
-
-    // Time 4: initial value of w_
-    w_->value().resize(w_->key().size());
-    w_->value().setValue(app_cf_.init_w());
-    w_->finish(kWorkerGroup, time+4);
+int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
+  if (!IamWorker()) return 0;
+  bool hit_cache = loadCache("train");
+  if (!hit_cache) {
+    train_data_ = readMatricesOrDie<double>(app_cf_.training_data());
   }
-  return InstanceInfo();
+  *info = train_data_[0]->info().ins_info();
+  for (int i = 1; i < train_data_.size(); ++i) {
+    grp_map_[train_data_[i].info().id()] = i;
+  }
+  return hit_cache;
 }
 
+void BatchSolver::preprocessData(const MessagePtr& msg) {
+  int time = msg->task.time() * kPace;
+  auto call = get(msg);
+  int channel_size = call.channel_size();
+  if (IamWorker()) {
+    for (int i = 0; i < channel_size; ++i, time += kPace) {
+      // Time 0: send all unique keys with their count to servers
+      int grp = call.channel(i);
+      SArray<Key> uniq_key;
+      SArray<uint32> key_cnt;
+      Localizer<Key, double> localizer;
+      if (grp_map_.count(grp) != 0) localizer.set(train_data_[grp_map_[grp]]);
+      Localizer.countUniqIndex(&uniq_key, &key_cnt);
 
+      MessagePtr count(new Message(kServerGroup, time));
+      count->addKV(uniq_key, {key_cnt});
+      w_->set(count)->set_insert_key_freq(true);
+      w_->set(count)->set_channel(grp);
+      CHECK_EQ(time, w_->push(count));
+
+      // time 2: pull filered keys
+      MessagePtr filter(new Message(kServerGroup, time+2, time+1));
+      filter->key = uniq_key;
+      w_->set(filter)->set_query_key_freq(app_cf_.block_solver().tail_feature_count());
+      w_->set(filter)->set_channel(grp);
+      filter->fin_handle = [this, localizer, grp]() {
+        // localize the training matrix
+        if (grp_map_.count(grp) == 0) return;
+        auto X = localizer.remapIndex(w_->key(grp));
+        if (app_cf_.block_solver().feature_block_ratio() > 0) X = X->toColMajor();
+        { Lock l(mu_); train_data_[grp_map_[grp]] = X; }
+      };
+      CHECK_EQ(time+2, w_->pull(filter));
+    }
+
+    for (int i = 0; i < channel_size; ++i, time += kPace) {
+      // wait until key(grp) is ready
+      w_->waitOutMsg(kServerGroup, time - channel_size * kPace);
+
+      // time 0: push the filtered keys to servers
+      int grp = call.channel(i);
+      MessagePtr push_key(new Message(kServerGroup, time));
+      push_key->key = w_->key(grp);
+      CHECK_EQ(time, w_->push(push_key));
+
+      // time 2: fetch initial value of w_
+      MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
+      pull_val->key = w_->key();
+      pull_val->wait = true;
+      CHECK_EQ(time+2, w_->pull(pull_val));
+
+      if (grp_map_.count(grp) == 0) return;
+      auto init_w = w_->received(time+2);
+      CHECK_EQ(init_w.size(), 1);
+      CHECK_EQ(w_->key().size(), init_w[0].first.size());
+
+      w_->value(grp) = init_w[0].second;
+
+      // set the local variable
+      auto X = train_data_[grp_map_[grp]];
+      if (dual_.empty()) {
+        dual_.resize(X->rows());
+        dual_.setZero();
+      }
+      // if () TODO ignore if w==0
+      dual_.eigenVector() = *X * w_->value(grp).eigenVector();
+    }
+
+    for (int i = 0; i < channel_size; ++i) {
+      int t = (msg->task.time() + channel_size + i) * kPace;
+      w_->waitOutMsg(kServerGroup, t);
+    }
+  } else {
+    for (int i = 0; i < channel_size; ++i, time += kPace) {
+      w_->waitInMsg(kWorkerGroup, time);
+      w_->finish(kWorkerGroup, time+1);
+    }
+
+    for (int i = 0; i < channel_size; ++i, time += kPace) {
+      w_->waitInMsg(kWorkerGroup, time);
+
+      int grp = call.channel(i);
+      w_->value(grp).resize(w_->key(grp).size());
+      w_->value(grp).setValue(app_cf_.init_w());
+      w_->finish(kWorkerGroup, time+1);
+    }
+  }
+}
 
 RiskMinProgress BatchSolver::evaluateProgress() {
   RiskMinProgress prog;

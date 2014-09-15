@@ -30,9 +30,14 @@ class SharedParameter : public Customer {
     set(msg)->set_cmd(CallSharedPara::PULL);
     return sync(msg);
   }
-  void wait(const NodeID& node, int time) {
+  void waitInMsg(const NodeID& node, int time) {
     taskpool(node)->waitIncomingTask(time);
   }
+
+  void waitOutMsg(const NodeID& node, int time) {
+    taskpool(node)->waitOutgoingTask(time);
+  }
+
   void finish(const NodeID& node, int time) {
     taskpool(node)->finishIncomingTask(time);
   }

@@ -1,6 +1,7 @@
 package PS;
 import "proto/range.proto";
 import "proto/evaluation.proto";
+import "proto/instance.proto"
 
 message BlockSolverConfig {
   // The minibatch size. If <= 0, then use the whole data
@@ -73,15 +74,21 @@ message RiskMinProgress {
   repeated double busy_time = 11;
 }
 
+message DataInfo {
+  optional InstanceInfo ins_info = 1;
+  optional int32 hit_cache = 2;
+}
+
 message RiskMinCall {
   enum Command {
-    PREPARE_DATA = 1;
-    UPDATE_MODEL = 2;
-    EVALUATE_PROGRESS = 3;
-    SAVE_MODEL = 4;  // save w
-    SAVE_AS_DENSE = 7;     // save X * w in a given key range
-    RECOVER = 5;
-    COMPUTE_VALIDATION_AUC = 6;
+    LOAD_DATA = 1;
+    PREPROCESS_DATA = 2;
+    UPDATE_MODEL = 3;
+    EVALUATE_PROGRESS = 4;
+    SAVE_MODEL = 5;  // save w
+    RECOVER = 6;
+    COMPUTE_VALIDATION_AUC = 7;
+    // SAVE_AS_DENSE = 7;     // save X * w in a given key range
   }
   required Command cmd = 1;
   optional PbRange key = 2;
@@ -92,6 +99,7 @@ message RiskMinCall {
 
   repeated PbRange reduce_range = 6;
   optional string name = 7;
+  repeated int32 channel = 8;
 }
 
 message AggGradLearnerArg {

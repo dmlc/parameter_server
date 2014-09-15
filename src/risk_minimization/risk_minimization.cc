@@ -14,11 +14,15 @@ void RiskMinimization::process(const MessagePtr& msg) {
       sys_.replyProtocalMessage(msg, prog);
       break;
     }
-    case Call::PREPARE_DATA: {
-      auto info = prepareData(msg);
+    case Call::LODA_DATA: {
+      DataInfo info;
+      info.set_hit_cache(prepareData(msg, info->mutable_ins_info()));
       sys_.replyProtocalMessage(msg, info);
       break;
     }
+    case Call:PREPROCESS_DATA:
+      preprocessData(msg);
+      break;
     case Call::UPDATE_MODEL:
       updateModel(msg);
       break;
@@ -35,9 +39,6 @@ void RiskMinimization::process(const MessagePtr& msg) {
       sys_.replyProtocalMessage(msg, data);
       break;
     }
-    // case Call::SAVE_AS_DENSE:
-    //   saveAsDenseData(*msg);
-    //   break;
     default:
       CHECK(false) << "unknown cmd: " << get(msg).cmd();
   }

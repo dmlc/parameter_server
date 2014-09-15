@@ -28,7 +28,7 @@ class DenseMatrix : public Matrix<V> {
   virtual MatrixPtr<V> trans() const {CHECK(false);  return MatrixPtr<V>(); }
 
   // convert global index into local index (0,1,2,3...) and return the key map
-  virtual MatrixPtr<V> localize(SArray<Key>* key_map) const {CHECK(false);  return MatrixPtr<V>(); }
+  // virtual MatrixPtr<V> localize(SArray<Key>* key_map) const {CHECK(false);  return MatrixPtr<V>(); }
 
   virtual MatrixPtr<V> alterStorage() const;
 

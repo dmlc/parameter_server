@@ -12,8 +12,9 @@ class RiskMinimization : public App {
   void mergeProgress(int iter);
   void mergeAUC(AUC* auc);
  protected:
-  // load the data, and return the data info
-  virtual InstanceInfo prepareData(const MessagePtr& msg) = 0;
+  // load the data, and return 1 if hit cache, 0 if normal, -1 if error,
+  virtual int loadData(const MessageCPtr& msg, InstanceInfo* info) = 0;
+  virtual void preprocessData(const MessageCPtr& msg) = 0;
   // update model
   virtual void updateModel(const MessagePtr& msg) = 0;
   // compute objective, time, ...
