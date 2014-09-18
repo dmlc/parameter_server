@@ -26,6 +26,7 @@ template<typename V> class SArray {
   // Create an array with length n. Values are not initialized. To initialize
   // them, call setValue(v) or setZero()
   explicit SArray(size_t n) { resize(n); }
+  explicit SArray(size_t n, V val) { resize(n); setValue(val); }
 
   // Zero-copy constructor, namely just copy the pointer
   template <typename W> explicit SArray(const SArray<W>& arr);

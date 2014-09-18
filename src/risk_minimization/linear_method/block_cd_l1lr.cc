@@ -384,19 +384,21 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
     busy_timer_.restart();
   } else {
     size_t nnz_w = 0;
+    size_t nnz_as = 0;
     double objv = 0;
-    for (int k = 0; k < w_->channel(); ++k) {
-      for (size_t i = 0; i < w_->value(k).size(); ++i) {
-        double  w = w_->value(k)[i];
+    for (int grp : fea_grp_) {
+      const auto& value = w_->value(grp);
+      for (double w : value) {
         if (w == 0 || w != w) continue;
         ++ nnz_w;
         objv += fabs(w);
       }
+      nnz_as += active_set_[grp].nnz();
     }
     prog.set_objv(objv * app_cf_.penalty().lambda(0));
     prog.set_nnz_w(nnz_w);
     prog.set_violation(violation_);
-    prog.set_nnz_active_set(active_set_.nnz());
+    prog.set_nnz_active_set(nnz_as);
   }
   // LL << myNodeID() << ": " << w_->getTime();
   return prog;
