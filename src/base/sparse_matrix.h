@@ -51,7 +51,7 @@ class SparseMatrix : public Matrix<V> {
   MatrixPtr<V> alterStorage() const;
 
   // void countUniqIndex (SArray<I>* uniq_idx, SArray<uint32>* idx_cnt = nullptr) const;
-  k/ // return a matrix with index mapped: idx_map[i] -> i. Any index does not exists
+  // return a matrix with index mapped: idx_map[i] -> i. Any index does not exists
   // // in *idx_map* is dropped.
   // MatrixPtr<V> remapIndex(const SArray<I>& idx_map) const;
 

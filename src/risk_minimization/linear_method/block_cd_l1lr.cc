@@ -46,7 +46,6 @@ void BlockCoordDescL1LR::runIteration() {
       auto blk = fea_blocks_[order[i]];
       blk.second.to(cmd->mutable_key());
       cmd->add_fea_grp(blk.first);
-      cmd->add_w_chl(grp2chl_[blk.first]);
       time = pool->submit(update);
     }
 
@@ -80,7 +79,7 @@ void BlockCoordDescL1LR::runIteration() {
 
 
 
-void BlockCoordDescL1LR::preprocessData(const MessagePtr& msg) {
+void BlockCoordDescL1LR::preprocessData(const MessageCPtr& msg) {
   BatchSolver::preprocessData(msg);
   if (IamWorker()) {
     // dual_ = exp(y.*(X_*w_))
@@ -105,25 +104,25 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
   }
   if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
     // KKT_filter_threshold_ = 1e20;
-    for (grp : fea_grp_) active_set_[grp].fill(true);
+    for (int grp : fea_grp_) active_set_[grp].fill(true);
   }
-  CHECK_EQ(call.has_channel());
-  int chl = call.channel();
+  CHECK_EQ(call.fea_grp_size(), 1);
+  int grp = call.fea_grp(0);
   Range<Key> g_key_range(call.key());
-  auto seg_pos = w_->find(chl, g_key_range);
+  auto seg_pos = w_->find(grp, g_key_range);
 
   if (IamWorker()) {
     // compute local gradients
     mu_.lock();
     busy_timer_.start();
-    auto local_gradients = computeGradients(seg_pos);
+    auto local_gradients = computeGradients(grp, seg_pos);
     busy_timer_.stop();
     mu_.unlock();
 
 
     // time 0: push local gradients
     MessagePtr push_msg(new Message(kServerGroup, time));
-    auto local_keys = w_->key(chl).segment(seg_pos);
+    auto local_keys = w_->key(grp).segment(seg_pos);
     push_msg->addKV(local_keys, local_gradients);
     g_key_range.to(push_msg->task.mutable_key_range());
     CHECK_EQ(time, w_->push(push_msg));
@@ -136,12 +135,12 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     pull_msg->key = local_keys;
     g_key_range.to(pull_msg->task.mutable_key_range());
     // the callback for updating the local dual variable
-    pull_msg->fin_handle = [this, chl, seg_pos, time, msg] () {
+    pull_msg->fin_handle = [this, grp, seg_pos, time, msg] () {
       auto data = w_->received(time+2);
       CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
       mu_.lock();
       busy_timer_.start();
-      updateDual(chl, seg_pos, data[0].second);
+      updateDual(grp, seg_pos, data[0].second);
       busy_timer_.stop();
       mu_.unlock();
       // now finished, reply the scheduler
@@ -154,21 +153,21 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     if (w_->myKeyRange().setIntersection(g_key_range).empty()) return;
 
     // time 0: aggregate all workers' local gradients
-    w_->wait(kWorkerGroup, time);
+    w_->waitInMsg(kWorkerGroup, time);
 
     // time 1: update model
     auto data = w_->received(time);
     CHECK_EQ(data.size(), 2);
     CHECK_EQ(seg_pos, data[0].first);
     CHECK_EQ(seg_pos, data[1].first);
-    updateWeight(chl, seg_pos, data[0].second, data[1].second);
+    updateWeight(grp, seg_pos, data[0].second, data[1].second);
     w_->finish(kWorkerGroup, time+1);
 
     // time 2: let the workers pull from me
   }
 }
 
-SArrayList<double> BlockCoordDescL1LR::computeGradients(SizeR col_range) {
+SArrayList<double> BlockCoordDescL1LR::computeGradients(int grp, SizeR col_range) {
   SArrayList<double> grads(2);
   for (int i : {0, 1} ) {
     grads[i].resize(col_range.size());
@@ -181,9 +180,9 @@ SArrayList<double> BlockCoordDescL1LR::computeGradients(SizeR col_range) {
   for (int i = 0; i < npart; ++i) {
     auto thr_range = col_range.evenDivide(npart, i);
     if (thr_range.empty()) continue;
-    auto gr = thr_col_range - col_range.begin();
-    pool.add([this, thr_range, gr, &grads]() {
-        computeGradients(thr_range, grads[0].segment(gr), grads[1].segment(gr));
+    auto gr = thr_range - col_range.begin();
+    pool.add([this, grp, thr_range, gr, &grads]() {
+        computeGradients(grp, thr_range, grads[0].segment(gr), grads[1].segment(gr));
       });
   }
   pool.startWorkers();
@@ -191,16 +190,16 @@ SArrayList<double> BlockCoordDescL1LR::computeGradients(SizeR col_range) {
 }
 
 void BlockCoordDescL1LR::computeGradients(
-    int chl, SizeR col_range, SArray<double> G, SArray<double> U) {
+    int grp, SizeR col_range, SArray<double> G, SArray<double> U) {
   CHECK_EQ(G.size(), col_range.size());
   CHECK_EQ(U.size(), col_range.size());
-  CHECK(X_->colMajor());
+  CHECK(X_[grp]->colMajor());
 
-  const auto& active_set = active_set_[chl];
-  const auto& delta = delta_[chl];
+  const auto& active_set = active_set_[grp];
+  const auto& delta = delta_[grp];
   const double* y = y_->value().data();
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
-      X_->colBlock(col_range));
+      X_[grp]->colBlock(col_range));
   const size_t* offset = X->offset().data();
   uint32* index = X->index().data() + offset[0];
   double* value = X->value().data() + offset[0];
@@ -237,11 +236,11 @@ void BlockCoordDescL1LR::computeGradients(
   }
 }
 
-void BlockCoordDescL1LR::updateDual(int chl, SizeR col_range, SArray<double> new_w) {
+void BlockCoordDescL1LR::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
   SArray<double> delta_w(new_w.size());
-  auto& cur_w = w_->value(chl);
-  auto& active_set = active_set_[chl];
-  auto& delta = delta_[chl];
+  auto& cur_w = w_->value(grp);
+  auto& active_set = active_set_[grp];
+  auto& delta = delta_[grp];
 
   for (size_t i = 0; i < new_w.size(); ++i) {
     size_t j = col_range.begin() + i;
@@ -262,29 +261,29 @@ void BlockCoordDescL1LR::updateDual(int chl, SizeR col_range, SArray<double> new
     cw = nw;
   }
 
-  CHECK(X_[chl]);
-  SizeR row_range(0, X_[chl]->rows());
+  CHECK(X_[grp]);
+  SizeR row_range(0, X_[grp]->rows());
   ThreadPool pool(FLAGS_num_threads);
   int npart = FLAGS_num_threads;
   for (int i = 0; i < npart; ++i) {
     auto thr_range = row_range.evenDivide(npart, i);
     if (thr_range.empty()) continue;
-    pool.add([this, chl, thr_range, col_range, delta_w]() {
-        updateDual(chl, thr_range, col_range, delta_w);
+    pool.add([this, grp, thr_range, col_range, delta_w]() {
+        updateDual(grp, thr_range, col_range, delta_w);
       });
   }
   pool.startWorkers();
 }
 
 void BlockCoordDescL1LR::updateDual(
-    int chl, SizeR row_range, SizeR col_range, const SArray<double>& w_delta) {
+    int grp, SizeR row_range, SizeR col_range, SArray<double> w_delta) {
   CHECK_EQ(w_delta.size(), col_range.size());
-  CHECK(X_[chl]->colMajor());
+  CHECK(X_[grp]->colMajor());
 
-  const auto& active_set = active_set_[chl];
+  const auto& active_set = active_set_[grp];
   double* y = y_->value().data();
   auto X = std::static_pointer_cast<
-    SparseMatrix<uint32, double>>(X_[chl]->colBlock(col_range));
+    SparseMatrix<uint32, double>>(X_[grp]->colBlock(col_range));
   size_t* offset = X->offset().data();
   uint32* index = X->index().data() + offset[0];
   double* value = X->value().data();
@@ -309,15 +308,15 @@ void BlockCoordDescL1LR::updateDual(
 }
 
 void BlockCoordDescL1LR::updateWeight(
-    int chl, SizeR range, const SArray<double>& G, const SArray<double>& U) {
+    int grp, SizeR range, SArray<double> G, SArray<double> U) {
   CHECK_EQ(G.size(), range.size());
   CHECK_EQ(U.size(), range.size());
 
   double eta = app_cf_.learning_rate().eta();
   double lambda = app_cf_.penalty().lambda(0);
-  auto& value = w_->value(chl);
-  auto& active_set = active_set_[chl];
-  auto& delta = delta_[chl];
+  auto& value = w_->value(grp);
+  auto& active_set = active_set_[grp];
+  auto& delta = delta_[grp];
   for (size_t i = 0; i < range.size(); ++i) {
     size_t k = i + range.begin();
     double g = G[i], u = U[i] / eta + 1e-10;

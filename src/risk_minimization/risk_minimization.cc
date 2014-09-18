@@ -14,13 +14,13 @@ void RiskMinimization::process(const MessagePtr& msg) {
       sys_.replyProtocalMessage(msg, prog);
       break;
     }
-    case Call::LODA_DATA: {
+    case Call::LOAD_DATA: {
       DataInfo info;
-      info.set_hit_cache(prepareData(msg, info->mutable_ins_info()));
+      info.set_hit_cache(loadData(msg, info.mutable_ins_info()));
       sys_.replyProtocalMessage(msg, info);
       break;
     }
-    case Call:PREPROCESS_DATA:
+    case Call::PREPROCESS_DATA:
       preprocessData(msg);
       break;
     case Call::UPDATE_MODEL:

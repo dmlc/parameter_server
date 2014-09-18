@@ -1,6 +1,7 @@
 #include "risk_minimization/linear_method/batch_solver.h"
 #include "util/split.h"
 #include "base/matrix_io_inl.h"
+#include "base/localizer.h"
 #include "base/sparse_matrix.h"
 
 namespace PS {
@@ -29,7 +30,7 @@ void BatchSolver::run() {
     });
   if (hit_cache > 0) {
     CHECK_EQ(hit_cache, FLAGS_num_workers);
-    LI << "Hit training data caches"
+    LI << "Hit training data caches";
   }
   LI << "Loaded " << g_train_ins_info_.num_ins() << " training instances in "
      << toc(load_time) << " sec";
@@ -82,7 +83,7 @@ void BatchSolver::run() {
   // preprocess the training data
   auto preprocess_time = tic();
   Task preprocess = newTask(RiskMinCall::PREPROCESS_DATA);
-  for (auto grp : fea_grp_) set(preprocess)->add_fea_grp(grp);
+  for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
   active_nodes->submitAndWait(preprocess);
   LI << "Preprocessing is finished in " << toc(preprocess_time)
      << " sec, start iterating...";
@@ -150,7 +151,7 @@ bool BatchSolver::loadCache(const string& cache_name) {
   // }
   // y_ = y_list[0];
   // X_[0] = X_list[0];
-  LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
+  // LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
   return true;
 }
 
@@ -163,6 +164,7 @@ bool BatchSolver::saveCache(const string& cache_name) {
   // return (y_->writeToBinFile(y_conf.file(0)) &&
   //         X_[0]->writeToBinFile(X_conf.file(0)) &&
   //         w_->key().writeToFile(key_conf.file(0)));
+  return false;
 }
 
 
@@ -174,14 +176,14 @@ int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
     CHECK_GE(train.size(), 2);
     y_ = train[0];
     for (int i = 1; i < train.size(); ++i) {
-      X_[train[i].info().id()] = train[i];
+      X_[train[i]->info().id()] = train[i];
     }
   }
   *info = y_->info().ins_info();
   return hit_cache;
 }
 
-void BatchSolver::preprocessData(const MessagePtr& msg) {
+void BatchSolver::preprocessData(const MessageCPtr& msg) {
   int time = msg->task.time() * kPace;
   int grp_size = get(msg).fea_grp_size();
   fea_grp_.clear();
@@ -190,7 +192,7 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
   if (IamWorker()) {
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // Time 0: send all unique keys with their count to servers
-      int grp = fea_grp[i];
+      int grp = fea_grp_[i];
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
       Localizer<Key, double> localizer(X_[grp]);
@@ -209,10 +211,12 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
       w_->set(filter)->set_channel(grp);
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
-        if (grp_map_.count(grp) == 0) return;
+        if (!X_[grp]) return;
+        // SArray<Key> xx;
+        // auto X = localizer.remapIndex(xx);
         auto X = localizer.remapIndex(w_->key(grp));
         if (app_cf_.block_solver().feature_block_ratio() > 0) X = X->toColMajor();
-        { Lock l(mu_); train_data_[grp_map_[grp]] = X; }
+        { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
     }
@@ -222,6 +226,7 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
+      int grp = fea_grp_[i];
       push_key->key = w_->key(grp);
       w_->set(push_key)->set_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
@@ -239,15 +244,15 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
       w_->value(grp) = init_w[0].second;
 
       // set the local variable
-      auto X = X_[call.fea_grp(i)];
+      auto X = X_[grp];
       if (!X) continue;
       if (dual_.empty()) {
         dual_.resize(X->rows());
         dual_.setZero();
       } else {
-        CHECK_EQ(dual_size(), X->rows());
+        CHECK_EQ(dual_.size(), X->rows());
       }
-      if (app_cf_.init_w() != ParameterInitConfig::ZERO) {
+      if (app_cf_.init_w().type() != ParameterInitConfig::ZERO) {
         dual_.eigenVector() = *X * w_->value(grp).eigenVector();
       }
     }
@@ -275,7 +280,7 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
 }
 
 RiskMinProgress BatchSolver::evaluateProgress() {
-  // RiskMinProgress prog;
+  RiskMinProgress prog;
   // if (IamWorker()) {
   //   mu_.lock();
   //   busy_timer_.start();
@@ -288,7 +293,7 @@ RiskMinProgress BatchSolver::evaluateProgress() {
   //   prog.set_nnz_w(w_->nnz());
   // }
   // // LL << myNodeID() << ": objv " << prog.objv();
-  // return prog;
+  return prog;
 }
 
 void BatchSolver::saveModel(const MessageCPtr& msg) {
@@ -300,18 +305,20 @@ void BatchSolver::saveModel(const MessageCPtr& msg) {
     std::string file = "../output/" + w_->name() + "_" + myNodeID();
     if (output.file_size() > 0) file = output.file(0) + file;
     std::ofstream out(file); CHECK(out.good());
-    for (int k = 0; k < w_->channel(); ++k) {
-      CHECK_EQ(w_->key(k).size(), w_->value(k).size());
+    for (int grp : fea_grp_) {
+      auto key = w_->key(grp);
+      auto value = w_->value(grp);
+      CHECK_EQ(key.size(), value.size());
       // TODO use the model_file in msg
-      for (size_t i = 0; i < w_->key(k).size(); ++i) {
-        auto v = w_->value(k)[i];
-        if (v != 0 && !(v != v)) out << w_->key(k)[i] << "\t" << v << "\n";
+      for (size_t i = 0; i < key.size(); ++i) {
+        double v = value[i];
+        if (v != 0 && !(v != v)) out << key[i] << "\t" << v << "\n";
       }
-    } else {
-      LL << "didn't implement yet";
     }
+    LI << myNodeID() << " writes model to " << file;
+  } else {
+    LL << "didn't implement yet";
   }
-  LI << myNodeID() << " writes model to " << file;
 }
 
 void BatchSolver::showProgress(int iter) {

@@ -89,7 +89,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     CHECK_EQ(recv_data.size(), recv_key.size());
     size_t n = 0;
     Range<K> key_range(msg->task.key_range());
-    auto aligned = match(key_, recv_key, recv_data.data(), key_range, &n);
+    auto aligned = match(key_[ch], recv_key, recv_data.data(), key_range, &n);
     CHECK_GE(aligned.second.size(), recv_key.size());
     CHECK_EQ(recv_key.size(), n);
     {

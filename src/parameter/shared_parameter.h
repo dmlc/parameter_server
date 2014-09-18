@@ -80,7 +80,7 @@ class SharedParameter : public Customer {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
  private:
-  unordered_map<int, FreqencyFilter<K>> key_filter_;
+  std::unordered_map<int, FreqencyFilter<K>> key_filter_;
 
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
@@ -102,8 +102,7 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
   if (call.replica()) {
     if (pull && !req && Range<K>(msg->task.key_range()) == myKeyRange()) {
       recoverFrom(msg);
-    } else if ()
-    if (push && req || pull && !req) {
+    } else if ((push && req) || (pull && !req)) {
       setReplica(msg);
     } else if (pull && req) {
       getReplica(reply);
@@ -111,7 +110,7 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
   } else if (call.insert_key_freq()) {
     if (push && req) {
       key_filter_[call.channel()].insertKeys(
-          SArray<K>(msg->key(), SArray<uint32>(msg->value(0))));
+          SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
     }
   } else if (call.has_query_key_freq()) {
     if (pull && req) {
@@ -121,7 +120,7 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
       setValue(msg);
     }
   } else {
-    if (push && req || pull && !req) {
+    if ((push && req) || (pull && !req)) {
       setValue(msg);
     } else if (pull && req) {
       getValue(msg);

@@ -110,13 +110,11 @@ inline bool ManageApp_Command_Parse(
 }
 enum CallSharedPara_Command {
   CallSharedPara_Command_PUSH = 1,
-  CallSharedPara_Command_PULL = 2,
-  CallSharedPara_Command_PUSH_REPLICA = 3,
-  CallSharedPara_Command_PULL_REPLICA = 4
+  CallSharedPara_Command_PULL = 2
 };
 bool CallSharedPara_Command_IsValid(int value);
 const CallSharedPara_Command CallSharedPara_Command_Command_MIN = CallSharedPara_Command_PUSH;
-const CallSharedPara_Command CallSharedPara_Command_Command_MAX = CallSharedPara_Command_PULL_REPLICA;
+const CallSharedPara_Command CallSharedPara_Command_Command_MAX = CallSharedPara_Command_PULL;
 const int CallSharedPara_Command_Command_ARRAYSIZE = CallSharedPara_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CallSharedPara_Command_descriptor();
@@ -274,13 +272,6 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 wait_time() const;
   inline void set_wait_time(::google::protobuf::int32 value);
 
-  // optional int32 priority = 6 [default = 0];
-  inline bool has_priority() const;
-  inline void clear_priority();
-  static const int kPriorityFieldNumber = 6;
-  inline ::google::protobuf::int32 priority() const;
-  inline void set_priority(::google::protobuf::int32 value);
-
   // optional bool has_key = 7 [default = false];
   inline bool has_has_key() const;
   inline void clear_has_key();
@@ -385,8 +376,6 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_time();
   inline void set_has_wait_time();
   inline void clear_has_wait_time();
-  inline void set_has_priority();
-  inline void clear_has_priority();
   inline void set_has_has_key();
   inline void clear_has_has_key();
   inline void set_has_key_range();
@@ -414,8 +403,6 @@ class Task : public ::google::protobuf::Message {
   bool request_;
   bool has_key_;
   ::google::protobuf::int32 wait_time_;
-  ::google::protobuf::int32 priority_;
-  ::google::protobuf::uint32 key_signature_;
   ::PS::PbRange* key_range_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
   ::std::string* msg_;
@@ -424,9 +411,10 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSharedPara* shared_para_;
   ::PS::RiskMinCall* risk_;
   ::PS::CallSketch* sketch_;
+  ::google::protobuf::uint32 key_signature_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -828,8 +816,6 @@ class CallSharedPara : public ::google::protobuf::Message {
   typedef CallSharedPara_Command Command;
   static const Command PUSH = CallSharedPara_Command_PUSH;
   static const Command PULL = CallSharedPara_Command_PULL;
-  static const Command PUSH_REPLICA = CallSharedPara_Command_PUSH_REPLICA;
-  static const Command PULL_REPLICA = CallSharedPara_Command_PULL_REPLICA;
   static inline bool Command_IsValid(int value) {
     return CallSharedPara_Command_IsValid(value);
   }
@@ -860,26 +846,33 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline ::PS::CallSharedPara_Command cmd() const;
   inline void set_cmd(::PS::CallSharedPara_Command value);
 
-  // optional bool add_key = 2;
-  inline bool has_add_key() const;
-  inline void clear_add_key();
-  static const int kAddKeyFieldNumber = 2;
-  inline bool add_key() const;
-  inline void set_add_key(bool value);
+  // optional int32 channel = 2;
+  inline bool has_channel() const;
+  inline void clear_channel();
+  static const int kChannelFieldNumber = 2;
+  inline ::google::protobuf::int32 channel() const;
+  inline void set_channel(::google::protobuf::int32 value);
 
-  // optional bool add_key_count = 3;
-  inline bool has_add_key_count() const;
-  inline void clear_add_key_count();
-  static const int kAddKeyCountFieldNumber = 3;
-  inline bool add_key_count() const;
-  inline void set_add_key_count(bool value);
+  // optional bool insert_key_freq = 3;
+  inline bool has_insert_key_freq() const;
+  inline void clear_insert_key_freq();
+  static const int kInsertKeyFreqFieldNumber = 3;
+  inline bool insert_key_freq() const;
+  inline void set_insert_key_freq(bool value);
 
-  // optional int32 key_freq = 4;
-  inline bool has_key_freq() const;
-  inline void clear_key_freq();
-  static const int kKeyFreqFieldNumber = 4;
-  inline ::google::protobuf::int32 key_freq() const;
-  inline void set_key_freq(::google::protobuf::int32 value);
+  // optional int32 query_key_freq = 4;
+  inline bool has_query_key_freq() const;
+  inline void clear_query_key_freq();
+  static const int kQueryKeyFreqFieldNumber = 4;
+  inline ::google::protobuf::int32 query_key_freq() const;
+  inline void set_query_key_freq(::google::protobuf::int32 value);
+
+  // optional bool replica = 5;
+  inline bool has_replica() const;
+  inline void clear_replica();
+  static const int kReplicaFieldNumber = 5;
+  inline bool replica() const;
+  inline void set_replica(bool value);
 
   // repeated .PS.Timestamp backup = 6;
   inline int backup_size() const;
@@ -897,23 +890,26 @@ class CallSharedPara : public ::google::protobuf::Message {
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
-  inline void set_has_add_key();
-  inline void clear_has_add_key();
-  inline void set_has_add_key_count();
-  inline void clear_has_add_key_count();
-  inline void set_has_key_freq();
-  inline void clear_has_key_freq();
+  inline void set_has_channel();
+  inline void clear_has_channel();
+  inline void set_has_insert_key_freq();
+  inline void clear_has_insert_key_freq();
+  inline void set_has_query_key_freq();
+  inline void clear_has_query_key_freq();
+  inline void set_has_replica();
+  inline void clear_has_replica();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   int cmd_;
-  bool add_key_;
-  bool add_key_count_;
+  ::google::protobuf::int32 channel_;
+  ::google::protobuf::int32 query_key_freq_;
+  bool insert_key_freq_;
+  bool replica_;
   ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
-  ::google::protobuf::int32 key_freq_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1326,37 +1322,15 @@ inline void Task::set_wait_time(::google::protobuf::int32 value) {
   wait_time_ = value;
 }
 
-// optional int32 priority = 6 [default = 0];
-inline bool Task::has_priority() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void Task::set_has_priority() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void Task::clear_has_priority() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void Task::clear_priority() {
-  priority_ = 0;
-  clear_has_priority();
-}
-inline ::google::protobuf::int32 Task::priority() const {
-  return priority_;
-}
-inline void Task::set_priority(::google::protobuf::int32 value) {
-  set_has_priority();
-  priority_ = value;
-}
-
 // optional bool has_key = 7 [default = false];
 inline bool Task::has_has_key() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void Task::set_has_has_key() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void Task::clear_has_has_key() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void Task::clear_has_key() {
   has_key_ = false;
@@ -1372,13 +1346,13 @@ inline void Task::set_has_key(bool value) {
 
 // optional .PS.PbRange key_range = 8;
 inline bool Task::has_key_range() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void Task::set_has_key_range() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void Task::clear_has_key_range() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void Task::clear_key_range() {
   if (key_range_ != NULL) key_range_->::PS::PbRange::Clear();
@@ -1410,13 +1384,13 @@ inline void Task::set_allocated_key_range(::PS::PbRange* key_range) {
 
 // optional uint32 key_signature = 9;
 inline bool Task::has_key_signature() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void Task::set_has_key_signature() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void Task::clear_has_key_signature() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Task::clear_key_signature() {
   key_signature_ = 0u;
@@ -1457,13 +1431,13 @@ Task::mutable_uncompressed_size() {
 
 // optional bytes msg = 101;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1527,13 +1501,13 @@ inline void Task::set_allocated_msg(::std::string* msg) {
 
 // optional .PS.ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
@@ -1565,13 +1539,13 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
 
 // optional .PS.ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
@@ -1603,13 +1577,13 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
 
 // optional .PS.CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1641,13 +1615,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.RiskMinCall risk = 301;
 inline bool Task::has_risk() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_risk() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_risk() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_risk() {
   if (risk_ != NULL) risk_->::PS::RiskMinCall::Clear();
@@ -1679,13 +1653,13 @@ inline void Task::set_allocated_risk(::PS::RiskMinCall* risk) {
 
 // optional .PS.CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_sketch() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_sketch() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_sketch() {
   if (sketch_ != NULL) sketch_->::PS::CallSketch::Clear();
@@ -1955,70 +1929,92 @@ inline void CallSharedPara::set_cmd(::PS::CallSharedPara_Command value) {
   cmd_ = value;
 }
 
-// optional bool add_key = 2;
-inline bool CallSharedPara::has_add_key() const {
+// optional int32 channel = 2;
+inline bool CallSharedPara::has_channel() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void CallSharedPara::set_has_add_key() {
+inline void CallSharedPara::set_has_channel() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void CallSharedPara::clear_has_add_key() {
+inline void CallSharedPara::clear_has_channel() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void CallSharedPara::clear_add_key() {
-  add_key_ = false;
-  clear_has_add_key();
+inline void CallSharedPara::clear_channel() {
+  channel_ = 0;
+  clear_has_channel();
 }
-inline bool CallSharedPara::add_key() const {
-  return add_key_;
+inline ::google::protobuf::int32 CallSharedPara::channel() const {
+  return channel_;
 }
-inline void CallSharedPara::set_add_key(bool value) {
-  set_has_add_key();
-  add_key_ = value;
+inline void CallSharedPara::set_channel(::google::protobuf::int32 value) {
+  set_has_channel();
+  channel_ = value;
 }
 
-// optional bool add_key_count = 3;
-inline bool CallSharedPara::has_add_key_count() const {
+// optional bool insert_key_freq = 3;
+inline bool CallSharedPara::has_insert_key_freq() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void CallSharedPara::set_has_add_key_count() {
+inline void CallSharedPara::set_has_insert_key_freq() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void CallSharedPara::clear_has_add_key_count() {
+inline void CallSharedPara::clear_has_insert_key_freq() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void CallSharedPara::clear_add_key_count() {
-  add_key_count_ = false;
-  clear_has_add_key_count();
+inline void CallSharedPara::clear_insert_key_freq() {
+  insert_key_freq_ = false;
+  clear_has_insert_key_freq();
 }
-inline bool CallSharedPara::add_key_count() const {
-  return add_key_count_;
+inline bool CallSharedPara::insert_key_freq() const {
+  return insert_key_freq_;
 }
-inline void CallSharedPara::set_add_key_count(bool value) {
-  set_has_add_key_count();
-  add_key_count_ = value;
+inline void CallSharedPara::set_insert_key_freq(bool value) {
+  set_has_insert_key_freq();
+  insert_key_freq_ = value;
 }
 
-// optional int32 key_freq = 4;
-inline bool CallSharedPara::has_key_freq() const {
+// optional int32 query_key_freq = 4;
+inline bool CallSharedPara::has_query_key_freq() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void CallSharedPara::set_has_key_freq() {
+inline void CallSharedPara::set_has_query_key_freq() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void CallSharedPara::clear_has_key_freq() {
+inline void CallSharedPara::clear_has_query_key_freq() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void CallSharedPara::clear_key_freq() {
-  key_freq_ = 0;
-  clear_has_key_freq();
+inline void CallSharedPara::clear_query_key_freq() {
+  query_key_freq_ = 0;
+  clear_has_query_key_freq();
 }
-inline ::google::protobuf::int32 CallSharedPara::key_freq() const {
-  return key_freq_;
+inline ::google::protobuf::int32 CallSharedPara::query_key_freq() const {
+  return query_key_freq_;
 }
-inline void CallSharedPara::set_key_freq(::google::protobuf::int32 value) {
-  set_has_key_freq();
-  key_freq_ = value;
+inline void CallSharedPara::set_query_key_freq(::google::protobuf::int32 value) {
+  set_has_query_key_freq();
+  query_key_freq_ = value;
+}
+
+// optional bool replica = 5;
+inline bool CallSharedPara::has_replica() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void CallSharedPara::set_has_replica() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void CallSharedPara::clear_has_replica() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void CallSharedPara::clear_replica() {
+  replica_ = false;
+  clear_has_replica();
+}
+inline bool CallSharedPara::replica() const {
+  return replica_;
+}
+inline void CallSharedPara::set_replica(bool value) {
+  set_has_replica();
+  replica_ = value;
 }
 
 // repeated .PS.Timestamp backup = 6;

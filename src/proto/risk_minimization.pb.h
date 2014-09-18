@@ -27,6 +27,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
 #include "proto/evaluation.pb.h"
+#include "proto/instance.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -41,6 +42,7 @@ class BCDL1LRConfig;
 class LossConfig;
 class LearnerConfig;
 class RiskMinProgress;
+class DataInfo;
 class RiskMinCall;
 class AggGradLearnerArg;
 
@@ -86,17 +88,17 @@ inline bool LearnerConfig_Type_Parse(
     LearnerConfig_Type_descriptor(), name, value);
 }
 enum RiskMinCall_Command {
-  RiskMinCall_Command_PREPARE_DATA = 1,
-  RiskMinCall_Command_UPDATE_MODEL = 2,
-  RiskMinCall_Command_EVALUATE_PROGRESS = 3,
-  RiskMinCall_Command_SAVE_MODEL = 4,
-  RiskMinCall_Command_SAVE_AS_DENSE = 7,
-  RiskMinCall_Command_RECOVER = 5,
-  RiskMinCall_Command_COMPUTE_VALIDATION_AUC = 6
+  RiskMinCall_Command_LOAD_DATA = 1,
+  RiskMinCall_Command_PREPROCESS_DATA = 2,
+  RiskMinCall_Command_UPDATE_MODEL = 3,
+  RiskMinCall_Command_EVALUATE_PROGRESS = 4,
+  RiskMinCall_Command_SAVE_MODEL = 5,
+  RiskMinCall_Command_RECOVER = 6,
+  RiskMinCall_Command_COMPUTE_VALIDATION_AUC = 7
 };
 bool RiskMinCall_Command_IsValid(int value);
-const RiskMinCall_Command RiskMinCall_Command_Command_MIN = RiskMinCall_Command_PREPARE_DATA;
-const RiskMinCall_Command RiskMinCall_Command_Command_MAX = RiskMinCall_Command_SAVE_AS_DENSE;
+const RiskMinCall_Command RiskMinCall_Command_Command_MIN = RiskMinCall_Command_LOAD_DATA;
+const RiskMinCall_Command RiskMinCall_Command_Command_MAX = RiskMinCall_Command_COMPUTE_VALIDATION_AUC;
 const int RiskMinCall_Command_Command_ARRAYSIZE = RiskMinCall_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RiskMinCall_Command_descriptor();
@@ -770,6 +772,100 @@ class RiskMinProgress : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class DataInfo : public ::google::protobuf::Message {
+ public:
+  DataInfo();
+  virtual ~DataInfo();
+
+  DataInfo(const DataInfo& from);
+
+  inline DataInfo& operator=(const DataInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const DataInfo& default_instance();
+
+  void Swap(DataInfo* other);
+
+  // implements Message ----------------------------------------------
+
+  DataInfo* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const DataInfo& from);
+  void MergeFrom(const DataInfo& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .PS.InstanceInfo ins_info = 1;
+  inline bool has_ins_info() const;
+  inline void clear_ins_info();
+  static const int kInsInfoFieldNumber = 1;
+  inline const ::PS::InstanceInfo& ins_info() const;
+  inline ::PS::InstanceInfo* mutable_ins_info();
+  inline ::PS::InstanceInfo* release_ins_info();
+  inline void set_allocated_ins_info(::PS::InstanceInfo* ins_info);
+
+  // optional int32 hit_cache = 2;
+  inline bool has_hit_cache() const;
+  inline void clear_hit_cache();
+  static const int kHitCacheFieldNumber = 2;
+  inline ::google::protobuf::int32 hit_cache() const;
+  inline void set_hit_cache(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:PS.DataInfo)
+ private:
+  inline void set_has_ins_info();
+  inline void clear_has_ins_info();
+  inline void set_has_hit_cache();
+  inline void clear_has_hit_cache();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::PS::InstanceInfo* ins_info_;
+  ::google::protobuf::int32 hit_cache_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
+  friend void protobuf_ShutdownFile_proto_2frisk_5fminimization_2eproto();
+
+  void InitAsDefaultInstance();
+  static DataInfo* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class RiskMinCall : public ::google::protobuf::Message {
  public:
   RiskMinCall();
@@ -823,11 +919,11 @@ class RiskMinCall : public ::google::protobuf::Message {
   // nested types ----------------------------------------------------
 
   typedef RiskMinCall_Command Command;
-  static const Command PREPARE_DATA = RiskMinCall_Command_PREPARE_DATA;
+  static const Command LOAD_DATA = RiskMinCall_Command_LOAD_DATA;
+  static const Command PREPROCESS_DATA = RiskMinCall_Command_PREPROCESS_DATA;
   static const Command UPDATE_MODEL = RiskMinCall_Command_UPDATE_MODEL;
   static const Command EVALUATE_PROGRESS = RiskMinCall_Command_EVALUATE_PROGRESS;
   static const Command SAVE_MODEL = RiskMinCall_Command_SAVE_MODEL;
-  static const Command SAVE_AS_DENSE = RiskMinCall_Command_SAVE_AS_DENSE;
   static const Command RECOVER = RiskMinCall_Command_RECOVER;
   static const Command COMPUTE_VALIDATION_AUC = RiskMinCall_Command_COMPUTE_VALIDATION_AUC;
   static inline bool Command_IsValid(int value) {
@@ -869,13 +965,6 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_key();
   inline void set_allocated_key(::PS::PbRange* key);
 
-  // optional int32 feature_group_id = 3;
-  inline bool has_feature_group_id() const;
-  inline void clear_feature_group_id();
-  static const int kFeatureGroupIdFieldNumber = 3;
-  inline ::google::protobuf::int32 feature_group_id() const;
-  inline void set_feature_group_id(::google::protobuf::int32 value);
-
   // optional double kkt_filter_threshold = 4;
   inline bool has_kkt_filter_threshold() const;
   inline void clear_kkt_filter_threshold();
@@ -890,29 +979,17 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline bool kkt_filter_reset() const;
   inline void set_kkt_filter_reset(bool value);
 
-  // repeated .PS.PbRange reduce_range = 6;
-  inline int reduce_range_size() const;
-  inline void clear_reduce_range();
-  static const int kReduceRangeFieldNumber = 6;
-  inline const ::PS::PbRange& reduce_range(int index) const;
-  inline ::PS::PbRange* mutable_reduce_range(int index);
-  inline ::PS::PbRange* add_reduce_range();
-  inline const ::google::protobuf::RepeatedPtrField< ::PS::PbRange >&
-      reduce_range() const;
-  inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
-      mutable_reduce_range();
-
-  // optional string name = 7;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 7;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  inline void set_allocated_name(::std::string* name);
+  // repeated int32 fea_grp = 8;
+  inline int fea_grp_size() const;
+  inline void clear_fea_grp();
+  static const int kFeaGrpFieldNumber = 8;
+  inline ::google::protobuf::int32 fea_grp(int index) const;
+  inline void set_fea_grp(int index, ::google::protobuf::int32 value);
+  inline void add_fea_grp(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      fea_grp() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_fea_grp();
 
   // @@protoc_insertion_point(class_scope:PS.RiskMinCall)
  private:
@@ -920,27 +997,21 @@ class RiskMinCall : public ::google::protobuf::Message {
   inline void clear_has_cmd();
   inline void set_has_key();
   inline void clear_has_key();
-  inline void set_has_feature_group_id();
-  inline void clear_has_feature_group_id();
   inline void set_has_kkt_filter_threshold();
   inline void clear_has_kkt_filter_threshold();
   inline void set_has_kkt_filter_reset();
   inline void clear_has_kkt_filter_reset();
-  inline void set_has_name();
-  inline void clear_has_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::PS::PbRange* key_;
   int cmd_;
-  ::google::protobuf::int32 feature_group_id_;
-  double kkt_filter_threshold_;
-  ::google::protobuf::RepeatedPtrField< ::PS::PbRange > reduce_range_;
-  ::std::string* name_;
   bool kkt_filter_reset_;
+  double kkt_filter_threshold_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > fea_grp_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2frisk_5fminimization_2eproto();
   friend void protobuf_AssignDesc_proto_2frisk_5fminimization_2eproto();
@@ -1608,6 +1679,70 @@ RiskMinProgress::mutable_busy_time() {
 
 // -------------------------------------------------------------------
 
+// DataInfo
+
+// optional .PS.InstanceInfo ins_info = 1;
+inline bool DataInfo::has_ins_info() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DataInfo::set_has_ins_info() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DataInfo::clear_has_ins_info() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DataInfo::clear_ins_info() {
+  if (ins_info_ != NULL) ins_info_->::PS::InstanceInfo::Clear();
+  clear_has_ins_info();
+}
+inline const ::PS::InstanceInfo& DataInfo::ins_info() const {
+  return ins_info_ != NULL ? *ins_info_ : *default_instance_->ins_info_;
+}
+inline ::PS::InstanceInfo* DataInfo::mutable_ins_info() {
+  set_has_ins_info();
+  if (ins_info_ == NULL) ins_info_ = new ::PS::InstanceInfo;
+  return ins_info_;
+}
+inline ::PS::InstanceInfo* DataInfo::release_ins_info() {
+  clear_has_ins_info();
+  ::PS::InstanceInfo* temp = ins_info_;
+  ins_info_ = NULL;
+  return temp;
+}
+inline void DataInfo::set_allocated_ins_info(::PS::InstanceInfo* ins_info) {
+  delete ins_info_;
+  ins_info_ = ins_info;
+  if (ins_info) {
+    set_has_ins_info();
+  } else {
+    clear_has_ins_info();
+  }
+}
+
+// optional int32 hit_cache = 2;
+inline bool DataInfo::has_hit_cache() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DataInfo::set_has_hit_cache() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DataInfo::clear_has_hit_cache() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DataInfo::clear_hit_cache() {
+  hit_cache_ = 0;
+  clear_has_hit_cache();
+}
+inline ::google::protobuf::int32 DataInfo::hit_cache() const {
+  return hit_cache_;
+}
+inline void DataInfo::set_hit_cache(::google::protobuf::int32 value) {
+  set_has_hit_cache();
+  hit_cache_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // RiskMinCall
 
 // required .PS.RiskMinCall.Command cmd = 1;
@@ -1671,37 +1806,15 @@ inline void RiskMinCall::set_allocated_key(::PS::PbRange* key) {
   }
 }
 
-// optional int32 feature_group_id = 3;
-inline bool RiskMinCall::has_feature_group_id() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void RiskMinCall::set_has_feature_group_id() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void RiskMinCall::clear_has_feature_group_id() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void RiskMinCall::clear_feature_group_id() {
-  feature_group_id_ = 0;
-  clear_has_feature_group_id();
-}
-inline ::google::protobuf::int32 RiskMinCall::feature_group_id() const {
-  return feature_group_id_;
-}
-inline void RiskMinCall::set_feature_group_id(::google::protobuf::int32 value) {
-  set_has_feature_group_id();
-  feature_group_id_ = value;
-}
-
 // optional double kkt_filter_threshold = 4;
 inline bool RiskMinCall::has_kkt_filter_threshold() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void RiskMinCall::set_has_kkt_filter_threshold() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void RiskMinCall::clear_has_kkt_filter_threshold() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void RiskMinCall::clear_kkt_filter_threshold() {
   kkt_filter_threshold_ = 0;
@@ -1717,13 +1830,13 @@ inline void RiskMinCall::set_kkt_filter_threshold(double value) {
 
 // optional bool kkt_filter_reset = 5;
 inline bool RiskMinCall::has_kkt_filter_reset() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void RiskMinCall::set_has_kkt_filter_reset() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void RiskMinCall::clear_has_kkt_filter_reset() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void RiskMinCall::clear_kkt_filter_reset() {
   kkt_filter_reset_ = false;
@@ -1737,99 +1850,29 @@ inline void RiskMinCall::set_kkt_filter_reset(bool value) {
   kkt_filter_reset_ = value;
 }
 
-// repeated .PS.PbRange reduce_range = 6;
-inline int RiskMinCall::reduce_range_size() const {
-  return reduce_range_.size();
+// repeated int32 fea_grp = 8;
+inline int RiskMinCall::fea_grp_size() const {
+  return fea_grp_.size();
 }
-inline void RiskMinCall::clear_reduce_range() {
-  reduce_range_.Clear();
+inline void RiskMinCall::clear_fea_grp() {
+  fea_grp_.Clear();
 }
-inline const ::PS::PbRange& RiskMinCall::reduce_range(int index) const {
-  return reduce_range_.Get(index);
+inline ::google::protobuf::int32 RiskMinCall::fea_grp(int index) const {
+  return fea_grp_.Get(index);
 }
-inline ::PS::PbRange* RiskMinCall::mutable_reduce_range(int index) {
-  return reduce_range_.Mutable(index);
+inline void RiskMinCall::set_fea_grp(int index, ::google::protobuf::int32 value) {
+  fea_grp_.Set(index, value);
 }
-inline ::PS::PbRange* RiskMinCall::add_reduce_range() {
-  return reduce_range_.Add();
+inline void RiskMinCall::add_fea_grp(::google::protobuf::int32 value) {
+  fea_grp_.Add(value);
 }
-inline const ::google::protobuf::RepeatedPtrField< ::PS::PbRange >&
-RiskMinCall::reduce_range() const {
-  return reduce_range_;
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+RiskMinCall::fea_grp() const {
+  return fea_grp_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::PS::PbRange >*
-RiskMinCall::mutable_reduce_range() {
-  return &reduce_range_;
-}
-
-// optional string name = 7;
-inline bool RiskMinCall::has_name() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void RiskMinCall::set_has_name() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void RiskMinCall::clear_has_name() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void RiskMinCall::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& RiskMinCall::name() const {
-  return *name_;
-}
-inline void RiskMinCall::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void RiskMinCall::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void RiskMinCall::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* RiskMinCall::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* RiskMinCall::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void RiskMinCall::set_allocated_name(::std::string* name) {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (name) {
-    set_has_name();
-    name_ = name;
-  } else {
-    clear_has_name();
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+RiskMinCall::mutable_fea_grp() {
+  return &fea_grp_;
 }
 
 // -------------------------------------------------------------------

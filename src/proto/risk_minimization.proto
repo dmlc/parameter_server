@@ -1,7 +1,7 @@
 package PS;
 import "proto/range.proto";
 import "proto/evaluation.proto";
-import "proto/instance.proto"
+import "proto/instance.proto";
 
 message BlockSolverConfig {
   // The minibatch size. If <= 0, then use the whole data

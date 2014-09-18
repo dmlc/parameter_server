@@ -13,8 +13,8 @@ void parallelSort(T* data, size_t len, size_t grainsize, const Fn& cmp) {
     std::sort(data, data + len, cmp);
     // LL << len << " " << t.get();
   } else {
-    std::thread thr(parallelSort<T>, data, len/2, grainsize);
-    parallelSort(data + len/2, len - len/2, grainsize);
+    std::thread thr(parallelSort<T, Fn>, data, len/2, grainsize, cmp);
+    parallelSort(data + len/2, len - len/2, grainsize, cmp);
     thr.join();
 
     // Timer t; t.start();

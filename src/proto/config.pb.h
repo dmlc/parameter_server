@@ -85,9 +85,10 @@ inline bool DataConfig_TextFormat_Parse(
 }
 enum ParameterInitConfig_Type {
   ParameterInitConfig_Type_ZERO = 1,
-  ParameterInitConfig_Type_RANDOM = 2,
-  ParameterInitConfig_Type_FILE = 3,
-  ParameterInitConfig_Type_CLONE = 4
+  ParameterInitConfig_Type_CONSTANT = 2,
+  ParameterInitConfig_Type_GAUSSIAN = 3,
+  ParameterInitConfig_Type_FILE = 4,
+  ParameterInitConfig_Type_CLONE = 5
 };
 bool ParameterInitConfig_Type_IsValid(int value);
 const ParameterInitConfig_Type ParameterInitConfig_Type_Type_MIN = ParameterInitConfig_Type_ZERO;
@@ -392,7 +393,8 @@ class ParameterInitConfig : public ::google::protobuf::Message {
 
   typedef ParameterInitConfig_Type Type;
   static const Type ZERO = ParameterInitConfig_Type_ZERO;
-  static const Type RANDOM = ParameterInitConfig_Type_RANDOM;
+  static const Type CONSTANT = ParameterInitConfig_Type_CONSTANT;
+  static const Type GAUSSIAN = ParameterInitConfig_Type_GAUSSIAN;
   static const Type FILE = ParameterInitConfig_Type_FILE;
   static const Type CLONE = ParameterInitConfig_Type_CLONE;
   static inline bool Type_IsValid(int value) {
@@ -425,24 +427,31 @@ class ParameterInitConfig : public ::google::protobuf::Message {
   inline ::PS::ParameterInitConfig_Type type() const;
   inline void set_type(::PS::ParameterInitConfig_Type value);
 
-  // optional double mean = 2 [default = 0];
+  // optional double constant = 2 [default = 1];
+  inline bool has_constant() const;
+  inline void clear_constant();
+  static const int kConstantFieldNumber = 2;
+  inline double constant() const;
+  inline void set_constant(double value);
+
+  // optional double mean = 3 [default = 0];
   inline bool has_mean() const;
   inline void clear_mean();
-  static const int kMeanFieldNumber = 2;
+  static const int kMeanFieldNumber = 3;
   inline double mean() const;
   inline void set_mean(double value);
 
-  // optional double std = 3 [default = 1];
+  // optional double std = 4 [default = 1];
   inline bool has_std() const;
   inline void clear_std();
-  static const int kStdFieldNumber = 3;
+  static const int kStdFieldNumber = 4;
   inline double std() const;
   inline void set_std(double value);
 
-  // optional string file_name = 4;
+  // optional string file_name = 5;
   inline bool has_file_name() const;
   inline void clear_file_name();
-  static const int kFileNameFieldNumber = 4;
+  static const int kFileNameFieldNumber = 5;
   inline const ::std::string& file_name() const;
   inline void set_file_name(const ::std::string& value);
   inline void set_file_name(const char* value);
@@ -455,6 +464,8 @@ class ParameterInitConfig : public ::google::protobuf::Message {
  private:
   inline void set_has_type();
   inline void clear_has_type();
+  inline void set_has_constant();
+  inline void clear_has_constant();
   inline void set_has_mean();
   inline void clear_has_mean();
   inline void set_has_std();
@@ -464,13 +475,14 @@ class ParameterInitConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  double constant_;
   double mean_;
   double std_;
   ::std::string* file_name_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1072,15 +1084,37 @@ inline void ParameterInitConfig::set_type(::PS::ParameterInitConfig_Type value) 
   type_ = value;
 }
 
-// optional double mean = 2 [default = 0];
-inline bool ParameterInitConfig::has_mean() const {
+// optional double constant = 2 [default = 1];
+inline bool ParameterInitConfig::has_constant() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void ParameterInitConfig::set_has_mean() {
+inline void ParameterInitConfig::set_has_constant() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void ParameterInitConfig::clear_has_mean() {
+inline void ParameterInitConfig::clear_has_constant() {
   _has_bits_[0] &= ~0x00000002u;
+}
+inline void ParameterInitConfig::clear_constant() {
+  constant_ = 1;
+  clear_has_constant();
+}
+inline double ParameterInitConfig::constant() const {
+  return constant_;
+}
+inline void ParameterInitConfig::set_constant(double value) {
+  set_has_constant();
+  constant_ = value;
+}
+
+// optional double mean = 3 [default = 0];
+inline bool ParameterInitConfig::has_mean() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ParameterInitConfig::set_has_mean() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ParameterInitConfig::clear_has_mean() {
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void ParameterInitConfig::clear_mean() {
   mean_ = 0;
@@ -1094,15 +1128,15 @@ inline void ParameterInitConfig::set_mean(double value) {
   mean_ = value;
 }
 
-// optional double std = 3 [default = 1];
+// optional double std = 4 [default = 1];
 inline bool ParameterInitConfig::has_std() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void ParameterInitConfig::set_has_std() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void ParameterInitConfig::clear_has_std() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void ParameterInitConfig::clear_std() {
   std_ = 1;
@@ -1116,15 +1150,15 @@ inline void ParameterInitConfig::set_std(double value) {
   std_ = value;
 }
 
-// optional string file_name = 4;
+// optional string file_name = 5;
 inline bool ParameterInitConfig::has_file_name() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void ParameterInitConfig::set_has_file_name() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void ParameterInitConfig::clear_has_file_name() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void ParameterInitConfig::clear_file_name() {
   if (file_name_ != &::google::protobuf::internal::kEmptyString) {

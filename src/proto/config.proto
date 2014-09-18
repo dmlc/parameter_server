@@ -32,7 +32,7 @@ message ParameterInitConfig {
     CONSTANT = 2;
     GAUSSIAN = 3;
     FILE = 4;
-    // CLONE = 4;
+    CLONE = 5;
   }
   optional Type type = 1 [default = ZERO];
   optional double constant = 2 [default = 1];

@@ -28,7 +28,7 @@ class RiskMinimization : public App {
   void showObjective(int iter);
   void showNNZ(int iter);
 
-  static RiskMinCall get(const MessagePtr& msg) {
+  static RiskMinCall get(const MessageCPtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
     CHECK(msg->task.has_risk());
     return msg->task.risk();
