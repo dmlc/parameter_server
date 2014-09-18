@@ -109,15 +109,13 @@ void SArray<V>::setValue(const ParameterInitConfig& cf) {
   typedef ParameterInitConfig Type;
   if (cf.type() == Type::ZERO) {
     setZero();
-  } else if (cf.type() == Type::RANDOM) {
-    if (cf.std() == 0) {
-      setValue((V)cf.mean());
-    } else {
-      for (size_t i = 0; i < size_; ++i) {
-        std::default_random_engine generator;
-        std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
-        data_[i] = distribution(generator);
-      }
+  } else if (cf.type() == Type::CONSTANT) {
+    setValue((V)cf.constant());
+  } else if (cf.type() == Type::GAUSSIAN) {
+    for (size_t i = 0; i < size_; ++i) {
+      std::default_random_engine generator;
+      std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
+      data_[i] = distribution(generator);
     }
   } else if (cf.type() == Type::FILE) {
     CHECK(false);

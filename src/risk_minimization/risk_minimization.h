@@ -34,6 +34,11 @@ class RiskMinimization : public App {
     return msg->task.risk();
   }
 
+  static RiskMinCall* set(Task *task) {
+    task->set_type(Task::CALL_CUSTOMER);
+    return task->mutable_risk();
+  }
+
   static RiskMinCall* setCall(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
     return task->mutable_risk();

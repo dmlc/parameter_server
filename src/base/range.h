@@ -85,6 +85,7 @@ class Range {
 template<class T>
 Range<T> Range<T>::evenDivide(size_t n, size_t i) const {
   CHECK(valid());
+  CHECK_GT(n, 0);
   CHECK_LT(i, n);
   auto itv = static_cast<long double>(end_ - begin_) /
              static_cast<long double>(n);

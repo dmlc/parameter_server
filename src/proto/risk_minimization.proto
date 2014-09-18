@@ -92,14 +92,16 @@ message RiskMinCall {
   }
   required Command cmd = 1;
   optional PbRange key = 2;
-  optional int32 feature_group_id = 3;
+  // optional int32 feature_group_id = 3;
 
   optional double kkt_filter_threshold = 4;
   optional bool kkt_filter_reset = 5;
 
-  repeated PbRange reduce_range = 6;
-  optional string name = 7;
-  repeated int32 channel = 8;
+  // repeated PbRange reduce_range = 6;
+  // optional string name = 7;
+
+  repeated int32 fea_grp = 8;
+  repeated int32 w_chl = 9;
 }
 
 message AggGradLearnerArg {

@@ -10,26 +10,29 @@ namespace PS {
 template <typename K, typename V>
 class KVVector : public SharedParameter<K,V> {
  public:
-  // keys and values
-  SArray<K>& key(int channel = 0) { return key_[channel]; }
-  SArray<V>& value(int channel = 0) { return val_[channel]; }
+  // # of channels, keys, and values
+  int channel() { return key_.size(); }
+  SArray<K>& key(int channel) { return key_[channel]; }
+  SArray<V>& value(int channel) { return val_[channel]; }
   // find the local positions of a global key range
 
-  SizeR find(const Range<K>& key_range, int channel = 0) {
+  SizeR find(int channel, const Range<K>& key_range) {
     return key_[channel].findRange(key_range);
   }
-  // slice a segment of the value using the local positions
-  SArray<V> slice(const SizeR& position, int channel = 0) {
-    return val_[channel].segment(local_range);
-  }
+
+
+  // // slice a segment of the value using the local positions
+  // SArray<V> slice(int channel, const SizeR& position) {
+  //   return val_[channel].segment(local_range);
+  // }
 
   // return the data received at time t, then *delete* it
   AlignedArrayList<V> received(int t);
 
-  // # of keys, or the length of the vector
-  size_t size() const { return key_[0].size(); }
-  // # of nnz entries
-  size_t nnz() const { return val_[0].nnz(); }
+  // // # of keys, or the length of the vector
+  // size_t size() const { return key_[0].size(); }
+  // // # of nnz entries
+  // size_t nnz() const { return val_[0].nnz(); }
 
   // implement the virtual functions required
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
