@@ -31,7 +31,6 @@ message AppConfig {
   optional LearnerConfig learner = 22;
 
   optional BlockSolverConfig block_solver = 24;
-
   optional BCDL1LRConfig bcd_l1lr = 25;
 
   // neural network

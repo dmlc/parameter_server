@@ -42,7 +42,7 @@ void BatchSolver::run() {
     CHECK(info.has_nnz_ele());
     CHECK(info.has_nnz_ins());
     CHECK(info.has_grp_id());
-    grp2chl_[info.grp_id()] = i;
+    fea_grp_.push_back(info.grp_id());
     double nnz_per_row = (double)info.nnz_ele() / (double)info.nnz_ins();
     int n = 1;  // number of blocks for a feature group
     if (nnz_per_row > 1 + 1e-6) {
@@ -82,10 +82,7 @@ void BatchSolver::run() {
   // preprocess the training data
   auto preprocess_time = tic();
   Task preprocess = newTask(RiskMinCall::PREPROCESS_DATA);
-  for (const auto& it : grp2ch_) {
-    set(preprocess)->add_fea_grp(it.first);
-    set(preprocess)->add_w_chl(it.second);
-  }
+  for (auto grp : fea_grp_) set(preprocess)->add_fea_grp(grp);
   active_nodes->submitAndWait(preprocess);
   LI << "Preprocessing is finished in " << toc(preprocess_time)
      << " sec, start iterating...";
@@ -186,14 +183,14 @@ int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
 
 void BatchSolver::preprocessData(const MessagePtr& msg) {
   int time = msg->task.time() * kPace;
-  auto call = get(msg);
-  int size = call.fea_grp_size();
-  CHECK_EQ(size, call.w_chl_size());
+  int grp_size = get(msg).fea_grp_size();
+  fea_grp_.clear();
+  for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
+
   if (IamWorker()) {
-    for (int i = 0; i < size; ++i, time += kPace) {
+    for (int i = 0; i < grp_size; ++i, time += kPace) {
       // Time 0: send all unique keys with their count to servers
-      int grp = call.fea_grp(i);
-      int chl = call.w_chl(i);
+      int grp = fea_grp[i];
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
       Localizer<Key, double> localizer(X_[grp]);
@@ -202,14 +199,14 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       w_->set(count)->set_insert_key_freq(true);
-      w_->set(count)->set_channel(chl);
+      w_->set(count)->set_channel(grp);
       CHECK_EQ(time, w_->push(count));
 
       // time 2: pull filered keys
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
       w_->set(filter)->set_query_key_freq(app_cf_.block_solver().tail_feature_count());
-      w_->set(filter)->set_channel(chl);
+      w_->set(filter)->set_channel(grp);
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (grp_map_.count(grp) == 0) return;
@@ -219,28 +216,27 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
       };
       CHECK_EQ(time+2, w_->pull(filter));
     }
-    for (int i = 0; i < size; ++i, time += kPace) {
-      int chl = call.w_chl(i);
+    for (int i = 0; i < grp_size; ++i, time += kPace) {
       // wait until the i-th channel's keys are ready
-      w_->waitOutMsg(kServerGroup, time - size * kPace);
+      w_->waitOutMsg(kServerGroup, time - grp_size * kPace);
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
-      push_key->key = w_->key(chl);
-      w_->set(push_key)->set_channel(chl);
+      push_key->key = w_->key(grp);
+      w_->set(push_key)->set_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
 
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
-      pull_val->key = w_->key(chl);
-      w_->set(pull_val)->set_channel(chl);
+      pull_val->key = w_->key(grp);
+      w_->set(pull_val)->set_channel(grp);
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
 
       auto init_w = w_->received(time+2);
       CHECK_EQ(init_w.size(), 1);
-      CHECK_EQ(w_->key(chl).size(), init_w[0].first.size());
-      w_->value(chl) = init_w[0].second;
+      CHECK_EQ(w_->key(grp).size(), init_w[0].first.size());
+      w_->value(grp) = init_w[0].second;
 
       // set the local variable
       auto X = X_[call.fea_grp(i)];
@@ -252,25 +248,25 @@ void BatchSolver::preprocessData(const MessagePtr& msg) {
         CHECK_EQ(dual_size(), X->rows());
       }
       if (app_cf_.init_w() != ParameterInitConfig::ZERO) {
-        dual_.eigenVector() = *X * w_->value(chl).eigenVector();
+        dual_.eigenVector() = *X * w_->value(grp).eigenVector();
       }
     }
 
     // wait until all weight pull finished
-    for (int i = 0; i < size; ++i) {
-      int t = (msg->task.time() + size + i) * kPace;
+    for (int i = 0; i < grp_size; ++i) {
+      int t = (msg->task.time() + grp_size + i) * kPace;
       w_->waitOutMsg(kServerGroup, t);
     }
   } else {
-    for (int i = 0; i < size; ++i, time += kPace) {
+    for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
       w_->finish(kWorkerGroup, time+1);
     }
 
-    for (int i = 0; i < size; ++i, time += kPace) {
+    for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
 
-      int chl = call.w_chl(i);
+      int chl = fea_grp_[i];
       w_->value(chl).resize(w_->key(chl).size());
       w_->value(chl).setValue(app_cf_.init_w());
       w_->finish(kWorkerGroup, time+1);

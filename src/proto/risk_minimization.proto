@@ -101,7 +101,7 @@ message RiskMinCall {
   // optional string name = 7;
 
   repeated int32 fea_grp = 8;
-  repeated int32 w_chl = 9;
+  // repeated int32 w_chl = 9;
 }
 
 message AggGradLearnerArg {

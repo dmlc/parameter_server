@@ -80,20 +80,19 @@ void BlockCoordDescL1LR::runIteration() {
 
 
 
-InstanceInfo BlockCoordDescL1LR::preprocessData(const MessagePtr& msg) {
-  auto info = BatchSolver::preprocessData(msg);
+void BlockCoordDescL1LR::preprocessData(const MessagePtr& msg) {
+  BatchSolver::preprocessData(msg);
   if (IamWorker()) {
     // dual_ = exp(y.*(X_*w_))
     dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
   }
-  active_set_.resize(w_->size(), true);
-
   bcd_l1lr_cf_ = app_cf_.bcd_l1lr();
-
-
-  delta_.resize(w_->size());
-  delta_.setValue(bcd_l1lr_cf_.delta_init_value());
-  return info;
+  for (int grp : fea_grp_) {
+    size_t n = w_->key(grp).size();
+    active_set_[grp].resize(n, true);
+    delta_[grp].resize(n);
+    delta_[grp].setValue(bcd_l1lr_cf_.delta_init_value());
+  }
 }
 
 void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
@@ -106,12 +105,12 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
   }
   if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
     // KKT_filter_threshold_ = 1e20;
-    active_set_.fill(true);
+    for (grp : fea_grp_) active_set_[grp].fill(true);
   }
   CHECK_EQ(call.has_channel());
-  int ch = call.channel();
+  int chl = call.channel();
   Range<Key> g_key_range(call.key());
-  auto seg_pos = w_->find(ch, g_key_range);
+  auto seg_pos = w_->find(chl, g_key_range);
 
   if (IamWorker()) {
     // compute local gradients
@@ -124,7 +123,7 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
 
     // time 0: push local gradients
     MessagePtr push_msg(new Message(kServerGroup, time));
-    auto local_keys = w_->key(ch).segment(seg_pos);
+    auto local_keys = w_->key(chl).segment(seg_pos);
     push_msg->addKV(local_keys, local_gradients);
     g_key_range.to(push_msg->task.mutable_key_range());
     CHECK_EQ(time, w_->push(push_msg));
@@ -137,12 +136,12 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     pull_msg->key = local_keys;
     g_key_range.to(pull_msg->task.mutable_key_range());
     // the callback for updating the local dual variable
-    pull_msg->fin_handle = [this, ch, seg_pos, time, msg] () {
+    pull_msg->fin_handle = [this, chl, seg_pos, time, msg] () {
       auto data = w_->received(time+2);
       CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
       mu_.lock();
       busy_timer_.start();
-      updateDual(ch, seg_pos, data[0].second);
+      updateDual(chl, seg_pos, data[0].second);
       busy_timer_.stop();
       mu_.unlock();
       // now finished, reply the scheduler
@@ -162,7 +161,7 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     CHECK_EQ(data.size(), 2);
     CHECK_EQ(seg_pos, data[0].first);
     CHECK_EQ(seg_pos, data[1].first);
-    updateWeight(ch, seg_pos, data[0].second, data[1].second);
+    updateWeight(chl, seg_pos, data[0].second, data[1].second);
     w_->finish(kWorkerGroup, time+1);
 
     // time 2: let the workers pull from me
@@ -192,11 +191,13 @@ SArrayList<double> BlockCoordDescL1LR::computeGradients(SizeR col_range) {
 }
 
 void BlockCoordDescL1LR::computeGradients(
-    SizeR col_range, SArray<double> G, SArray<double> U) {
+    int chl, SizeR col_range, SArray<double> G, SArray<double> U) {
   CHECK_EQ(G.size(), col_range.size());
   CHECK_EQ(U.size(), col_range.size());
   CHECK(X_->colMajor());
 
+  const auto& active_set = active_set_[chl];
+  const auto& delta = delta_[chl];
   const double* y = y_->value().data();
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
       X_->colBlock(col_range));
@@ -209,14 +210,14 @@ void BlockCoordDescL1LR::computeGradients(
   for (size_t j = 0; j < X->cols(); ++j) {
     size_t k = j + col_range.begin();
     size_t n = offset[j+1] - offset[j];
-    if (!active_set_.test(k)) {
+    if (!active_set.test(k)) {
       index += n;
       if (!binary) value += n;
       G[j] = U[j] = kInactiveValue_;
       continue;
     }
     double g = 0, u = 0;
-    double d = binary ? exp(delta_[k]) : delta_[k];
+    double d = binary ? exp(delta[k]) : delta[k];
     // TODO unroll loop
     for (size_t o = 0; o < n; ++o) {
       auto i = *(index ++);
@@ -236,16 +237,19 @@ void BlockCoordDescL1LR::computeGradients(
   }
 }
 
-void BlockCoordDescL1LR::updateDual(int ch, SizeR col_range, SArray<double> new_w) {
+void BlockCoordDescL1LR::updateDual(int chl, SizeR col_range, SArray<double> new_w) {
   SArray<double> delta_w(new_w.size());
-  SArray<double> cur_w = w_->value(ch);
+  auto& cur_w = w_->value(chl);
+  auto& active_set = active_set_[chl];
+  auto& delta = delta_[chl];
+
   for (size_t i = 0; i < new_w.size(); ++i) {
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
     double& nw = new_w[i];
     if (nw != nw) {
       // marked as inactive
-      active_set_.clear(j);
+      active_set.clear(j);
       cw = 0;
       delta_w[i] = 0;
       continue;
@@ -254,30 +258,33 @@ void BlockCoordDescL1LR::updateDual(int ch, SizeR col_range, SArray<double> new_
     //   active_set_.set(j);
     // }
     delta_w[i] = nw - cw;
-    delta_[j] = newDelta(delta_w[i]);
+    delta[j] = newDelta(delta_w[i]);
     cw = nw;
   }
 
-  SizeR row_range(0, X_->rows());
+  CHECK(X_[chl]);
+  SizeR row_range(0, X_[chl]->rows());
   ThreadPool pool(FLAGS_num_threads);
   int npart = FLAGS_num_threads;
   for (int i = 0; i < npart; ++i) {
     auto thr_range = row_range.evenDivide(npart, i);
     if (thr_range.empty()) continue;
-    pool.add([this, thr_range, col_range, delta_w]() {
-        updateDual(thr_range, col_range, delta_w);
+    pool.add([this, chl, thr_range, col_range, delta_w]() {
+        updateDual(chl, thr_range, col_range, delta_w);
       });
   }
   pool.startWorkers();
 }
 
 void BlockCoordDescL1LR::updateDual(
-    SizeR row_range, SizeR col_range, const SArray<double>& w_delta) {
+    int chl, SizeR row_range, SizeR col_range, const SArray<double>& w_delta) {
   CHECK_EQ(w_delta.size(), col_range.size());
-  CHECK(X_->colMajor());
+  CHECK(X_[chl]->colMajor());
 
-  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(X_->colBlock(col_range));
+  const auto& active_set = active_set_[chl];
   double* y = y_->value().data();
+  auto X = std::static_pointer_cast<
+    SparseMatrix<uint32, double>>(X_[chl]->colBlock(col_range));
   size_t* offset = X->offset().data();
   uint32* index = X->index().data() + offset[0];
   double* value = X->value().data();
@@ -288,7 +295,7 @@ void BlockCoordDescL1LR::updateDual(
     size_t k  = j + col_range.begin();
     size_t n = offset[j+1] - offset[j];
     double wd = w_delta[j];
-    if (wd == 0 || !active_set_.test(k)) {
+    if (wd == 0 || !active_set.test(k)) {
       index += n;
       continue;
     }
@@ -302,13 +309,15 @@ void BlockCoordDescL1LR::updateDual(
 }
 
 void BlockCoordDescL1LR::updateWeight(
-    int ch, SizeR range, const SArray<double>& G, const SArray<double>& U) {
+    int chl, SizeR range, const SArray<double>& G, const SArray<double>& U) {
   CHECK_EQ(G.size(), range.size());
   CHECK_EQ(U.size(), range.size());
 
   double eta = app_cf_.learning_rate().eta();
   double lambda = app_cf_.penalty().lambda(0);
-  auto value = w_->value(ch);
+  auto& value = w_->value(chl);
+  auto& active_set = active_set_[chl];
+  auto& delta = delta_[chl];
   for (size_t i = 0; i < range.size(); ++i) {
     size_t k = i + range.begin();
     double g = G[i], u = U[i] / eta + 1e-10;
@@ -322,7 +331,7 @@ void BlockCoordDescL1LR::updateWeight(
       } else if (g_neg > 0) {
         vio = g_neg;
       } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
-        active_set_.clear(k);
+        active_set.clear(k);
         w = kInactiveValue_;
         continue;
       }
@@ -335,10 +344,10 @@ void BlockCoordDescL1LR::updateWeight(
       d = - g_neg / u;
     }
 
-    d = std::min(delta_[k], std::max(-delta_[k], d));
+    d = std::min(delta[k], std::max(-delta[k], d));
 
     w += d;
-    delta_[k] = newDelta(d);
+    delta[k] = newDelta(d);
   }
 }
 

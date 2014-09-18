@@ -10,8 +10,6 @@ namespace PS {
 template <typename K, typename V>
 class KVVector : public SharedParameter<K,V> {
  public:
-  // # of channels, keys, and values
-  int channel() { return key_.size(); }
   SArray<K>& key(int channel) { return key_[channel]; }
   SArray<V>& value(int channel) { return val_[channel]; }
   // find the local positions of a global key range

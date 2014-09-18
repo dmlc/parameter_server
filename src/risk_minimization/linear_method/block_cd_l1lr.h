@@ -29,8 +29,8 @@ class BlockCoordDescL1LR : public BatchSolver {
     return std::min(bcd_l1lr_cf_.delta_max_value(), 2 * fabs(delta_w) + .1);
   }
 
-  Bitmap active_set_;
-  SArray<double> delta_;
+  std::unordered_map<int, Bitmap> active_set_;
+  std::unordered_map<int, SArray<double>> delta_;
 
   // snappy has good compression rate on 0xffff..ff, it is nan for double
   const double kInactiveValue_ = *((double*)&kuint64max);

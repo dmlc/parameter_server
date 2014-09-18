@@ -43,6 +43,7 @@ class BatchSolver : public LinearMethod {
   std::map<int, MatrixPtr<double>> X_;
   MatrixPtr<double> y_;
 
+  std::vector<int> fea_grp_;
   // std::map<int, int> grp_map_;
   // mapping a feature group into a channel
   std::map<int, int> grp2chl_;
