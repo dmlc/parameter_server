@@ -68,7 +68,7 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   f.set_nnz(g.nnz_ele());
   f.set_sizeof_index(sizeof(uint64));
   f.set_sizeof_value(sizeof(V));
-  f.set_nnz_per_row((double) g.nnz_ele() / (double) g.nnz_ins());
+  // f.set_nnz_per_row((double) g.nnz_ele() / (double) g.nnz_ins());
   *f.mutable_ins_info() = info;
   return f;
 }

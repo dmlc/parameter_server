@@ -48,13 +48,13 @@ void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq
   I curr = pair_[0].k;
   uint32 cnt = 0;
   for (const Pair& v : pair_) {
-    ++ cnt;
     if (v.k != curr) {
       uniq_idx->pushBack(curr);
       curr = v.k;
       if (idx_frq) idx_frq->pushBack(cnt);
       cnt = 0;
     }
+    ++ cnt;
   }
   if (!uniq_idx->empty()) {
     uniq_idx->pushBack(curr);
@@ -69,17 +69,17 @@ void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq
 
 template<typename I, typename V>
 MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
-  // TODO multi-thread
   CHECK_LT(idx_dict.size(), kuint32max);
   if (!mat_ || mat_->index().empty() || idx_dict.empty()) {
     return MatrixPtr<V>();
   }
 
+  // TODO multi-thread
   uint32 matched = 0;
   SArray<uint32> remapped_idx(pair_.size(), 0);
   const I* cur_dict = idx_dict.begin();
   const Pair* cur_pair = pair_.begin();
-  while (cur_dict != idx_dict.end() && cur_pair != pair_.begin()) {
+  while (cur_dict != idx_dict.end() && cur_pair != pair_.end()) {
     if (*cur_dict < cur_pair->k) {
       ++ cur_dict;
     } else {
@@ -96,7 +96,7 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
   auto offset = mat_->offset();
   auto value = mat_->value();
   SArray<uint32> new_index(matched);
-  SArray<size_t> new_offset(offset.size());
+  SArray<size_t> new_offset(offset.size()); new_offset[0] = 0;
   SArray<V> new_value(std::min(value.size(), (size_t)matched));
 
   size_t k = 0;
@@ -114,6 +114,7 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
   auto info = mat_->info();
   info.set_sizeof_index(sizeof(uint32));
   info.set_nnz(new_index.size());
+  info.clear_ins_info();
   SizeR local(0, idx_dict.size());
   if (mat_->rowMajor()) {
     local.to(info.mutable_col());

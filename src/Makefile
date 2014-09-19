@@ -64,7 +64,8 @@ DEPS = $(SRCS:.cc=.d)
 
 
 TESTS = \
-	matrix_io_test
+	matrix_io_test \
+	localizer_test
 	# sparse_matrix_perf \
 	# auc_test \
 	io_test \

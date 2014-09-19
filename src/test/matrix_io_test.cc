@@ -3,9 +3,6 @@
 
 using namespace PS;
 
-typedef SparseMatrix<int32, double> SM;
-typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vec;
-
 class MatrixIOTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
