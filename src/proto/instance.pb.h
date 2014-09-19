@@ -349,6 +349,20 @@ class InstanceInfo : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 nnz_ele() const;
   inline void set_nnz_ele(::google::protobuf::uint64 value);
 
+  // optional uint64 fea_begin = 6 [default = 18446744073709551615];
+  inline bool has_fea_begin() const;
+  inline void clear_fea_begin();
+  static const int kFeaBeginFieldNumber = 6;
+  inline ::google::protobuf::uint64 fea_begin() const;
+  inline void set_fea_begin(::google::protobuf::uint64 value);
+
+  // optional uint64 fea_end = 7;
+  inline bool has_fea_end() const;
+  inline void clear_fea_end();
+  static const int kFeaEndFieldNumber = 7;
+  inline ::google::protobuf::uint64 fea_end() const;
+  inline void set_fea_end(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:PS.InstanceInfo)
  private:
   inline void set_has_label_type();
@@ -359,6 +373,10 @@ class InstanceInfo : public ::google::protobuf::Message {
   inline void clear_has_num_ins();
   inline void set_has_nnz_ele();
   inline void clear_has_nnz_ele();
+  inline void set_has_fea_begin();
+  inline void clear_has_fea_begin();
+  inline void set_has_fea_end();
+  inline void clear_has_fea_end();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -367,9 +385,11 @@ class InstanceInfo : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::PS::FeatureGroupInfo > fea_grp_;
   ::google::protobuf::uint64 num_ins_;
   ::google::protobuf::uint64 nnz_ele_;
+  ::google::protobuf::uint64 fea_begin_;
+  ::google::protobuf::uint64 fea_end_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2finstance_2eproto();
   friend void protobuf_AssignDesc_proto_2finstance_2eproto();
@@ -827,6 +847,50 @@ inline ::google::protobuf::uint64 InstanceInfo::nnz_ele() const {
 inline void InstanceInfo::set_nnz_ele(::google::protobuf::uint64 value) {
   set_has_nnz_ele();
   nnz_ele_ = value;
+}
+
+// optional uint64 fea_begin = 6 [default = 18446744073709551615];
+inline bool InstanceInfo::has_fea_begin() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void InstanceInfo::set_has_fea_begin() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void InstanceInfo::clear_has_fea_begin() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void InstanceInfo::clear_fea_begin() {
+  fea_begin_ = GOOGLE_ULONGLONG(18446744073709551615);
+  clear_has_fea_begin();
+}
+inline ::google::protobuf::uint64 InstanceInfo::fea_begin() const {
+  return fea_begin_;
+}
+inline void InstanceInfo::set_fea_begin(::google::protobuf::uint64 value) {
+  set_has_fea_begin();
+  fea_begin_ = value;
+}
+
+// optional uint64 fea_end = 7;
+inline bool InstanceInfo::has_fea_end() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void InstanceInfo::set_has_fea_end() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void InstanceInfo::clear_has_fea_end() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void InstanceInfo::clear_fea_end() {
+  fea_end_ = GOOGLE_ULONGLONG(0);
+  clear_has_fea_end();
+}
+inline ::google::protobuf::uint64 InstanceInfo::fea_end() const {
+  return fea_end_;
+}
+inline void InstanceInfo::set_fea_end(::google::protobuf::uint64 value) {
+  set_has_fea_end();
+  fea_end_ = value;
 }
 
 // -------------------------------------------------------------------

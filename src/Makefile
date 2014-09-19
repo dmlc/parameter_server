@@ -1,8 +1,8 @@
 CC = g++
 # CC = clang
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -64,7 +64,8 @@ DEPS = $(SRCS:.cc=.d)
 
 
 TESTS = \
-	sparse_matrix_perf \
+	matrix_io_test
+	# sparse_matrix_perf \
 	# auc_test \
 	io_test \
 	bitmap_test \

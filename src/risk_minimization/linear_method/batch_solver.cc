@@ -14,11 +14,11 @@ void BatchSolver::init() {
 }
 
 void BatchSolver::run() {
-  auto active_nodes = taskpool(kActiveGroup);
   // start the system
   LinearMethod::startSystem();
 
   // load data
+  auto active_nodes = taskpool(kActiveGroup);
   auto load_time = tic();
   Task load = newTask(RiskMinCall::LOAD_DATA);
   int hit_cache = 0;

@@ -61,8 +61,8 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   f.set_id(g.grp_id());
   f.mutable_row()->set_begin(0);
   f.mutable_row()->set_end(info.num_ins());
-  f.mutable_col()->set_begin(0);
-  f.mutable_col()->set_end(kuint64max);
+  f.mutable_col()->set_begin(info.fea_begin());
+  f.mutable_col()->set_end(info.fea_end());
   // f.mutable_col()->set_begin(g.fea_begin());
   // f.mutable_col()->set_end(g.fea_end());
   f.set_nnz(g.nnz_ele());
@@ -275,7 +275,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
 
   for (int i = 0; i < data.file_size(); ++i) {
     FileLineReader reader(data.file(i));
-    // reader.set_line_callback(handle);
+    reader.set_line_callback(handle);
     reader.Reload();
   }
   auto info = parser.info();

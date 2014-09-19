@@ -118,6 +118,7 @@ void Executor::run() {
     bool req = active_msg_->task.request();
     int t = active_msg_->task.time();
     auto sender = rnode(active_msg_->sender);
+    CHECK(sender) << "unknow node: " << active_msg_->sender;
     // mark it as been started in the task tracker
     if (req) sender->incoming_task_.start(t);
     // call user program to process this message if necessary

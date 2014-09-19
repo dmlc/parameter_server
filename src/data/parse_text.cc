@@ -50,7 +50,10 @@ InstanceInfo ParseText::info() {
   info_.clear_fea_grp();
   info_.set_num_ins(num_ins_);
   for (int i = 0; i < kGrpIDmax; ++i) {
-    if (grp_info_[i].has_grp_id()) {
+    if (grp_info_[i].nnz_ele() > 0) {
+      grp_info_[i].set_grp_id(i);
+      info_.set_fea_begin(std::min(info_.fea_begin(), grp_info_[i].fea_begin()));
+      info_.set_fea_end(std::max(info_.fea_end(), grp_info_[i].fea_end()));
       *info_.add_fea_grp() = grp_info_[i];
       info_.set_nnz_ele(info_.nnz_ele() + grp_info_[i].nnz_ele());
     }

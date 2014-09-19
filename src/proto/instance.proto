@@ -37,6 +37,9 @@ message InstanceInfo {
   optional uint64 num_ins = 4;
   // total number of non-zero elemenets
   optional uint64 nnz_ele = 5;
+  optional uint64 fea_begin = 6 [default = 0xFFFFFFFFFFFFFFFF];
+  optional uint64 fea_end = 7;
+
 }
 
 message FeatureGroup {

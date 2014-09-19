@@ -7,7 +7,9 @@ namespace PS {
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
 // , Callback received, Callback finished, bool no_wait) {
 int RNode::submit(const MessagePtr& msg) {
-  auto& task = msg->task; CHECK(task.has_type());
+  CHECK(msg);
+  CHECK(msg->task.has_type());
+  auto& task = msg->task;
   task.set_request(true);
   task.set_customer(exec_.obj().name());
 
