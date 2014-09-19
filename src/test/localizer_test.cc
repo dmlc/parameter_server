@@ -40,6 +40,5 @@ TEST(Localizer, RCV1) {
   EXPECT_LT(X->value().eigenArray().sum(), 132224);
   EXPECT_GT(X->value().eigenArray().sum(), 132223);
 
-
   // LL << X->debugString();
 }

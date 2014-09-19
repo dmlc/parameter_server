@@ -152,7 +152,7 @@ bool BatchSolver::loadCache(const string& cache_name) {
   // y_ = y_list[0];
   // X_[0] = X_list[0];
   // LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
-  return true;
+  return false;
 }
 
 bool BatchSolver::saveCache(const string& cache_name) {
@@ -201,14 +201,14 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       w_->set(count)->set_insert_key_freq(true);
-      w_->set(count)->set_channel(grp);
+      count->task.set_key_channel(grp);
       CHECK_EQ(time, w_->push(count));
 
       // time 2: pull filered keys
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
+      filter->task.set_key_channel(grp);
       w_->set(filter)->set_query_key_freq(app_cf_.block_solver().tail_feature_count());
-      w_->set(filter)->set_channel(grp);
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (!X_[grp]) return;
@@ -228,13 +228,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr push_key(new Message(kServerGroup, time));
       int grp = fea_grp_[i];
       push_key->key = w_->key(grp);
-      w_->set(push_key)->set_channel(grp);
+      push_key->task.set_key_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
 
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
       pull_val->key = w_->key(grp);
-      w_->set(pull_val)->set_channel(grp);
+      pull_val->task.set_key_channel(grp);
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
 

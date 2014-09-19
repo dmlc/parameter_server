@@ -116,7 +116,7 @@ void RiskMinimization::showNNZ(int iter) {
     fprintf(stderr, "+-----------");
   } else {
     auto prog = global_progress_[iter];
-    fprintf(stderr, "|%10llu ", prog.nnz_w());
+    fprintf(stderr, "|%10lu ", (size_t)prog.nnz_w());
   }
 }
 

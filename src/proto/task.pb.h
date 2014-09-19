@@ -272,28 +272,35 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 wait_time() const;
   inline void set_wait_time(::google::protobuf::int32 value);
 
-  // optional bool has_key = 7 [default = false];
+  // optional bool has_key = 6 [default = false];
   inline bool has_has_key() const;
   inline void clear_has_key();
-  static const int kHasKeyFieldNumber = 7;
+  static const int kHasKeyFieldNumber = 6;
   inline bool has_key() const;
   inline void set_has_key(bool value);
 
-  // optional .PS.PbRange key_range = 8;
+  // optional .PS.PbRange key_range = 7;
   inline bool has_key_range() const;
   inline void clear_key_range();
-  static const int kKeyRangeFieldNumber = 8;
+  static const int kKeyRangeFieldNumber = 7;
   inline const ::PS::PbRange& key_range() const;
   inline ::PS::PbRange* mutable_key_range();
   inline ::PS::PbRange* release_key_range();
   inline void set_allocated_key_range(::PS::PbRange* key_range);
 
-  // optional uint32 key_signature = 9;
+  // optional uint32 key_signature = 8;
   inline bool has_key_signature() const;
   inline void clear_key_signature();
-  static const int kKeySignatureFieldNumber = 9;
+  static const int kKeySignatureFieldNumber = 8;
   inline ::google::protobuf::uint32 key_signature() const;
   inline void set_key_signature(::google::protobuf::uint32 value);
+
+  // optional int32 key_channel = 9;
+  inline bool has_key_channel() const;
+  inline void clear_key_channel();
+  static const int kKeyChannelFieldNumber = 9;
+  inline ::google::protobuf::int32 key_channel() const;
+  inline void set_key_channel(::google::protobuf::int32 value);
 
   // repeated uint64 uncompressed_size = 10;
   inline int uncompressed_size_size() const;
@@ -382,6 +389,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_key_range();
   inline void set_has_key_signature();
   inline void clear_has_key_signature();
+  inline void set_has_key_channel();
+  inline void clear_has_key_channel();
   inline void set_has_msg();
   inline void clear_has_msg();
   inline void set_has_mng_node();
@@ -404,6 +413,8 @@ class Task : public ::google::protobuf::Message {
   bool has_key_;
   ::google::protobuf::int32 wait_time_;
   ::PS::PbRange* key_range_;
+  ::google::protobuf::uint32 key_signature_;
+  ::google::protobuf::int32 key_channel_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
   ::std::string* msg_;
   ::PS::ManageNode* mng_node_;
@@ -411,10 +422,9 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSharedPara* shared_para_;
   ::PS::RiskMinCall* risk_;
   ::PS::CallSketch* sketch_;
-  ::google::protobuf::uint32 key_signature_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -846,13 +856,6 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline ::PS::CallSharedPara_Command cmd() const;
   inline void set_cmd(::PS::CallSharedPara_Command value);
 
-  // optional int32 channel = 2;
-  inline bool has_channel() const;
-  inline void clear_channel();
-  static const int kChannelFieldNumber = 2;
-  inline ::google::protobuf::int32 channel() const;
-  inline void set_channel(::google::protobuf::int32 value);
-
   // optional bool insert_key_freq = 3;
   inline bool has_insert_key_freq() const;
   inline void clear_insert_key_freq();
@@ -890,8 +893,6 @@ class CallSharedPara : public ::google::protobuf::Message {
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
-  inline void set_has_channel();
-  inline void clear_has_channel();
   inline void set_has_insert_key_freq();
   inline void clear_has_insert_key_freq();
   inline void set_has_query_key_freq();
@@ -902,14 +903,13 @@ class CallSharedPara : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   int cmd_;
-  ::google::protobuf::int32 channel_;
   ::google::protobuf::int32 query_key_freq_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   bool insert_key_freq_;
   bool replica_;
-  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1322,7 +1322,7 @@ inline void Task::set_wait_time(::google::protobuf::int32 value) {
   wait_time_ = value;
 }
 
-// optional bool has_key = 7 [default = false];
+// optional bool has_key = 6 [default = false];
 inline bool Task::has_has_key() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
@@ -1344,7 +1344,7 @@ inline void Task::set_has_key(bool value) {
   has_key_ = value;
 }
 
-// optional .PS.PbRange key_range = 8;
+// optional .PS.PbRange key_range = 7;
 inline bool Task::has_key_range() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
@@ -1382,7 +1382,7 @@ inline void Task::set_allocated_key_range(::PS::PbRange* key_range) {
   }
 }
 
-// optional uint32 key_signature = 9;
+// optional uint32 key_signature = 8;
 inline bool Task::has_key_signature() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
@@ -1402,6 +1402,28 @@ inline ::google::protobuf::uint32 Task::key_signature() const {
 inline void Task::set_key_signature(::google::protobuf::uint32 value) {
   set_has_key_signature();
   key_signature_ = value;
+}
+
+// optional int32 key_channel = 9;
+inline bool Task::has_key_channel() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Task::set_has_key_channel() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Task::clear_has_key_channel() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Task::clear_key_channel() {
+  key_channel_ = 0;
+  clear_has_key_channel();
+}
+inline ::google::protobuf::int32 Task::key_channel() const {
+  return key_channel_;
+}
+inline void Task::set_key_channel(::google::protobuf::int32 value) {
+  set_has_key_channel();
+  key_channel_ = value;
 }
 
 // repeated uint64 uncompressed_size = 10;
@@ -1431,13 +1453,13 @@ Task::mutable_uncompressed_size() {
 
 // optional bytes msg = 101;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1501,13 +1523,13 @@ inline void Task::set_allocated_msg(::std::string* msg) {
 
 // optional .PS.ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
@@ -1539,13 +1561,13 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
 
 // optional .PS.ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
@@ -1577,13 +1599,13 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
 
 // optional .PS.CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1615,13 +1637,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.RiskMinCall risk = 301;
 inline bool Task::has_risk() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_risk() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_risk() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_risk() {
   if (risk_ != NULL) risk_->::PS::RiskMinCall::Clear();
@@ -1653,13 +1675,13 @@ inline void Task::set_allocated_risk(::PS::RiskMinCall* risk) {
 
 // optional .PS.CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_sketch() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_sketch() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_sketch() {
   if (sketch_ != NULL) sketch_->::PS::CallSketch::Clear();
@@ -1929,37 +1951,15 @@ inline void CallSharedPara::set_cmd(::PS::CallSharedPara_Command value) {
   cmd_ = value;
 }
 
-// optional int32 channel = 2;
-inline bool CallSharedPara::has_channel() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void CallSharedPara::set_has_channel() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void CallSharedPara::clear_has_channel() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void CallSharedPara::clear_channel() {
-  channel_ = 0;
-  clear_has_channel();
-}
-inline ::google::protobuf::int32 CallSharedPara::channel() const {
-  return channel_;
-}
-inline void CallSharedPara::set_channel(::google::protobuf::int32 value) {
-  set_has_channel();
-  channel_ = value;
-}
-
 // optional bool insert_key_freq = 3;
 inline bool CallSharedPara::has_insert_key_freq() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void CallSharedPara::set_has_insert_key_freq() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void CallSharedPara::clear_has_insert_key_freq() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void CallSharedPara::clear_insert_key_freq() {
   insert_key_freq_ = false;
@@ -1975,13 +1975,13 @@ inline void CallSharedPara::set_insert_key_freq(bool value) {
 
 // optional int32 query_key_freq = 4;
 inline bool CallSharedPara::has_query_key_freq() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void CallSharedPara::set_has_query_key_freq() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void CallSharedPara::clear_has_query_key_freq() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void CallSharedPara::clear_query_key_freq() {
   query_key_freq_ = 0;
@@ -1997,13 +1997,13 @@ inline void CallSharedPara::set_query_key_freq(::google::protobuf::int32 value) 
 
 // optional bool replica = 5;
 inline bool CallSharedPara::has_replica() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void CallSharedPara::set_has_replica() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void CallSharedPara::clear_has_replica() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void CallSharedPara::clear_replica() {
   replica_ = false;

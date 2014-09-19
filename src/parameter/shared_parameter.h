@@ -89,6 +89,7 @@ class SharedParameter : public Customer {
 template <typename K, typename V>
 void SharedParameter<K,V>::process(const MessagePtr& msg) {
   bool req = msg->task.request();
+  int chl = msg->task.key_channel();
   auto call = get(msg);
   bool push = call.cmd() == CallSharedPara::PUSH;
   bool pull = call.cmd() == CallSharedPara::PULL;
@@ -109,12 +110,12 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
     }
   } else if (call.insert_key_freq()) {
     if (push && req) {
-      key_filter_[call.channel()].insertKeys(
+      key_filter_[chl].insertKeys(
           SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
     }
   } else if (call.has_query_key_freq()) {
     if (pull && req) {
-      reply->key = key_filter_[call.channel()].queryKeys(
+      reply->key = key_filter_[chl].queryKeys(
           SArray<K>(msg->key), call.query_key_freq());
     } else if (pull && !req) {
       setValue(msg);
@@ -128,7 +129,8 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
   }
   // reply if necessary
   if (pull && req) {
-    sys_.queue(taskpool(reply->recver)->cacheKeySender(reply));
+    taskpool(reply->recver)->cacheKeySender(reply);
+    sys_.queue(reply);
     msg->replied = true;
   }
 }

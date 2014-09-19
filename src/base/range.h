@@ -105,7 +105,15 @@ struct hash<PS::Range<T> > {
   std::size_t operator()(PS::Range<T> const& s) const {
     // return std::hash<std::pair<T,T> >()(std::make_pair(s.begin(), s.end()));
     // return (std::hash<T>(s.begin()) ^ (std::hash<T>(s.end()) << 1));
-    return (size_t)(s.begin() ^ s.end() << 1);
+    return (size_t)(s.begin() ^ s.end() << 1);  // TODO why << 1?
   }
 };
+
+template<typename T>
+struct hash<std::pair<int, PS::Range<T>>> {
+  std::size_t operator()(std::pair<int, PS::Range<T>> const& s) const {
+    return (s.first ^ s.second.begin() ^ s.second.end());
+  }
+};
+
 } // namespace std

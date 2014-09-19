@@ -49,8 +49,8 @@ class RNode {
 
   // cache the keys, return the message with keys removed but filled with a
   // key signature when *FLAGS_key_cache* is true
-  MessagePtr cacheKeySender(const MessagePtr& msg);
-  MessagePtr cacheKeyRecver(const MessagePtr& msg);
+  void cacheKeySender(const MessagePtr& msg);
+  void cacheKeyRecver(const MessagePtr& msg);
   void clearCache() { key_cache_.clear(); }
 
   // wait a submitted task (send to the remote node from the local node) with
@@ -85,9 +85,9 @@ class RNode {
   std::unordered_map<int, Message::Callback> msg_receive_handle_;
   std::unordered_map<int, Message::Callback> msg_finish_handle_;
 
-  // key_range => key signature & key list
-  std::unordered_map<Range<Key>, std::pair<uint32_t, SArray<char>>> key_cache_;
+  // (channel, key_range) => (key signature, key list)
+  std::unordered_map<std::pair<int,Range<Key>>,
+                     std::pair<uint32_t, SArray<char>>> key_cache_;
   std::mutex key_cache_mu_;
 };
-
 } // namespace PS

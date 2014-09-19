@@ -26,11 +26,13 @@ message Task {
   // optional int32 priority = 6 [default = 0];
 
   // if or not there is the key list
-  optional bool has_key = 7 [default = false];
+  optional bool has_key = 6 [default = false];
   // the key range of this task
-  optional PbRange key_range = 8;
+  optional PbRange key_range = 7;
   // signature of the key lists, used to identity the key cache
-  optional uint32 key_signature = 9;
+  optional uint32 key_signature = 8;
+  // namespace of keys
+  optional int32 key_channel = 9;
 
   // set values if data are compressed, empty means data are not compressed
   repeated uint64 uncompressed_size = 10;
@@ -83,7 +85,7 @@ message CallSharedPara {
   required Command cmd= 1;
 
   // key namespace
-  optional int32 channel = 2;
+  // optional int32 channel = 2;
 
   optional bool insert_key_freq = 3;
   optional int32 query_key_freq = 4;

@@ -53,7 +53,8 @@ int RNode::submit(const MessagePtr& msg) {
       w->pending_msgs_[t] = msgs[i];
       if (msg->recv_handle) w->msg_receive_handle_[t] = msg->recv_handle;
     }
-    sys_.queue(w->cacheKeySender(msgs[i]));
+    w->cacheKeySender(msgs[i]);
+    sys_.queue(msgs[i]);
     ++ i;
   }
   CHECK_EQ(i, msgs.size());
@@ -91,48 +92,46 @@ void RNode::finishIncomingTask(int time) {
 }
 
 
-MessagePtr RNode::cacheKeySender(const MessagePtr& msg) {
-  if (!FLAGS_key_cache || !msg->task.has_key_range() || msg->key.size() == 0)
-    return msg;
-  MessagePtr ret(new Message(*msg));
-  Range<Key> range(ret->task.key_range());
-  auto sig = crc32c::Value(ret->key.data(), ret->key.size());
+void RNode::cacheKeySender(const MessagePtr& msg) {
+  if (!FLAGS_key_cache || !msg->task.has_key_range() || msg->key.empty()) return;
+  int chl = msg->task.key_channel();
+  Range<Key> range(msg->task.key_range());
+  auto sig = crc32c::Value(msg->key.data(), msg->key.size());
+  msg->task.set_key_signature(sig);
 
   Lock l(key_cache_mu_);
-  auto& cache = key_cache_[range];
-  bool hit_cache = cache.first == sig && cache.second.size() == ret->key.size();
+  auto& cache = key_cache_[std::make_pair(chl, range)];
+  bool hit_cache = cache.first == sig && cache.second.size() == msg->key.size();
 
   if (hit_cache) {
-    ret->key.reset(nullptr, 0);
-    ret->task.set_has_key(false);
+    msg->key.clear();
+    msg->task.set_has_key(false);
   } else {
     cache.first = sig;
-    cache.second = ret->key;
-    ret->task.set_has_key(true);
+    cache.second = msg->key;
+    msg->task.set_has_key(true);
   }
-  ret->task.set_key_signature(sig);
-  return ret;
 }
 
-MessagePtr RNode::cacheKeyRecver(const MessagePtr& msg) {
-  if (!FLAGS_key_cache || !msg->task.has_key_range()) return msg;
-
-  MessagePtr ret(new Message(*msg));
-  Range<Key> range(ret->task.key_range());
-  auto sig = ret->task.key_signature();
+void RNode::cacheKeyRecver(const MessagePtr& msg) {
+  if (!FLAGS_key_cache || !msg->task.has_key_range()) return;
+  int chl = msg->task.key_channel();
+  Range<Key> range(msg->task.key_range());
+  auto sig = msg->task.key_signature();
 
   Lock l(key_cache_mu_);
-  auto& cache = key_cache_[range];
+  auto& cache = key_cache_[std::make_pair(chl, range)];
 
-  if (ret->task.has_key()) {
-    CHECK_EQ(crc32c::Value(ret->key.data(), ret->key.size()), sig);
+  if (msg->task.has_key()) {
+    // double check
+    CHECK_EQ(crc32c::Value(msg->key.data(), msg->key.size()), sig);
     cache.first = sig;
-    cache.second = ret->key;
+    cache.second = msg->key;
   } else {
+    // the cache is invalid... may ask the sender to resend this task
     CHECK_EQ(sig, cache.first) << msg->debugString();
-    ret->key = cache.second;
+    msg->key = cache.second;
   }
-  return ret;
 }
 
 } // namespace PS

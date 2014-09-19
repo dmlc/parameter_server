@@ -74,7 +74,7 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
-  int ch = get(msg).channel();
+  int ch = msg->task.key_channel();
   // only keys, insert them
   SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
   if (msg->value.empty()) {
@@ -108,7 +108,7 @@ template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
-  int ch = get(msg).channel();
+  int ch = msg->task.key_channel();
   CHECK_EQ(key_[ch].size(), val_[ch].size());
   size_t n = 0;
   Range<Key> range = recv_key.range().setUnion(key_[ch].range());
