@@ -85,8 +85,7 @@ void BatchSolver::run() {
   Task preprocess = newTask(RiskMinCall::PREPROCESS_DATA);
   for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
   active_nodes->submitAndWait(preprocess);
-  LI << "Preprocessing is finished in " << toc(preprocess_time)
-     << " sec, start iterating...";
+  LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
 
   runIteration();
 
@@ -190,6 +189,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
 
   if (IamWorker()) {
+    std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // Time 0: send all unique keys with their count to servers
       int grp = fea_grp_[i];
@@ -219,10 +219,11 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
+      pull_time[i] = time + 2;
     }
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // wait until the i-th channel's keys are ready
-      w_->waitOutMsg(kServerGroup, time - grp_size * kPace);
+      w_->waitOutMsg(kServerGroup, pull_time[i]);
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
@@ -237,6 +238,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       pull_val->task.set_key_channel(grp);
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
+      pull_time[i] = time + 2;
 
       auto init_w = w_->received(time+2);
       CHECK_EQ(init_w.size(), 1);
@@ -259,8 +261,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
 
     // wait until all weight pull finished
     for (int i = 0; i < grp_size; ++i) {
-      int t = (msg->task.time() + grp_size + i) * kPace;
-      w_->waitOutMsg(kServerGroup, t);
+      w_->waitOutMsg(kServerGroup, pull_time[i]);
     }
   } else {
     for (int i = 0; i < grp_size; ++i, time += kPace) {

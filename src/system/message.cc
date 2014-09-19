@@ -8,21 +8,21 @@ Message::Message(const NodeID& dest, int time, int wait_time)
   task.set_wait_time(wait_time);
 }
 
-// Message::Message(const Message& msg)
-//     : task(msg.task), sender(msg.sender), recver(msg.recver),
-//       original_recver(msg.original_recver), replied(msg.replied),
-//       finished(msg.finished), valid(msg.valid), terminate(msg.terminate),
-//       wait(msg.wait), recv_handle(msg.recv_handle), fin_handle(msg.fin_handle) { }
-
 std::string Message::shortDebugString() const {
   std::stringstream ss;
-  ss << "T: " << task.time() << ", " << sender << "=>" << recver;
-  if (!original_recver.empty()) ss << "(" << original_recver << ")";
-  ss << " wait_T: " << task.wait_time()
-     << ", " << key.size() << " keys, " << value.size() << " value:";
-  for (const auto& x: value)
-    ss << " " << x.size();
-  ss << ", task:" << task.ShortDebugString();
+  if (task.request()) ss << "REQ"; else ss << "RLY";
+
+  ss << " " << task.time() << " ";
+  if (task.wait_time() >= 0) ss << "(wait " << task.wait_time() << ") ";
+  ss << sender << "=>" << recver << " ";
+  if (!original_recver.empty()) ss << "(" << original_recver << ") ";
+  ss << "key [" << key.size() << "] value [";
+  for (int i = 0; i < value.size(); ++i) {
+    ss << value[i].size();
+    if (i < value.size() - 1) ss << ",";
+  }
+  auto t = task; t.clear_msg();
+  ss << "]\n\t" << t.ShortDebugString();
   return ss.str();
 }
 

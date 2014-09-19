@@ -9,19 +9,19 @@ namespace LM {
 void BlockCoordDescL1LR::runIteration() {
   CHECK_EQ(app_cf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(app_cf_.penalty().type(), PenaltyConfig::L1);
-  LI << "Train l_1 logistic regression by block coordinate descent";
-
   auto block_cf = app_cf_.block_solver();
+  int tau = block_cf.max_block_delay();
+  LI << "Train l_1 logistic regression by " << tau << "-delayed block coordinate descent";
+
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
   bool random_blk_order = block_cf.random_feature_block_order();
   if (!random_blk_order) {
-    LI << "Randomized block order often acclerates the convergence.";
+    LI << "Warning: Randomized block order often acclerates the convergence.";
   }
   // iterating
   auto pool = taskpool(kActiveGroup);
-  int time = pool->time();
-  int tau = block_cf.max_block_delay();
+  int time = pool->time() + fea_grp_.size() * 2;
   int iter = 0;
   for (; iter < block_cf.max_pass_of_data(); ++iter) {
     if (random_blk_order) {
@@ -31,8 +31,12 @@ void BlockCoordDescL1LR::runIteration() {
     if (iter == 0) order.insert(order.begin(), prior_block_order_.begin(), prior_block_order_.end());
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(RiskMinCall::UPDATE_MODEL);
-      if (iter == 0 && i < prior_block_order_.size()) {
-        update.set_wait_time(time);  // force zero delay
+      update.set_time(time+1);
+      if (iter == 0 && i == 0) {
+        update.set_wait_time(-1);
+      } else if (iter == 0 && i < prior_block_order_.size()) {
+        // force zero delay for important groups
+        update.set_wait_time(time);
       } else {
         update.set_wait_time(time - tau);
       }

@@ -74,12 +74,12 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
-  int ch = msg->task.key_channel();
+  int chl = msg->task.key_channel();
   // only keys, insert them
   SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
   if (msg->value.empty()) {
-    key_[ch] = key_[ch].setUnion(recv_key);
-    val_[ch].clear();
+    key_[chl] = key_[chl].setUnion(recv_key);
+    val_[chl].clear();
     return;
   }
   // merge values, and store them in recved_val
@@ -89,14 +89,16 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     CHECK_EQ(recv_data.size(), recv_key.size());
     size_t n = 0;
     Range<K> key_range(msg->task.key_range());
-    auto aligned = match(key_[ch], recv_key, recv_data.data(), key_range, &n);
+    auto aligned = match(key_[chl], recv_key, recv_data.data(), key_range, &n);
     CHECK_GE(aligned.second.size(), recv_key.size());
     CHECK_EQ(recv_key.size(), n);
     {
       Lock l(recved_val_mu_);
-      if (recved_val_.count(t) == 0) {
+      if (recved_val_[t].size() <= i) {
+        // LL << t << " " << i << " " << aligned.first;
         recved_val_[t].push_back(aligned);
       } else {
+        // LL << t << " "<< i << " "  << aligned.first;
         CHECK_EQ(aligned.first, recved_val_[t][i].first);
         recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
       }
