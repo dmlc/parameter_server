@@ -106,7 +106,7 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
       if (remapped_idx[j] == 0) continue;
       ++ n;
       if (!bin) new_value[k] = value[j];
-      new_index[k++] = remapped_idx[j];
+      new_index[k++] = remapped_idx[j] - 1;
     }
     new_offset[i+1] = new_offset[i] + n;
   }

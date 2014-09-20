@@ -215,7 +215,8 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
         // SArray<Key> xx;
         // auto X = localizer.remapIndex(xx);
         auto X = localizer.remapIndex(w_->key(grp));
-        if (app_cf_.block_solver().feature_block_ratio() > 0) X = X->toColMajor();
+        if (app_cf_.block_solver().has_feature_block_ratio()) X = X->toColMajor();
+
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));

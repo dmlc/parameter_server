@@ -323,6 +323,7 @@ void BlockCoordDescL1LR::updateWeight(
   auto& delta = delta_[grp];
   for (size_t i = 0; i < range.size(); ++i) {
     size_t k = i + range.begin();
+    if (!active_set.test(k)) continue;
     double g = G[i], u = U[i] / eta + 1e-10;
     double g_pos = g + lambda, g_neg = g - lambda;
     double& w = value[k];

@@ -95,7 +95,6 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     {
       Lock l(recved_val_mu_);
       if (recved_val_[t].size() <= i) {
-        // LL << t << " " << i << " " << aligned.first;
         recved_val_[t].push_back(aligned);
       } else {
         // LL << t << " "<< i << " "  << aligned.first;
