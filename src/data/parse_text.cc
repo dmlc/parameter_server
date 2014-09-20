@@ -130,6 +130,7 @@ bool ParseText::parseAdfea(char* line, Instance* ins) {
       if (grp_id != pre_grp_id) {
         grp = ins->add_fea_grp();
         grp->set_grp_id(grp_id);
+        pre_grp_id = grp_id;
       }
       grp->add_fea_id(fea_id);
     }

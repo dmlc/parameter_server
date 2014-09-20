@@ -42,3 +42,30 @@ TEST(Localizer, RCV1) {
 
   // LL << X->debugString();
 }
+
+TEST(Localizer, ADFEA) {
+  DataConfig dc;
+  dc.set_format(DataConfig::TEXT);
+  dc.set_text(DataConfig::ADFEA);
+  dc.add_file("../../data/ctrc/train/part-0001.gz");
+  auto data = readMatricesOrDie<double>(dc);
+
+  for (int i = 1; i < data.size(); ++i) {
+    Localizer<uint64, double> lc(data[i]);
+    SArray<uint64> key;
+    SArray<uint32> freq;
+    lc.countUniqIndex(&key, &freq);
+
+    int filter = 4;
+    SArray<uint64> f_key;
+    for (int i = 0; i < key.size(); ++i) {
+      if (freq[i] > filter) f_key.pushBack(key[i]);
+    }
+    LL << f_key.size();
+    auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(lc.remapIndex(f_key));
+    if (X) {
+      LL << X->index().eigenArray().maxCoeff();
+    }
+    // LL << X->debugString();
+  }
+}

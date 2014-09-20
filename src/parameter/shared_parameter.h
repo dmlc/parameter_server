@@ -109,7 +109,7 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
       getReplica(reply);
     }
   } else if (call.insert_key_freq()) {
-    if (push && req) {
+    if (push && req && msg->value.size()) {
       key_filter_[chl].insertKeys(
           SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
     }

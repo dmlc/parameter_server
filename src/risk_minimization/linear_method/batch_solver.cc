@@ -157,11 +157,12 @@ bool BatchSolver::loadCache(const string& cache_name) {
 bool BatchSolver::saveCache(const string& cache_name) {
   // if (!app_cf_.has_local_cache()) return false;
   // auto cache = app_cf_.local_cache();
-  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
-  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
+  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_label_" + myNodeID());
+  // if (!y_->writeToBinFile(y_conf.file(0))) return false;
+
+  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_fea_grp_" +  + myNodeID());
   // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  // return (y_->writeToBinFile(y_conf.file(0)) &&
-  //         X_[0]->writeToBinFile(X_conf.file(0)) &&
+  // return (X_[0]->writeToBinFile(X_conf.file(0)) &&
   //         w_->key().writeToFile(key_conf.file(0)));
   return false;
 }
@@ -197,7 +198,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       SArray<uint32> key_cnt;
       Localizer<Key, double> localizer(X_[grp]);
       localizer.countUniqIndex(&uniq_key, &key_cnt);
-
+      if (uniq_key.empty()) {
+        LL << myNodeID() << " " << grp;
+        if (X_[grp]) LL << X_[grp]->debugString();
+      }
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       w_->set(count)->set_insert_key_freq(true);
@@ -212,11 +216,9 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (!X_[grp]) return;
-        // SArray<Key> xx;
-        // auto X = localizer.remapIndex(xx);
         auto X = localizer.remapIndex(w_->key(grp));
+        if (!X) {LL << "empty:" << grp; return; }
         if (app_cf_.block_solver().has_feature_block_ratio()) X = X->toColMajor();
-
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
@@ -233,6 +235,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       push_key->task.set_key_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
 
+
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
       pull_val->key = w_->key(grp);
@@ -240,6 +243,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
       pull_time[i] = time + 2;
+      if (pull_val->key.empty()) continue; // otherwise received(time+2) will return error
 
       auto init_w = w_->received(time+2);
       CHECK_EQ(init_w.size(), 1);

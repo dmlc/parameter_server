@@ -870,17 +870,24 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 query_key_freq() const;
   inline void set_query_key_freq(::google::protobuf::int32 value);
 
-  // optional bool replica = 5;
+  // optional bool insert_key = 5;
+  inline bool has_insert_key() const;
+  inline void clear_insert_key();
+  static const int kInsertKeyFieldNumber = 5;
+  inline bool insert_key() const;
+  inline void set_insert_key(bool value);
+
+  // optional bool replica = 10;
   inline bool has_replica() const;
   inline void clear_replica();
-  static const int kReplicaFieldNumber = 5;
+  static const int kReplicaFieldNumber = 10;
   inline bool replica() const;
   inline void set_replica(bool value);
 
-  // repeated .PS.Timestamp backup = 6;
+  // repeated .PS.Timestamp backup = 11;
   inline int backup_size() const;
   inline void clear_backup();
-  static const int kBackupFieldNumber = 6;
+  static const int kBackupFieldNumber = 11;
   inline const ::PS::Timestamp& backup(int index) const;
   inline ::PS::Timestamp* mutable_backup(int index);
   inline ::PS::Timestamp* add_backup();
@@ -897,6 +904,8 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline void clear_has_insert_key_freq();
   inline void set_has_query_key_freq();
   inline void clear_has_query_key_freq();
+  inline void set_has_insert_key();
+  inline void clear_has_insert_key();
   inline void set_has_replica();
   inline void clear_has_replica();
 
@@ -906,10 +915,11 @@ class CallSharedPara : public ::google::protobuf::Message {
   ::google::protobuf::int32 query_key_freq_;
   ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   bool insert_key_freq_;
+  bool insert_key_;
   bool replica_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1995,15 +2005,37 @@ inline void CallSharedPara::set_query_key_freq(::google::protobuf::int32 value) 
   query_key_freq_ = value;
 }
 
-// optional bool replica = 5;
-inline bool CallSharedPara::has_replica() const {
+// optional bool insert_key = 5;
+inline bool CallSharedPara::has_insert_key() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void CallSharedPara::set_has_replica() {
+inline void CallSharedPara::set_has_insert_key() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void CallSharedPara::clear_has_replica() {
+inline void CallSharedPara::clear_has_insert_key() {
   _has_bits_[0] &= ~0x00000008u;
+}
+inline void CallSharedPara::clear_insert_key() {
+  insert_key_ = false;
+  clear_has_insert_key();
+}
+inline bool CallSharedPara::insert_key() const {
+  return insert_key_;
+}
+inline void CallSharedPara::set_insert_key(bool value) {
+  set_has_insert_key();
+  insert_key_ = value;
+}
+
+// optional bool replica = 10;
+inline bool CallSharedPara::has_replica() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void CallSharedPara::set_has_replica() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void CallSharedPara::clear_has_replica() {
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void CallSharedPara::clear_replica() {
   replica_ = false;
@@ -2017,7 +2049,7 @@ inline void CallSharedPara::set_replica(bool value) {
   replica_ = value;
 }
 
-// repeated .PS.Timestamp backup = 6;
+// repeated .PS.Timestamp backup = 11;
 inline int CallSharedPara::backup_size() const {
   return backup_.size();
 }

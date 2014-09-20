@@ -129,6 +129,7 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     auto local_keys = w_->key(grp).segment(seg_pos);
     push_msg->addKV(local_keys, local_gradients);
     g_key_range.to(push_msg->task.mutable_key_range());
+    push_msg->task.set_key_channel(grp);
     CHECK_EQ(time, w_->push(push_msg));
 
     // time 1: servers do update, none of my business
@@ -138,15 +139,18 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
     pull_msg->key = local_keys;
     g_key_range.to(pull_msg->task.mutable_key_range());
+    pull_msg->task.set_key_channel(grp);
     // the callback for updating the local dual variable
     pull_msg->fin_handle = [this, grp, seg_pos, time, msg] () {
-      auto data = w_->received(time+2);
-      CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
-      mu_.lock();
-      busy_timer_.start();
-      updateDual(grp, seg_pos, data[0].second);
-      busy_timer_.stop();
-      mu_.unlock();
+      if (!seg_pos.empty()) {
+        auto data = w_->received(time+2);
+        CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
+        mu_.lock();
+        busy_timer_.start();
+        updateDual(grp, seg_pos, data[0].second);
+        busy_timer_.stop();
+        mu_.unlock();
+      }
       // now finished, reply the scheduler
       taskpool(msg->sender)->finishIncomingTask(msg->task.time());
       sys_.reply(msg->sender, msg->task);
@@ -160,11 +164,13 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
     w_->waitInMsg(kWorkerGroup, time);
 
     // time 1: update model
-    auto data = w_->received(time);
-    CHECK_EQ(data.size(), 2);
-    CHECK_EQ(seg_pos, data[0].first);
-    CHECK_EQ(seg_pos, data[1].first);
-    updateWeight(grp, seg_pos, data[0].second, data[1].second);
+    if (!seg_pos.empty()) {
+      auto data = w_->received(time);
+      CHECK_EQ(data.size(), 2);
+      CHECK_EQ(seg_pos, data[0].first);
+      CHECK_EQ(seg_pos, data[1].first);
+      updateWeight(grp, seg_pos, data[0].second, data[1].second);
+    }
     w_->finish(kWorkerGroup, time+1);
 
     // time 2: let the workers pull from me

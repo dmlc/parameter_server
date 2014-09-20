@@ -32,8 +32,10 @@ template<typename I, typename V>
 void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
   if (!mat_ || mat_->index().empty()) return;
   int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
+  CHECK(uniq_idx);
 
   auto idx = mat_->index();
+  CHECK_EQ(idx.size(), mat_->offset().back());
   pair_.resize(idx.size());
   for (size_t i = 0; i < idx.size(); ++i) {
     pair_[i].k = idx[i];
@@ -56,10 +58,8 @@ void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq
     }
     ++ cnt;
   }
-  if (!uniq_idx->empty()) {
-    uniq_idx->pushBack(curr);
-    if (idx_frq) idx_frq->pushBack(cnt);
-  }
+  uniq_idx->pushBack(curr);
+  if (idx_frq) idx_frq->pushBack(cnt);
 
   // for debug
   // index_.writeToFile("index");
@@ -99,6 +99,7 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
   SArray<size_t> new_offset(offset.size()); new_offset[0] = 0;
   SArray<V> new_value(std::min(value.size(), (size_t)matched));
 
+  CHECK_EQ(offset.back(), remapped_idx.size());
   size_t k = 0;
   for (size_t i = 0; i < offset.size() - 1; ++i) {
     size_t n = 0;
@@ -110,6 +111,7 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
     }
     new_offset[i+1] = new_offset[i] + n;
   }
+  CHECK_EQ(k, matched);
 
   auto info = mat_->info();
   info.set_sizeof_index(sizeof(uint32));

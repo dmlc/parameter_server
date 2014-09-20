@@ -291,14 +291,18 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
     if (n == 0) continue;
     SArray<size_t> offset(num_ins+1); offset[0] = 0;
     uint32 k = 0;
+    size_t t = 0;
     for (uint32 j = 0; j < num_ins; ++j) {
       if (k >= n || j < slot.row_idx[k]) {
         offset[j+1] = offset[j];
       } else {
         offset[j+1] = offset[j] + slot.row_siz[k];
+        t += slot.row_siz[k];
         ++ k;
       }
     }
+    CHECK_EQ(t, slot.col_idx.size());
+    CHECK_EQ(offset.back(), slot.col_idx.size());
     // construct the fea group matrix
     MatrixInfo f = readMatrixInfo<V>(info, grp_num);
     mat->push_back(MatrixPtr<V>(

@@ -380,8 +380,8 @@ string SparseMatrix<I,V>::debugString() const {
   std::stringstream ss;
   int nnz = offset_.back() - offset_.front();
   ss << info_.DebugString() << "offset: " << offset_ << "\n"
-     << "index: " << dbstr(index_.data()+offset_[0], nnz)  << "\n"
-     << "value: " << dbstr(value_.data()+offset_[0], nnz)  << "\n";
+     << "index: " << dbstr(index_.data()+offset_[0], nnz)  << "\n";
+  if (!binary()) ss << "value: " << dbstr(value_.data()+offset_[0], nnz)  << "\n";
   return ss.str();
 }
 

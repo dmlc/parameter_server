@@ -24,7 +24,7 @@ class KVVector : public SharedParameter<K,V> {
   //   return val_[channel].segment(local_range);
   // }
 
-  // return the data received at time t, then *delete* it
+  // return the data received at time t, then *delete* it.
   AlignedArrayList<V> received(int t);
 
   // // # of keys, or the length of the vector
@@ -74,6 +74,8 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
+  // TODO review this logic. if received an empty message at time t, then call
+  // received(t) will get an error
   int chl = msg->task.key_channel();
   // only keys, insert them
   SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
@@ -90,7 +92,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     size_t n = 0;
     Range<K> key_range(msg->task.key_range());
     auto aligned = match(key_[chl], recv_key, recv_data.data(), key_range, &n);
-    CHECK_GE(aligned.second.size(), recv_key.size());
+    CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
     CHECK_EQ(recv_key.size(), n);
     {
       Lock l(recved_val_mu_);

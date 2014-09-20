@@ -89,11 +89,11 @@ message CallSharedPara {
 
   optional bool insert_key_freq = 3;
   optional int32 query_key_freq = 4;
-  // optional bool add_key = 2;
+  optional bool insert_key = 5;
 
   // it's a replica request
-  optional bool replica = 5;
-  repeated Timestamp backup = 6;
+  optional bool replica = 10;
+  repeated Timestamp backup = 11;
 }
 
 message CallSketch {
