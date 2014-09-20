@@ -1,7 +1,7 @@
 #pragma once
 #include "base/matrix_io.h"
 #include "util/filelinereader.h"
-#include "data/parse_text.h"
+#include "data/text_parser.h"
 
 namespace PS {
 
@@ -241,7 +241,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
 template<typename V>
 bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
   // TODO. multi-thread
-  ParseText parser(data.text(), data.ignore_fea_grp());
+  TextParser parser(data.text(), data.ignore_fea_grp());
 
   SArray<V> label;
   struct Slot {
@@ -255,7 +255,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
 
   std::function<void(char*)> handle = [&] (char *line) {
     // parse one text line
-    Instance ins; if (!parser.toProto(line, &ins)) return;
+    Instance ins; if (!parser.toProtobuf(line, &ins)) return;
     // store them
     label.pushBack(ins.label());
     for (int i = 0; i < ins.fea_grp_size(); ++i) {

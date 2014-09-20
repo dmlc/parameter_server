@@ -1,5 +1,5 @@
 #pragma once
-#include "risk_minimization/linear_method/linear_method.h"
+#include "linear_method/linear_method.h"
 
 namespace PS {
 namespace LM {

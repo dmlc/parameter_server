@@ -1,9 +1,30 @@
-package PS;
+package PS.LM;
 import "proto/range.proto";
 import "proto/evaluation.proto";
 import "proto/instance.proto";
+import "proto/config.proto";
 
-message BlockSolverConfig {
+message Config {
+  optional DataConfig training_data = 1;
+  optional DataConfig validation_data = 2;
+  optional DataConfig local_cache = 3;
+
+  optional ParameterInitConfig init_w = 4;
+
+  optional DataConfig model_output = 5;
+
+  optional LossConfig loss = 10;
+  optional PenaltyConfig penalty = 11;
+
+  optional LearningRateConfig learning_rate = 12;
+
+  optional LearnerConfig learner = 13;
+
+  optional SolverConfig solver = 14;
+  optional DarlingConfig darling = 15;
+}
+
+message SolverConfig {
   // The minibatch size. If <= 0, then use the whole data
   optional int64 minibatch_size = 1 [default = 0];
   // Divide a feature group into feature_block_ratio x nnz_feature_per_instance
@@ -26,10 +47,10 @@ message BlockSolverConfig {
   optional int64 auc_goodness = 12 [default = 100000];
   // features which occurs <= *tail_feature_count* will be filtered before training
   optional int32 tail_feature_count  = 15 [default = 4];
+
 }
 
-
-message BCDL1LRConfig {
+message DarlingConfig {
   // Used by the trust region method. All changes of parameters will be bounded
   // by *delta*. *delta* is updated according to the convergence,  whose intial
   // value is *delta_init_value* and maximal value is *delta_max_value*
@@ -60,7 +81,8 @@ message LearnerConfig {
   required Type type = 1;
 }
 
-message RiskMinProgress {
+///////////// the followings protobufs are used by implementation ///////////
+message Progress {
   optional double objv = 1;
   optional double relative_objv = 2;
   optional uint64 nnz_w = 5;
@@ -79,7 +101,7 @@ message DataInfo {
   optional int32 hit_cache = 2;
 }
 
-message RiskMinCall {
+message Call {
   enum Command {
     LOAD_DATA = 1;
     PREPROCESS_DATA = 2;
@@ -104,6 +126,7 @@ message RiskMinCall {
   // repeated int32 w_chl = 9;
 }
 
+// deprecated
 message AggGradLearnerArg {
   optional double learning_rate = 1;
 }

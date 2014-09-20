@@ -20,7 +20,7 @@ void BatchSolver::run() {
   // load data
   auto active_nodes = taskpool(kActiveGroup);
   auto load_time = tic();
-  Task load = newTask(RiskMinCall::LOAD_DATA);
+  Task load = newTask(Call::LOAD_DATA);
   int hit_cache = 0;
   active_nodes->submitAndWait(load, [this, &hit_cache](){
       DataInfo info; CHECK(info.ParseFromString(exec_.lastRecvReply()));
@@ -36,8 +36,8 @@ void BatchSolver::run() {
      << toc(load_time) << " sec";
 
   // partition feature blocks
-  CHECK(app_cf_.has_block_solver());
-  auto cf = app_cf_.block_solver();
+  CHECK(conf_.has_solver());
+  auto sol_cf = conf_.solver();
   for (int i = 0; i < g_train_ins_info_.fea_grp_size(); ++i) {
     auto info = g_train_ins_info_.fea_grp(i);
     CHECK(info.has_nnz_ele());
@@ -48,7 +48,7 @@ void BatchSolver::run() {
     int n = 1;  // number of blocks for a feature group
     if (nnz_per_row > 1 + 1e-6) {
       // only parititon feature group whose features are correlated
-      n = std::max((int)std::ceil(nnz_per_row*cf.feature_block_ratio()), 1);
+      n = std::max((int)std::ceil(nnz_per_row * sol_cf.feature_block_ratio()), 1);
     }
     for (int i = 0; i < n; ++i) {
       auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
@@ -63,16 +63,16 @@ void BatchSolver::run() {
 
   // blocks for important feature groups
   std::vector<string> hit_blk;
-  for (int i = 0; i < cf.prior_fea_group_size(); ++i) {
-    int grp_id = cf.prior_fea_group(i);
+  for (int i = 0; i < sol_cf.prior_fea_group_size(); ++i) {
+    int grp_id = sol_cf.prior_fea_group(i);
     std::vector<int> tmp;
     for (int k = 0; k < fea_blocks_.size(); ++k) {
       if (fea_blocks_[k].first == grp_id) tmp.push_back(k);
     }
     if (tmp.empty()) continue;
     hit_blk.push_back(std::to_string(grp_id));
-    for (int j = 0; j < cf.num_iter_for_prior_fea_group(); ++j) {
-      if (cf.random_feature_block_order()) {
+    for (int j = 0; j < sol_cf.num_iter_for_prior_fea_group(); ++j) {
+      if (sol_cf.random_feature_block_order()) {
         std::random_shuffle(tmp.begin(), tmp.end());
       }
       prior_block_order_.insert(prior_block_order_.end(), tmp.begin(), tmp.end());
@@ -82,17 +82,17 @@ void BatchSolver::run() {
 
   // preprocess the training data
   auto preprocess_time = tic();
-  Task preprocess = newTask(RiskMinCall::PREPROCESS_DATA);
+  Task preprocess = newTask(Call::PREPROCESS_DATA);
   for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
   active_nodes->submitAndWait(preprocess);
   LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
 
   runIteration();
 
-  if (app_cf_.has_validation_data()) {
+  if (XXXX.has_validation_data()) {
     // LI << "\tEvaluate with " << g_validation_info_[0].row().end()
     //    << " validation examples\n";
-    Task test = newTask(RiskMinCall::COMPUTE_VALIDATION_AUC);
+    Task test = newTask(Call::COMPUTE_VALIDATION_AUC);
     AUC validation_auc;
     active_nodes->submitAndWait(test, [this, &validation_auc](){
         mergeAUC(&validation_auc); });
@@ -100,45 +100,45 @@ void BatchSolver::run() {
        << ", auc: " << validation_auc.evaluate();
   }
 
-  Task save_model = newTask(RiskMinCall::SAVE_MODEL);
+  Task save_model = newTask(Call::SAVE_MODEL);
   active_nodes->submitAndWait(save_model);
 }
 
 void BatchSolver::runIteration() {
-  auto cf = app_cf_.block_solver();
+  auto sol_cf = conf_.solver();
   auto pool = taskpool(kActiveGroup);
   int time = pool->time();
-  int tau = cf.max_block_delay();
-  for (int iter = 0; iter < cf.max_pass_of_data(); ++iter) {
-    if (cf.random_feature_block_order())
+  int tau = sol_sol_cf.max_block_delay();
+  for (int iter = 0; iter < sol_cf.max_pass_of_data(); ++iter) {
+    if (sol_cf.random_feature_block_order())
       std::random_shuffle(block_order_.begin(), block_order_.end());
 
     for (int b : block_order_)  {
-      Task update = newTask(RiskMinCall::UPDATE_MODEL);
+      Task update = newTask(Call::UPDATE_MODEL);
       update.set_wait_time(time - tau);
       // set the feature key range will be updated in this block
       fea_blocks_[b].second.to(setCall(&update)->mutable_key());
       time = pool->submit(update);
     }
 
-    Task eval = newTask(RiskMinCall::EVALUATE_PROGRESS);
+    Task eval = newTask(Call::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
-        eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+        eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
 
     showProgress(iter);
 
     double rel = global_progress_[iter].relative_objv();
-    if (rel > 0 && rel <= cf.epsilon()) {
-      LI << "\tStopped: relative objective <= " << cf.epsilon();
+    if (rel > 0 && rel <= sol_cf.epsilon()) {
+      LI << "\tStopped: relative objective <= " << sol_cf.epsilon();
       break;
     }
   }
 }
 
 bool BatchSolver::loadCache(const string& cache_name) {
-  // if (!app_cf_.has_local_cache()) return false;
-  // auto cache = app_cf_.local_cache();
+  // if (!XXXX.has_local_cache()) return false;
+  // auto cache = XXXX.local_cache();
   // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
   // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
   // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
@@ -155,8 +155,8 @@ bool BatchSolver::loadCache(const string& cache_name) {
 }
 
 bool BatchSolver::saveCache(const string& cache_name) {
-  // if (!app_cf_.has_local_cache()) return false;
-  // auto cache = app_cf_.local_cache();
+  // if (!XXXX.has_local_cache()) return false;
+  // auto cache = XXXX.local_cache();
   // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_label_" + myNodeID());
   // if (!y_->writeToBinFile(y_conf.file(0))) return false;
 
@@ -172,7 +172,7 @@ int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
   if (!IamWorker()) return 0;
   bool hit_cache = loadCache("train");
   if (!hit_cache) {
-    auto train = readMatricesOrDie<double>(app_cf_.training_data());
+    auto train = readMatricesOrDie<double>(XXXX.training_data());
     CHECK_GE(train.size(), 2);
     y_ = train[0];
     for (int i = 1; i < train.size(); ++i) {
@@ -212,13 +212,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
       filter->task.set_key_channel(grp);
-      w_->set(filter)->set_query_key_freq(app_cf_.block_solver().tail_feature_count());
+      w_->set(filter)->set_query_key_freq(XXXX.block_solver().tail_feature_count());
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (!X_[grp]) return;
         auto X = localizer.remapIndex(w_->key(grp));
         if (!X) {LL << "empty:" << grp; return; }
-        if (app_cf_.block_solver().has_feature_block_ratio()) X = X->toColMajor();
+        if (XXXX.block_solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
@@ -259,7 +259,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       } else {
         CHECK_EQ(dual_.size(), X->rows());
       }
-      if (app_cf_.init_w().type() != ParameterInitConfig::ZERO) {
+      if (XXXX.init_w().type() != ParameterInitConfig::ZERO) {
         dual_.eigenVector() = *X * w_->value(grp).eigenVector();
       }
     }
@@ -279,7 +279,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
 
       int chl = fea_grp_[i];
       w_->value(chl).resize(w_->key(chl).size());
-      w_->value(chl).setValue(app_cf_.init_w());
+      w_->value(chl).setValue(XXXX.init_w());
       w_->finish(kWorkerGroup, time+1);
     }
   }
@@ -304,9 +304,9 @@ RiskMinProgress BatchSolver::evaluateProgress() {
 
 void BatchSolver::saveModel(const MessageCPtr& msg) {
   if (!IamServer()) return;
-  if (!app_cf_.has_model_output()) return;
+  if (!XXXX.has_model_output()) return;
 
-  auto output = app_cf_.model_output();
+  auto output = XXXX.model_output();
   if (output.format() == DataConfig::TEXT) {
     std::string file = "../output/" + w_->name() + "_" + myNodeID();
     if (output.file_size() > 0) file = output.file(0) + file;
@@ -341,9 +341,9 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
 
   // TODO
   // load data
-  // CHECK(app_cf_.has_validation_data());
+  // CHECK(XXXX.has_validation_data());
   // if (!loadCache("valid")) {
-  //   auto list = readMatricesOrDie<double>(app_cf_.training_data());
+  //   auto list = readMatricesOrDie<double>(XXXX.training_data());
   //   CHECK_EQ(list.size(), 2);
   //   y_ = list[0];
   //   auto X = std::static_pointer_cast<SparseMatrix<Key, double>>(list[1]);
@@ -363,7 +363,7 @@ void BatchSolver::computeEvaluationAUC(AUCData *data) {
   // // w_->fetchValueFromServers();
 
   // // compute auc
-  // AUC auc; auc.setGoodness(app_cf_.block_solver().auc_goodness());
+  // AUC auc; auc.setGoodness(XXXX.block_solver().auc_goodness());
   // SArray<double> Xw(X_->rows());
   // for (auto& v : w_->value()) if (v != v) v = 0;
   // Xw.eigenVector() = *X_ * w_->value().eigenVector();
@@ -456,7 +456,7 @@ void BatchSolver::updateModel(const MessagePtr& msg) {
   //         aggregated_gradient.push_back(d.second);
   //       }
   //       AggGradLearnerArg arg;
-  //       arg.set_learning_rate(app_cf_.learning_rate().eta());
+  //       arg.set_learning_rate(XXXX.learning_rate().eta());
   //       learner_->update(aggregated_gradient, arg, w_->segment(local_range));
   //     });
   // }

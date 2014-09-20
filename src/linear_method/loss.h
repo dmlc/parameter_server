@@ -1,9 +1,11 @@
 #pragma once
 #include "util/common.h"
 #include "base/matrix.h"
+#include "proto/linear_method.pb.h"
 #include <Eigen/Dense>
 
 namespace PS {
+namespace LM {
 
 template<typename T> class Loss;
 template<typename T> using LossPtr = std::shared_ptr<Loss<T>>;
@@ -103,4 +105,5 @@ class SquareHingeLoss : public BinaryClassificationLoss<T> {
   }
 };
 
+} // namespace LM
 } // namespace PS

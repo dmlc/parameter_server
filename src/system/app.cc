@@ -1,19 +1,18 @@
 #include "system/app.h"
-#include "risk_minimization/linear_method/batch_solver.h"
-#include "risk_minimization/linear_method/block_cd_l1lr.h"
+#include "linear_method/darling.h"
+#include "linear_method/batch_solver.h"
 #include "neural_network/sgd_solver.h"
 namespace PS {
 
 DEFINE_bool(test_fault_tol, false, "");
 
-AppPtr App::create(const AppConfig& config) {
+AppPtr App::create(const AppConfig& conf) {
   AppPtr ptr;
-  if (config.has_block_solver()) {
-    CHECK_EQ(config.type(), AppConfig::RISK_MINIMIZATION);
-    auto blk = config.block_solver();
-    if (blk.minibatch_size() <= 0) {
+  if (conf.has_linear_method()) {
+    const auto& lm = conf.linear_method();
+    if (lm.sovler().minibatch_size() <= 0) {
       // batch solver
-      if (config.has_bcd_l1lr()) {
+      if (lm.has_darling()) {
         ptr = AppPtr(new LM::BlockCoordDescL1LR());
       } else {
         ptr = AppPtr(new LM::BatchSolver());
@@ -21,13 +20,17 @@ AppPtr App::create(const AppConfig& config) {
     } else {
       // online sovler
     }
-  } else if (config.has_nn_solver()) {
-    CHECK_EQ(config.type(), AppConfig::NEURAL_NETWORK);
+  } else if (conf.has_neural_network()) {
     ptr = AppPtr(new NN::SGDSolver());
   } else {
-    CHECK(false) << "unknown app: " << config.DebugString();
+    CHECK(false) << "unknown app: " << conf.DebugString();
   }
-  ptr->set(config);
+
+  CHECK(conf.has_app_name());
+  ptr->name_ = conf.app_name();
+  for (int i = 0; i < conf.parameter_name_size(); ++i) {
+    ptr->child_customers_.push_back(conf.parameter_name(i));
+  }
   ptr->init();
   return ptr;
 }
@@ -48,58 +51,56 @@ void App::stop() {
   LI << "System stopped\n";
 }
 
-void App::testFaultTolerance(Task recover) {
-  CHECK_GT(FLAGS_num_replicas, 0);
-
-  // TODO
-  // // terminate s0
-  // auto& s0 = nodes_["S0"];
-  // auto ts0 = taskpool("S0");
-  // Task terminate;
-  // terminate.set_type(Task::TERMINATE);
-  // ts0->submitAndWait(terminate);
-  // terminate.set_type(Task::TERMINATE_CONFIRM);
-  // ts0->submit(terminate);
-  // LL << "S0 stopped";
-
-  // // updates nodes_
-  // LL << "start backup node U0";
-  // CHECK_GT(FLAGS_num_unused, 0);
-  // auto& u0 = nodes_["U0"];
-  // u0.set_role(Node::SERVER);
-  // *u0.mutable_key() = s0.key();
-  // s0.set_role(Node::UNUSED);
-
-  // // init U0
-  // Task add = App::startNode();
-  // auto tu0 = taskpool("U0");
-  // tu0->submitAndWait(add);
-  // LL << "sch: u0 inited";
-
-  // // ask U0 doing recovering
-  // recover.set_type(Task::CALL_CUSTOMER);
-  // tu0->submitAndWait(recover);
-  // LL << "sch: u0 recovered";
-
-  // // ask rest nodes to updates their node info
-  // auto all = taskpool(kActiveGroup);
-  // Task replace;
-  // replace.set_type(Task::MANAGE);
-  // replace.set_customer(name_);
-  // // replace.set_priority(1024);
-  // replace.set_time(1000000);
-  // auto cmd = replace.mutable_mng_node();
-  // cmd->set_cmd(ManageNode::REPLACE);
-  // *cmd->add_nodes() = s0;
-  // *cmd->add_nodes() = u0;
-
-  // LL << replace.DebugString();
-  // // update myself, and then others
-  // sys_.manage_node(replace);
-
-  // taskpool(kActiveGroup)->submitAndWait(replace);
-
-  // LL << "recovering is finished";
-}
-
 } // namespace PS
+
+// void App::testFaultTolerance(Task recover) {
+//   CHECK_GT(FLAGS_num_replicas, 0);
+//   // terminate s0
+//   auto& s0 = nodes_["S0"];
+//   auto ts0 = taskpool("S0");
+//   Task terminate;
+//   terminate.set_type(Task::TERMINATE);
+//   ts0->submitAndWait(terminate);
+//   terminate.set_type(Task::TERMINATE_CONFIRM);
+//   ts0->submit(terminate);
+//   LL << "S0 stopped";
+
+//   // updates nodes_
+//   LL << "start backup node U0";
+//   CHECK_GT(FLAGS_num_unused, 0);
+//   auto& u0 = nodes_["U0"];
+//   u0.set_role(Node::SERVER);
+//   *u0.mutable_key() = s0.key();
+//   s0.set_role(Node::UNUSED);
+
+//   // init U0
+//   Task add = App::startNode();
+//   auto tu0 = taskpool("U0");
+//   tu0->submitAndWait(add);
+//   LL << "sch: u0 inited";
+
+//   // ask U0 doing recovering
+//   recover.set_type(Task::CALL_CUSTOMER);
+//   tu0->submitAndWait(recover);
+//   LL << "sch: u0 recovered";
+
+//   // ask rest nodes to updates their node info
+//   auto all = taskpool(kActiveGroup);
+//   Task replace;
+//   replace.set_type(Task::MANAGE);
+//   replace.set_customer(name_);
+//   // replace.set_priority(1024);
+//   replace.set_time(1000000);
+//   auto cmd = replace.mutable_mng_node();
+//   cmd->set_cmd(ManageNode::REPLACE);
+//   *cmd->add_nodes() = s0;
+//   *cmd->add_nodes() = u0;
+
+//   LL << replace.DebugString();
+//   // update myself, and then others
+//   sys_.manage_node(replace);
+
+//   taskpool(kActiveGroup)->submitAndWait(replace);
+
+//   LL << "recovering is finished";
+// }

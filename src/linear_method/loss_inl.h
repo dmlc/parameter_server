@@ -1,7 +1,8 @@
 #pragma once
-#include "risk_minimization/loss.h"
+#include "linear_method/loss.h"
 
 namespace PS {
+namespace LM {
 
 template <typename T>
 T ScalarLoss<T>::evaluate(const MatrixPtrList<T>& data) {
@@ -36,4 +37,5 @@ void ScalarLoss<T>::compute(
   compute(y.eigenArray(), X, Xw.eigenArray(), gradient.eigenArray(), diag_hessian.eigenArray());
 }
 
+} // namespace LM
 } // namespace PS

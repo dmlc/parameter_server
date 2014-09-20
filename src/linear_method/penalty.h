@@ -1,8 +1,10 @@
 #pragma once
 #include "util/common.h"
 #include "base/matrix.h"
+#include "proto/linear_method.pb.h"
 
 namespace PS {
+namespace LM {
 
 template<typename T> class Penalty;
 template<typename T> using PenaltyPtr = std::shared_ptr<Penalty<T>>;
@@ -47,4 +49,5 @@ class PNormPenalty : public Penalty<T> {
   T lambda_;
 };
 
+} // namespace LM
 } // namespace PS

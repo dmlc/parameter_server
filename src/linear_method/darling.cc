@@ -1,4 +1,4 @@
-#include "risk_minimization/linear_method/block_cd_l1lr.h"
+#include "linear_method/darling.h"
 #include "base/matrix_io.h"
 #include "base/sparse_matrix.h"
 
@@ -7,15 +7,16 @@ namespace LM {
 
 // quite similar to BatchSolver::run(), but diffs at the KKT filter
 void BlockCoordDescL1LR::runIteration() {
-  CHECK_EQ(app_cf_.loss().type(), LossConfig::LOGIT);
-  CHECK_EQ(app_cf_.penalty().type(), PenaltyConfig::L1);
-  auto block_cf = app_cf_.block_solver();
-  int tau = block_cf.max_block_delay();
+  CHECK_EQ(conf_.has_darling());
+  CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
+  CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
+  auto sol_cf = conf_.block_solver();
+  int tau = sol_cf.max_block_delay();
   LI << "Train l_1 logistic regression by " << tau << "-delayed block coordinate descent";
 
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
-  bool random_blk_order = block_cf.random_feature_block_order();
+  bool random_blk_order = sol_cf.random_feature_block_order();
   if (!random_blk_order) {
     LI << "Warning: Randomized block order often acclerates the convergence.";
   }
@@ -23,14 +24,14 @@ void BlockCoordDescL1LR::runIteration() {
   auto pool = taskpool(kActiveGroup);
   int time = pool->time() + fea_grp_.size() * 2;
   int iter = 0;
-  for (; iter < block_cf.max_pass_of_data(); ++iter) {
+  for (; iter < sol_cf.max_pass_of_data(); ++iter) {
     if (random_blk_order) {
       std::random_shuffle(block_order_.begin(), block_order_.end());
     }
     auto order = block_order_;
     if (iter == 0) order.insert(order.begin(), prior_block_order_.begin(), prior_block_order_.end());
     for (int i = 0; i < order.size(); ++i) {
-      Task update = newTask(RiskMinCall::UPDATE_MODEL);
+      Task update = newTask(Call::UPDATE_MODEL);
       update.set_time(time+1);
       if (iter == 0 && i == 0) {
         update.set_wait_time(-1);
@@ -53,21 +54,21 @@ void BlockCoordDescL1LR::runIteration() {
       time = pool->submit(update);
     }
 
-    Task eval = newTask(RiskMinCall::EVALUATE_PROGRESS);
+    Task eval = newTask(Call::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
-        eval, [this, iter](){ RiskMinimization::mergeProgress(iter); });
+        eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
 
     double vio = global_progress_[iter].violation();
     KKT_filter_threshold_
         = vio / (double)g_train_ins_info_.num_ins()
-        * app_cf_.bcd_l1lr().kkt_filter_threshold_ratio();
+        * conf_.darling().kkt_filter_threshold_ratio();
 
     double rel = global_progress_[iter].relative_objv();
-    if (rel > 0 && rel <= block_cf.epsilon()) {
+    if (rel > 0 && rel <= sol_cf.epsilon()) {
       if (reset_kkt_filter) {
-        LI << "Stopped: relative objective <= " << block_cf.epsilon();
+        LI << "Stopped: relative objective <= " << sol_cf.epsilon();
         break;
       } else {
         reset_kkt_filter = true;
@@ -76,8 +77,8 @@ void BlockCoordDescL1LR::runIteration() {
       reset_kkt_filter = false;
     }
   }
-  if (iter == block_cf.max_pass_of_data()) {
-    LI << "Reached maximal " << block_cf.max_pass_of_data() << " data passes";
+  if (iter == sol_cf.max_pass_of_data()) {
+    LI << "Reached maximal " << sol_cf.max_pass_of_data() << " data passes";
   }
 }
 
@@ -89,12 +90,11 @@ void BlockCoordDescL1LR::preprocessData(const MessageCPtr& msg) {
     // dual_ = exp(y.*(X_*w_))
     dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
   }
-  bcd_l1lr_cf_ = app_cf_.bcd_l1lr();
   for (int grp : fea_grp_) {
     size_t n = w_->key(grp).size();
     active_set_[grp].resize(n, true);
     delta_[grp].resize(n);
-    delta_[grp].setValue(bcd_l1lr_cf_.delta_init_value());
+    delta_[grp].setValue(conf_.darling().delta_init_value());
   }
 }
 

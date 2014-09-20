@@ -1,6 +1,6 @@
 #pragma once
 #include <float.h>
-#include "risk_minimization/linear_method/batch_solver.h"
+#include "linear_method/batch_solver.h"
 #include "base/bitmap.h"
 
 namespace PS {
@@ -26,7 +26,7 @@ class BlockCoordDescL1LR : public BatchSolver {
   void updateDual(int grp, SizeR row_range, SizeR col_range, SArray<double> w_delta);
 
   double newDelta(double delta_w) {
-    return std::min(bcd_l1lr_cf_.delta_max_value(), 2 * fabs(delta_w) + .1);
+    return std::min(conf_.darling().delta_max_value(), 2 * fabs(delta_w) + .1);
   }
 
   std::unordered_map<int, Bitmap> active_set_;
@@ -39,7 +39,7 @@ class BlockCoordDescL1LR : public BatchSolver {
   double KKT_filter_threshold_;
   double violation_;
 
-  BCDL1LRConfig bcd_l1lr_cf_;
+  DarlingConfig darling_conf_;
 };
 
 } // namespace LM

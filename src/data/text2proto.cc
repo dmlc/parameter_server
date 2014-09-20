@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   string format = FLAGS_format;
   std::transform(format.begin(), format.end(), format.begin(), ::tolower);
 
-  ParseText parser;
+  TextParser parser;
   if (format == "libsvm") {
     parser.setFormat(DataConfig::LIBSVM);
   } else if (format == "adfea") {
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
   int ignored = 0;
   FileLineReader reader(FLAGS_input.c_str());
   reader.set_line_callback([&parser, &ins, &writer, &ignored] (char *line) {
-      ignored += !parser.toProto(line, &ins);
+      ignored += !parser.toProtobuf(line, &ins);
       writer.WriteProtocolMessage(ins);
     });
 

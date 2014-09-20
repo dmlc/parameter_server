@@ -19,23 +19,12 @@ class App : public Customer {
   // run the applications: load data, iterating...
   virtual void run() = 0;
   void stop();
- private:
-  void set(const AppConfig& config) {
-    CHECK(config.has_app_name());
-    app_cf_ = config;
-    name_ = config.app_name();
-    for (int i = 0; i < config.parameter_name_size(); ++i) {
-      child_customers_.push_back(config.parameter_name(i));
-    }
-  }
-
  protected:
   AppConfig app_cf_;
   Timer busy_timer_;
-  Timer total_timer_;
 
   // shut down server S0, and evoke R0 to replace S0
-  void testFaultTolerance(Task recover);
+  // void testFaultTolerance(Task recover);
 };
 
 } // namespace PS

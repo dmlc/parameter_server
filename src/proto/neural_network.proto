@@ -1,6 +1,12 @@
 package PS.NN;
 import "proto/config.proto";
 
+message Config {
+  optional NetConfig train = 30;
+  optional NetConfig test = 31;
+  optional SolverConfig solver = 32;
+}
+
 message LayerConfig {
   enum Type {
     NONE = 0;

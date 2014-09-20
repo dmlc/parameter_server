@@ -1,42 +1,10 @@
 package PS;
-
-import "proto/config.proto";
 import "proto/neural_network.proto";
-import "proto/risk_minimization.proto";
+import "proto/linear_method.proto";
 
 message AppConfig {
-  enum Type {
-    RISK_MINIMIZATION = 1;
-    SKETCH = 2;
-    NEURAL_NETWORK = 3;
-  }
-  optional Type type = 1;
   optional string app_name = 2;
   repeated string parameter_name = 3;
-
-  // input / output
-  optional DataConfig training_data = 10;
-  optional DataConfig validation_data = 11;
-  optional DataConfig local_cache = 16;
-
-  optional ParameterInitConfig init_w = 13;
-
-  optional DataConfig model_output = 15;
-
-  // risk minimization
-  optional LossConfig loss = 20;
-  optional PenaltyConfig penalty = 21;
-  optional LearningRateConfig learning_rate = 23;
-
-  optional LearnerConfig learner = 22;
-
-  optional BlockSolverConfig block_solver = 24;
-  optional BCDL1LRConfig bcd_l1lr = 25;
-
-  // neural network
-  optional NN.NetConfig nn_train = 30;
-  optional NN.NetConfig nn_test = 31;
-  optional NN.SolverConfig nn_solver = 32;
-
-  // others
+  optional LM.Config linear_method = 4;
+  optional NN.Config neural_network = 5;
 }

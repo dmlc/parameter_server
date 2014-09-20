@@ -47,8 +47,8 @@ TEST(Localizer, ADFEA) {
   DataConfig dc;
   dc.set_format(DataConfig::TEXT);
   dc.set_text(DataConfig::ADFEA);
-  dc.add_file("../../data/ctrc/train/part-0001.gz");
-  auto data = readMatricesOrDie<double>(dc);
+  dc.add_file("../../data/ctrc/train/part-000[0-1].gz");
+  auto data = readMatricesOrDie<double>(searchFiles(dc));
 
   for (int i = 1; i < data.size(); ++i) {
     Localizer<uint64, double> lc(data[i]);
