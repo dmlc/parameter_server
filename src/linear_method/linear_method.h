@@ -5,6 +5,7 @@
 
 #include "linear_method/loss_inl.h"
 #include "linear_method/penalty_inl.h"
+#include "base/auc.h"
 // #include "linear_method/learner/learner.h"
 // #include "linear_method/learner/aggregate_gradient.h"
 
@@ -29,7 +30,7 @@ class LinearMethod : public App {
   // update model
   virtual void updateModel(const MessagePtr& msg) = 0;
   // compute objective, time, ...
-  virtual RiskMinProgress evaluateProgress() = 0;
+  virtual Progress evaluateProgress() = 0;
   virtual void saveModel(const MessageCPtr& msg) = 0;
   virtual void computeEvaluationAUC(AUCData *data) = 0;
 
@@ -41,12 +42,12 @@ class LinearMethod : public App {
 
   static Call get(const MessageCPtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg->task.has_risk());
-    return msg->task.risk();
+    CHECK(msg->task.has_linear_method());
+    return msg->task.linear_method();
   }
   static Call* set(Task *task) {
     task->set_type(Task::CALL_CUSTOMER);
-    return task->mutable_risk();
+    return task->mutable_linear_method();
   }
   static Task newTask(Call::Command cmd) {
     Task task; set(&task)->set_cmd(cmd);

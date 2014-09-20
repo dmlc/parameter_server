@@ -23,11 +23,9 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
-#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
-#include "proto/config.pb.h"
 #include "proto/neural_network.pb.h"
-#include "proto/risk_minimization.pb.h"
+#include "proto/linear_method.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -39,26 +37,6 @@ void protobuf_ShutdownFile_proto_2fapp_2eproto();
 
 class AppConfig;
 
-enum AppConfig_Type {
-  AppConfig_Type_RISK_MINIMIZATION = 1,
-  AppConfig_Type_SKETCH = 2,
-  AppConfig_Type_NEURAL_NETWORK = 3
-};
-bool AppConfig_Type_IsValid(int value);
-const AppConfig_Type AppConfig_Type_Type_MIN = AppConfig_Type_RISK_MINIMIZATION;
-const AppConfig_Type AppConfig_Type_Type_MAX = AppConfig_Type_NEURAL_NETWORK;
-const int AppConfig_Type_Type_ARRAYSIZE = AppConfig_Type_Type_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* AppConfig_Type_descriptor();
-inline const ::std::string& AppConfig_Type_Name(AppConfig_Type value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    AppConfig_Type_descriptor(), value);
-}
-inline bool AppConfig_Type_Parse(
-    const ::std::string& name, AppConfig_Type* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<AppConfig_Type>(
-    AppConfig_Type_descriptor(), name, value);
-}
 // ===================================================================
 
 class AppConfig : public ::google::protobuf::Message {
@@ -113,39 +91,7 @@ class AppConfig : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef AppConfig_Type Type;
-  static const Type RISK_MINIMIZATION = AppConfig_Type_RISK_MINIMIZATION;
-  static const Type SKETCH = AppConfig_Type_SKETCH;
-  static const Type NEURAL_NETWORK = AppConfig_Type_NEURAL_NETWORK;
-  static inline bool Type_IsValid(int value) {
-    return AppConfig_Type_IsValid(value);
-  }
-  static const Type Type_MIN =
-    AppConfig_Type_Type_MIN;
-  static const Type Type_MAX =
-    AppConfig_Type_Type_MAX;
-  static const int Type_ARRAYSIZE =
-    AppConfig_Type_Type_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Type_descriptor() {
-    return AppConfig_Type_descriptor();
-  }
-  static inline const ::std::string& Type_Name(Type value) {
-    return AppConfig_Type_Name(value);
-  }
-  static inline bool Type_Parse(const ::std::string& name,
-      Type* value) {
-    return AppConfig_Type_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
-
-  // optional .PS.AppConfig.Type type = 1;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 1;
-  inline ::PS::AppConfig_Type type() const;
-  inline void set_type(::PS::AppConfig_Type value);
 
   // optional string app_name = 2;
   inline bool has_app_name() const;
@@ -175,189 +121,42 @@ class AppConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parameter_name() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parameter_name();
 
-  // optional .PS.DataConfig training_data = 10;
-  inline bool has_training_data() const;
-  inline void clear_training_data();
-  static const int kTrainingDataFieldNumber = 10;
-  inline const ::PS::DataConfig& training_data() const;
-  inline ::PS::DataConfig* mutable_training_data();
-  inline ::PS::DataConfig* release_training_data();
-  inline void set_allocated_training_data(::PS::DataConfig* training_data);
+  // optional .PS.LM.Config linear_method = 4;
+  inline bool has_linear_method() const;
+  inline void clear_linear_method();
+  static const int kLinearMethodFieldNumber = 4;
+  inline const ::PS::LM::Config& linear_method() const;
+  inline ::PS::LM::Config* mutable_linear_method();
+  inline ::PS::LM::Config* release_linear_method();
+  inline void set_allocated_linear_method(::PS::LM::Config* linear_method);
 
-  // optional .PS.DataConfig validation_data = 11;
-  inline bool has_validation_data() const;
-  inline void clear_validation_data();
-  static const int kValidationDataFieldNumber = 11;
-  inline const ::PS::DataConfig& validation_data() const;
-  inline ::PS::DataConfig* mutable_validation_data();
-  inline ::PS::DataConfig* release_validation_data();
-  inline void set_allocated_validation_data(::PS::DataConfig* validation_data);
-
-  // optional .PS.DataConfig local_cache = 16;
-  inline bool has_local_cache() const;
-  inline void clear_local_cache();
-  static const int kLocalCacheFieldNumber = 16;
-  inline const ::PS::DataConfig& local_cache() const;
-  inline ::PS::DataConfig* mutable_local_cache();
-  inline ::PS::DataConfig* release_local_cache();
-  inline void set_allocated_local_cache(::PS::DataConfig* local_cache);
-
-  // optional .PS.ParameterInitConfig init_w = 13;
-  inline bool has_init_w() const;
-  inline void clear_init_w();
-  static const int kInitWFieldNumber = 13;
-  inline const ::PS::ParameterInitConfig& init_w() const;
-  inline ::PS::ParameterInitConfig* mutable_init_w();
-  inline ::PS::ParameterInitConfig* release_init_w();
-  inline void set_allocated_init_w(::PS::ParameterInitConfig* init_w);
-
-  // optional .PS.DataConfig model_output = 15;
-  inline bool has_model_output() const;
-  inline void clear_model_output();
-  static const int kModelOutputFieldNumber = 15;
-  inline const ::PS::DataConfig& model_output() const;
-  inline ::PS::DataConfig* mutable_model_output();
-  inline ::PS::DataConfig* release_model_output();
-  inline void set_allocated_model_output(::PS::DataConfig* model_output);
-
-  // optional .PS.LossConfig loss = 20;
-  inline bool has_loss() const;
-  inline void clear_loss();
-  static const int kLossFieldNumber = 20;
-  inline const ::PS::LossConfig& loss() const;
-  inline ::PS::LossConfig* mutable_loss();
-  inline ::PS::LossConfig* release_loss();
-  inline void set_allocated_loss(::PS::LossConfig* loss);
-
-  // optional .PS.PenaltyConfig penalty = 21;
-  inline bool has_penalty() const;
-  inline void clear_penalty();
-  static const int kPenaltyFieldNumber = 21;
-  inline const ::PS::PenaltyConfig& penalty() const;
-  inline ::PS::PenaltyConfig* mutable_penalty();
-  inline ::PS::PenaltyConfig* release_penalty();
-  inline void set_allocated_penalty(::PS::PenaltyConfig* penalty);
-
-  // optional .PS.LearningRateConfig learning_rate = 23;
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 23;
-  inline const ::PS::LearningRateConfig& learning_rate() const;
-  inline ::PS::LearningRateConfig* mutable_learning_rate();
-  inline ::PS::LearningRateConfig* release_learning_rate();
-  inline void set_allocated_learning_rate(::PS::LearningRateConfig* learning_rate);
-
-  // optional .PS.LearnerConfig learner = 22;
-  inline bool has_learner() const;
-  inline void clear_learner();
-  static const int kLearnerFieldNumber = 22;
-  inline const ::PS::LearnerConfig& learner() const;
-  inline ::PS::LearnerConfig* mutable_learner();
-  inline ::PS::LearnerConfig* release_learner();
-  inline void set_allocated_learner(::PS::LearnerConfig* learner);
-
-  // optional .PS.BlockSolverConfig block_solver = 24;
-  inline bool has_block_solver() const;
-  inline void clear_block_solver();
-  static const int kBlockSolverFieldNumber = 24;
-  inline const ::PS::BlockSolverConfig& block_solver() const;
-  inline ::PS::BlockSolverConfig* mutable_block_solver();
-  inline ::PS::BlockSolverConfig* release_block_solver();
-  inline void set_allocated_block_solver(::PS::BlockSolverConfig* block_solver);
-
-  // optional .PS.BCDL1LRConfig bcd_l1lr = 25;
-  inline bool has_bcd_l1lr() const;
-  inline void clear_bcd_l1lr();
-  static const int kBcdL1LrFieldNumber = 25;
-  inline const ::PS::BCDL1LRConfig& bcd_l1lr() const;
-  inline ::PS::BCDL1LRConfig* mutable_bcd_l1lr();
-  inline ::PS::BCDL1LRConfig* release_bcd_l1lr();
-  inline void set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr);
-
-  // optional .PS.NN.NetConfig nn_train = 30;
-  inline bool has_nn_train() const;
-  inline void clear_nn_train();
-  static const int kNnTrainFieldNumber = 30;
-  inline const ::PS::NN::NetConfig& nn_train() const;
-  inline ::PS::NN::NetConfig* mutable_nn_train();
-  inline ::PS::NN::NetConfig* release_nn_train();
-  inline void set_allocated_nn_train(::PS::NN::NetConfig* nn_train);
-
-  // optional .PS.NN.NetConfig nn_test = 31;
-  inline bool has_nn_test() const;
-  inline void clear_nn_test();
-  static const int kNnTestFieldNumber = 31;
-  inline const ::PS::NN::NetConfig& nn_test() const;
-  inline ::PS::NN::NetConfig* mutable_nn_test();
-  inline ::PS::NN::NetConfig* release_nn_test();
-  inline void set_allocated_nn_test(::PS::NN::NetConfig* nn_test);
-
-  // optional .PS.NN.SolverConfig nn_solver = 32;
-  inline bool has_nn_solver() const;
-  inline void clear_nn_solver();
-  static const int kNnSolverFieldNumber = 32;
-  inline const ::PS::NN::SolverConfig& nn_solver() const;
-  inline ::PS::NN::SolverConfig* mutable_nn_solver();
-  inline ::PS::NN::SolverConfig* release_nn_solver();
-  inline void set_allocated_nn_solver(::PS::NN::SolverConfig* nn_solver);
+  // optional .PS.NN.Config neural_network = 5;
+  inline bool has_neural_network() const;
+  inline void clear_neural_network();
+  static const int kNeuralNetworkFieldNumber = 5;
+  inline const ::PS::NN::Config& neural_network() const;
+  inline ::PS::NN::Config* mutable_neural_network();
+  inline ::PS::NN::Config* release_neural_network();
+  inline void set_allocated_neural_network(::PS::NN::Config* neural_network);
 
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
-  inline void set_has_type();
-  inline void clear_has_type();
   inline void set_has_app_name();
   inline void clear_has_app_name();
-  inline void set_has_training_data();
-  inline void clear_has_training_data();
-  inline void set_has_validation_data();
-  inline void clear_has_validation_data();
-  inline void set_has_local_cache();
-  inline void clear_has_local_cache();
-  inline void set_has_init_w();
-  inline void clear_has_init_w();
-  inline void set_has_model_output();
-  inline void clear_has_model_output();
-  inline void set_has_loss();
-  inline void clear_has_loss();
-  inline void set_has_penalty();
-  inline void clear_has_penalty();
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
-  inline void set_has_learner();
-  inline void clear_has_learner();
-  inline void set_has_block_solver();
-  inline void clear_has_block_solver();
-  inline void set_has_bcd_l1lr();
-  inline void clear_has_bcd_l1lr();
-  inline void set_has_nn_train();
-  inline void clear_has_nn_train();
-  inline void set_has_nn_test();
-  inline void clear_has_nn_test();
-  inline void set_has_nn_solver();
-  inline void clear_has_nn_solver();
+  inline void set_has_linear_method();
+  inline void clear_has_linear_method();
+  inline void set_has_neural_network();
+  inline void clear_has_neural_network();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* app_name_;
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
-  ::PS::DataConfig* training_data_;
-  ::PS::DataConfig* validation_data_;
-  ::PS::DataConfig* local_cache_;
-  ::PS::ParameterInitConfig* init_w_;
-  ::PS::DataConfig* model_output_;
-  ::PS::LossConfig* loss_;
-  ::PS::PenaltyConfig* penalty_;
-  ::PS::LearningRateConfig* learning_rate_;
-  ::PS::LearnerConfig* learner_;
-  ::PS::BlockSolverConfig* block_solver_;
-  ::PS::BCDL1LRConfig* bcd_l1lr_;
-  ::PS::NN::NetConfig* nn_train_;
-  ::PS::NN::NetConfig* nn_test_;
-  ::PS::NN::SolverConfig* nn_solver_;
-  int type_;
+  ::PS::LM::Config* linear_method_;
+  ::PS::NN::Config* neural_network_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fapp_2eproto();
   friend void protobuf_AssignDesc_proto_2fapp_2eproto();
@@ -373,38 +172,15 @@ class AppConfig : public ::google::protobuf::Message {
 
 // AppConfig
 
-// optional .PS.AppConfig.Type type = 1;
-inline bool AppConfig::has_type() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void AppConfig::set_has_type() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void AppConfig::clear_has_type() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void AppConfig::clear_type() {
-  type_ = 1;
-  clear_has_type();
-}
-inline ::PS::AppConfig_Type AppConfig::type() const {
-  return static_cast< ::PS::AppConfig_Type >(type_);
-}
-inline void AppConfig::set_type(::PS::AppConfig_Type value) {
-  assert(::PS::AppConfig_Type_IsValid(value));
-  set_has_type();
-  type_ = value;
-}
-
 // optional string app_name = 2;
 inline bool AppConfig::has_app_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
 inline void AppConfig::set_has_app_name() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000001u;
 }
 inline void AppConfig::clear_has_app_name() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000001u;
 }
 inline void AppConfig::clear_app_name() {
   if (app_name_ != &::google::protobuf::internal::kEmptyString) {
@@ -510,535 +286,79 @@ AppConfig::mutable_parameter_name() {
   return &parameter_name_;
 }
 
-// optional .PS.DataConfig training_data = 10;
-inline bool AppConfig::has_training_data() const {
+// optional .PS.LM.Config linear_method = 4;
+inline bool AppConfig::has_linear_method() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void AppConfig::set_has_linear_method() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void AppConfig::clear_has_linear_method() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void AppConfig::clear_linear_method() {
+  if (linear_method_ != NULL) linear_method_->::PS::LM::Config::Clear();
+  clear_has_linear_method();
+}
+inline const ::PS::LM::Config& AppConfig::linear_method() const {
+  return linear_method_ != NULL ? *linear_method_ : *default_instance_->linear_method_;
+}
+inline ::PS::LM::Config* AppConfig::mutable_linear_method() {
+  set_has_linear_method();
+  if (linear_method_ == NULL) linear_method_ = new ::PS::LM::Config;
+  return linear_method_;
+}
+inline ::PS::LM::Config* AppConfig::release_linear_method() {
+  clear_has_linear_method();
+  ::PS::LM::Config* temp = linear_method_;
+  linear_method_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_linear_method(::PS::LM::Config* linear_method) {
+  delete linear_method_;
+  linear_method_ = linear_method;
+  if (linear_method) {
+    set_has_linear_method();
+  } else {
+    clear_has_linear_method();
+  }
+}
+
+// optional .PS.NN.Config neural_network = 5;
+inline bool AppConfig::has_neural_network() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void AppConfig::set_has_training_data() {
+inline void AppConfig::set_has_neural_network() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void AppConfig::clear_has_training_data() {
+inline void AppConfig::clear_has_neural_network() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void AppConfig::clear_training_data() {
-  if (training_data_ != NULL) training_data_->::PS::DataConfig::Clear();
-  clear_has_training_data();
+inline void AppConfig::clear_neural_network() {
+  if (neural_network_ != NULL) neural_network_->::PS::NN::Config::Clear();
+  clear_has_neural_network();
 }
-inline const ::PS::DataConfig& AppConfig::training_data() const {
-  return training_data_ != NULL ? *training_data_ : *default_instance_->training_data_;
+inline const ::PS::NN::Config& AppConfig::neural_network() const {
+  return neural_network_ != NULL ? *neural_network_ : *default_instance_->neural_network_;
 }
-inline ::PS::DataConfig* AppConfig::mutable_training_data() {
-  set_has_training_data();
-  if (training_data_ == NULL) training_data_ = new ::PS::DataConfig;
-  return training_data_;
+inline ::PS::NN::Config* AppConfig::mutable_neural_network() {
+  set_has_neural_network();
+  if (neural_network_ == NULL) neural_network_ = new ::PS::NN::Config;
+  return neural_network_;
 }
-inline ::PS::DataConfig* AppConfig::release_training_data() {
-  clear_has_training_data();
-  ::PS::DataConfig* temp = training_data_;
-  training_data_ = NULL;
+inline ::PS::NN::Config* AppConfig::release_neural_network() {
+  clear_has_neural_network();
+  ::PS::NN::Config* temp = neural_network_;
+  neural_network_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_training_data(::PS::DataConfig* training_data) {
-  delete training_data_;
-  training_data_ = training_data;
-  if (training_data) {
-    set_has_training_data();
+inline void AppConfig::set_allocated_neural_network(::PS::NN::Config* neural_network) {
+  delete neural_network_;
+  neural_network_ = neural_network;
+  if (neural_network) {
+    set_has_neural_network();
   } else {
-    clear_has_training_data();
-  }
-}
-
-// optional .PS.DataConfig validation_data = 11;
-inline bool AppConfig::has_validation_data() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void AppConfig::set_has_validation_data() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void AppConfig::clear_has_validation_data() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void AppConfig::clear_validation_data() {
-  if (validation_data_ != NULL) validation_data_->::PS::DataConfig::Clear();
-  clear_has_validation_data();
-}
-inline const ::PS::DataConfig& AppConfig::validation_data() const {
-  return validation_data_ != NULL ? *validation_data_ : *default_instance_->validation_data_;
-}
-inline ::PS::DataConfig* AppConfig::mutable_validation_data() {
-  set_has_validation_data();
-  if (validation_data_ == NULL) validation_data_ = new ::PS::DataConfig;
-  return validation_data_;
-}
-inline ::PS::DataConfig* AppConfig::release_validation_data() {
-  clear_has_validation_data();
-  ::PS::DataConfig* temp = validation_data_;
-  validation_data_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_validation_data(::PS::DataConfig* validation_data) {
-  delete validation_data_;
-  validation_data_ = validation_data;
-  if (validation_data) {
-    set_has_validation_data();
-  } else {
-    clear_has_validation_data();
-  }
-}
-
-// optional .PS.DataConfig local_cache = 16;
-inline bool AppConfig::has_local_cache() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void AppConfig::set_has_local_cache() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void AppConfig::clear_has_local_cache() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void AppConfig::clear_local_cache() {
-  if (local_cache_ != NULL) local_cache_->::PS::DataConfig::Clear();
-  clear_has_local_cache();
-}
-inline const ::PS::DataConfig& AppConfig::local_cache() const {
-  return local_cache_ != NULL ? *local_cache_ : *default_instance_->local_cache_;
-}
-inline ::PS::DataConfig* AppConfig::mutable_local_cache() {
-  set_has_local_cache();
-  if (local_cache_ == NULL) local_cache_ = new ::PS::DataConfig;
-  return local_cache_;
-}
-inline ::PS::DataConfig* AppConfig::release_local_cache() {
-  clear_has_local_cache();
-  ::PS::DataConfig* temp = local_cache_;
-  local_cache_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_local_cache(::PS::DataConfig* local_cache) {
-  delete local_cache_;
-  local_cache_ = local_cache;
-  if (local_cache) {
-    set_has_local_cache();
-  } else {
-    clear_has_local_cache();
-  }
-}
-
-// optional .PS.ParameterInitConfig init_w = 13;
-inline bool AppConfig::has_init_w() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void AppConfig::set_has_init_w() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void AppConfig::clear_has_init_w() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void AppConfig::clear_init_w() {
-  if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
-  clear_has_init_w();
-}
-inline const ::PS::ParameterInitConfig& AppConfig::init_w() const {
-  return init_w_ != NULL ? *init_w_ : *default_instance_->init_w_;
-}
-inline ::PS::ParameterInitConfig* AppConfig::mutable_init_w() {
-  set_has_init_w();
-  if (init_w_ == NULL) init_w_ = new ::PS::ParameterInitConfig;
-  return init_w_;
-}
-inline ::PS::ParameterInitConfig* AppConfig::release_init_w() {
-  clear_has_init_w();
-  ::PS::ParameterInitConfig* temp = init_w_;
-  init_w_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
-  delete init_w_;
-  init_w_ = init_w;
-  if (init_w) {
-    set_has_init_w();
-  } else {
-    clear_has_init_w();
-  }
-}
-
-// optional .PS.DataConfig model_output = 15;
-inline bool AppConfig::has_model_output() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void AppConfig::set_has_model_output() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void AppConfig::clear_has_model_output() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void AppConfig::clear_model_output() {
-  if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
-  clear_has_model_output();
-}
-inline const ::PS::DataConfig& AppConfig::model_output() const {
-  return model_output_ != NULL ? *model_output_ : *default_instance_->model_output_;
-}
-inline ::PS::DataConfig* AppConfig::mutable_model_output() {
-  set_has_model_output();
-  if (model_output_ == NULL) model_output_ = new ::PS::DataConfig;
-  return model_output_;
-}
-inline ::PS::DataConfig* AppConfig::release_model_output() {
-  clear_has_model_output();
-  ::PS::DataConfig* temp = model_output_;
-  model_output_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_model_output(::PS::DataConfig* model_output) {
-  delete model_output_;
-  model_output_ = model_output;
-  if (model_output) {
-    set_has_model_output();
-  } else {
-    clear_has_model_output();
-  }
-}
-
-// optional .PS.LossConfig loss = 20;
-inline bool AppConfig::has_loss() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void AppConfig::set_has_loss() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void AppConfig::clear_has_loss() {
-  _has_bits_[0] &= ~0x00000100u;
-}
-inline void AppConfig::clear_loss() {
-  if (loss_ != NULL) loss_->::PS::LossConfig::Clear();
-  clear_has_loss();
-}
-inline const ::PS::LossConfig& AppConfig::loss() const {
-  return loss_ != NULL ? *loss_ : *default_instance_->loss_;
-}
-inline ::PS::LossConfig* AppConfig::mutable_loss() {
-  set_has_loss();
-  if (loss_ == NULL) loss_ = new ::PS::LossConfig;
-  return loss_;
-}
-inline ::PS::LossConfig* AppConfig::release_loss() {
-  clear_has_loss();
-  ::PS::LossConfig* temp = loss_;
-  loss_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_loss(::PS::LossConfig* loss) {
-  delete loss_;
-  loss_ = loss;
-  if (loss) {
-    set_has_loss();
-  } else {
-    clear_has_loss();
-  }
-}
-
-// optional .PS.PenaltyConfig penalty = 21;
-inline bool AppConfig::has_penalty() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void AppConfig::set_has_penalty() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void AppConfig::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void AppConfig::clear_penalty() {
-  if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
-  clear_has_penalty();
-}
-inline const ::PS::PenaltyConfig& AppConfig::penalty() const {
-  return penalty_ != NULL ? *penalty_ : *default_instance_->penalty_;
-}
-inline ::PS::PenaltyConfig* AppConfig::mutable_penalty() {
-  set_has_penalty();
-  if (penalty_ == NULL) penalty_ = new ::PS::PenaltyConfig;
-  return penalty_;
-}
-inline ::PS::PenaltyConfig* AppConfig::release_penalty() {
-  clear_has_penalty();
-  ::PS::PenaltyConfig* temp = penalty_;
-  penalty_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
-  delete penalty_;
-  penalty_ = penalty;
-  if (penalty) {
-    set_has_penalty();
-  } else {
-    clear_has_penalty();
-  }
-}
-
-// optional .PS.LearningRateConfig learning_rate = 23;
-inline bool AppConfig::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void AppConfig::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000400u;
-}
-inline void AppConfig::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000400u;
-}
-inline void AppConfig::clear_learning_rate() {
-  if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
-  clear_has_learning_rate();
-}
-inline const ::PS::LearningRateConfig& AppConfig::learning_rate() const {
-  return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
-}
-inline ::PS::LearningRateConfig* AppConfig::mutable_learning_rate() {
-  set_has_learning_rate();
-  if (learning_rate_ == NULL) learning_rate_ = new ::PS::LearningRateConfig;
-  return learning_rate_;
-}
-inline ::PS::LearningRateConfig* AppConfig::release_learning_rate() {
-  clear_has_learning_rate();
-  ::PS::LearningRateConfig* temp = learning_rate_;
-  learning_rate_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_learning_rate(::PS::LearningRateConfig* learning_rate) {
-  delete learning_rate_;
-  learning_rate_ = learning_rate;
-  if (learning_rate) {
-    set_has_learning_rate();
-  } else {
-    clear_has_learning_rate();
-  }
-}
-
-// optional .PS.LearnerConfig learner = 22;
-inline bool AppConfig::has_learner() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
-}
-inline void AppConfig::set_has_learner() {
-  _has_bits_[0] |= 0x00000800u;
-}
-inline void AppConfig::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000800u;
-}
-inline void AppConfig::clear_learner() {
-  if (learner_ != NULL) learner_->::PS::LearnerConfig::Clear();
-  clear_has_learner();
-}
-inline const ::PS::LearnerConfig& AppConfig::learner() const {
-  return learner_ != NULL ? *learner_ : *default_instance_->learner_;
-}
-inline ::PS::LearnerConfig* AppConfig::mutable_learner() {
-  set_has_learner();
-  if (learner_ == NULL) learner_ = new ::PS::LearnerConfig;
-  return learner_;
-}
-inline ::PS::LearnerConfig* AppConfig::release_learner() {
-  clear_has_learner();
-  ::PS::LearnerConfig* temp = learner_;
-  learner_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_learner(::PS::LearnerConfig* learner) {
-  delete learner_;
-  learner_ = learner;
-  if (learner) {
-    set_has_learner();
-  } else {
-    clear_has_learner();
-  }
-}
-
-// optional .PS.BlockSolverConfig block_solver = 24;
-inline bool AppConfig::has_block_solver() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
-}
-inline void AppConfig::set_has_block_solver() {
-  _has_bits_[0] |= 0x00001000u;
-}
-inline void AppConfig::clear_has_block_solver() {
-  _has_bits_[0] &= ~0x00001000u;
-}
-inline void AppConfig::clear_block_solver() {
-  if (block_solver_ != NULL) block_solver_->::PS::BlockSolverConfig::Clear();
-  clear_has_block_solver();
-}
-inline const ::PS::BlockSolverConfig& AppConfig::block_solver() const {
-  return block_solver_ != NULL ? *block_solver_ : *default_instance_->block_solver_;
-}
-inline ::PS::BlockSolverConfig* AppConfig::mutable_block_solver() {
-  set_has_block_solver();
-  if (block_solver_ == NULL) block_solver_ = new ::PS::BlockSolverConfig;
-  return block_solver_;
-}
-inline ::PS::BlockSolverConfig* AppConfig::release_block_solver() {
-  clear_has_block_solver();
-  ::PS::BlockSolverConfig* temp = block_solver_;
-  block_solver_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_block_solver(::PS::BlockSolverConfig* block_solver) {
-  delete block_solver_;
-  block_solver_ = block_solver;
-  if (block_solver) {
-    set_has_block_solver();
-  } else {
-    clear_has_block_solver();
-  }
-}
-
-// optional .PS.BCDL1LRConfig bcd_l1lr = 25;
-inline bool AppConfig::has_bcd_l1lr() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
-}
-inline void AppConfig::set_has_bcd_l1lr() {
-  _has_bits_[0] |= 0x00002000u;
-}
-inline void AppConfig::clear_has_bcd_l1lr() {
-  _has_bits_[0] &= ~0x00002000u;
-}
-inline void AppConfig::clear_bcd_l1lr() {
-  if (bcd_l1lr_ != NULL) bcd_l1lr_->::PS::BCDL1LRConfig::Clear();
-  clear_has_bcd_l1lr();
-}
-inline const ::PS::BCDL1LRConfig& AppConfig::bcd_l1lr() const {
-  return bcd_l1lr_ != NULL ? *bcd_l1lr_ : *default_instance_->bcd_l1lr_;
-}
-inline ::PS::BCDL1LRConfig* AppConfig::mutable_bcd_l1lr() {
-  set_has_bcd_l1lr();
-  if (bcd_l1lr_ == NULL) bcd_l1lr_ = new ::PS::BCDL1LRConfig;
-  return bcd_l1lr_;
-}
-inline ::PS::BCDL1LRConfig* AppConfig::release_bcd_l1lr() {
-  clear_has_bcd_l1lr();
-  ::PS::BCDL1LRConfig* temp = bcd_l1lr_;
-  bcd_l1lr_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_bcd_l1lr(::PS::BCDL1LRConfig* bcd_l1lr) {
-  delete bcd_l1lr_;
-  bcd_l1lr_ = bcd_l1lr;
-  if (bcd_l1lr) {
-    set_has_bcd_l1lr();
-  } else {
-    clear_has_bcd_l1lr();
-  }
-}
-
-// optional .PS.NN.NetConfig nn_train = 30;
-inline bool AppConfig::has_nn_train() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
-}
-inline void AppConfig::set_has_nn_train() {
-  _has_bits_[0] |= 0x00004000u;
-}
-inline void AppConfig::clear_has_nn_train() {
-  _has_bits_[0] &= ~0x00004000u;
-}
-inline void AppConfig::clear_nn_train() {
-  if (nn_train_ != NULL) nn_train_->::PS::NN::NetConfig::Clear();
-  clear_has_nn_train();
-}
-inline const ::PS::NN::NetConfig& AppConfig::nn_train() const {
-  return nn_train_ != NULL ? *nn_train_ : *default_instance_->nn_train_;
-}
-inline ::PS::NN::NetConfig* AppConfig::mutable_nn_train() {
-  set_has_nn_train();
-  if (nn_train_ == NULL) nn_train_ = new ::PS::NN::NetConfig;
-  return nn_train_;
-}
-inline ::PS::NN::NetConfig* AppConfig::release_nn_train() {
-  clear_has_nn_train();
-  ::PS::NN::NetConfig* temp = nn_train_;
-  nn_train_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_nn_train(::PS::NN::NetConfig* nn_train) {
-  delete nn_train_;
-  nn_train_ = nn_train;
-  if (nn_train) {
-    set_has_nn_train();
-  } else {
-    clear_has_nn_train();
-  }
-}
-
-// optional .PS.NN.NetConfig nn_test = 31;
-inline bool AppConfig::has_nn_test() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
-}
-inline void AppConfig::set_has_nn_test() {
-  _has_bits_[0] |= 0x00008000u;
-}
-inline void AppConfig::clear_has_nn_test() {
-  _has_bits_[0] &= ~0x00008000u;
-}
-inline void AppConfig::clear_nn_test() {
-  if (nn_test_ != NULL) nn_test_->::PS::NN::NetConfig::Clear();
-  clear_has_nn_test();
-}
-inline const ::PS::NN::NetConfig& AppConfig::nn_test() const {
-  return nn_test_ != NULL ? *nn_test_ : *default_instance_->nn_test_;
-}
-inline ::PS::NN::NetConfig* AppConfig::mutable_nn_test() {
-  set_has_nn_test();
-  if (nn_test_ == NULL) nn_test_ = new ::PS::NN::NetConfig;
-  return nn_test_;
-}
-inline ::PS::NN::NetConfig* AppConfig::release_nn_test() {
-  clear_has_nn_test();
-  ::PS::NN::NetConfig* temp = nn_test_;
-  nn_test_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_nn_test(::PS::NN::NetConfig* nn_test) {
-  delete nn_test_;
-  nn_test_ = nn_test;
-  if (nn_test) {
-    set_has_nn_test();
-  } else {
-    clear_has_nn_test();
-  }
-}
-
-// optional .PS.NN.SolverConfig nn_solver = 32;
-inline bool AppConfig::has_nn_solver() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
-}
-inline void AppConfig::set_has_nn_solver() {
-  _has_bits_[0] |= 0x00010000u;
-}
-inline void AppConfig::clear_has_nn_solver() {
-  _has_bits_[0] &= ~0x00010000u;
-}
-inline void AppConfig::clear_nn_solver() {
-  if (nn_solver_ != NULL) nn_solver_->::PS::NN::SolverConfig::Clear();
-  clear_has_nn_solver();
-}
-inline const ::PS::NN::SolverConfig& AppConfig::nn_solver() const {
-  return nn_solver_ != NULL ? *nn_solver_ : *default_instance_->nn_solver_;
-}
-inline ::PS::NN::SolverConfig* AppConfig::mutable_nn_solver() {
-  set_has_nn_solver();
-  if (nn_solver_ == NULL) nn_solver_ = new ::PS::NN::SolverConfig;
-  return nn_solver_;
-}
-inline ::PS::NN::SolverConfig* AppConfig::release_nn_solver() {
-  clear_has_nn_solver();
-  ::PS::NN::SolverConfig* temp = nn_solver_;
-  nn_solver_ = NULL;
-  return temp;
-}
-inline void AppConfig::set_allocated_nn_solver(::PS::NN::SolverConfig* nn_solver) {
-  delete nn_solver_;
-  nn_solver_ = nn_solver;
-  if (nn_solver) {
-    set_has_nn_solver();
-  } else {
-    clear_has_nn_solver();
+    clear_has_neural_network();
   }
 }
 
@@ -1051,10 +371,6 @@ inline void AppConfig::set_allocated_nn_solver(::PS::NN::SolverConfig* nn_solver
 namespace google {
 namespace protobuf {
 
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::AppConfig_Type>() {
-  return ::PS::AppConfig_Type_descriptor();
-}
 
 }  // namespace google
 }  // namespace protobuf

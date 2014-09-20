@@ -18,16 +18,18 @@ class Solver : public App {
 };
 
 void Solver::init() {
-  CHECK(app_cf_.has_nn_train());
-  train_.reset(new Net<real>(app_cf_.nn_train()));
-  train_->init();
+  CHECK(app_cf_.has_neural_network());
 
-  if (app_cf_.has_nn_test()) {
-    test_.reset(new Net<real>(app_cf_.nn_test()));
-    test_->init(train_);
-  }
-  CHECK(app_cf_.has_nn_solver());
-  cf_ = app_cf_.nn_solver();
+  // TODO
+  // train_.reset(new Net<real>(app_cf_.nn_train()));
+  // train_->init();
+
+  // if (app_cf_.has_nn_test()) {
+  //   test_.reset(new Net<real>(app_cf_.nn_test()));
+  //   test_->init(train_);
+  // }
+  // CHECK(app_cf_.has_nn_solver());
+  // cf_ = app_cf_.nn_solver();
 }
 
 } // namespace NN

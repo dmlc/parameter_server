@@ -28,7 +28,7 @@
 #include "proto/node.pb.h"
 #include "proto/range.pb.h"
 #include "proto/app.pb.h"
-#include "proto/risk_minimization.pb.h"
+#include "proto/linear_method.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -353,14 +353,14 @@ class Task : public ::google::protobuf::Message {
   inline ::PS::CallSharedPara* release_shared_para();
   inline void set_allocated_shared_para(::PS::CallSharedPara* shared_para);
 
-  // optional .PS.RiskMinCall risk = 301;
-  inline bool has_risk() const;
-  inline void clear_risk();
-  static const int kRiskFieldNumber = 301;
-  inline const ::PS::RiskMinCall& risk() const;
-  inline ::PS::RiskMinCall* mutable_risk();
-  inline ::PS::RiskMinCall* release_risk();
-  inline void set_allocated_risk(::PS::RiskMinCall* risk);
+  // optional .PS.LM.Call linear_method = 301;
+  inline bool has_linear_method() const;
+  inline void clear_linear_method();
+  static const int kLinearMethodFieldNumber = 301;
+  inline const ::PS::LM::Call& linear_method() const;
+  inline ::PS::LM::Call* mutable_linear_method();
+  inline ::PS::LM::Call* release_linear_method();
+  inline void set_allocated_linear_method(::PS::LM::Call* linear_method);
 
   // optional .PS.CallSketch sketch = 302;
   inline bool has_sketch() const;
@@ -399,8 +399,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_mng_app();
   inline void set_has_shared_para();
   inline void clear_has_shared_para();
-  inline void set_has_risk();
-  inline void clear_has_risk();
+  inline void set_has_linear_method();
+  inline void clear_has_linear_method();
   inline void set_has_sketch();
   inline void clear_has_sketch();
 
@@ -420,7 +420,7 @@ class Task : public ::google::protobuf::Message {
   ::PS::ManageNode* mng_node_;
   ::PS::ManageApp* mng_app_;
   ::PS::CallSharedPara* shared_para_;
-  ::PS::RiskMinCall* risk_;
+  ::PS::LM::Call* linear_method_;
   ::PS::CallSketch* sketch_;
 
   mutable int _cached_size_;
@@ -1645,41 +1645,41 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
   }
 }
 
-// optional .PS.RiskMinCall risk = 301;
-inline bool Task::has_risk() const {
+// optional .PS.LM.Call linear_method = 301;
+inline bool Task::has_linear_method() const {
   return (_has_bits_[0] & 0x00004000u) != 0;
 }
-inline void Task::set_has_risk() {
+inline void Task::set_has_linear_method() {
   _has_bits_[0] |= 0x00004000u;
 }
-inline void Task::clear_has_risk() {
+inline void Task::clear_has_linear_method() {
   _has_bits_[0] &= ~0x00004000u;
 }
-inline void Task::clear_risk() {
-  if (risk_ != NULL) risk_->::PS::RiskMinCall::Clear();
-  clear_has_risk();
+inline void Task::clear_linear_method() {
+  if (linear_method_ != NULL) linear_method_->::PS::LM::Call::Clear();
+  clear_has_linear_method();
 }
-inline const ::PS::RiskMinCall& Task::risk() const {
-  return risk_ != NULL ? *risk_ : *default_instance_->risk_;
+inline const ::PS::LM::Call& Task::linear_method() const {
+  return linear_method_ != NULL ? *linear_method_ : *default_instance_->linear_method_;
 }
-inline ::PS::RiskMinCall* Task::mutable_risk() {
-  set_has_risk();
-  if (risk_ == NULL) risk_ = new ::PS::RiskMinCall;
-  return risk_;
+inline ::PS::LM::Call* Task::mutable_linear_method() {
+  set_has_linear_method();
+  if (linear_method_ == NULL) linear_method_ = new ::PS::LM::Call;
+  return linear_method_;
 }
-inline ::PS::RiskMinCall* Task::release_risk() {
-  clear_has_risk();
-  ::PS::RiskMinCall* temp = risk_;
-  risk_ = NULL;
+inline ::PS::LM::Call* Task::release_linear_method() {
+  clear_has_linear_method();
+  ::PS::LM::Call* temp = linear_method_;
+  linear_method_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_risk(::PS::RiskMinCall* risk) {
-  delete risk_;
-  risk_ = risk;
-  if (risk) {
-    set_has_risk();
+inline void Task::set_allocated_linear_method(::PS::LM::Call* linear_method) {
+  delete linear_method_;
+  linear_method_ = linear_method;
+  if (linear_method) {
+    set_has_linear_method();
   } else {
-    clear_has_risk();
+    clear_has_linear_method();
   }
 }
 

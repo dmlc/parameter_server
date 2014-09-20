@@ -1,4 +1,4 @@
-#include "risk_minimization/linear_method/batch_solver.h"
+#include "linear_method/batch_solver.h"
 #include "util/split.h"
 #include "base/matrix_io_inl.h"
 #include "base/localizer.h"
@@ -89,7 +89,7 @@ void BatchSolver::run() {
 
   runIteration();
 
-  if (XXXX.has_validation_data()) {
+  if (conf_.has_validation_data()) {
     // LI << "\tEvaluate with " << g_validation_info_[0].row().end()
     //    << " validation examples\n";
     Task test = newTask(Call::COMPUTE_VALIDATION_AUC);
@@ -108,7 +108,7 @@ void BatchSolver::runIteration() {
   auto sol_cf = conf_.solver();
   auto pool = taskpool(kActiveGroup);
   int time = pool->time();
-  int tau = sol_sol_cf.max_block_delay();
+  int tau = sol_cf.max_block_delay();
   for (int iter = 0; iter < sol_cf.max_pass_of_data(); ++iter) {
     if (sol_cf.random_feature_block_order())
       std::random_shuffle(block_order_.begin(), block_order_.end());
@@ -117,7 +117,7 @@ void BatchSolver::runIteration() {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_wait_time(time - tau);
       // set the feature key range will be updated in this block
-      fea_blocks_[b].second.to(setCall(&update)->mutable_key());
+      fea_blocks_[b].second.to(set(&update)->mutable_key());
       time = pool->submit(update);
     }
 
@@ -137,8 +137,8 @@ void BatchSolver::runIteration() {
 }
 
 bool BatchSolver::loadCache(const string& cache_name) {
-  // if (!XXXX.has_local_cache()) return false;
-  // auto cache = XXXX.local_cache();
+  // if (!conf_.has_local_cache()) return false;
+  // auto cache = conf_.local_cache();
   // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
   // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
   // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
@@ -155,8 +155,8 @@ bool BatchSolver::loadCache(const string& cache_name) {
 }
 
 bool BatchSolver::saveCache(const string& cache_name) {
-  // if (!XXXX.has_local_cache()) return false;
-  // auto cache = XXXX.local_cache();
+  // if (!conf_.has_local_cache()) return false;
+  // auto cache = conf_.local_cache();
   // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_label_" + myNodeID());
   // if (!y_->writeToBinFile(y_conf.file(0))) return false;
 
@@ -172,7 +172,7 @@ int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
   if (!IamWorker()) return 0;
   bool hit_cache = loadCache("train");
   if (!hit_cache) {
-    auto train = readMatricesOrDie<double>(XXXX.training_data());
+    auto train = readMatricesOrDie<double>(conf_.training_data());
     CHECK_GE(train.size(), 2);
     y_ = train[0];
     for (int i = 1; i < train.size(); ++i) {
@@ -212,13 +212,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
       filter->task.set_key_channel(grp);
-      w_->set(filter)->set_query_key_freq(XXXX.block_solver().tail_feature_count());
+      w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_count());
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (!X_[grp]) return;
         auto X = localizer.remapIndex(w_->key(grp));
         if (!X) {LL << "empty:" << grp; return; }
-        if (XXXX.block_solver().has_feature_block_ratio()) X = X->toColMajor();
+        if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
@@ -259,7 +259,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       } else {
         CHECK_EQ(dual_.size(), X->rows());
       }
-      if (XXXX.init_w().type() != ParameterInitConfig::ZERO) {
+      if (conf_.init_w().type() != ParameterInitConfig::ZERO) {
         dual_.eigenVector() = *X * w_->value(grp).eigenVector();
       }
     }
@@ -279,14 +279,14 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
 
       int chl = fea_grp_[i];
       w_->value(chl).resize(w_->key(chl).size());
-      w_->value(chl).setValue(XXXX.init_w());
+      w_->value(chl).setValue(conf_.init_w());
       w_->finish(kWorkerGroup, time+1);
     }
   }
 }
 
-RiskMinProgress BatchSolver::evaluateProgress() {
-  RiskMinProgress prog;
+Progress BatchSolver::evaluateProgress() {
+  Progress prog;
   // if (IamWorker()) {
   //   mu_.lock();
   //   busy_timer_.start();
@@ -304,9 +304,9 @@ RiskMinProgress BatchSolver::evaluateProgress() {
 
 void BatchSolver::saveModel(const MessageCPtr& msg) {
   if (!IamServer()) return;
-  if (!XXXX.has_model_output()) return;
+  if (!conf_.has_model_output()) return;
 
-  auto output = XXXX.model_output();
+  auto output = conf_.model_output();
   if (output.format() == DataConfig::TEXT) {
     std::string file = "../output/" + w_->name() + "_" + myNodeID();
     if (output.file_size() > 0) file = output.file(0) + file;
@@ -330,9 +330,9 @@ void BatchSolver::saveModel(const MessageCPtr& msg) {
 void BatchSolver::showProgress(int iter) {
   int s = iter == 0 ? -3 : iter;
   for (int i = s; i <= iter; ++i) {
-    RiskMinimization::showObjective(i);
-    RiskMinimization::showNNZ(i);
-    RiskMinimization::showTime(i);
+    showObjective(i);
+    showNNZ(i);
+    showTime(i);
   }
 }
 

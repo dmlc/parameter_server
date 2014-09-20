@@ -7,10 +7,10 @@ namespace LM {
 
 // quite similar to BatchSolver::run(), but diffs at the KKT filter
 void BlockCoordDescL1LR::runIteration() {
-  CHECK_EQ(conf_.has_darling());
+  CHECK(conf_.has_darling());
   CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
-  auto sol_cf = conf_.block_solver();
+  auto sol_cf = conf_.solver();
   int tau = sol_cf.max_block_delay();
   LI << "Train l_1 logistic regression by " << tau << "-delayed block coordinate descent";
 
@@ -322,8 +322,8 @@ void BlockCoordDescL1LR::updateWeight(
   CHECK_EQ(G.size(), range.size());
   CHECK_EQ(U.size(), range.size());
 
-  double eta = app_cf_.learning_rate().eta();
-  double lambda = app_cf_.penalty().lambda(0);
+  double eta = conf_.learning_rate().eta();
+  double lambda = conf_.penalty().lambda(0);
   auto& value = w_->value(grp);
   auto& active_set = active_set_[grp];
   auto& delta = delta_[grp];
@@ -378,16 +378,16 @@ void BlockCoordDescL1LR::showKKTFilter(int iter) {
 void BlockCoordDescL1LR::showProgress(int iter) {
   int s = iter == 0 ? -3 : iter;
   for (int i = s; i <= iter; ++i) {
-    RiskMinimization::showObjective(i);
-    RiskMinimization::showNNZ(i);
+    showObjective(i);
+    showNNZ(i);
     showKKTFilter(i);
-    RiskMinimization::showTime(i);
+    showTime(i);
   }
 }
 
 
-RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
-  RiskMinProgress prog;
+Progress BlockCoordDescL1LR::evaluateProgress() {
+  Progress prog;
   if (IamWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
@@ -405,7 +405,7 @@ RiskMinProgress BlockCoordDescL1LR::evaluateProgress() {
       }
       nnz_as += active_set_[grp].nnz();
     }
-    prog.set_objv(objv * app_cf_.penalty().lambda(0));
+    prog.set_objv(objv * conf_.penalty().lambda(0));
     prog.set_nnz_w(nnz_w);
     prog.set_violation(violation_);
     prog.set_nnz_active_set(nnz_as);

@@ -36,6 +36,7 @@ void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
 void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
 void protobuf_ShutdownFile_proto_2fneural_5fnetwork_2eproto();
 
+class Config;
 class LayerConfig;
 class NetConfig;
 class ActivationConfig;
@@ -124,6 +125,114 @@ inline bool SolverConfig_Update_Parse(
     SolverConfig_Update_descriptor(), name, value);
 }
 // ===================================================================
+
+class Config : public ::google::protobuf::Message {
+ public:
+  Config();
+  virtual ~Config();
+
+  Config(const Config& from);
+
+  inline Config& operator=(const Config& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Config& default_instance();
+
+  void Swap(Config* other);
+
+  // implements Message ----------------------------------------------
+
+  Config* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Config& from);
+  void MergeFrom(const Config& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .PS.NN.NetConfig train = 30;
+  inline bool has_train() const;
+  inline void clear_train();
+  static const int kTrainFieldNumber = 30;
+  inline const ::PS::NN::NetConfig& train() const;
+  inline ::PS::NN::NetConfig* mutable_train();
+  inline ::PS::NN::NetConfig* release_train();
+  inline void set_allocated_train(::PS::NN::NetConfig* train);
+
+  // optional .PS.NN.NetConfig test = 31;
+  inline bool has_test() const;
+  inline void clear_test();
+  static const int kTestFieldNumber = 31;
+  inline const ::PS::NN::NetConfig& test() const;
+  inline ::PS::NN::NetConfig* mutable_test();
+  inline ::PS::NN::NetConfig* release_test();
+  inline void set_allocated_test(::PS::NN::NetConfig* test);
+
+  // optional .PS.NN.SolverConfig solver = 32;
+  inline bool has_solver() const;
+  inline void clear_solver();
+  static const int kSolverFieldNumber = 32;
+  inline const ::PS::NN::SolverConfig& solver() const;
+  inline ::PS::NN::SolverConfig* mutable_solver();
+  inline ::PS::NN::SolverConfig* release_solver();
+  inline void set_allocated_solver(::PS::NN::SolverConfig* solver);
+
+  // @@protoc_insertion_point(class_scope:PS.NN.Config)
+ private:
+  inline void set_has_train();
+  inline void clear_has_train();
+  inline void set_has_test();
+  inline void clear_has_test();
+  inline void set_has_solver();
+  inline void clear_has_solver();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::PS::NN::NetConfig* train_;
+  ::PS::NN::NetConfig* test_;
+  ::PS::NN::SolverConfig* solver_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_AssignDesc_proto_2fneural_5fnetwork_2eproto();
+  friend void protobuf_ShutdownFile_proto_2fneural_5fnetwork_2eproto();
+
+  void InitAsDefaultInstance();
+  static Config* default_instance_;
+};
+// -------------------------------------------------------------------
 
 class LayerConfig : public ::google::protobuf::Message {
  public:
@@ -742,6 +851,124 @@ class SolverConfig : public ::google::protobuf::Message {
 
 
 // ===================================================================
+
+// Config
+
+// optional .PS.NN.NetConfig train = 30;
+inline bool Config::has_train() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Config::set_has_train() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Config::clear_has_train() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Config::clear_train() {
+  if (train_ != NULL) train_->::PS::NN::NetConfig::Clear();
+  clear_has_train();
+}
+inline const ::PS::NN::NetConfig& Config::train() const {
+  return train_ != NULL ? *train_ : *default_instance_->train_;
+}
+inline ::PS::NN::NetConfig* Config::mutable_train() {
+  set_has_train();
+  if (train_ == NULL) train_ = new ::PS::NN::NetConfig;
+  return train_;
+}
+inline ::PS::NN::NetConfig* Config::release_train() {
+  clear_has_train();
+  ::PS::NN::NetConfig* temp = train_;
+  train_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_train(::PS::NN::NetConfig* train) {
+  delete train_;
+  train_ = train;
+  if (train) {
+    set_has_train();
+  } else {
+    clear_has_train();
+  }
+}
+
+// optional .PS.NN.NetConfig test = 31;
+inline bool Config::has_test() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Config::set_has_test() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Config::clear_has_test() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Config::clear_test() {
+  if (test_ != NULL) test_->::PS::NN::NetConfig::Clear();
+  clear_has_test();
+}
+inline const ::PS::NN::NetConfig& Config::test() const {
+  return test_ != NULL ? *test_ : *default_instance_->test_;
+}
+inline ::PS::NN::NetConfig* Config::mutable_test() {
+  set_has_test();
+  if (test_ == NULL) test_ = new ::PS::NN::NetConfig;
+  return test_;
+}
+inline ::PS::NN::NetConfig* Config::release_test() {
+  clear_has_test();
+  ::PS::NN::NetConfig* temp = test_;
+  test_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_test(::PS::NN::NetConfig* test) {
+  delete test_;
+  test_ = test;
+  if (test) {
+    set_has_test();
+  } else {
+    clear_has_test();
+  }
+}
+
+// optional .PS.NN.SolverConfig solver = 32;
+inline bool Config::has_solver() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Config::set_has_solver() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Config::clear_has_solver() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Config::clear_solver() {
+  if (solver_ != NULL) solver_->::PS::NN::SolverConfig::Clear();
+  clear_has_solver();
+}
+inline const ::PS::NN::SolverConfig& Config::solver() const {
+  return solver_ != NULL ? *solver_ : *default_instance_->solver_;
+}
+inline ::PS::NN::SolverConfig* Config::mutable_solver() {
+  set_has_solver();
+  if (solver_ == NULL) solver_ = new ::PS::NN::SolverConfig;
+  return solver_;
+}
+inline ::PS::NN::SolverConfig* Config::release_solver() {
+  clear_has_solver();
+  ::PS::NN::SolverConfig* temp = solver_;
+  solver_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_solver(::PS::NN::SolverConfig* solver) {
+  delete solver_;
+  solver_ = solver;
+  if (solver) {
+    set_has_solver();
+  } else {
+    clear_has_solver();
+  }
+}
+
+// -------------------------------------------------------------------
 
 // LayerConfig
 

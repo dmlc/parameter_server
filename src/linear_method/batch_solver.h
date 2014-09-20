@@ -17,7 +17,7 @@ class BatchSolver : public LinearMethod {
   virtual void updateModel(const MessagePtr& msg);
   virtual void runIteration();
 
-  virtual RiskMinProgress evaluateProgress();
+  virtual Progress evaluateProgress();
   virtual void showProgress(int iter);
 
   void computeEvaluationAUC(AUCData *data);

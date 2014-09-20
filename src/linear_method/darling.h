@@ -18,7 +18,7 @@ class BlockCoordDescL1LR : public BatchSolver {
   void updateDual(int grp, SizeR col_range, SArray<double> new_weight);
   void updateWeight(int grp, SizeR col_range, SArray<double> G, SArray<double> U);
 
-  RiskMinProgress evaluateProgress();
+  Progress evaluateProgress();
   void showProgress(int iter);
   void showKKTFilter(int iter);
 

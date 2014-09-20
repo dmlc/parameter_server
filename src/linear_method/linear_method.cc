@@ -10,7 +10,7 @@ namespace LM {
 
 void LinearMethod::init() {
   CHECK(app_cf_.has_linear_method());
-  conf_ = app_cf_;
+  conf_ = app_cf_.linear_method();
 
   CHECK(conf_.has_loss());
   loss_ = Loss<double>::create(conf_.loss());

@@ -2,7 +2,7 @@ package PS;
 import "proto/node.proto";
 import "proto/range.proto";
 import "proto/app.proto";
-import "proto/risk_minimization.proto";
+import "proto/linear_method.proto";
 
 message Task {
   enum Type {
@@ -46,7 +46,7 @@ message Task {
   optional CallSharedPara shared_para = 201;
 
   // applications
-  optional RiskMinCall risk = 301;
+  optional LM.Call linear_method = 301;
   optional CallSketch sketch = 302;
 }
 

@@ -10,7 +10,7 @@ AppPtr App::create(const AppConfig& conf) {
   AppPtr ptr;
   if (conf.has_linear_method()) {
     const auto& lm = conf.linear_method();
-    if (lm.sovler().minibatch_size() <= 0) {
+    if (lm.solver().minibatch_size() <= 0) {
       // batch solver
       if (lm.has_darling()) {
         ptr = AppPtr(new LM::BlockCoordDescL1LR());
