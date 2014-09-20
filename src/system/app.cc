@@ -31,6 +31,7 @@ AppPtr App::create(const AppConfig& conf) {
   for (int i = 0; i < conf.parameter_name_size(); ++i) {
     ptr->child_customers_.push_back(conf.parameter_name(i));
   }
+  ptr->app_cf_ = conf;
   ptr->init();
   return ptr;
 }

@@ -8,6 +8,7 @@ namespace PS {
 namespace LM {
 
 void BatchSolver::init() {
+  LinearMethod::init();
   w_ = KVVectorPtr(new KVVector<Key, double>());
   w_->name() = app_cf_.parameter_name(0);
   sys_.yp().add(std::static_pointer_cast<Customer>(w_));

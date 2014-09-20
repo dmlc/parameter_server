@@ -125,16 +125,17 @@ void LinearMethod::startSystem() {
   start.mutable_mng_app()->set_cmd(ManageApp::ADD);
   start.set_time(time);
   for (auto& w : exec_.group(kActiveGroup)) {
-    auto cf = conf_;
-    cf.clear_training_data();
-    cf.clear_validation_data();
+    auto cf = app_cf_;
+    auto lm = cf.mutable_linear_method();
+    lm->clear_training_data();
+    lm->clear_validation_data();
     if (w->role() == Node::WORKER) {
       if (conf_.has_validation_data()) {
-        *cf.mutable_validation_data() = va_parts[k];
+        *lm->mutable_validation_data() = va_parts[k];
       }
-      *cf.mutable_training_data() = tr_parts[k++];
+      *lm->mutable_training_data() = tr_parts[k++];
     }
-    *(start.mutable_mng_app()->mutable_app_config()->mutable_linear_method()) = cf;
+    *start.mutable_mng_app()->mutable_app_config() = cf;
     CHECK_EQ(time, w->submit(start));
   }
   taskpool(kActiveGroup)->waitOutgoingTask(time);

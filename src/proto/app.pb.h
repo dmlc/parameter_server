@@ -93,10 +93,10 @@ class AppConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional string app_name = 2;
+  // optional string app_name = 1;
   inline bool has_app_name() const;
   inline void clear_app_name();
-  static const int kAppNameFieldNumber = 2;
+  static const int kAppNameFieldNumber = 1;
   inline const ::std::string& app_name() const;
   inline void set_app_name(const ::std::string& value);
   inline void set_app_name(const char* value);
@@ -105,10 +105,10 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::std::string* release_app_name();
   inline void set_allocated_app_name(::std::string* app_name);
 
-  // repeated string parameter_name = 3;
+  // repeated string parameter_name = 2;
   inline int parameter_name_size() const;
   inline void clear_parameter_name();
-  static const int kParameterNameFieldNumber = 3;
+  static const int kParameterNameFieldNumber = 2;
   inline const ::std::string& parameter_name(int index) const;
   inline ::std::string* mutable_parameter_name(int index);
   inline void set_parameter_name(int index, const ::std::string& value);
@@ -121,19 +121,19 @@ class AppConfig : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parameter_name() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parameter_name();
 
-  // optional .PS.LM.Config linear_method = 4;
+  // optional .PS.LM.Config linear_method = 3;
   inline bool has_linear_method() const;
   inline void clear_linear_method();
-  static const int kLinearMethodFieldNumber = 4;
+  static const int kLinearMethodFieldNumber = 3;
   inline const ::PS::LM::Config& linear_method() const;
   inline ::PS::LM::Config* mutable_linear_method();
   inline ::PS::LM::Config* release_linear_method();
   inline void set_allocated_linear_method(::PS::LM::Config* linear_method);
 
-  // optional .PS.NN.Config neural_network = 5;
+  // optional .PS.NN.Config neural_network = 4;
   inline bool has_neural_network() const;
   inline void clear_neural_network();
-  static const int kNeuralNetworkFieldNumber = 5;
+  static const int kNeuralNetworkFieldNumber = 4;
   inline const ::PS::NN::Config& neural_network() const;
   inline ::PS::NN::Config* mutable_neural_network();
   inline ::PS::NN::Config* release_neural_network();
@@ -172,7 +172,7 @@ class AppConfig : public ::google::protobuf::Message {
 
 // AppConfig
 
-// optional string app_name = 2;
+// optional string app_name = 1;
 inline bool AppConfig::has_app_name() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -242,7 +242,7 @@ inline void AppConfig::set_allocated_app_name(::std::string* app_name) {
   }
 }
 
-// repeated string parameter_name = 3;
+// repeated string parameter_name = 2;
 inline int AppConfig::parameter_name_size() const {
   return parameter_name_.size();
 }
@@ -286,7 +286,7 @@ AppConfig::mutable_parameter_name() {
   return &parameter_name_;
 }
 
-// optional .PS.LM.Config linear_method = 4;
+// optional .PS.LM.Config linear_method = 3;
 inline bool AppConfig::has_linear_method() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -324,7 +324,7 @@ inline void AppConfig::set_allocated_linear_method(::PS::LM::Config* linear_meth
   }
 }
 
-// optional .PS.NN.Config neural_network = 5;
+// optional .PS.NN.Config neural_network = 4;
 inline bool AppConfig::has_neural_network() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
