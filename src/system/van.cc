@@ -142,7 +142,7 @@ Status Van::send(const MessageCPtr& msg) {
   }
 
   if (FLAGS_print_van) {
-    debug_out_ << "SND " << msg->shortDebugString()<< std::endl;
+    debug_out_ << "\tSND " << msg->shortDebugString()<< std::endl;
   }
   return Status::OK();
 }
@@ -197,7 +197,7 @@ Status Van::recv(const MessagePtr& msg) {
   }
 
   if (FLAGS_print_van) {
-    debug_out_ << "RCV " << msg->shortDebugString() << std::endl;
+    debug_out_ << "\tRCV " << msg->shortDebugString() << std::endl;
   }
   return Status::OK();;
 }

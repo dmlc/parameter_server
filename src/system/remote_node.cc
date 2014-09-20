@@ -5,7 +5,6 @@
 namespace PS {
 
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
-// , Callback received, Callback finished, bool no_wait) {
 int RNode::submit(const MessagePtr& msg) {
   CHECK(msg);
   CHECK(msg->task.has_type());
@@ -114,7 +113,7 @@ void RNode::cacheKeySender(const MessagePtr& msg) {
 }
 
 void RNode::cacheKeyRecver(const MessagePtr& msg) {
-  if (!FLAGS_key_cache || !msg->task.has_key_range()) return;
+  if (!FLAGS_key_cache || !msg->task.has_key_range() || !msg->task.has_key_signature()) return;
   int chl = msg->task.key_channel();
   Range<Key> range(msg->task.key_range());
   auto sig = msg->task.key_signature();

@@ -22,7 +22,7 @@ std::string Message::shortDebugString() const {
     if (i < value.size() - 1) ss << ",";
   }
   auto t = task; t.clear_msg();
-  ss << "]\n\t" << t.ShortDebugString();
+  ss << "]. " << t.ShortDebugString();
   return ss.str();
 }
 
