@@ -31,7 +31,7 @@ void BatchSolver::run() {
     });
   if (hit_cache > 0) {
     CHECK_EQ(hit_cache, FLAGS_num_workers);
-    LI << "Hit training data caches";
+    LI << "Hit local caches for the training data";
   }
   LI << "Loaded " << g_train_ins_info_.num_ins() << " training instances in "
      << toc(load_time) << " sec";
@@ -167,6 +167,8 @@ bool BatchSolver::dataCache(const string& name, bool load) {
       X_[id] = x_list[0];
       if (!w_->key(id).readFromFile(SizeR(0, X_[id]->cols()), key_conf)) return false;
     } else {
+      if (!X_[id]) continue;
+      if (w_->key(id).empty()) LL << id << " " << X_[id]->debugString();
       if (!(X_[id]->writeToBinFile(x_conf.file(0))
             && w_->key(id).writeToFile(key_conf.file(0)))) return false;
       *new_info.add_fea_grp() = info.fea_grp(i);
@@ -196,8 +198,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   int grp_size = get(msg).fea_grp_size();
   fea_grp_.clear();
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
-  // bool hit_cache = get(msg).hit_cache();
-  bool hit_cache = 0;
+  bool hit_cache = get(msg).hit_cache();
 
   if (IamWorker()) {
     std::vector<int> pull_time(grp_size);
@@ -228,7 +229,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
         // localize the training matrix
         if (!X_[grp]) return;
         auto X = localizer.remapIndex(w_->key(grp));
-        if (!X) return;
+        if (!X) { X_.erase(grp); return; }
         if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }
       };
