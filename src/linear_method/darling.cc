@@ -12,38 +12,39 @@ void Darling::init() {
   memcpy(&kInactiveValue_, &kuint64max, sizeof(double));
 }
 
-// quite similar to BatchSolver::run(), but diffs at the KKT filter
 void Darling::runIteration() {
   CHECK(conf_.has_darling());
   CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
   auto sol_cf = conf_.solver();
   int tau = sol_cf.max_block_delay();
-  LI << "Train l_1 logistic regression by " << tau << "-delayed block coordinate descent";
-
   KKT_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
   bool random_blk_order = sol_cf.random_feature_block_order();
   if (!random_blk_order) {
     LI << "Warning: Randomized block order often acclerates the convergence.";
   }
+  LI << "Train l_1 logistic regression by " << tau << "-delayed block coordinate descent";
+
   // iterating
+  int max_iter = sol_cf.max_pass_of_data();
   auto pool = taskpool(kActiveGroup);
   int time = pool->time() + fea_grp_.size() * 2;
-  int iter = 0;
-  for (; iter < sol_cf.max_pass_of_data(); ++iter) {
-    if (random_blk_order) {
-      std::random_shuffle(blk_order_.begin(), blk_order_.end());
-    }
+  for (int iter = 0; iter < max_iter; ++iter) {
+    // pick up a updating order
     auto order = blk_order_;
-    if (iter == 0) order.insert(order.begin(), prior_blk_order_.begin(), prior_blk_order_.end());
+    if (random_blk_order) std::random_shuffle(order.begin(), order.end());
+    if (iter == 0) order.insert(
+            order.begin(), prior_blk_order_.begin(), prior_blk_order_.end());
+
+    // iterating on feature blocks
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_time(time+1);
       if (iter == 0 && i == 0) {
         update.set_wait_time(-1);
       } else if (iter == 0 && i < prior_blk_order_.size()) {
-        // force zero delay for important groups
+        // force zero delay for important feature blocks
         update.set_wait_time(time);
       } else {
         update.set_wait_time(time - tau);
@@ -51,9 +52,7 @@ void Darling::runIteration() {
       auto cmd = set(&update);
       if (i == 0) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
-        if (reset_kkt_filter) {
-          cmd->set_kkt_filter_reset(true);
-        }
+        if (reset_kkt_filter) cmd->set_kkt_filter_reset(true);
       }
       auto blk = fea_blk_[order[i]];
       blk.second.to(cmd->mutable_key());
@@ -61,17 +60,19 @@ void Darling::runIteration() {
       time = pool->submit(update);
     }
 
+    // evaluate the progress
     Task eval = newTask(Call::EVALUATE_PROGRESS);
     eval.set_wait_time(time - tau);
     time = pool->submitAndWait(
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
 
+    // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
-    KKT_filter_threshold_
-        = vio / (double)g_train_ins_info_.num_ins()
-        * conf_.darling().kkt_filter_threshold_ratio();
+    double ratio = conf_.darling().kkt_filter_threshold_ratio();
+    KKT_filter_threshold_ = vio / (double)g_train_ins_info_.num_ins() * ratio;
 
+    // check if finished
     double rel = g_progress_[iter].relative_objv();
     if (rel > 0 && rel <= sol_cf.epsilon()) {
       if (reset_kkt_filter) {
@@ -83,13 +84,11 @@ void Darling::runIteration() {
     } else {
       reset_kkt_filter = false;
     }
-  }
-  if (iter == sol_cf.max_pass_of_data()) {
-    LI << "Reached maximal " << sol_cf.max_pass_of_data() << " data passes";
+    if (iter == max_iter - 1) {
+      LI << "Reached maximal " << max_iter << " data passes";
+    }
   }
 }
-
-
 
 void Darling::preprocessData(const MessageCPtr& msg) {
   BatchSolver::preprocessData(msg);
@@ -114,7 +113,6 @@ void Darling::updateModel(const MessagePtr& msg) {
     violation_ = 0;
   }
   if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
-    // KKT_filter_threshold_ = 1e20;
     for (int grp : fea_grp_) active_set_[grp].fill(true);
   }
   CHECK_EQ(call.fea_grp_size(), 1);
@@ -130,7 +128,6 @@ void Darling::updateModel(const MessagePtr& msg) {
     busy_timer_.stop();
     mu_.unlock();
 
-
     // time 0: push local gradients
     MessagePtr push_msg(new Message(kServerGroup, time));
     auto local_keys = w_->key(grp).segment(seg_pos);
@@ -140,7 +137,6 @@ void Darling::updateModel(const MessagePtr& msg) {
     CHECK_EQ(time, w_->push(push_msg));
 
     // time 1: servers do update, none of my business
-
     // time 2: pull the updated model from servers
     msg->finished = false; // not finished until model updates are pulled
     MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
@@ -270,9 +266,6 @@ void Darling::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
       delta_w[i] = 0;
       continue;
     }
-    // else {
-    //   active_set_.set(j);
-    // }
     delta_w[i] = nw - cw;
     delta[j] = newDelta(delta_w[i]);
     cw = nw;
@@ -360,11 +353,9 @@ void Darling::updateWeight(
     } else if (g_neg >= u * w) {
       d = - g_neg / u;
     }
-
     d = std::min(delta[k], std::max(-delta[k], d));
-
-    w += d;
     delta[k] = newDelta(d);
+    w += d;
   }
 }
 
@@ -392,7 +383,6 @@ void Darling::showProgress(int iter) {
   }
 }
 
-
 Progress Darling::evaluateProgress() {
   Progress prog;
   if (IamWorker()) {
@@ -417,7 +407,6 @@ Progress Darling::evaluateProgress() {
     prog.set_violation(violation_);
     prog.set_nnz_active_set(nnz_as);
   }
-  // LL << myNodeID() << ": " << w_->getTime();
   return prog;
 }
 

@@ -218,7 +218,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
         // localize the training matrix
         if (!X_[grp]) return;
         auto X = localizer.remapIndex(w_->key(grp));
-        if (!X) {LL << "empty:" << grp; return; }
+        if (!X) return;
         if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }
       };
