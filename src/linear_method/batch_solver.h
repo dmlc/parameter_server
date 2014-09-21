@@ -31,24 +31,18 @@ class BatchSolver : public LinearMethod {
 
   // feature block info, only available at the scheduler, format: pair<fea_grp_id, fea_range>
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
-  FeatureBlocks fea_blocks_;
-  std::vector<int> block_order_;
-  std::vector<int> prior_block_order_;
+  FeatureBlocks fea_blk_;
+  std::vector<int> blk_order_;
+  std::vector<int> prior_blk_order_;
+  std::vector<int> fea_grp_;
 
   // global data information, only available at the scheduler
   InstanceInfo g_train_ins_info_;
 
   // training data, available at the workers
-  // MatrixPtrList<double> train_data_;
   std::map<int, MatrixPtr<double>> X_;
   MatrixPtr<double> y_;
-
-  std::vector<int> fea_grp_;
-  // std::map<int, int> grp_map_;
-  // mapping a feature group into a channel
-  std::map<int, int> grp2chl_;
-
-  // dual_ = X_ * w_
+  // dual_ = X * w
   SArray<double> dual_;
 
   std::mutex mu_;

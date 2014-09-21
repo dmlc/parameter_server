@@ -24,17 +24,13 @@ class LinearMethod : public App {
  protected:
   void startSystem();
 
-  // load the data, and return 1 if hit cache, 0 if normal, -1 if error,
+  // load the data, and return 1 if hit cache, 0 if normal
   virtual int loadData(const MessageCPtr& msg, InstanceInfo* info) = 0;
   virtual void preprocessData(const MessageCPtr& msg) = 0;
-  // update model
   virtual void updateModel(const MessagePtr& msg) = 0;
-  // compute objective, time, ...
   virtual Progress evaluateProgress() = 0;
   virtual void saveModel(const MessageCPtr& msg) = 0;
   virtual void computeEvaluationAUC(AUCData *data) = 0;
-
-  // virtual void saveAsDenseData(const Message& msg) { }
 
   void showTime(int iter);
   void showObjective(int iter);
@@ -55,10 +51,11 @@ class LinearMethod : public App {
   }
 
   // progress of all iterations, only valid for the scheduler
-  std::map<int, Progress> global_progress_;
+  std::map<int, Progress> g_progress_;
 
   Config conf_;
-  Timer timer_;
+  Timer total_timer_;
+  Timer busy_timer_;
 
   LossPtr<double> loss_;
   PenaltyPtr<double> penalty_;
@@ -67,5 +64,5 @@ class LinearMethod : public App {
 };
 
 } // namespace LM
-
 } // namespace PS
+  // virtual void saveAsDenseData(const Message& msg) { }

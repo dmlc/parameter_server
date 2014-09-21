@@ -13,7 +13,7 @@ AppPtr App::create(const AppConfig& conf) {
     if (lm.solver().minibatch_size() <= 0) {
       // batch solver
       if (lm.has_darling()) {
-        ptr = AppPtr(new LM::BlockCoordDescL1LR());
+        ptr = AppPtr(new LM::Darling());
       } else {
         ptr = AppPtr(new LM::BatchSolver());
       }

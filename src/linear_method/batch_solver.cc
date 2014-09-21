@@ -54,21 +54,21 @@ void BatchSolver::run() {
     for (int i = 0; i < n; ++i) {
       auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
       if (block.empty()) continue;
-      fea_blocks_.push_back(std::make_pair(info.grp_id(), block));
+      fea_blk_.push_back(std::make_pair(info.grp_id(), block));
     }
   }
-  LI << "Features are partitioned into " << fea_blocks_.size() << " blocks";
+  LI << "Features are partitioned into " << fea_blk_.size() << " blocks";
 
   // a simple block order
-  for (int i = 0; i < fea_blocks_.size(); ++i) block_order_.push_back(i);
+  for (int i = 0; i < fea_blk_.size(); ++i) blk_order_.push_back(i);
 
   // blocks for important feature groups
   std::vector<string> hit_blk;
   for (int i = 0; i < sol_cf.prior_fea_group_size(); ++i) {
     int grp_id = sol_cf.prior_fea_group(i);
     std::vector<int> tmp;
-    for (int k = 0; k < fea_blocks_.size(); ++k) {
-      if (fea_blocks_[k].first == grp_id) tmp.push_back(k);
+    for (int k = 0; k < fea_blk_.size(); ++k) {
+      if (fea_blk_[k].first == grp_id) tmp.push_back(k);
     }
     if (tmp.empty()) continue;
     hit_blk.push_back(std::to_string(grp_id));
@@ -76,7 +76,7 @@ void BatchSolver::run() {
       if (sol_cf.random_feature_block_order()) {
         std::random_shuffle(tmp.begin(), tmp.end());
       }
-      prior_block_order_.insert(prior_block_order_.end(), tmp.begin(), tmp.end());
+      prior_blk_order_.insert(prior_blk_order_.end(), tmp.begin(), tmp.end());
     }
   }
   if (!hit_blk.empty()) LI << "Will first update feature group: " + join(hit_blk, ", ");
@@ -112,13 +112,13 @@ void BatchSolver::runIteration() {
   int tau = sol_cf.max_block_delay();
   for (int iter = 0; iter < sol_cf.max_pass_of_data(); ++iter) {
     if (sol_cf.random_feature_block_order())
-      std::random_shuffle(block_order_.begin(), block_order_.end());
+      std::random_shuffle(blk_order_.begin(), blk_order_.end());
 
-    for (int b : block_order_)  {
+    for (int b : blk_order_)  {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_wait_time(time - tau);
       // set the feature key range will be updated in this block
-      fea_blocks_[b].second.to(set(&update)->mutable_key());
+      fea_blk_[b].second.to(set(&update)->mutable_key());
       time = pool->submit(update);
     }
 
@@ -129,7 +129,7 @@ void BatchSolver::runIteration() {
 
     showProgress(iter);
 
-    double rel = global_progress_[iter].relative_objv();
+    double rel = g_progress_[iter].relative_objv();
     if (rel > 0 && rel <= sol_cf.epsilon()) {
       LI << "\tStopped: relative objective <= " << sol_cf.epsilon();
       break;
@@ -213,7 +213,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
       filter->task.set_key_channel(grp);
-      w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_count());
+      w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
       filter->fin_handle = [this, localizer, grp]() {
         // localize the training matrix
         if (!X_[grp]) return;
@@ -309,8 +309,8 @@ void BatchSolver::saveModel(const MessageCPtr& msg) {
 
   auto output = conf_.model_output();
   if (output.format() == DataConfig::TEXT) {
-    std::string file = "../output/" + w_->name() + "_" + myNodeID();
-    if (output.file_size() > 0) file = output.file(0) + file;
+    CHECK(output.file_size());
+    std::string file = output.file(0) + "_" + myNodeID();
     std::ofstream out(file); CHECK(out.good());
     for (int grp : fea_grp_) {
       auto key = w_->key(grp);

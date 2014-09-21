@@ -69,15 +69,15 @@ void LinearMethod::process(const MessagePtr& msg) {
 void LinearMethod::mergeProgress(int iter) {
   Progress recv;
   CHECK(recv.ParseFromString(exec_.lastRecvReply()));
-  auto& p = global_progress_[iter];
+  auto& p = g_progress_[iter];
 
   p.set_objv(p.objv() + recv.objv());
   p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
-  p.set_total_time(timer_.stop());
-  timer_.start();
-  p.set_relative_objv(iter==0 ? 1 : global_progress_[iter-1].objv()/p.objv() - 1);
+  p.set_total_time(total_timer_.stop());
+  total_timer_.start();
+  p.set_relative_objv(iter==0 ? 1 : g_progress_[iter-1].objv()/p.objv() - 1);
   p.set_violation(std::max(p.violation(), recv.violation()));
   p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
 }
@@ -149,9 +149,9 @@ void LinearMethod::showTime(int iter) {
   } else if (iter == -1) {
     fprintf(stderr, "+-----------------\n");
   } else {
-    auto prog = global_progress_[iter];
+    auto prog = g_progress_[iter];
     double ttl_t = prog.total_time() - (
-        iter > 0 ? global_progress_[iter-1].total_time() : 0);
+        iter > 0 ? g_progress_[iter-1].total_time() : 0);
 
     int n = prog.busy_time_size();
     Eigen::ArrayXd busy_t(n);
@@ -174,7 +174,7 @@ void LinearMethod::showObjective(int iter) {
   } else if (iter == -1) {
     fprintf(stderr, " ----+------------------------");
   } else {
-    auto prog = global_progress_[iter];
+    auto prog = g_progress_[iter];
     fprintf(stderr, "%4d | %.5e  %.3e ",
             iter, prog.objv(), prog.relative_objv()); //o, prog.training_auc());
   }
@@ -188,7 +188,7 @@ void LinearMethod::showNNZ(int iter) {
   } else if (iter == -1) {
     fprintf(stderr, "+-----------");
   } else {
-    auto prog = global_progress_[iter];
+    auto prog = g_progress_[iter];
     fprintf(stderr, "|%10lu ", (size_t)prog.nnz_w());
   }
 }

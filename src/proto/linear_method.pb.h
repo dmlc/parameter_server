@@ -442,12 +442,12 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 auc_goodness() const;
   inline void set_auc_goodness(::google::protobuf::int64 value);
 
-  // optional int32 tail_feature_count = 15 [default = 4];
-  inline bool has_tail_feature_count() const;
-  inline void clear_tail_feature_count();
-  static const int kTailFeatureCountFieldNumber = 15;
-  inline ::google::protobuf::int32 tail_feature_count() const;
-  inline void set_tail_feature_count(::google::protobuf::int32 value);
+  // optional int32 tail_feature_freq = 15 [default = 4];
+  inline bool has_tail_feature_freq() const;
+  inline void clear_tail_feature_freq();
+  static const int kTailFeatureFreqFieldNumber = 15;
+  inline ::google::protobuf::int32 tail_feature_freq() const;
+  inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
  private:
@@ -467,8 +467,8 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_epsilon();
   inline void set_has_auc_goodness();
   inline void clear_has_auc_goodness();
-  inline void set_has_tail_feature_count();
-  inline void clear_has_tail_feature_count();
+  inline void set_has_tail_feature_freq();
+  inline void clear_has_tail_feature_freq();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -480,7 +480,7 @@ class SolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 max_block_delay_;
   double epsilon_;
   ::google::protobuf::int32 max_pass_of_data_;
-  ::google::protobuf::int32 tail_feature_count_;
+  ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int64 auc_goodness_;
 
   mutable int _cached_size_;
@@ -1939,26 +1939,26 @@ inline void SolverConfig::set_auc_goodness(::google::protobuf::int64 value) {
   auc_goodness_ = value;
 }
 
-// optional int32 tail_feature_count = 15 [default = 4];
-inline bool SolverConfig::has_tail_feature_count() const {
+// optional int32 tail_feature_freq = 15 [default = 4];
+inline bool SolverConfig::has_tail_feature_freq() const {
   return (_has_bits_[0] & 0x00000200u) != 0;
 }
-inline void SolverConfig::set_has_tail_feature_count() {
+inline void SolverConfig::set_has_tail_feature_freq() {
   _has_bits_[0] |= 0x00000200u;
 }
-inline void SolverConfig::clear_has_tail_feature_count() {
+inline void SolverConfig::clear_has_tail_feature_freq() {
   _has_bits_[0] &= ~0x00000200u;
 }
-inline void SolverConfig::clear_tail_feature_count() {
-  tail_feature_count_ = 4;
-  clear_has_tail_feature_count();
+inline void SolverConfig::clear_tail_feature_freq() {
+  tail_feature_freq_ = 4;
+  clear_has_tail_feature_freq();
 }
-inline ::google::protobuf::int32 SolverConfig::tail_feature_count() const {
-  return tail_feature_count_;
+inline ::google::protobuf::int32 SolverConfig::tail_feature_freq() const {
+  return tail_feature_freq_;
 }
-inline void SolverConfig::set_tail_feature_count(::google::protobuf::int32 value) {
-  set_has_tail_feature_count();
-  tail_feature_count_ = value;
+inline void SolverConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
+  set_has_tail_feature_freq();
+  tail_feature_freq_ = value;
 }
 
 // -------------------------------------------------------------------

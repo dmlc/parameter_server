@@ -6,9 +6,10 @@
 namespace PS {
 namespace LM {
 
-// optimizated for sparse logisitic regression
-class BlockCoordDescL1LR : public BatchSolver {
+// batch algorithm for sparse logistic regression
+class Darling : public BatchSolver {
  public:
+  virtual void init();
  protected:
   virtual void runIteration();
   virtual void preprocessData(const MessageCPtr& msg);
@@ -29,12 +30,11 @@ class BlockCoordDescL1LR : public BatchSolver {
     return std::min(conf_.darling().delta_max_value(), 2 * fabs(delta_w) + .1);
   }
 
+  bool inactive(double val) { return val != val; }
+  double kInactiveValue_;
+
   std::unordered_map<int, Bitmap> active_set_;
   std::unordered_map<int, SArray<double>> delta_;
-
-  // snappy has good compression rate on 0xffff..ff, it is nan for double
-  const double kInactiveValue_ = *((double*)&kuint64max);
-  // const double kInactiveValue_ = 0;
 
   double KKT_filter_threshold_;
   double violation_;

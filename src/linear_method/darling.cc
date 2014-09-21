@@ -5,8 +5,15 @@
 namespace PS {
 namespace LM {
 
+void Darling::init() {
+  BatchSolver::init();
+  // set is as a nan. the reason choosing kuint64max is because snappy has good
+  // compression rate on 0xffff..ff
+  memcpy(&kInactiveValue_, &kuint64max, sizeof(double));
+}
+
 // quite similar to BatchSolver::run(), but diffs at the KKT filter
-void BlockCoordDescL1LR::runIteration() {
+void Darling::runIteration() {
   CHECK(conf_.has_darling());
   CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
@@ -26,16 +33,16 @@ void BlockCoordDescL1LR::runIteration() {
   int iter = 0;
   for (; iter < sol_cf.max_pass_of_data(); ++iter) {
     if (random_blk_order) {
-      std::random_shuffle(block_order_.begin(), block_order_.end());
+      std::random_shuffle(blk_order_.begin(), blk_order_.end());
     }
-    auto order = block_order_;
-    if (iter == 0) order.insert(order.begin(), prior_block_order_.begin(), prior_block_order_.end());
+    auto order = blk_order_;
+    if (iter == 0) order.insert(order.begin(), prior_blk_order_.begin(), prior_blk_order_.end());
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_time(time+1);
       if (iter == 0 && i == 0) {
         update.set_wait_time(-1);
-      } else if (iter == 0 && i < prior_block_order_.size()) {
+      } else if (iter == 0 && i < prior_blk_order_.size()) {
         // force zero delay for important groups
         update.set_wait_time(time);
       } else {
@@ -48,7 +55,7 @@ void BlockCoordDescL1LR::runIteration() {
           cmd->set_kkt_filter_reset(true);
         }
       }
-      auto blk = fea_blocks_[order[i]];
+      auto blk = fea_blk_[order[i]];
       blk.second.to(cmd->mutable_key());
       cmd->add_fea_grp(blk.first);
       time = pool->submit(update);
@@ -60,12 +67,12 @@ void BlockCoordDescL1LR::runIteration() {
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
 
-    double vio = global_progress_[iter].violation();
+    double vio = g_progress_[iter].violation();
     KKT_filter_threshold_
         = vio / (double)g_train_ins_info_.num_ins()
         * conf_.darling().kkt_filter_threshold_ratio();
 
-    double rel = global_progress_[iter].relative_objv();
+    double rel = g_progress_[iter].relative_objv();
     if (rel > 0 && rel <= sol_cf.epsilon()) {
       if (reset_kkt_filter) {
         LI << "Stopped: relative objective <= " << sol_cf.epsilon();
@@ -84,7 +91,7 @@ void BlockCoordDescL1LR::runIteration() {
 
 
 
-void BlockCoordDescL1LR::preprocessData(const MessageCPtr& msg) {
+void Darling::preprocessData(const MessageCPtr& msg) {
   BatchSolver::preprocessData(msg);
   if (IamWorker()) {
     // dual_ = exp(y.*(X_*w_))
@@ -98,7 +105,7 @@ void BlockCoordDescL1LR::preprocessData(const MessageCPtr& msg) {
   }
 }
 
-void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
+void Darling::updateModel(const MessagePtr& msg) {
   CHECK_GT(FLAGS_num_threads, 0);
   auto time = msg->task.time() * kPace;
   auto call = get(msg);
@@ -177,7 +184,7 @@ void BlockCoordDescL1LR::updateModel(const MessagePtr& msg) {
   }
 }
 
-SArrayList<double> BlockCoordDescL1LR::computeGradients(int grp, SizeR col_range) {
+SArrayList<double> Darling::computeGradients(int grp, SizeR col_range) {
   SArrayList<double> grads(2);
   for (int i : {0, 1} ) {
     grads[i].resize(col_range.size());
@@ -199,7 +206,7 @@ SArrayList<double> BlockCoordDescL1LR::computeGradients(int grp, SizeR col_range
   return grads;
 }
 
-void BlockCoordDescL1LR::computeGradients(
+void Darling::computeGradients(
     int grp, SizeR col_range, SArray<double> G, SArray<double> U) {
   CHECK_EQ(G.size(), col_range.size());
   CHECK_EQ(U.size(), col_range.size());
@@ -246,7 +253,7 @@ void BlockCoordDescL1LR::computeGradients(
   }
 }
 
-void BlockCoordDescL1LR::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
+void Darling::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
   SArray<double> delta_w(new_w.size());
   auto& cur_w = w_->value(grp);
   auto& active_set = active_set_[grp];
@@ -256,7 +263,7 @@ void BlockCoordDescL1LR::updateDual(int grp, SizeR col_range, SArray<double> new
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
     double& nw = new_w[i];
-    if (nw != nw) {
+    if (inactive(nw)) {
       // marked as inactive
       active_set.clear(j);
       cw = 0;
@@ -285,7 +292,7 @@ void BlockCoordDescL1LR::updateDual(int grp, SizeR col_range, SArray<double> new
   pool.startWorkers();
 }
 
-void BlockCoordDescL1LR::updateDual(
+void Darling::updateDual(
     int grp, SizeR row_range, SizeR col_range, SArray<double> w_delta) {
   CHECK_EQ(w_delta.size(), col_range.size());
   CHECK(X_[grp]->colMajor());
@@ -317,7 +324,7 @@ void BlockCoordDescL1LR::updateDual(
   }
 }
 
-void BlockCoordDescL1LR::updateWeight(
+void Darling::updateWeight(
     int grp, SizeR range, SArray<double> G, SArray<double> U) {
   CHECK_EQ(G.size(), range.size());
   CHECK_EQ(U.size(), range.size());
@@ -362,7 +369,7 @@ void BlockCoordDescL1LR::updateWeight(
 }
 
 
-void BlockCoordDescL1LR::showKKTFilter(int iter) {
+void Darling::showKKTFilter(int iter) {
   if (iter == -3) {
     fprintf(stderr, "|      KKT filter     ");
   } else if (iter == -2) {
@@ -370,12 +377,12 @@ void BlockCoordDescL1LR::showKKTFilter(int iter) {
   } else if (iter == -1) {
     fprintf(stderr, "+---------------------");
   } else {
-    auto prog = global_progress_[iter];
+    auto prog = g_progress_[iter];
     fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, (uint64)prog.nnz_active_set());
   }
 }
 
-void BlockCoordDescL1LR::showProgress(int iter) {
+void Darling::showProgress(int iter) {
   int s = iter == 0 ? -3 : iter;
   for (int i = s; i <= iter; ++i) {
     showObjective(i);
@@ -386,7 +393,7 @@ void BlockCoordDescL1LR::showProgress(int iter) {
 }
 
 
-Progress BlockCoordDescL1LR::evaluateProgress() {
+Progress Darling::evaluateProgress() {
   Progress prog;
   if (IamWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
@@ -399,7 +406,7 @@ Progress BlockCoordDescL1LR::evaluateProgress() {
     for (int grp : fea_grp_) {
       const auto& value = w_->value(grp);
       for (double w : value) {
-        if (w == 0 || w != w) continue;
+        if (inactive(w) || w == 0) continue;
         ++ nnz_w;
         objv += fabs(w);
       }

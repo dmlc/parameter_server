@@ -21,7 +21,6 @@ class App : public Customer {
   void stop();
  protected:
   AppConfig app_cf_;
-  Timer busy_timer_;
 
   // shut down server S0, and evoke R0 to replace S0
   // void testFaultTolerance(Task recover);

@@ -42,6 +42,5 @@ TEST(double, max) {
   LL << x << " " <<  (double)x;
   double y = *((double*)&kuint64max);
 
-
   LL << (y != y);
 }

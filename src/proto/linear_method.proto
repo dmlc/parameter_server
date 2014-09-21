@@ -8,18 +8,12 @@ message Config {
   optional DataConfig training_data = 1;
   optional DataConfig validation_data = 2;
   optional DataConfig local_cache = 3;
-
   optional ParameterInitConfig init_w = 4;
-
   optional DataConfig model_output = 5;
-
   optional LossConfig loss = 10;
   optional PenaltyConfig penalty = 11;
-
   optional LearningRateConfig learning_rate = 12;
-
   optional LearnerConfig learner = 13;
-
   optional SolverConfig solver = 14;
   optional DarlingConfig darling = 15;
 }
@@ -45,8 +39,8 @@ message SolverConfig {
   optional double epsilon = 11 [default = 1e-4];
   // precision of auc, the larger the better
   optional int64 auc_goodness = 12 [default = 100000];
-  // features which occurs <= *tail_feature_count* will be filtered before training
-  optional int32 tail_feature_count  = 15 [default = 4];
+  // features which occurs <= *tail_feature_freq* will be filtered before training
+  optional int32 tail_feature_freq  = 15 [default = 4];
 
 }
 
