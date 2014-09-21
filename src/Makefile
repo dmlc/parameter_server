@@ -30,7 +30,6 @@ GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)
 DEPS = $(SRCS:.cc=.d)
--include $(DEPS)
 PROTOS= $(wildcard proto/*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
 SRCS = $(PROTOS_CC) \
@@ -50,6 +49,7 @@ SRCS = $(PROTOS_CC) \
 	linear_method/linear_method.cc \
 	linear_method/batch_solver.cc \
 	linear_method/darling.cc
+
 
 TESTS = \
 	matrix_io_test \
@@ -98,6 +98,7 @@ $(BIN)/%: test/%.cc $(LIB)/libps.a
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
 
+-include $(DEPS)
 
 # static link, works fine for both mac and linux.
 $(LIB)/libps.a: $(OBJS) #gtest
