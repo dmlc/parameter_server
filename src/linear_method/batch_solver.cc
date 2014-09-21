@@ -89,6 +89,7 @@ void BatchSolver::run() {
   active_nodes->submitAndWait(preprocess);
   LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
 
+  total_timer_.restart();
   runIteration();
 
   if (conf_.has_validation_data()) {
