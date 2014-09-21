@@ -85,6 +85,7 @@ void BatchSolver::run() {
   auto preprocess_time = tic();
   Task preprocess = newTask(Call::PREPROCESS_DATA);
   for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
+  set(&preprocess)->set_hit_cache(hit_cache > 0);
   active_nodes->submitAndWait(preprocess);
   LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
 
@@ -137,37 +138,43 @@ void BatchSolver::runIteration() {
   }
 }
 
-bool BatchSolver::loadCache(const string& cache_name) {
-  // if (!conf_.has_local_cache()) return false;
-  // auto cache = conf_.local_cache();
-  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_y_" + myNodeID());
-  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_X_" + myNodeID());
-  // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  // MatrixPtrList<double> y_list, X_list;
-  // if (!(readMatrices<double>(y_conf, &y_list) &&
-  //       readMatrices<double>(X_conf, &X_list) &&
-  //       w_->key().readFromFile(SizeR(0, X_list[0]->cols()), key_conf))) {
-  //   return false;
-  // }
-  // y_ = y_list[0];
-  // X_[0] = X_list[0];
-  // LI << myNodeID() << " hit cache in " << cache.file(0) << " for " << cache_name;
-  return false;
+bool BatchSolver::dataCache(const string& name, bool load) {
+  if (!conf_.has_local_cache()) return false;
+  // load / save label
+  auto cache = conf_.local_cache();
+  auto y_conf = ithFile(cache, 0, name + "_label_" + myNodeID());
+  if (load) {
+    MatrixPtrList<double> y_list;
+    if (!readMatrices<double>(y_conf, &y_list) || !y_list.size()==1) return false;
+    y_ = y_list[0];
+  } else {
+    if (!y_->writeToBinFile(y_conf.file(0))) return false;
+  }
+  // load / save feature groups
+  string info_file = cache.file(0) + name + "_" + myNodeID() + ".info";
+  InstanceInfo info = y_->info().ins_info();
+  if (load && !readFileToProto(info_file, &info)) return false;
+  InstanceInfo new_info;
+  for (int i = 0; i < info.fea_grp_size(); ++i) {
+    int id = info.fea_grp(i).grp_id();
+    string x_name = name + "_fea_grp_" + std::to_string(id) + "_" + myNodeID();
+    auto x_conf = ithFile(cache, 0, x_name);
+    string key_name = name + "_key_" + std::to_string(id) + "_" + myNodeID();
+    auto key_conf = ithFile(cache, 0, key_name);
+    if (load) {
+      MatrixPtrList<double> x_list;
+      if (!readMatrices<double>(x_conf, &x_list) || x_list.size()==1) return false;
+      X_[id] = x_list[0];
+      if (!w_->key(id).readFromFile(SizeR(0, X_[id]->cols()), key_conf)) return false;
+    } else {
+      if (!X_[id]->writeToBinFile(x_conf.file(0))
+          && w_->key(id).writeToFile(key_conf.file(0))) return false;
+      *new_info.add_fea_grp() = info.fea_grp(i);
+    }
+  }
+  if (!load && !writeProtoToASCIIFile(new_info, info_file)) return false;
+  return true;
 }
-
-bool BatchSolver::saveCache(const string& cache_name) {
-  // if (!conf_.has_local_cache()) return false;
-  // auto cache = conf_.local_cache();
-  // auto y_conf = ithFile(cache, 0, "_" + cache_name + "_label_" + myNodeID());
-  // if (!y_->writeToBinFile(y_conf.file(0))) return false;
-
-  // auto X_conf = ithFile(cache, 0, "_" + cache_name + "_fea_grp_" +  + myNodeID());
-  // auto key_conf = ithFile(cache, 0, "_" + cache_name + "_key_" + myNodeID());
-  // return (X_[0]->writeToBinFile(X_conf.file(0)) &&
-  //         w_->key().writeToFile(key_conf.file(0)));
-  return false;
-}
-
 
 int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
   if (!IamWorker()) return 0;
@@ -189,10 +196,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   int grp_size = get(msg).fea_grp_size();
   fea_grp_.clear();
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
+  // bool hit_cache = get(msg).hit_cache();
+  bool hit_cache = 0;
 
   if (IamWorker()) {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
+      if (hit_cache) continue;
       // Time 0: send all unique keys with their count to servers
       int grp = fea_grp_[i];
       SArray<Key> uniq_key;
@@ -227,7 +237,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
     }
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // wait until the i-th channel's keys are ready
-      w_->waitOutMsg(kServerGroup, pull_time[i]);
+      if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
@@ -269,8 +279,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
     for (int i = 0; i < grp_size; ++i) {
       w_->waitOutMsg(kServerGroup, pull_time[i]);
     }
+    saveCache("train");
   } else {
     for (int i = 0; i < grp_size; ++i, time += kPace) {
+      if (hit_cache) continue;
       w_->waitInMsg(kWorkerGroup, time);
       w_->finish(kWorkerGroup, time+1);
     }

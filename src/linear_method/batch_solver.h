@@ -23,8 +23,9 @@ class BatchSolver : public LinearMethod {
   void computeEvaluationAUC(AUCData *data);
   void saveModel(const MessageCPtr& msg);
 
-  bool loadCache(const string& cache_name);
-  bool saveCache(const string& cache_name);
+  bool loadCache(const string& name) { return dataCache(name, true); }
+  bool saveCache(const string& name) { return dataCache(name, false); }
+  bool dataCache(const string& name, bool load);
 
   typedef shared_ptr<KVVector<Key, double>> KVVectorPtr;
   KVVectorPtr w_;
@@ -44,6 +45,7 @@ class BatchSolver : public LinearMethod {
   MatrixPtr<double> y_;
   // dual_ = X * w
   SArray<double> dual_;
+
 
   std::mutex mu_;
 };

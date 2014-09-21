@@ -113,11 +113,8 @@ message Call {
   optional double kkt_filter_threshold = 4;
   optional bool kkt_filter_reset = 5;
 
-  // repeated PbRange reduce_range = 6;
-  // optional string name = 7;
-
   repeated int32 fea_grp = 8;
-  // repeated int32 w_chl = 9;
+  optional bool hit_cache = 9;
 }
 
 // deprecated

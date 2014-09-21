@@ -1198,6 +1198,13 @@ class Call : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
       mutable_fea_grp();
 
+  // optional bool hit_cache = 9;
+  inline bool has_hit_cache() const;
+  inline void clear_hit_cache();
+  static const int kHitCacheFieldNumber = 9;
+  inline bool hit_cache() const;
+  inline void set_hit_cache(bool value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.Call)
  private:
   inline void set_has_cmd();
@@ -1208,17 +1215,20 @@ class Call : public ::google::protobuf::Message {
   inline void clear_has_kkt_filter_threshold();
   inline void set_has_kkt_filter_reset();
   inline void clear_has_kkt_filter_reset();
+  inline void set_has_hit_cache();
+  inline void clear_has_hit_cache();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::PS::PbRange* key_;
+  double kkt_filter_threshold_;
   int cmd_;
   bool kkt_filter_reset_;
-  double kkt_filter_threshold_;
+  bool hit_cache_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int32 > fea_grp_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -2502,6 +2512,28 @@ Call::fea_grp() const {
 inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
 Call::mutable_fea_grp() {
   return &fea_grp_;
+}
+
+// optional bool hit_cache = 9;
+inline bool Call::has_hit_cache() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Call::set_has_hit_cache() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Call::clear_has_hit_cache() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Call::clear_hit_cache() {
+  hit_cache_ = false;
+  clear_has_hit_cache();
+}
+inline bool Call::hit_cache() const {
+  return hit_cache_;
+}
+inline void Call::set_hit_cache(bool value) {
+  set_has_hit_cache();
+  hit_cache_ = value;
 }
 
 // -------------------------------------------------------------------
