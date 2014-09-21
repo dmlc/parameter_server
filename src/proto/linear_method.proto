@@ -42,6 +42,11 @@ message SolverConfig {
   // features which occurs <= *tail_feature_freq* will be filtered before training
   optional int32 tail_feature_freq  = 15 [default = 4];
 
+  // countmin sketch is used for filtering the tail features. It has two
+  // parameters, k and n.
+  optional int32 countmin_k = 16 [default = 2];
+  // n = the_first_arrive_key_length * num_workeres * countmin_n_ratio
+  optional double countmin_n_ratio = 17 [default = 2.0];
 }
 
 message DarlingConfig {

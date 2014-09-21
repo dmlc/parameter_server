@@ -449,6 +449,20 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 tail_feature_freq() const;
   inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
+  // optional int32 countmin_k = 16 [default = 2];
+  inline bool has_countmin_k() const;
+  inline void clear_countmin_k();
+  static const int kCountminKFieldNumber = 16;
+  inline ::google::protobuf::int32 countmin_k() const;
+  inline void set_countmin_k(::google::protobuf::int32 value);
+
+  // optional double countmin_n_ratio = 17 [default = 2];
+  inline bool has_countmin_n_ratio() const;
+  inline void clear_countmin_n_ratio();
+  static const int kCountminNRatioFieldNumber = 17;
+  inline double countmin_n_ratio() const;
+  inline void set_countmin_n_ratio(double value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
  private:
   inline void set_has_minibatch_size();
@@ -469,6 +483,10 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_auc_goodness();
   inline void set_has_tail_feature_freq();
   inline void clear_has_tail_feature_freq();
+  inline void set_has_countmin_k();
+  inline void clear_has_countmin_k();
+  inline void set_has_countmin_n_ratio();
+  inline void clear_has_countmin_n_ratio();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -482,9 +500,11 @@ class SolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 max_pass_of_data_;
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int64 auc_goodness_;
+  double countmin_n_ratio_;
+  ::google::protobuf::int32 countmin_k_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -1969,6 +1989,50 @@ inline ::google::protobuf::int32 SolverConfig::tail_feature_freq() const {
 inline void SolverConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
   set_has_tail_feature_freq();
   tail_feature_freq_ = value;
+}
+
+// optional int32 countmin_k = 16 [default = 2];
+inline bool SolverConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void SolverConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void SolverConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void SolverConfig::clear_countmin_k() {
+  countmin_k_ = 2;
+  clear_has_countmin_k();
+}
+inline ::google::protobuf::int32 SolverConfig::countmin_k() const {
+  return countmin_k_;
+}
+inline void SolverConfig::set_countmin_k(::google::protobuf::int32 value) {
+  set_has_countmin_k();
+  countmin_k_ = value;
+}
+
+// optional double countmin_n_ratio = 17 [default = 2];
+inline bool SolverConfig::has_countmin_n_ratio() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void SolverConfig::set_has_countmin_n_ratio() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void SolverConfig::clear_has_countmin_n_ratio() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void SolverConfig::clear_countmin_n_ratio() {
+  countmin_n_ratio_ = 2;
+  clear_has_countmin_n_ratio();
+}
+inline double SolverConfig::countmin_n_ratio() const {
+  return countmin_n_ratio_;
+}
+inline void SolverConfig::set_countmin_n_ratio(double value) {
+  set_has_countmin_n_ratio();
+  countmin_n_ratio_ = value;
 }
 
 // -------------------------------------------------------------------
