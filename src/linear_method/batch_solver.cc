@@ -145,7 +145,7 @@ bool BatchSolver::dataCache(const string& name, bool load) {
   auto y_conf = ithFile(cache, 0, name + "_label_" + myNodeID());
   if (load) {
     MatrixPtrList<double> y_list;
-    if (!readMatrices<double>(y_conf, &y_list) || !y_list.size()==1) return false;
+    if (!readMatrices<double>(y_conf, &y_list) || !(y_list.size()==1)) return false;
     y_ = y_list[0];
   } else {
     if (!y_->writeToBinFile(y_conf.file(0))) return false;
@@ -163,12 +163,12 @@ bool BatchSolver::dataCache(const string& name, bool load) {
     auto key_conf = ithFile(cache, 0, key_name);
     if (load) {
       MatrixPtrList<double> x_list;
-      if (!readMatrices<double>(x_conf, &x_list) || x_list.size()==1) return false;
+      if (!readMatrices<double>(x_conf, &x_list) || !(x_list.size()==1)) return false;
       X_[id] = x_list[0];
       if (!w_->key(id).readFromFile(SizeR(0, X_[id]->cols()), key_conf)) return false;
     } else {
-      if (!X_[id]->writeToBinFile(x_conf.file(0))
-          && w_->key(id).writeToFile(key_conf.file(0))) return false;
+      if (!(X_[id]->writeToBinFile(x_conf.file(0))
+            && w_->key(id).writeToFile(key_conf.file(0)))) return false;
       *new_info.add_fea_grp() = info.fea_grp(i);
     }
   }
