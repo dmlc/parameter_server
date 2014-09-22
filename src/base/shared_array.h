@@ -121,6 +121,7 @@ template<typename V> class SArray {
   // Uncompress the values from src with size src_size. Before calling this
   // function, you should allocate enough memory first (e.g. call resize(xx))
   void uncompressFrom(const char* src, size_t src_size);
+  void uncompressFrom(const SArray<char>& src) { uncompressFrom(src.data(), src.size()); }
 
   // read the segment [range.begin(), range.end()) from the binary file
   bool readFromFile(SizeR range, const string& file_name);

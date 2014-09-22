@@ -173,7 +173,8 @@ template <typename V>
 void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
   size_t dsize = 0;
   CHECK(snappy::GetUncompressedLength(src, src_size, &dsize));
-  resize(dsize);
+  CHECK_EQ(dsize/sizeof(V)*sizeof(V), dsize);
+  resize(dsize/sizeof(V));
   // CHECK_LE(dsize, size_);
   CHECK(snappy::RawUncompress(src, src_size, reinterpret_cast<char*>(data_)));
 }
@@ -224,10 +225,11 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
 
 template <typename V>
 SArray<char> SArray<V>::compressTo() const {
-  size_t dsize = snappy::MaxCompressedLength(size_);
+  size_t ssize = size_ * sizeof(V);
+  size_t dsize = snappy::MaxCompressedLength(ssize);
   SArray<char> dest(dsize);
   snappy::RawCompress(
-      reinterpret_cast<const char*>(data_), size_, dest.data(), &dsize);
+      reinterpret_cast<const char*>(data_), ssize, dest.data(), &dsize);
   dest.resize(dsize);
   return dest;
 }

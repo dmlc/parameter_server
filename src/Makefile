@@ -55,6 +55,7 @@ TESTS = \
 	matrix_io_test \
 	localizer_test \
 	countmin_test \
+	snappy_test \
 	# sparse_matrix_perf \
 	# auc_test \
 	io_test \
