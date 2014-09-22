@@ -877,6 +877,20 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline bool insert_key() const;
   inline void set_insert_key(bool value);
 
+  // optional int32 countmin_n = 6;
+  inline bool has_countmin_n() const;
+  inline void clear_countmin_n();
+  static const int kCountminNFieldNumber = 6;
+  inline ::google::protobuf::int32 countmin_n() const;
+  inline void set_countmin_n(::google::protobuf::int32 value);
+
+  // optional int32 countmin_k = 7;
+  inline bool has_countmin_k() const;
+  inline void clear_countmin_k();
+  static const int kCountminKFieldNumber = 7;
+  inline ::google::protobuf::int32 countmin_k() const;
+  inline void set_countmin_k(::google::protobuf::int32 value);
+
   // optional bool replica = 10;
   inline bool has_replica() const;
   inline void clear_replica();
@@ -906,6 +920,10 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline void clear_has_query_key_freq();
   inline void set_has_insert_key();
   inline void clear_has_insert_key();
+  inline void set_has_countmin_n();
+  inline void clear_has_countmin_n();
+  inline void set_has_countmin_k();
+  inline void clear_has_countmin_k();
   inline void set_has_replica();
   inline void clear_has_replica();
 
@@ -913,13 +931,15 @@ class CallSharedPara : public ::google::protobuf::Message {
 
   int cmd_;
   ::google::protobuf::int32 query_key_freq_;
-  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   bool insert_key_freq_;
   bool insert_key_;
   bool replica_;
+  ::google::protobuf::int32 countmin_n_;
+  ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
+  ::google::protobuf::int32 countmin_k_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -2027,15 +2047,59 @@ inline void CallSharedPara::set_insert_key(bool value) {
   insert_key_ = value;
 }
 
-// optional bool replica = 10;
-inline bool CallSharedPara::has_replica() const {
+// optional int32 countmin_n = 6;
+inline bool CallSharedPara::has_countmin_n() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void CallSharedPara::set_has_replica() {
+inline void CallSharedPara::set_has_countmin_n() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void CallSharedPara::clear_has_replica() {
+inline void CallSharedPara::clear_has_countmin_n() {
   _has_bits_[0] &= ~0x00000010u;
+}
+inline void CallSharedPara::clear_countmin_n() {
+  countmin_n_ = 0;
+  clear_has_countmin_n();
+}
+inline ::google::protobuf::int32 CallSharedPara::countmin_n() const {
+  return countmin_n_;
+}
+inline void CallSharedPara::set_countmin_n(::google::protobuf::int32 value) {
+  set_has_countmin_n();
+  countmin_n_ = value;
+}
+
+// optional int32 countmin_k = 7;
+inline bool CallSharedPara::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void CallSharedPara::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void CallSharedPara::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void CallSharedPara::clear_countmin_k() {
+  countmin_k_ = 0;
+  clear_has_countmin_k();
+}
+inline ::google::protobuf::int32 CallSharedPara::countmin_k() const {
+  return countmin_k_;
+}
+inline void CallSharedPara::set_countmin_k(::google::protobuf::int32 value) {
+  set_has_countmin_k();
+  countmin_k_ = value;
+}
+
+// optional bool replica = 10;
+inline bool CallSharedPara::has_replica() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void CallSharedPara::set_has_replica() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void CallSharedPara::clear_has_replica() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void CallSharedPara::clear_replica() {
   replica_ = false;

@@ -91,6 +91,9 @@ message CallSharedPara {
   optional int32 query_key_freq = 4;
   optional bool insert_key = 5;
 
+  optional int32 countmin_n = 6;
+  optional int32 countmin_k = 7;
+
   // it's a replica request
   optional bool replica = 10;
   repeated Timestamp backup = 11;

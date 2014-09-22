@@ -109,9 +109,10 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
       getReplica(reply);
     }
   } else if (call.insert_key_freq()) {
-    if (push && req && msg->value.size()) {
+    if (push && req && !msg->value.empty()) {
       key_filter_[chl].insertKeys(
-          SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
+          SArray<K>(msg->key), SArray<uint32>(msg->value[0]),
+          call.countmin_n(), call.countmin_k());
     }
   } else if (call.has_query_key_freq()) {
     if (pull && req) {

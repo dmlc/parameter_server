@@ -456,7 +456,7 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 countmin_k() const;
   inline void set_countmin_k(::google::protobuf::int32 value);
 
-  // optional double countmin_n_ratio = 17 [default = 2];
+  // optional double countmin_n_ratio = 17 [default = 4];
   inline bool has_countmin_n_ratio() const;
   inline void clear_countmin_n_ratio();
   static const int kCountminNRatioFieldNumber = 17;
@@ -2013,7 +2013,7 @@ inline void SolverConfig::set_countmin_k(::google::protobuf::int32 value) {
   countmin_k_ = value;
 }
 
-// optional double countmin_n_ratio = 17 [default = 2];
+// optional double countmin_n_ratio = 17 [default = 4];
 inline bool SolverConfig::has_countmin_n_ratio() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
@@ -2024,7 +2024,7 @@ inline void SolverConfig::clear_has_countmin_n_ratio() {
   _has_bits_[0] &= ~0x00000800u;
 }
 inline void SolverConfig::clear_countmin_n_ratio() {
-  countmin_n_ratio_ = 2;
+  countmin_n_ratio_ = 4;
   clear_has_countmin_n_ratio();
 }
 inline double SolverConfig::countmin_n_ratio() const {

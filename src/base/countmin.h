@@ -1,13 +1,15 @@
 #pragma once
 
 #include <math.h>
-#include "base/shared_array.h"
+#include "base/shared_array_inl.h"
 namespace PS {
 
+// may support template key
 class CountMin {
  public:
   // TODO prefetch to accelerate the memory access
-  int capacity() const { return n_; }
+  bool empty() { return n_ == 0; }
+
   void resize(int n, int k) {
     n_ = std::max(n, 64);
     data_.resize(n_);
@@ -27,11 +29,6 @@ class CountMin {
       }
     }
 
-    // hash version
-    // CHECK_EQ(key.size(), count.size());
-    // for (size_t i = 0; i < key.size(); ++i) {
-    //   map_[key[i]] += count[i];
-    // }
   }
 
   uint32 query(const uint64& key) const {
@@ -43,11 +40,6 @@ class CountMin {
       h += delta;
     }
     return res;
-
-    // hash version
-    // auto it = map_.find(key);
-    // if (it == map_.end()) return 0;
-    // return it->second;
   }
 
  private:
@@ -67,7 +59,6 @@ class CountMin {
   }
 
   SArray<uint32> data_;
-  std::unordered_map<uint64, uint32> map_;
   int n_ = 0;
   int k_ = 1;
 };

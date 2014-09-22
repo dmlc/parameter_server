@@ -46,7 +46,7 @@ message SolverConfig {
   // parameters, k and n.
   optional int32 countmin_k = 16 [default = 2];
   // n = the_first_arrive_key_length * num_workeres * countmin_n_ratio
-  optional double countmin_n_ratio = 17 [default = 2.0];
+  optional double countmin_n_ratio = 17 [default = 4.0];
 }
 
 message DarlingConfig {

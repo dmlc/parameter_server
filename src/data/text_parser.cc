@@ -108,7 +108,7 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
 // same group_ids should appear together, but not necesary be ordered
 bool TextParser::parseAdfea(char* line, Instance* ins) {
   std::vector<uint64> feas;
-  uint64 fea_id;
+  uint64 fea_id = -1;
   int pre_grp_id = -1;
   FeatureGroup* grp = nullptr;
 

@@ -30,7 +30,7 @@ void BatchSolver::run() {
       hit_cache += info.hit_cache();
     });
   if (hit_cache > 0) {
-    CHECK_EQ(hit_cache, FLAGS_num_workers);
+    CHECK_EQ(hit_cache, FLAGS_num_workers) << "clear the local caches";
     LI << "Hit local caches for the training data";
   }
   LI << "Loaded " << g_train_ins_info_.num_ins() << " training instances in "
@@ -217,8 +217,11 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       }
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
-      w_->set(count)->set_insert_key_freq(true);
       count->task.set_key_channel(grp);
+      auto sc = w_->set(count);
+      sc->set_insert_key_freq(true);
+      sc->set_countmin_k(conf_.solver().countmin_k());
+      sc->set_countmin_n((int)(uniq_key.size()*conf_.solver().countmin_n_ratio()));
       CHECK_EQ(time, w_->push(count));
 
       // time 2: pull filered keys
