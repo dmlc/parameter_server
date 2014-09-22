@@ -2,48 +2,9 @@
 #include "base/matrix_io.h"
 #include "util/filelinereader.h"
 #include "data/text_parser.h"
-
+#include "util/file.h"
+#include "data/common.h"
 namespace PS {
-
-inline DataConfig ithFile(const DataConfig& conf, int i, const string& suffix = "") {
-  CHECK_GE(i, 0); CHECK_LT(i, conf.file_size());
-  auto f = conf; f.clear_file(); f.add_file(conf.file(i) + suffix);
-  return f;
-}
-
-// inline FeatureGroupInfo
-// mergeFeatureGroupInfo(const FeatureGroupInfo& A, const FeatureGroupInfo& B) {
-//   auto C = A;
-//   C.set_nnz(A.nnz() + B.nnz());
-//   C.set_num_nonempty_ins(A.num_nonempty_ins() + B.num_nonempty_ins());
-//   return C;
-// }
-
-inline InstanceInfo
-mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
-  auto as = A.fea_grp_size();
-  auto bs = B.fea_grp_size();
-  if (!as) return B;
-  if (!bs) return A;
-  CHECK_EQ(as, bs);
-
-  CHECK_EQ(A.label_type(), B.label_type());
-  CHECK_EQ(A.fea_type(), B.fea_type());
-
-  InstanceInfo C = A;
-  C.set_num_ins(A.num_ins() + B.num_ins());
-  C.set_nnz_ele(A.nnz_ele() + B.nnz_ele());
-  C.clear_fea_grp();
-  for (int i = 0; i < as; ++i) {
-    auto G = A.fea_grp(i);
-    G.set_nnz_ins(G.nnz_ins() + B.fea_grp(i).nnz_ins());
-    G.set_nnz_ele(G.nnz_ele() + B.fea_grp(i).nnz_ele());
-    G.set_fea_begin(std::min(G.fea_begin(), B.fea_grp(i).fea_begin()));
-    G.set_fea_end(std::max(G.fea_end(), B.fea_grp(i).fea_end()));
-    *C.add_fea_grp() = G;
-  }
-  return C;
-}
 
 template<typename V>
 MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
@@ -255,7 +216,7 @@ bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
 
   std::function<void(char*)> handle = [&] (char *line) {
     // parse one text line
-    Instance ins; if (!parser.toProtobuf(line, &ins)) return;
+    Instance ins; if (!parser.toProto(line, &ins)) return;
     // store them
     label.pushBack(ins.label());
     for (int i = 0; i < ins.fea_grp_size(); ++i) {

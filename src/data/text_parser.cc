@@ -26,7 +26,7 @@ TextParser::TextParser(TextFormat format, bool ignore_feature_group) {
   }
 }
 
-bool TextParser::toProtobuf(char* line, Instance* ins) {
+bool TextParser::toProto(char* line, Instance* ins) {
   // convert to protobuf format
   ins->Clear(); if (!convertor_(line, ins)) return false;
   // update info

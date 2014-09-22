@@ -11,7 +11,7 @@ class TextParser {
  public:
   typedef DataConfig::TextFormat TextFormat;
   TextParser(TextFormat format, bool ignore_fea_grp = false);
-  bool toProtobuf(char* line, Instance* ins);
+  bool toProto(char* line, Instance* ins);
   InstanceInfo info();
  private:
   bool parseLibsvm(char*, Instance*);

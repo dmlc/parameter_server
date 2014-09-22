@@ -45,6 +45,7 @@ SRCS = $(PROTOS_CC) \
 	system/remote_node.cc \
 	system/executor.cc \
 	system/app.cc \
+	data/common.cc \
 	data/text_parser.cc \
 	linear_method/linear_method.cc \
 	linear_method/batch_solver.cc \
@@ -55,7 +56,7 @@ TESTS = \
 	matrix_io_test \
 	localizer_test \
 	countmin_test \
-	snappy_test \
+	# snappy_test \
 	# sparse_matrix_perf \
 	# auc_test \
 	io_test \

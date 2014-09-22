@@ -5,6 +5,7 @@
 #include <string>
 #include "zlib.h"
 #include "util/integral_types.h"
+#include "util/common.h"
 #include "glog/logging.h"
 #include "proto/config.pb.h"
 
@@ -111,12 +112,8 @@ std::string hadoopFS(const HDFSConfig& conf);
 std::vector<std::string> readFilenamesInDirectory(const std::string& directory);
 std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory);
 
-// // locate the i-th file in *config*
-// DataConfig ithFile(const DataConfig& config);
-
-// return files matches the regex in *config*
-DataConfig searchFiles(const DataConfig& config);
-// evenly parttion the files into *num* parts
-std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
+string removeExtension(const string& file);
+string getPath(const string& full);
+string getFilename(const string& full);
 
 } // namespace PS

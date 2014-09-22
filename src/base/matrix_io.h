@@ -7,7 +7,6 @@
 #include "util/recordio.h"
 #include "proto/app.pb.h"
 #include "proto/instance.pb.h"
-#include "util/file.h"
 
 namespace PS {
 

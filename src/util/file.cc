@@ -1,3 +1,4 @@
+#include "util/file.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -6,9 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <dirent.h>
-#include <regex>
-
-#include "util/file.h"
+#include "util/common.h"
 #include "util/split.h"
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
@@ -271,12 +270,11 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
   return files;
 }
 
-namespace {
-string filename(const string& full) {
+string getFilename(const string& full) {
   auto elems = split(full, '/');
   return elems.empty() ? "" : elems.back();
 }
-string path(const string& full) {
+string getPath(const string& full) {
   auto elems = split(full, '/');
   if (elems.size() <= 1) return full;
   elems.pop_back();
@@ -289,158 +287,5 @@ string removeExtension(const string& file) {
   elems.pop_back();
   return join(elems, ".");
 }
-}
-
-DataConfig searchFiles(const DataConfig& config) {
-  int n = config.file_size();
-  CHECK_GE(n, 1) << "empty files: " << config.DebugString();
-  std::vector<std::string> matched_files;
-  for (int i = 0; i < n; ++i) {
-    std::regex pattern;
-    try {
-      pattern = std::regex(filename(config.file(i)));
-    } catch (const std::regex_error& e) {
-      CHECK(false) << filename(config.file(i))
-                   << " is not valid (supported) regex, regex_error caught: "
-                   << e.what() << ". you may try gcc>=4.9 or llvm>=3.4";
-    }
-    auto dir = config; dir.clear_file();
-    dir.add_file(path(config.file(i)));
-    // match regex
-    auto files = readFilenamesInDirectory(dir);
-    for (auto& f : files) {
-      if (std::regex_match(f, pattern)) {
-        auto l = config.format() == DataConfig::TEXT ? f : removeExtension(f);
-        matched_files.push_back(dir.file(0) + "/" + l);
-      }
-    }
-  }
-  // remove duplicate files
-  std::sort(matched_files.begin(), matched_files.end());
-  auto it = std::unique(matched_files.begin(), matched_files.end());
-  matched_files.resize(std::distance(matched_files.begin(), it));
-  DataConfig ret = config; ret.clear_file();
-  for (auto& f : matched_files) ret.add_file(f);
-  return ret;
-}
-
-std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
-  CHECK_GT(data.file_size(), 0) << "empty files" << data.DebugString();
-  CHECK_GE(data.file_size(), num) << "too many partitions";
-  // evenly divide files
-  std::vector<DataConfig> parts;
-  for (int i = 0; i < num; ++i) {
-    DataConfig dc = data; dc.clear_file();
-    for (int j = 0; j < data.file_size(); ++j) {
-      if (j % num == i) dc.add_file(data.file(j));
-    }
-    parts.push_back(dc);
-  }
-  return parts;
-}
 
 } // namespace PS
-
-
-// an old version which support read and write gz files
-
-// File* File::open(const std::string& name, const char* const flag) {
-//   File* f;
-//   if (name == "stdin") {
-//     f = new File(stdin, name);
-//   } else if (name == "stdout") {
-//     f = new File(stdout, name);
-//   } else if (name == "stderr") {
-//     f = new File(stderr, name);
-//   } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
-//     gzFile des = gzopen(name.data(), flag);
-//     if (des == NULL) {
-//       LOG(ERROR) << "cannot open " << name;
-//       return NULL;
-//     }
-//     f = new File(des, name);
-//   } else {
-//     FILE*  des = fopen(name.data(), flag);
-//     if (des == NULL) {
-//       LOG(ERROR) << "cannot open " << name;
-//       return NULL;
-//     }
-//     f = new File(des, name);
-//   }
-//   return f;
-// }
-
-// File* File::openOrDie(const std::string& name, const char* const flag) {
-//   File* f = File::open(name, flag);
-//   CHECK(f != NULL && f->open());
-//   return f;
-// }
-
-// File* File::open(const DataConfig& name,  const char* const flag) {
-//   CHECK_EQ(name.file_size(), 1);
-//   auto filename = name.file(0);
-//   if (name.has_hdfs()) {
-//     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
-//     FILE* des = popen(cmd.c_str(), "r");
-//     auto f = new File(des, filename);
-//     return f;
-//   } else {
-//     return open(filename, flag);
-//   }
-// }
-// File* File::openOrDie(const DataConfig& name,  const char* const flag) {
-// File* f = open(name, flag);
-// CHECK(f != NULL && f->open());
-// return f;
-// }
-
-// size_t File::size(const std::string& name) {
-//   struct stat f_stat;
-//   stat(name.c_str(), &f_stat);
-//   return f_stat.st_size;
-// }
-
-// size_t File::size() {
-//   return File::size(name_);
-// }
-
-// // bool File::Flush() { return is_gz_ ? gzflush()fflush(f_) == 0; }
-
-// bool File::close() {
-//   if (gz_f_) {
-//     if (gzclose(gz_f_) == Z_OK) {
-//       gz_f_ = NULL;
-//       return true;
-//     } else {
-//       return false;
-//     }
-//   }
-//   if (f_) {
-//     if (fclose(f_) == 0) {
-//       f_ = NULL;
-//       return true;
-//     } else {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
-
-// size_t File::read(void* const buf, size_t size) {
-//   return (is_gz_ ? gzread(gz_f_, buf, size) : fread(buf, 1, size, f_));
-// }
-
-// size_t File::write(const void* const buf, size_t size) {
-//   return (is_gz_ ? gzwrite(gz_f_, buf, size) : fwrite(buf, 1, size, f_));
-// }
-
-
-// char* File::readLine(char* const output, uint64 max_length) {
-//   return (is_gz_ ? gzgets(gz_f_, output, max_length) : fgets(output, max_length, f_));
-// }
-
-// bool File::seek(size_t position) {
-//   return (is_gz_ ?
-//           gzseek(gz_f_, position, SEEK_SET) == position :
-//           fseek(f_, position, SEEK_SET) == 0);
-// }
