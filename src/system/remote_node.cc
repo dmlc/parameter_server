@@ -92,16 +92,22 @@ void RNode::finishIncomingTask(int time) {
 
 
 void RNode::cacheKeySender(const MessagePtr& msg) {
-  if (!FLAGS_key_cache || !msg->task.has_key_range() || msg->key.empty()) return;
-  int chl = msg->task.key_channel();
-  Range<Key> range(msg->task.key_range());
+  if (!FLAGS_key_cache || !msg->task.has_key_range()) return;
+  auto cache_k = std::make_pair(
+      msg->task.key_channel(), Range<Key>(msg->task.key_range()));
+
+  if (msg->key.empty()) {
+    msg->task.clear_key_signature();
+    Lock l(key_cache_mu_);
+    key_cache_.erase(cache_k);
+    return;
+  }
+
   auto sig = crc32c::Value(msg->key.data(), msg->key.size());
   msg->task.set_key_signature(sig);
-
   Lock l(key_cache_mu_);
-  auto& cache = key_cache_[std::make_pair(chl, range)];
+  auto& cache = key_cache_[cache_k];
   bool hit_cache = cache.first == sig && cache.second.size() == msg->key.size();
-
   if (hit_cache) {
     msg->key.clear();
     msg->task.set_has_key(false);
@@ -113,14 +119,18 @@ void RNode::cacheKeySender(const MessagePtr& msg) {
 }
 
 void RNode::cacheKeyRecver(const MessagePtr& msg) {
-  if (!FLAGS_key_cache || !msg->task.has_key_range() || !msg->task.has_key_signature()) return;
-  int chl = msg->task.key_channel();
-  Range<Key> range(msg->task.key_range());
+  if (!FLAGS_key_cache || !msg->task.has_key_range()) return;
+  auto cache_k = std::make_pair(
+      msg->task.key_channel(), Range<Key>(msg->task.key_range()));
+  if (!msg->task.has_key_signature()) {
+    Lock l(key_cache_mu_);
+    key_cache_.erase(cache_k);
+    return;
+  }
   auto sig = msg->task.key_signature();
 
   Lock l(key_cache_mu_);
-  auto& cache = key_cache_[std::make_pair(chl, range)];
-
+  auto& cache = key_cache_[cache_k];
   if (msg->task.has_key()) {
     // double check
     CHECK_EQ(crc32c::Value(msg->key.data(), msg->key.size()), sig);

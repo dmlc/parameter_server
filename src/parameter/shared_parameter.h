@@ -118,8 +118,10 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
     if (pull && req) {
       reply->key = key_filter_[chl].queryKeys(
           SArray<K>(msg->key), call.query_key_freq());
+      // LL << reply->key.size();
     } else if (pull && !req) {
       setValue(msg);
+      // LL << msg->key.size();
     }
   } else {
     if ((push && req) || (pull && !req)) {

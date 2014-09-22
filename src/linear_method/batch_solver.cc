@@ -33,7 +33,7 @@ void BatchSolver::run() {
     CHECK_EQ(hit_cache, FLAGS_num_workers) << "clear the local caches";
     LI << "Hit local caches for the training data";
   }
-  LI << "Loaded " << g_train_ins_info_.num_ins() << " training instances in "
+  LI << "Loaded " << g_train_ins_info_.num_ins() << " examples in "
      << toc(load_time) << " sec";
 
   // partition feature blocks
@@ -57,6 +57,17 @@ void BatchSolver::run() {
       fea_blk_.push_back(std::make_pair(info.grp_id(), block));
     }
   }
+
+  // preprocess the training data
+  auto preprocess_time = tic();
+  Task preprocess = newTask(Call::PREPROCESS_DATA);
+  for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
+  set(&preprocess)->set_hit_cache(hit_cache > 0);
+  active_nodes->submitAndWait(preprocess);
+  if (sol_cf.tail_feature_freq()) {
+    LI << "Features with frequency <= " << sol_cf.tail_feature_freq() << " are filtered";
+  }
+  LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
   LI << "Features are partitioned into " << fea_blk_.size() << " blocks";
 
   // a simple block order
@@ -79,15 +90,7 @@ void BatchSolver::run() {
       prior_blk_order_.insert(prior_blk_order_.end(), tmp.begin(), tmp.end());
     }
   }
-  if (!hit_blk.empty()) LI << "Will first update feature group: " + join(hit_blk, ", ");
-
-  // preprocess the training data
-  auto preprocess_time = tic();
-  Task preprocess = newTask(Call::PREPROCESS_DATA);
-  for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);
-  set(&preprocess)->set_hit_cache(hit_cache > 0);
-  active_nodes->submitAndWait(preprocess);
-  LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
+  if (!hit_blk.empty()) LI << "Prior feature groups: " + join(hit_blk, ", ");
 
   total_timer_.restart();
   runIteration();
@@ -211,10 +214,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       SArray<uint32> key_cnt;
       Localizer<Key, double> localizer(X_[grp]);
       localizer.countUniqIndex(&uniq_key, &key_cnt);
-      if (uniq_key.empty()) {
-        LL << myNodeID() << " " << grp;
-        if (X_[grp]) LL << X_[grp]->debugString();
-      }
+      // if (uniq_key.empty()) {
+      //   LL << myNodeID() << " " << grp;
+      //   if (X_[grp]) LL << X_[grp]->debugString();
+      // }
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       count->task.set_key_channel(grp);
@@ -240,6 +243,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;
     }
+
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // wait until the i-th channel's keys are ready
       if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
@@ -250,7 +254,6 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       push_key->key = w_->key(grp);
       push_key->task.set_key_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
-
 
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));

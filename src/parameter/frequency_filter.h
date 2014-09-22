@@ -17,10 +17,10 @@ class FreqencyFilter {
   std::unordered_map<K, uint32> map_;
 };
 
-// // countmin implementation
+// countmin implementation
 
 // template<typename K>
-// SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) const {
+// SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
 //   SArray<K> filtered_key;
 //   for (auto k : key) {
 //     if (count_.query(k) > freqency) filtered_key.pushBack(k);
