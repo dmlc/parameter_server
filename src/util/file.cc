@@ -21,7 +21,7 @@ File* File::open(const std::string& name, const char* const flag) {
     f = new File(stdout, name);
   } else if (name == "stderr") {
     f = new File(stderr, name);
-  } else if (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz") {
+  } else if (gzfile(name)) {
     gzFile des = gzopen(name.data(), flag);
     if (des == NULL) {
       // LOG(ERROR) << "cannot open " << name;
@@ -69,6 +69,10 @@ File* File::openOrDie(const DataConfig& name,  const char* const flag) {
 }
 
 size_t File::size(const std::string& name) {
+  if (gzfile(name)) {
+    LL << "didn't implement how to get a gz file size";
+    return 0;
+  }
   struct stat f_stat;
   stat(name.c_str(), &f_stat);
   return f_stat.st_size;

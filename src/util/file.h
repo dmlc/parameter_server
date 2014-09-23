@@ -33,6 +33,9 @@ class File {
   static bool remove(const char* const name) { return remove(name) == 0; }
   // Tests if a file exists.
   static bool exists(const char* const name) { return access(name, F_OK) == 0; }
+  static bool gzfile(const std::string& name) {
+    return (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz");
+  }
 
   // Reads "size" bytes to buff from file, buff should be pre-allocated.
   size_t read(void* const buff, size_t size);

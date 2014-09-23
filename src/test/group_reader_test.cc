@@ -10,6 +10,9 @@ TEST(GroupReader, read) {
   dc.set_text(DataConfig::ADFEA);
   dc.add_file("../../data/ctrc/train/part-000[0-1].gz");
 
-  GroupReader gr(cache);
-  gr.read(searchFiles(dc));
+  GroupReader gr(searchFiles(dc), cache);
+  gr.read();
+
+  auto index  = gr.index(157);
+  LL << index;
 }

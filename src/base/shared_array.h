@@ -125,6 +125,9 @@ template<typename V> class SArray {
 
   // read the segment [range.begin(), range.end()) from the binary file
   bool readFromFile(SizeR range, const string& file_name);
+  bool readFromFile(const string& file_name) {
+    return readFromFile(SizeR::all(), file_name);
+  }
   bool readFromFile(SizeR range, const DataConfig& file);
 
   // write all values into a binary file

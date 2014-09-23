@@ -3,29 +3,32 @@
 #include "util/threadpool.h"
 #include "util/filelinereader.h"
 
-DEFINE_bool(compress_cache, false, "");
+// DEFINE_bool(compress_cache, false, "");
 
 namespace PS {
 
-GroupReader::GroupReader(const DataConfig& cache) {
+GroupReader::GroupReader(const DataConfig& data, const DataConfig& cache) {
+  CHECK(data.format() == DataConfig::TEXT);
   if (cache.file_size()) dump_to_disk_ = true;
   cache_ = cache.file(0);
+  data_ = data;
 }
 
-int GroupReader::read(const DataConfig& data, InstanceInfo* info) {
-  CHECK(data.format() == DataConfig::TEXT);
+int GroupReader::read(InstanceInfo* info) {
   CHECK_GT(FLAGS_num_threads, 0);
   {
     FLAGS_num_threads = 2;
     ThreadPool pool(FLAGS_num_threads);
-    for (int i = 0; i < data.file_size(); ++i) {
-      auto one_file = ithFile(data, i);
-      // readOneFile(one_file);
+    for (int i = 0; i < data_.file_size(); ++i) {
+      auto one_file = ithFile(data_, i);
       pool.add([this, one_file](){ readOneFile(one_file); });
     }
     pool.startWorkers();
   }
   if (info) *info = info_;
+  for (int i = 0; i < info_.fea_grp_size(); ++i) {
+    fea_grp_[info_.fea_grp(i).grp_id()] = info_.fea_grp(i);
+  }
 }
 
 
@@ -37,8 +40,9 @@ bool GroupReader::readOneFile(const DataConfig& data) {
     SArray<uint64> col_idx;
     SArray<uint16> row_siz;
     bool writeToFile(const string& name) {
-      return val.writeToFile(name+".val") && col_idx.writeToFile(name+".colidx")
-          && row_siz.writeToFile(name+".rowsiz");
+      return val.compressTo().writeToFile(name+".val")
+          && col_idx.compressTo().writeToFile(name+".colidx")
+          && row_siz.compressTo().writeToFile(name+".rowsiz");
     }
   };
 
@@ -74,7 +78,7 @@ bool GroupReader::readOneFile(const DataConfig& data) {
   for (int i = 0; i <= kGrpIDmax; ++i) {
     auto& slot = slots[i];
     if (i < kGrpIDmax && slot.row_siz.empty()) continue;
-    CHECK(slot.writeToFile(cache_ + name + "_grp_" + std::to_string(i)));
+    CHECK(slot.writeToFile(cacheName(data, i)));
   }
 
   auto info = parser.info();
@@ -85,7 +89,16 @@ bool GroupReader::readOneFile(const DataConfig& data) {
 }
 
 SArray<uint64> GroupReader::index(int grp_id) {
-
+  SArray<uint64> idx;
+  if (fea_grp_.count(grp_id) == 0) return idx;
+  for (int i = 0; i < data_.file_size(); ++i) {
+    string file = cacheName(ithFile(data_, i), grp_id) + ".colidx";
+    SArray<char> comp; CHECK(comp.readFromFile(file));
+    SArray<uint64> uncomp; uncomp.uncompressFrom(comp);
+    idx.append(uncomp);
+  }
+  CHECK_EQ(idx.size(), fea_grp_[grp_id].nnz_ele());
+  return idx;
 }
 
 SArray<size_t> GroupReader::offset(int grp_id) {

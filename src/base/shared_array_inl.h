@@ -170,32 +170,11 @@ SizeR SArray<V>::findRange (const Range<V>& bound) const {
 }
 
 template <typename V>
-void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
-  size_t dsize = 0;
-  CHECK(snappy::GetUncompressedLength(src, src_size, &dsize));
-  CHECK_EQ(dsize/sizeof(V)*sizeof(V), dsize);
-  resize(dsize/sizeof(V));
-  // CHECK_LE(dsize, size_);
-  CHECK(snappy::RawUncompress(src, src_size, reinterpret_cast<char*>(data_)));
-}
-
-template <typename V>
 bool SArray<V>::readFromFile(SizeR range, const string& file_name) {
   DataConfig data;
   data.set_format(DataConfig::BIN);
   data.add_file(file_name);
   return readFromFile(range, data);
-}
-
-template <typename V>
-bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
-  CHECK(!range.empty());
-  File* file = File::open(data, "r");
-  if (file == NULL || !file->open()) return false;
-  resize(range.size());
-  if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
-  size_t length = range.size() * sizeof(V);
-  return (file->read(ptr_.get(), length) == length);
 }
 
 template <typename V>
@@ -212,6 +191,20 @@ MatrixPtr<V> SArray<V>::matrix(size_t rows, size_t cols) {
 }
 
 template <typename V>
+bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
+  if (range == SizeR::all()) range = SizeR(0, File::size(data.file(0)));
+  if (range.empty()) { clear(); return true; }
+
+  LL << data.file(0);
+  File* file = File::open(data, "r");
+  if (file == NULL || !file->open()) return false;
+  resize(range.size());
+  if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
+  size_t length = range.size() * sizeof(V);
+  return (file->read(ptr_.get(), length) == length);
+}
+
+template <typename V>
 bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
   if (range.empty()) return true;
   CHECK(range.valid());
@@ -224,7 +217,21 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
 }
 
 template <typename V>
+void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
+  if (src_size == 0) { clear(); return; }
+  size_t dsize = 0;
+  CHECK(snappy::GetUncompressedLength(src, src_size, &dsize));
+  CHECK_EQ(dsize/sizeof(V)*sizeof(V), dsize);
+  resize(dsize/sizeof(V));
+  // CHECK_LE(dsize, size_);
+  CHECK(snappy::RawUncompress(src, src_size, reinterpret_cast<char*>(data_)));
+}
+
+
+template <typename V>
 SArray<char> SArray<V>::compressTo() const {
+  // otherwise, snappy will add a 0 here...
+  if (empty()) return SArray<char>();
   size_t ssize = size_ * sizeof(V);
   size_t dsize = snappy::MaxCompressedLength(ssize);
   SArray<char> dest(dsize);
@@ -237,7 +244,6 @@ SArray<char> SArray<V>::compressTo() const {
 template <typename V>
 void SArray<V>::append(const SArray<V>& arr) {
   if (arr.empty()) return;
-  LL << size_ << " " << arr.size();
   auto orig_size = size_;
   resize(size_ + arr.size());
   memcpy(data_+orig_size, arr.data(), arr.size()*sizeof(V));
