@@ -16,7 +16,6 @@ void FileLineReader::Reload() {
     loaded_successfully_ = false;
     return;
   }
-
   std::unique_ptr<char[]> line(new char[kMaxLineLength]);
   for (;;) {
     char* const result = data_file->readLine(line.get(), kMaxLineLength);

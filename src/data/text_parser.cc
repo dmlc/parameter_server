@@ -6,6 +6,8 @@
 
 namespace PS {
 
+
+// NOTICE: Do not use strtok, it is not thread-safe, use strtok_r instead
 TextParser::TextParser(TextFormat format, bool ignore_feature_group) {
   ignore_fea_grp_ = ignore_feature_group;
   using namespace std::placeholders;
@@ -71,6 +73,7 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
   char * pch = strtok (buff, " \t\r\n");
   uint64 idx, last_idx=0;
   float label, val;
+  char *saveptr;
 
   if (!strtofloat(pch, &label)) return false;
   ins->set_label(label);
@@ -79,7 +82,7 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
   } else if (label != 1 && label != -1) {
     info_.set_label_type(InstanceInfo::MULTICLASS);
   }
-  pch = strtok (NULL, " \t\r\n");
+  pch = strtok_r(NULL, " \t\r\n", &saveptr);
 
   auto grp = ins->add_fea_grp();
   grp->set_grp_id(0);
@@ -96,7 +99,7 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
 
     grp->add_fea_id(idx);
     grp->add_fea_val(val);
-    pch = strtok (NULL, " \t\r\n");
+    pch = strtok_r(NULL, " \t\r\n", &saveptr);
   }
   return true;
 }
@@ -107,13 +110,13 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
 //
 // same group_ids should appear together, but not necesary be ordered
 bool TextParser::parseAdfea(char* line, Instance* ins) {
-  std::vector<uint64> feas;
   uint64 fea_id = -1;
   int pre_grp_id = -1;
   FeatureGroup* grp = nullptr;
 
-  char* tk = strtok (line, " :");
-  for (int i = 0; tk != NULL; tk = strtok (NULL, " :"), ++i) {
+  char *saveptr;
+  char* tk = strtok_r(line, " :", &saveptr);
+  for (int i = 0; tk != NULL; tk = strtok_r(NULL, " :", &saveptr), ++i) {
     if (i == 0) {
       // skip it the ins id
     } else if (i == 1) {
@@ -135,6 +138,7 @@ bool TextParser::parseAdfea(char* line, Instance* ins) {
       grp->add_fea_id(fea_id);
     }
   }
+  // LL << ins->ShortDebugString();
   return true;
 }
 

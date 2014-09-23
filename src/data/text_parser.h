@@ -13,10 +13,10 @@ class TextParser {
   TextParser(TextFormat format, bool ignore_fea_grp = false);
   bool toProto(char* line, Instance* ins);
   InstanceInfo info();
- private:
   bool parseLibsvm(char*, Instance*);
   bool parseAdfea(char*, Instance*);
 
+ private:
   InstanceInfo info_;
   FeatureGroupInfo grp_info_[kGrpIDmax];
   bool ignore_fea_grp_;

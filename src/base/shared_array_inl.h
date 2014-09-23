@@ -213,8 +213,8 @@ MatrixPtr<V> SArray<V>::matrix(size_t rows, size_t cols) {
 
 template <typename V>
 bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
-  if (range == SizeR::all()) range = SizeR(0, size_);
-  CHECK(!range.empty());
+  if (range.empty()) return true;
+  CHECK(range.valid());
   CHECK_LE(range.end(), size_);
 
   File* file = File::open(file_name, "w");

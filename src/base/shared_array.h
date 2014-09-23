@@ -129,7 +129,7 @@ template<typename V> class SArray {
 
   // write all values into a binary file
   bool writeToFile(const string& file_name) const {
-    return writeToFile(SizeR::all(), file_name);
+    return writeToFile(SizeR(0, size_), file_name);
   }
   // write the segment [range.begin(), range.end()) into a binary file
   bool writeToFile(SizeR range, const string& file_name) const;
