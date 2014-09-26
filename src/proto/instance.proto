@@ -30,7 +30,9 @@ message InstanceInfo {
     SPARSE = 2;
     SPARSE_BINARY = 3;
   }
+
   optional FeatureType fea_type = 2;
+
   // all feature groups, the first one is the union of all rest groups
   repeated FeatureGroupInfo fea_grp = 3;
   // total number of instances

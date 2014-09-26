@@ -18,7 +18,7 @@ TEST(GroupReader, read) {
   // dc.add_file("../data/rcv1/train/part-.*");
 
   DataConfig dc2 = searchFiles(dc);
-  GroupReader gr(dc2, cache); gr.read();
+  GroupReader gr; gr.init(dc2, cache); gr.read();
 
   auto data = readMatricesOrDie<double>(dc2);
 

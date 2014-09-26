@@ -186,12 +186,17 @@ int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
   if (!IamWorker()) return 0;
   bool hit_cache = loadCache("train");
   if (!hit_cache) {
-    auto train = readMatricesOrDie<double>(conf_.training_data());
-    CHECK_GE(train.size(), 2);
-    y_ = train[0];
-    for (int i = 1; i < train.size(); ++i) {
-      X_[train[i]->info().id()] = train[i];
-    }
+    CHECK(conf_.has_local_cache());
+    grp_reader_.init(conf_.training_data(), conf_.local_cache());
+
+    // FIXME
+
+    // auto train = readMatricesOrDie<double>(
+    // CHECK_GE(train.size(), 2);
+    // y_ = train[0];
+    // for (int i = 1; i < train.size(); ++i) {
+    //   X_[train[i]->info().id()] = train[i];
+    // }
   }
   *info = y_->info().ins_info();
   return hit_cache;
@@ -204,6 +209,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
   bool hit_cache = get(msg).hit_cache();
 
+  // FIXME
   if (IamWorker()) {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
@@ -212,8 +218,9 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       int grp = fea_grp_[i];
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
-      Localizer<Key, double> localizer(X_[grp]);
-      localizer.countUniqIndex(&uniq_key, &key_cnt);
+
+      // Localizer<Key, double> localizer(X_[grp]);
+      // localizer.countUniqIndex(&uniq_key, &key_cnt);
       // if (uniq_key.empty()) {
       //   LL << myNodeID() << " " << grp;
       //   if (X_[grp]) LL << X_[grp]->debugString();
@@ -232,13 +239,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       filter->key = uniq_key;
       filter->task.set_key_channel(grp);
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
-      filter->fin_handle = [this, localizer, grp]() {
-        // localize the training matrix
-        if (!X_[grp]) return;
-        auto X = localizer.remapIndex(w_->key(grp));
-        if (!X) { X_.erase(grp); return; }
-        if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
-        { Lock l(mu_); X_[grp] = X; }
+      filter->fin_handle = [this, grp]() {
+        // // localize the training matrix
+        // if (!X_[grp]) return;
+        // auto X = localizer.remapIndex(w_->key(grp));
+        // if (!X) { X_.erase(grp); return; }
+        // if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
+        // { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;

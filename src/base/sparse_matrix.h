@@ -26,16 +26,13 @@ class SparseMatrix : public Matrix<V> {
   USING_MATRIX;
   SparseMatrix(
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
-      : Matrix<V>(info, value), offset_(offset), index_(index) { }
-
-  void resize(size_t rows, size_t cols, size_t nnz, bool row_major) {
-    CHECK(false) << "TODO";
+      : Matrix<V>(info, value), offset_(offset), index_(index) {
+    CHECK_EQ(offset.back(), index.size());
+    if (!binary()) CHECK_EQ(value.size(), index.size());
+    // may do more check here
   }
 
-  bool binary() const { return this->info_.type() == MatrixInfo::SPARSE_BINARY; }
-
   void times(const V* x, V* y) const { templateTimes(x, y); }
-
   MatrixPtr<V> dotTimes(const MatrixPtr<V>& B) const;
 
   // (nearly) non-copy matrix transpose
@@ -45,25 +42,7 @@ class SparseMatrix : public Matrix<V> {
     return MatrixPtr<V>(B);
   }
 
-  MatrixPtr<V> colBlock(SizeR range) const;
-  MatrixPtr<V> rowBlock(SizeR range) const;
-
   MatrixPtr<V> alterStorage() const;
-
-  // void countUniqIndex (SArray<I>* uniq_idx, SArray<uint32>* idx_cnt = nullptr) const;
-  // return a matrix with index mapped: idx_map[i] -> i. Any index does not exists
-  // // in *idx_map* is dropped.
-  // MatrixPtr<V> remapIndex(const SArray<I>& idx_map) const;
-
-  // MatrixPtr<V> localize(SArray<Key>* key_map) const {
-  //   // stupied, fix me
-  //   // CHECK_EQ(sizeof(Key), sizeof(I));
-  //   // SArray<I> tmp;
-  //   // countUniqIndex(&tmp);
-  //   // *key_map = tmp;
-  //   // return remapIndex(tmp);
-  // }
-
 
   // debug string
   string debugString() const;
@@ -75,10 +54,16 @@ class SparseMatrix : public Matrix<V> {
             (binary() || value_.writeToFile(name+".value")));
   }
 
+  MatrixPtr<V> colBlock(SizeR range) const;
+  MatrixPtr<V> rowBlock(SizeR range) const;
 
+  bool binary() const { return this->info_.type() == MatrixInfo::SPARSE_BINARY; }
   SArray<I> index() const { return index_; }
   SArray<size_t> offset() const { return offset_; }
 
+  void resize(size_t rows, size_t cols, size_t nnz, bool row_major) {
+    CHECK(false) << "TODO";
+  }
  private:
 
   //// y = A * x, version 1. simper and faster

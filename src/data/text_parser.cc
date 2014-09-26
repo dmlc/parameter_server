@@ -13,7 +13,6 @@ TextParser::TextParser(TextFormat format, bool ignore_feature_group) {
   using namespace std::placeholders;
   switch (format) {
     case DataConfig::LIBSVM:
-      ignore_fea_grp_ = true;
       convertor_ = std::bind(&TextParser::parseLibsvm, this, _1, _2);
       info_.set_fea_type(InstanceInfo::SPARSE);
       info_.set_label_type(InstanceInfo::BINARY);

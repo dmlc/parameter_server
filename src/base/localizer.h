@@ -2,40 +2,48 @@
 #include "base/shared_array_inl.h"
 #include "base/sparse_matrix.h"
 #include "util/parallel_sort.h"
+#include "data/group_reader.h"
 
 namespace PS {
 
-template<typename I, typename V>
+template<typename I>
 class Localizer {
  public:
-  Localizer(const MatrixPtr<V>& mat) {
-    if (mat) mat_ = std::static_pointer_cast<SparseMatrix<I, V>>(mat);
-  }
-
-  // return ordered unique indeces with their number of occrus
-  void countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
+  // find the unique indeces with their number of occrus in *idx*
+  void countUniqIndex(const SArray<const I>& idx,
+                      SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
 
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
-  MatrixPtr<V> remapIndex(const SArray<I>& idx_dict) const;
+  template<typename V>
+  MatrixPtr<V> remapIndex(
+      const GroupReader& reader, int grp_id, const SArray<const I>& idx_dict) {
+    return remapIndex(reader.info(grp_id), reader.offset(grp_id),
+                      reader.index(grp_id), reader.value<V>(grp_id), idx_dict);
+  }
+
+  template<typename V>
+  MatrixPtr<V> remapIndex(
+      const MatrixInfo& info, const SArray<const size_t>& offset,
+      const SArray<const I>& index, const SArray<const V>& value,
+      const SArray<const I>& idx_dict) const;
 
  private:
+#pragma pack(4)
   struct Pair {
-    I k; size_t i;
+    I k; uint32 i;
   };
   SArray<Pair> pair_;
-  SparseMatrixPtr<Key, V> mat_;
-
 };
 
-template<typename I, typename V>
-void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
-  if (!mat_ || mat_->index().empty()) return;
-  int num_threads = FLAGS_num_threads; CHECK_GT(num_threads, 0);
+template<typename I> void Localizer<I>::countUniqIndex(
+    const SArray<const I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+  if (idx.empty()) return;
   CHECK(uniq_idx);
+  CHECK_LT(idx.size(), kuint32max)
+      << "well, you need to change Pair.i from uint32 to uint64";
+  CHECK_GT(FLAGS_num_threads, 0);
 
-  auto idx = mat_->index();
-  CHECK_EQ(idx.size(), mat_->offset().back());
   pair_.resize(idx.size());
   for (size_t i = 0; i < idx.size(); ++i) {
     pair_[i].k = idx[i];
@@ -67,12 +75,18 @@ void Localizer<I,V>::countUniqIndex(SArray<I>* uniq_idx, SArray<uint32>* idx_frq
   // idx_frq->writeToFile("cnt");
 }
 
-template<typename I, typename V>
-MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
+template<typename I>
+template<typename V>
+MatrixPtr<V> Localizer<I>::remapIndex(
+    const MatrixInfo& info, const SArray<const size_t>& offset,
+    const SArray<const I>& index, const SArray<const V>& value,
+    const SArray<const I>& idx_dict) const {
+  if (index.empty() || idx_dict.empty()) return MatrixPtr<V>();
   CHECK_LT(idx_dict.size(), kuint32max);
-  if (!mat_ || mat_->index().empty() || idx_dict.empty()) {
-    return MatrixPtr<V>();
-  }
+  CHECK_EQ(offset.back(), index.size());
+  CHECK_EQ(index.size(), pair_.size());
+  bool bin = value.empty();
+  if (!bin) CHECK_EQ(value.size(), index.size());
 
   // TODO multi-thread
   uint32 matched = 0;
@@ -92,14 +106,10 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
   }
 
   // construct the new matrix
-  bool bin = mat_->binary();
-  auto offset = mat_->offset();
-  auto value = mat_->value();
   SArray<uint32> new_index(matched);
   SArray<size_t> new_offset(offset.size()); new_offset[0] = 0;
   SArray<V> new_value(std::min(value.size(), (size_t)matched));
 
-  CHECK_EQ(offset.back(), remapped_idx.size());
   size_t k = 0;
   for (size_t i = 0; i < offset.size() - 1; ++i) {
     size_t n = 0;
@@ -113,18 +123,18 @@ MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) const {
   }
   CHECK_EQ(k, matched);
 
-  auto info = mat_->info();
-  info.set_sizeof_index(sizeof(uint32));
-  info.set_nnz(new_index.size());
-  info.clear_ins_info();
+  auto new_info = info;
+  new_info.set_sizeof_index(sizeof(uint32));
+  new_info.set_nnz(new_index.size());
+  new_info.clear_ins_info();
   SizeR local(0, idx_dict.size());
-  if (mat_->rowMajor()) {
-    local.to(info.mutable_col());
+  if (new_info.row_major())  {
+    local.to(new_info.mutable_col());
   } else {
-    local.to(info.mutable_row());
+    local.to(new_info.mutable_row());
   }
   // LL << curr_o << " " << local.end() << " " << curr_j;
-  return MatrixPtr<V>(new SparseMatrix<uint32, V>(info, new_offset, new_index, new_value));
+  return MatrixPtr<V>(new SparseMatrix<uint32, V>(new_info, new_offset, new_index, new_value));
 }
 
 } // namespace PS

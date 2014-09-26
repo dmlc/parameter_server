@@ -2,12 +2,13 @@
 #include "data/text_parser.h"
 #include "util/threadpool.h"
 #include "util/filelinereader.h"
+#include "base/matrix_io_inl.h"
 
 // DEFINE_bool(compress_cache, false, "");
 
 namespace PS {
 
-GroupReader::GroupReader(const DataConfig& data, const DataConfig& cache) {
+void GroupReader::init(const DataConfig& data, const DataConfig& cache) {
   CHECK(data.format() == DataConfig::TEXT);
   if (cache.file_size()) dump_to_disk_ = true;
   cache_ = cache.file(0);
@@ -90,8 +91,10 @@ bool GroupReader::readOneFile(const DataConfig& data) {
   return true;
 }
 
-SArray<uint64> GroupReader::index(int grp_id) {
+SArray<uint64> GroupReader::index(int grp_id) const {
   SArray<uint64> idx;
+  auto it = fea_grp_.find(grp_id);
+  if (it == fea_grp_.end()) return idx;
   if (fea_grp_.count(grp_id) == 0) return idx;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), grp_id) + ".colidx";
@@ -99,11 +102,11 @@ SArray<uint64> GroupReader::index(int grp_id) {
     SArray<uint64> uncomp; uncomp.uncompressFrom(comp);
     idx.append(uncomp);
   }
-  CHECK_EQ(idx.size(), fea_grp_[grp_id].nnz_ele());
+  CHECK_EQ(idx.size(), it->second.nnz_ele());
   return idx;
 }
 
-SArray<size_t> GroupReader::offset(int grp_id) {
+SArray<size_t> GroupReader::offset(int grp_id) const {
   SArray<size_t> os(1); os[0] = 0;
   if (fea_grp_.count(grp_id) == 0) return os;
   for (int i = 0; i < data_.file_size(); ++i) {
@@ -118,5 +121,14 @@ SArray<size_t> GroupReader::offset(int grp_id) {
   return os;
 }
 
+MatrixInfo GroupReader::info(int grp_id) const {
+  for (int i = 0; i < info_.fea_grp_size(); ++i) {
+    if (info_.fea_grp(i).grp_id() == grp_id) {
+      // FIXME
+      return readMatrixInfo<double>(info_, i);
+    }
+  }
+  return MatrixInfo();
+}
 
 } // namespace PS

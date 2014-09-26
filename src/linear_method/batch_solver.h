@@ -1,5 +1,6 @@
 #pragma once
 #include "linear_method/linear_method.h"
+#include "data/group_reader.h"
 
 namespace PS {
 namespace LM {
@@ -43,6 +44,7 @@ class BatchSolver : public LinearMethod {
   // training data, available at the workers
   std::map<int, MatrixPtr<double>> X_;
   MatrixPtr<double> y_;
+  GroupReader grp_reader_;
   // dual_ = X * w
   SArray<double> dual_;
 
