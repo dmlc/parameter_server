@@ -44,6 +44,10 @@ bool TextParser::toProto(char* line, Instance* ins) {
     info.set_nnz_ins(info.nnz_ins() + 1);
     info.set_nnz_ele(info.nnz_ele() + ins->fea_grp(i).fea_id_size());
   }
+  if (ins->has_label()) {
+    auto& lbl = grp_info_[kGrpIDmax];
+    lbl.set_nnz_ins(lbl.nnz_ins() + 1);
+  }
   ++ num_ins_;
   return true;
 }
@@ -51,12 +55,19 @@ bool TextParser::toProto(char* line, Instance* ins) {
 InstanceInfo TextParser::info() {
   info_.clear_fea_grp();
   info_.set_num_ins(num_ins_);
-  for (int i = 0; i < kGrpIDmax; ++i) {
+  if (info_.label_type() != InstanceInfo::EMPTY) {
+    auto& lbl = grp_info_[kGrpIDmax];
+    lbl.set_nnz_ele(lbl.nnz_ins());
+    lbl.set_fea_begin(0);
+    lbl.set_fea_end(1);
+  }
+  for (int i = 0; i <= kGrpIDmax; ++i) {
     if (grp_info_[i].nnz_ele() > 0) {
       grp_info_[i].set_grp_id(i);
+      *info_.add_fea_grp() = grp_info_[i];
+      if (i == kGrpIDmax) continue;  // skip label
       info_.set_fea_begin(std::min(info_.fea_begin(), grp_info_[i].fea_begin()));
       info_.set_fea_end(std::max(info_.fea_end(), grp_info_[i].fea_end()));
-      *info_.add_fea_grp() = grp_info_[i];
       info_.set_nnz_ele(info_.nnz_ele() + grp_info_[i].nnz_ele());
     }
   }
@@ -70,10 +81,11 @@ InstanceInfo TextParser::info() {
 // assume feature_ids are ordered
 
 bool TextParser::parseLibsvm(char* buff, Instance* ins) {
-  char * pch = strtok (buff, " \t\r\n");
+
+  char *saveptr;
+  char * pch = strtok_r(buff, " \t\r\n", &saveptr);
   uint64 idx, last_idx=0;
   float label, val;
-  char *saveptr;
 
   if (!strtofloat(pch, &label)) return false;
   ins->set_label(label);

@@ -195,7 +195,6 @@ bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
   if (range == SizeR::all()) range = SizeR(0, File::size(data.file(0)));
   if (range.empty()) { clear(); return true; }
 
-  LL << data.file(0);
   File* file = File::open(data, "r");
   if (file == NULL || !file->open()) return false;
   resize(range.size());

@@ -55,12 +55,12 @@ SRCS = $(PROTOS_CC) \
 
 TESTS = \
 	group_reader_test \
-	# matrix_io_test \
+	matrix_io_test \
 	localizer_test \
 	countmin_test \
-	# snappy_test \
+	snappy_test \
 	# sparse_matrix_perf \
-	# auc_test \
+	auc_test \
 	io_test \
 	bitmap_test \
 	shared_array_test \
@@ -81,6 +81,8 @@ TESTS = \
 all: dir $(addprefix $(BIN)/, ps) # text2proto
 data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
+
+t: ../bin/group_reader_test
 
 dir:
 	mkdir -p $(LIB)

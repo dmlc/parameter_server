@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "data/group_reader.h"
+#include "base/matrix_io_inl.h"
 
 using namespace PS;
 
@@ -7,12 +8,34 @@ TEST(GroupReader, read) {
   DataConfig cache, dc;
   cache.add_file("/tmp/test/");
   dc.set_format(DataConfig::TEXT);
+
+  // load adfea
   dc.set_text(DataConfig::ADFEA);
   dc.add_file("../../data/ctrc/train/part-000[0-1].gz");
 
-  GroupReader gr(searchFiles(dc), cache);
-  gr.read();
+  // load libsvm
+  // dc.set_text(DataConfig::LIBSVM);
+  // dc.add_file("../data/rcv1/train/part-.*");
 
-  auto index  = gr.index(157);
-  LL << index;
+  DataConfig dc2 = searchFiles(dc);
+  GroupReader gr(dc2, cache); gr.read();
+
+  auto data = readMatricesOrDie<double>(dc2);
+
+  auto label = gr.value<double>(kGrpIDmax);
+  EXPECT_EQ((label.eigenVector() - data[0]->value().eigenVector()).norm(), 0);
+
+  for (int i = 1; i < data.size(); ++i) {
+    auto X = std::static_pointer_cast<SparseMatrix<uint64, double>>(data[i]);
+    int id = X->info().id();
+    auto index  = gr.index(id);
+    auto offset = gr.offset(id);
+    EXPECT_EQ((index.eigenVector() - X->index().eigenVector()).norm(), 0);
+    EXPECT_EQ((offset.eigenVector() - X->offset().eigenVector()).norm(), 0);
+
+    if (!X->value().empty()) {
+      auto value = gr.value<double>(id);
+      EXPECT_EQ((value.eigenVector() - X->value().eigenVector()).norm(), 0);
+    }
+  }
 }

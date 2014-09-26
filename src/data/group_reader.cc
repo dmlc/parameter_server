@@ -29,6 +29,7 @@ int GroupReader::read(InstanceInfo* info) {
   for (int i = 0; i < info_.fea_grp_size(); ++i) {
     fea_grp_[info_.fea_grp(i).grp_id()] = info_.fea_grp(i);
   }
+  return 0;
 }
 
 
@@ -40,7 +41,7 @@ bool GroupReader::readOneFile(const DataConfig& data) {
     SArray<uint64> col_idx;
     SArray<uint16> row_siz;
     bool writeToFile(const string& name) {
-      return val.compressTo().writeToFile(name+".val")
+      return val.compressTo().writeToFile(name+".value")
           && col_idx.compressTo().writeToFile(name+".colidx")
           && row_siz.compressTo().writeToFile(name+".rowsiz");
     }
@@ -74,18 +75,19 @@ bool GroupReader::readOneFile(const DataConfig& data) {
   reader.Reload();
 
   // save in cache
+  auto info = parser.info();
   string name = getFilename(data.file(0));
   for (int i = 0; i <= kGrpIDmax; ++i) {
     auto& slot = slots[i];
-    if (i < kGrpIDmax && slot.row_siz.empty()) continue;
+    if (slot.row_siz.empty() && slot.val.empty()) continue;
+    while (slot.row_siz.size() < num_ins) slot.row_siz.pushBack(0);
     CHECK(slot.writeToFile(cacheName(data, i)));
   }
-
-  auto info = parser.info();
   {
     Lock l(mu_);
     info_ = mergeInstanceInfo(info_, info);
   }
+  return true;
 }
 
 SArray<uint64> GroupReader::index(int grp_id) {
@@ -102,11 +104,19 @@ SArray<uint64> GroupReader::index(int grp_id) {
 }
 
 SArray<size_t> GroupReader::offset(int grp_id) {
-
+  SArray<size_t> os(1); os[0] = 0;
+  if (fea_grp_.count(grp_id) == 0) return os;
+  for (int i = 0; i < data_.file_size(); ++i) {
+    string file = cacheName(ithFile(data_, i), grp_id) + ".rowsiz";
+    SArray<char> comp; CHECK(comp.readFromFile(file));
+    SArray<uint16> uncomp; uncomp.uncompressFrom(comp);
+    size_t n = os.size();
+    os.resize(n + uncomp.size());
+    for (size_t i = 0; i < uncomp.size(); ++i) os[i+n] = os[i+n-1] + uncomp[i];
+  }
+  CHECK_EQ(os.size(), info_.num_ins()+1);
+  return os;
 }
 
-SArray<float> GroupReader::value(int grp_id) {
-
-}
 
 } // namespace PS

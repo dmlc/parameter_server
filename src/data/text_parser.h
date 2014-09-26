@@ -18,7 +18,7 @@ class TextParser {
 
  private:
   InstanceInfo info_;
-  FeatureGroupInfo grp_info_[kGrpIDmax];
+  FeatureGroupInfo grp_info_[kGrpIDmax+1];
   bool ignore_fea_grp_;
   size_t num_ins_ = 0;
 
