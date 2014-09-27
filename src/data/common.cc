@@ -35,6 +35,8 @@ MatrixInfo readMatrixInfo(
   f.set_nnz(slot.nnz_ele());
   f.set_sizeof_index(sizeof_idx);
   f.set_sizeof_value(sizeof_val);
+
+  // LL << info.DebugString() << "\n" << f.DebugString();
   // *f.mutable_ins_info() = info;
   return f;
 }

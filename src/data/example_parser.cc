@@ -48,7 +48,6 @@ ExampleInfo ExampleParser::info() {
     auto &sinfo = slot_info_[i];
     if (!sinfo.nnz_ele()) continue;
     sinfo.set_id(i);
-    *info_.add_slot() = sinfo;
     if (i == 0) {  // the label
       sinfo.set_format(SlotInfo::DENSE);
       sinfo.set_min_key(0);
@@ -60,6 +59,7 @@ ExampleInfo ExampleParser::info() {
         sinfo.set_format(SlotInfo::SPARSE_BINARY);
       }
     }
+    *info_.add_slot() = sinfo;
   }
   return info_;
 }

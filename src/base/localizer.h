@@ -10,17 +10,14 @@ template<typename I>
 class Localizer {
  public:
   // find the unique indeces with their number of occrus in *idx*
-  void countUniqIndex(const SArray<I>& idx,
-                      SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
+  void countUniqIndex(
+      const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
 
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   template<typename V>
   MatrixPtr<V> remapIndex(
-      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const {
-    return remapIndex(reader.info<V>(grp_id), reader.offset(grp_id),
-                      reader.index(grp_id), reader.value<V>(grp_id), idx_dict);
-  }
+      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const;
 
   template<typename V>
   MatrixPtr<V> remapIndex(
@@ -73,6 +70,18 @@ template<typename I> void Localizer<I>::countUniqIndex(
   // index_.writeToFile("index");
   // uniq_idx->writeToFile("uniq");
   // idx_frq->writeToFile("cnt");
+}
+
+template<typename I>
+template<typename V>
+MatrixPtr<V> Localizer<I>::remapIndex(
+    const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const {
+  SArray<V> val;
+  auto info = reader.info<V>(grp_id);
+  CHECK_NE(info.type(), MatrixInfo::DENSE)
+      << "dense matrix already have compact indeces\n" << info.DebugString();
+  if (info.type() == MatrixInfo::SPARSE) val = reader.value<V>(grp_id);
+  return remapIndex(info, reader.offset(grp_id), reader.index(grp_id), val, idx_dict);
 }
 
 template<typename I>

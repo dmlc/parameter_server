@@ -27,9 +27,6 @@ class SparseMatrix : public Matrix<V> {
   SparseMatrix(
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
       : Matrix<V>(info, value), offset_(offset), index_(index) {
-    CHECK_EQ(offset.back(), index.size());
-    if (!binary()) CHECK_EQ(value.size(), index.size());
-    // may do more check here
   }
 
   void times(const V* x, V* y) const { templateTimes(x, y); }
