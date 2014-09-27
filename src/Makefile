@@ -60,11 +60,11 @@ TESTS = \
 	localizer_test \
 	countmin_test \
 	snappy_test \
+	shared_array_test \
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \
 	bitmap_test \
-	shared_array_test \
 	eigen3_test \
 	sparse_matrix_test \
 	auc_layer_test \

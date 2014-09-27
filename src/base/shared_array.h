@@ -1,5 +1,5 @@
 #pragma once
-
+#include <atomic>
 #include "util/common.h"
 #include "util/file.h"
 #include "base/range.h"
@@ -12,6 +12,8 @@ template<typename V> class Matrix;
 template<typename V> class SArray;
 template<typename V> using SArrayList = std::vector<SArray<V>>;
 
+static std::atomic<int64> g_mem_usage_sarray = ATOMIC_VAR_INIT(0);
+
 // Memory efficient array. Most operations are zero-copy, such as assign, slice
 // a segment, convert to Eigen3 vector/array. It shares the same semantic as a C
 // array pointer. For example,
@@ -23,6 +25,7 @@ template<typename V> using SArrayList = std::vector<SArray<V>>;
 template<typename V> class SArray {
  public:
   SArray() { }
+  ~SArray() { }
   // Create an array with length n. Values are not initialized. To initialize
   // them, call setValue(v) or setZero()
   explicit SArray(size_t n) { resize(n); }
@@ -60,6 +63,9 @@ template<typename V> class SArray {
   // Capacity
   size_t size() const { return size_; }
   size_t capacity() const { return capacity_; }
+  // size_t memSize() const { return capacity_*sizeof(V); }
+  // static int64 gMemSize() { return g_mem_usage_sarray.load(); }
+
   bool empty() const { return size() == 0; }
   // Replace the current data pointer with data. the memory associated with the
   // replaced pointer will be released if no other SArray points to it.
@@ -143,6 +149,8 @@ template<typename V> class SArray {
   size_t capacity_ = 0;
   V* data_ = nullptr;
   shared_ptr<void> ptr_ = shared_ptr<void>(nullptr);
+
+
 };
 
 // for debug use

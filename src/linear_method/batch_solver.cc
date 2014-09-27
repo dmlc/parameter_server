@@ -245,8 +245,8 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
     }
 
     for (int i = 0; i < grp_size; ++i, time += kPace) {
-      // wait until the i-th channel's keys are ready
       if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
+      // wait until the i-th channel's keys are ready
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));

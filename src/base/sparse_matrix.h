@@ -58,6 +58,10 @@ class SparseMatrix : public Matrix<V> {
   SArray<I> index() const { return index_; }
   SArray<size_t> offset() const { return offset_; }
 
+  double memSize() const {
+    return (value_.size()*sizeof(V) + index_.size()*sizeof(I)
+            + offset_.size()*sizeof(size_t)) / 1e6;
+  }
   void resize(size_t rows, size_t cols, size_t nnz, bool row_major) {
     CHECK(false) << "TODO";
   }

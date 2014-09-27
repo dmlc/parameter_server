@@ -14,29 +14,36 @@ TEST(SArray, Ctor) {
   EXPECT_EQ(sa.pointer().use_count(), 1);
 }
 
-// TEST(SArray, Mem) {
-//   ResUsage r;
-//   {
-//     std::vector<int> a(10000000);
-//     double mem = 2*r.myPhyMem() + 1;
-//     {
-//       // SharedArray<int> sa(a.begin(), a.end());
-//       SArray<int> sa; sa.copyFrom(a.begin(), a.end());
-//       EXPECT_LE(r.myPhyMem(), mem);
-//       {
-//         SArray<int> sb(sa);
-//         EXPECT_LE(r.myPhyMem(), mem);
-//         {
-//           SArray<char> sc(sa);
-//           EXPECT_LE(r.myPhyMem(), mem);
-//         }
-//         EXPECT_LE(r.myPhyMem(), mem);
-//       }
-//       EXPECT_LE(r.myPhyMem(), mem);
-//     }
-//     EXPECT_LE(r.myPhyMem(), mem);
-//   }
-// }
+TEST(SArray, Mem) {
+  SArray<int> x;
+  ResUsage r;
+  {
+    std::vector<int> a(10000000);
+    double mem = 2*r.myPhyMem() + 1;
+    {
+      // SharedArray<int> sa(a.begin(), a.end());
+      SArray<int> sa; sa.copyFrom(a.begin(), a.end());
+      EXPECT_LE(r.myPhyMem(), mem);
+      {
+        SArray<int> sd(10000);
+        SArray<int> sb(sa);
+        EXPECT_LE(r.myPhyMem(), mem);
+        LL << x.gMemSize();
+        {
+          SArray<char> sc(sa);
+          EXPECT_LE(r.myPhyMem(), mem);
+          LL << x.gMemSize();
+        }
+        EXPECT_LE(r.myPhyMem(), mem);
+        LL << x.gMemSize();
+      }
+      EXPECT_LE(r.myPhyMem(), mem);
+      LL << x.gMemSize();
+    }
+    EXPECT_LE(r.myPhyMem(), mem);
+    LL << x.gMemSize();
+  }
+}
 
 TEST(SArray, intersection) {
   SArray<int> a{1,2,3,5,6,7,8}, b{3,4,7,10}, c{3,7}, d{};
@@ -59,11 +66,11 @@ TEST(SArray, union) {
 TEST(SArray, range) {
   SArray<int> a{1,1,4,4,5,7,7,8,8,8,20}, b{1,1}, c{4,4,5,7,7,8,8,8}, d{};
 
-  // EXPECT_EQ(a.findRange(1, 4), b);
-  // EXPECT_EQ(a.findRange(2, 15), c);
-  // EXPECT_EQ(a.findRange(0, 100), a);
-  // EXPECT_EQ(a.findRange(100, 0), d);
-  // EXPECT_EQ(a.findRange(4, 4), d);
+  EXPECT_EQ(a.segment(a.findRange(SizeR(1,4))), b);
+  // EXPECT_EQ(a.findRange(SizeR(2, 15)), c);
+  // EXPECT_EQ(a.findRange(SizeR(0, 100)), a);
+  // EXPECT_EQ(a.findRange(SizeR(100, 0)), d);
+  // EXPECT_EQ(a.findRange(SizeR(4, 4)), d);
 }
 
 // TEST(SArray, gz) {

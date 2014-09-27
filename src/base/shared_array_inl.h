@@ -25,10 +25,9 @@ void SArray<V>::reserve(size_t n) {
 template <typename V>
 template <typename ForwardIt>
 void SArray<V>::copyFrom(const ForwardIt first, const ForwardIt last) {
-  size_ = std::distance(first, last);
-  capacity_ = size_ + 5;
-  data_ = new V[capacity_];
-  ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) { delete [] p; });
+  size_t size = std::distance(first, last);
+  V* data = new V[size + 5];
+  reset(data, size);
   for (size_t i = 0; i < size_; ++i) {
     data_[i] = *(first+i);
   }
@@ -56,7 +55,14 @@ void SArray<V>::reset(V* data, size_t size) {
   capacity_ = size;
   size_ = size;
   data_ = data;
-  ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) { delete [] p; });
+  // int64 mem = capacity_*sizeof(V);
+  // g_mem_usage_sarray += mem;
+  // LL << "+ " << mem << " " << g_mem_usage_sarray.load();
+  ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) {
+      // g_mem_usage_sarray -= mem;
+      // LL << "- " << mem; << " " << g_mem_usage_sarray.load();
+      delete [] p;
+    });
 }
 
 template <typename V>
