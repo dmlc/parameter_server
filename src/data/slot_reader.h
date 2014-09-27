@@ -36,9 +36,7 @@ class SlotReader {
 
 template<typename V> SArray<V> SlotReader::value(int slot_id) const {
   SArray<V> val;
-  if (nnzEle(slot_id) == 0); return val;
-  auto it = slot_info_.find(slot_id);
-  if (it == slot_info_.end()) return val;
+  if (nnzEle(slot_id) == 0) return val;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".value";
     SArray<char> comp; CHECK(comp.readFromFile(file));

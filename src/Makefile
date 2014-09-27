@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -55,7 +55,7 @@ SRCS = $(PROTOS_CC) \
 
 
 TESTS = \
-	group_reader_test \
+	slot_reader_test \
 	matrix_io_test \
 	localizer_test \
 	countmin_test \
@@ -83,7 +83,7 @@ all: dir $(addprefix $(BIN)/, ps) # text2proto
 data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
-t: ../bin/group_reader_test
+t: ../bin/slot_reader_test
 
 dir:
 	mkdir -p $(LIB)

@@ -44,7 +44,7 @@ bool ExampleParser::toProto(char* line, Example* ex) {
 ExampleInfo ExampleParser::info() {
   info_.set_num_ex(num_ex_);
   info_.clear_slot();
-  for (int i = 0; i <= kSlotIDmax; ++i) {
+  for (int i = 0; i < kSlotIDmax; ++i) {
     auto &sinfo = slot_info_[i];
     if (!sinfo.nnz_ele()) continue;
     sinfo.set_id(i);

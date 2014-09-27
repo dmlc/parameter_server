@@ -96,7 +96,7 @@ bool TextParser::parseLibsvm(char* buff, Instance* ins) {
   pch = strtok_r(NULL, " \t\r\n", &saveptr);
 
   auto grp = ins->add_fea_grp();
-  grp->set_grp_id(0);
+  grp->set_grp_id(1);
   while (pch != NULL) {
     char *it;
     for (it = pch; *it != ':' && *it != 0; it ++);

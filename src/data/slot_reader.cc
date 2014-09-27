@@ -97,7 +97,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
 
 SArray<uint64> SlotReader::index(int slot_id) const {
   SArray<uint64> idx;
-  if (nnzEle(slot_id) == 0); return idx;
+  if (nnzEle(slot_id) == 0) return idx;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".colidx";
     SArray<char> comp; CHECK(comp.readFromFile(file));
@@ -110,7 +110,7 @@ SArray<uint64> SlotReader::index(int slot_id) const {
 
 SArray<size_t> SlotReader::offset(int slot_id) const {
   SArray<size_t> os(1); os[0] = 0;
-  if (nnzEle(slot_id) == 0); return os;
+  if (nnzEle(slot_id) == 0) return os;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".rowsiz";
     SArray<char> comp; CHECK(comp.readFromFile(file));

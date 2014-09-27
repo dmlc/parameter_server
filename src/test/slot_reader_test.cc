@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
-#include "data/group_reader.h"
+#include "data/slot_reader.h"
 #include "base/matrix_io_inl.h"
 
 using namespace PS;
 
-TEST(GroupReader, read) {
+TEST(SlotReader, read) {
   DataConfig cache, dc;
   cache.add_file("/tmp/test/");
   dc.set_format(DataConfig::TEXT);
@@ -18,11 +18,13 @@ TEST(GroupReader, read) {
   // dc.add_file("../data/rcv1/train/part-.*");
 
   DataConfig dc2 = searchFiles(dc);
-  GroupReader gr; gr.init(dc2, cache); gr.read();
+  SlotReader gr; gr.init(dc2, cache); gr.read();
 
   auto data = readMatricesOrDie<double>(dc2);
 
-  auto label = gr.value<double>(kGrpIDmax);
+  auto label = gr.value<double>(0);
+  // LL << label;
+  // LL << data[0]->value();
   EXPECT_EQ((label.eigenVector() - data[0]->value().eigenVector()).norm(), 0);
 
   for (int i = 1; i < data.size(); ++i) {
@@ -30,6 +32,8 @@ TEST(GroupReader, read) {
     int id = X->info().id();
     auto index  = gr.index(id);
     auto offset = gr.offset(id);
+    // LL << index;
+    // LL << offset;
     EXPECT_EQ((index.eigenVector() - X->index().eigenVector()).norm(), 0);
     EXPECT_EQ((offset.eigenVector() - X->offset().eigenVector()).norm(), 0);
 
