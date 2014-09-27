@@ -1,5 +1,5 @@
-#include "data/common.h"
 #include <regex>
+#include "data/common.h"
 #include "util/file.h"
 
 namespace PS {
@@ -8,6 +8,60 @@ DataConfig ithFile(const DataConfig& conf, int i, const string& suffix) {
   CHECK_GE(i, 0); CHECK_LT(i, conf.file_size());
   auto f = conf; f.clear_file(); f.add_file(conf.file(i) + suffix);
   return f;
+}
+
+MatrixInfo readMatrixInfo(
+    const ExampleInfo& info, int slot_id, int sizeof_idx, int sizeof_val) {
+  MatrixInfo f;
+  int i = 0;
+  for (; i < info.slot_size(); ++i) if (info.slot(i).id() == slot_id) break;
+  if (i == info.slot_size()) return f;
+
+  auto slot = info.slot(i);
+  if (slot.format() == SlotInfo::DENSE) {
+    f.set_type(MatrixInfo::DENSE);
+  } else if (slot.format() == SlotInfo::SPARSE) {
+    f.set_type(MatrixInfo::SPARSE);
+  } else if (slot.format() == SlotInfo::SPARSE_BINARY) {
+    f.set_type(MatrixInfo::SPARSE_BINARY);
+  }
+  f.set_row_major(true);
+  f.set_id(slot.id());
+  f.mutable_row()->set_begin(0);
+  f.mutable_row()->set_end(info.num_ex());
+  f.mutable_col()->set_begin(slot.min_key());
+  f.mutable_col()->set_end(slot.max_key());
+
+  f.set_nnz(slot.nnz_ele());
+  f.set_sizeof_index(sizeof_idx);
+  f.set_sizeof_value(sizeof_val);
+  // *f.mutable_ins_info() = info;
+  return f;
+}
+
+ExampleInfo mergeExampleInfo(const ExampleInfo& A, const ExampleInfo& B) {
+  std::map<int, SlotInfo> slots;
+  for (int i = 0; i < A.slot_size(); ++i) {
+    slots[A.slot(i).id()] = A.slot(i);
+  }
+
+  for (int i = 0; i < B.slot_size(); ++i) {
+    int id = B.slot(i).id();
+    if (slots.count(id) == 0) { slots[id] = B.slot(i); continue; }
+    auto a = slots[id];
+    auto b = B.slot(i);
+    CHECK_EQ(a.format(), b.format());
+    a.set_min_key(std::min(a.min_key(), b.min_key()));
+    a.set_max_key(std::max(a.max_key(), b.max_key()));
+    a.set_nnz_ele(a.nnz_ele() + b.nnz_ele());
+    a.set_nnz_ex(a.nnz_ex() + b.nnz_ex());
+    slots[id] = a;
+  }
+
+  ExampleInfo C;
+  C.set_num_ex(A.num_ex() + B.num_ex());
+  for (const auto& it : slots) *C.add_slot() = it.second;
+  return C;
 }
 
 InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {

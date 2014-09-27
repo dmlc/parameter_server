@@ -7,7 +7,7 @@
 namespace PS {
 
 template<typename V>
-MatrixInfo readMatrixInfo(const InstanceInfo& info, int grp_id) {
+MatrixInfo readMatrixInfo(const InstanceInfo& info, int i) {
   MatrixInfo f;
   if (info.fea_type() == InstanceInfo::DENSE) {
     f.set_type(MatrixInfo::DENSE);
@@ -17,7 +17,6 @@ MatrixInfo readMatrixInfo(const InstanceInfo& info, int grp_id) {
     f.set_type(MatrixInfo::SPARSE_BINARY);
   }
   // FIXME
-  int i = 0;
   CHECK_LT(i, info.fea_grp_size());
   auto g = info.fea_grp(i);
   f.set_row_major(true);

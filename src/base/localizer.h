@@ -2,7 +2,7 @@
 #include "base/shared_array_inl.h"
 #include "base/sparse_matrix.h"
 #include "util/parallel_sort.h"
-#include "data/group_reader.h"
+#include "data/slot_reader.h"
 
 namespace PS {
 
@@ -17,8 +17,8 @@ class Localizer {
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   template<typename V>
   MatrixPtr<V> remapIndex(
-      const GroupReader& reader, int grp_id, const SArray<const I>& idx_dict) {
-    return remapIndex(reader.info(grp_id), reader.offset(grp_id),
+      const SlotReader& reader, int grp_id, const SArray<const I>& idx_dict) {
+    return remapIndex(reader.info<V>(grp_id), reader.offset(grp_id),
                       reader.index(grp_id), reader.value<V>(grp_id), idx_dict);
   }
 

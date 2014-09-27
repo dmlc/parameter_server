@@ -47,7 +47,8 @@ SRCS = $(PROTOS_CC) \
 	system/app.cc \
 	data/common.cc \
 	data/text_parser.cc \
-	data/group_reader.cc \
+	data/example_parser.cc \
+	data/slot_reader.cc \
 	linear_method/linear_method.cc \
 	linear_method/batch_solver.cc \
 	linear_method/darling.cc

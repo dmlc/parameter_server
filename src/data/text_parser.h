@@ -1,3 +1,5 @@
+// deprecated, see example_parser.h
+
 #pragma once
 #include "util/common.h"
 #include "proto/instance.pb.h"
@@ -11,12 +13,14 @@ class TextParser {
  public:
   typedef DataConfig::TextFormat TextFormat;
   TextParser(TextFormat format, bool ignore_fea_grp = false);
+
   bool toProto(char* line, Instance* ins);
   InstanceInfo info();
   bool parseLibsvm(char*, Instance*);
   bool parseAdfea(char*, Instance*);
 
  private:
+
   InstanceInfo info_;
   FeatureGroupInfo grp_info_[kGrpIDmax+1];
   bool ignore_fea_grp_;

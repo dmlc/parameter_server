@@ -11,12 +11,11 @@
 namespace PS {
 
 // return A \union B
-InstanceInfo mergeInstanceInfo(
-    const InstanceInfo& A, const InstanceInfo& B);
+// InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B);
 
 // convert the feature group *grp_id* info into matrix info
 template<typename V>
-MatrixInfo readMatrixInfo(const InstanceInfo& info, int grp_id);
+MatrixInfo readMatrixInfo(const InstanceInfo& info, int i);
 
 // Read from recordio files. Each instance is stored in a protobuf format and
 // placed in a binary file one by one. Return two matrices, label vector and

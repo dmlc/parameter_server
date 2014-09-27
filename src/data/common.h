@@ -2,6 +2,8 @@
 #include "util/common.h"
 #include "proto/config.pb.h"
 #include "proto/instance.pb.h"
+#include "proto/example.pb.h"
+#include "proto/matrix.pb.h"
 
 namespace PS {
 
@@ -16,6 +18,11 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix = "");
 
 InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B);
+
+ExampleInfo mergeExampleInfo(const ExampleInfo& A, const ExampleInfo& B);
+
+MatrixInfo readMatrixInfo(
+    const ExampleInfo& info, int slot_id, int sizeof_idx, int sizeof_val);
 
 
 
