@@ -10,23 +10,23 @@ template<typename I>
 class Localizer {
  public:
   // find the unique indeces with their number of occrus in *idx*
-  void countUniqIndex(const SArray<const I>& idx,
+  void countUniqIndex(const SArray<I>& idx,
                       SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
 
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   template<typename V>
   MatrixPtr<V> remapIndex(
-      const SlotReader& reader, int grp_id, const SArray<const I>& idx_dict) {
+      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) {
     return remapIndex(reader.info<V>(grp_id), reader.offset(grp_id),
                       reader.index(grp_id), reader.value<V>(grp_id), idx_dict);
   }
 
   template<typename V>
   MatrixPtr<V> remapIndex(
-      const MatrixInfo& info, const SArray<const size_t>& offset,
-      const SArray<const I>& index, const SArray<const V>& value,
-      const SArray<const I>& idx_dict) const;
+      const MatrixInfo& info, const SArray<size_t>& offset,
+      const SArray<I>& index, const SArray<V>& value,
+      const SArray<I>& idx_dict) const;
 
  private:
 #pragma pack(4)
@@ -37,7 +37,7 @@ class Localizer {
 };
 
 template<typename I> void Localizer<I>::countUniqIndex(
-    const SArray<const I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+    const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
   if (idx.empty()) return;
   CHECK(uniq_idx);
   CHECK_LT(idx.size(), kuint32max)
@@ -78,9 +78,9 @@ template<typename I> void Localizer<I>::countUniqIndex(
 template<typename I>
 template<typename V>
 MatrixPtr<V> Localizer<I>::remapIndex(
-    const MatrixInfo& info, const SArray<const size_t>& offset,
-    const SArray<const I>& index, const SArray<const V>& value,
-    const SArray<const I>& idx_dict) const {
+    const MatrixInfo& info, const SArray<size_t>& offset,
+    const SArray<I>& index, const SArray<V>& value,
+    const SArray<I>& idx_dict) const {
   if (index.empty() || idx_dict.empty()) return MatrixPtr<V>();
   CHECK_LT(idx_dict.size(), kuint32max);
   CHECK_EQ(offset.back(), index.size());

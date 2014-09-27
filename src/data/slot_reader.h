@@ -8,6 +8,11 @@ namespace PS {
 // read all slots in *data* with multithreadd, save them into *cache*.
 class SlotReader {
  public:
+  SlotReader() { }
+  SlotReader(const DataConfig& data, const DataConfig& cache) {
+    init(data, cache);
+  }
+
   void init(const DataConfig& data, const DataConfig& cache);
 
   // first read, then save
@@ -16,7 +21,6 @@ class SlotReader {
   template<typename V> MatrixInfo info(int slot_id) const {
     return readMatrixInfo(info_, slot_id, sizeof(uint64), sizeof(V));
   }
-
   // load a slot from cache
   SArray<size_t> offset(int slot_id) const;
   SArray<uint64> index(int slot_id) const;

@@ -5,17 +5,22 @@
 using namespace PS;
 
 TEST(Localizer, RCV1) {
-  DataConfig dc;
+  DataConfig cache, dc;
+  cache.add_file("/tmp/test/");
+
   dc.set_format(DataConfig::TEXT);
   dc.set_text(DataConfig::LIBSVM);
   dc.add_file("../data/rcv1_train.binary");
-  auto data = readMatricesOrDie<double>(dc);
 
-  Localizer<uint64, double> lc(data[1]);
+  SlotReader sr(dc, cache);
+  ExampleInfo info;
+  sr.read(&info);
+
+  Localizer<uint64> lc;
 
   SArray<uint64> key;
   SArray<uint32> freq;
-  lc.countUniqIndex(&key, &freq);
+  lc.countUniqIndex(sr.index(1), &key, &freq);
 
   EXPECT_EQ(key.eigenArray().sum(), 1051859373);
   EXPECT_EQ(freq.eigenArray().sum(), 1498952);
@@ -30,42 +35,43 @@ TEST(Localizer, RCV1) {
   }
   EXPECT_EQ(f_key.size(), 19959);
 
-  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(lc.remapIndex(f_key));
-
+  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
+      lc.remapIndex<double>(sr, 1, f_key));
 
   EXPECT_EQ(X->offset().eigenArray().sum(), 14702421805);
   SArray<uint64> idx;
   for (auto k : X->index()) idx.pushBack(k);
-  EXPECT_EQ(idx.eigenArray().sum(), 14708054959);
+  EXPECT_EQ(idx.size(), 1467683);
+  EXPECT_EQ(idx.eigenArray().sum(), 14708054959 - idx.size());
   EXPECT_LT(X->value().eigenArray().sum(), 132224);
   EXPECT_GT(X->value().eigenArray().sum(), 132223);
 
   // LL << X->debugString();
 }
 
-TEST(Localizer, ADFEA) {
-  DataConfig dc;
-  dc.set_format(DataConfig::TEXT);
-  dc.set_text(DataConfig::ADFEA);
-  dc.add_file("../../data/ctrc/train/part-000[0-1].gz");
-  auto data = readMatricesOrDie<double>(searchFiles(dc));
+// TEST(Localizer, ADFEA) {
+//   DataConfig dc;
+//   dc.set_format(DataConfig::TEXT);
+//   dc.set_text(DataConfig::ADFEA);
+//   dc.add_file("../../data/ctrc/train/part-000[0-1].gz");
+//   auto data = readMatricesOrDie<double>(searchFiles(dc));
 
-  for (int i = 1; i < data.size(); ++i) {
-    Localizer<uint64, double> lc(data[i]);
-    SArray<uint64> key;
-    SArray<uint32> freq;
-    lc.countUniqIndex(&key, &freq);
+//   for (int i = 1; i < data.size(); ++i) {
+//     Localizer<uint64, double> lc(data[i]);
+//     SArray<uint64> key;
+//     SArray<uint32> freq;
+//     lc.countUniqIndex(&key, &freq);
 
-    int filter = 4;
-    SArray<uint64> f_key;
-    for (int i = 0; i < key.size(); ++i) {
-      if (freq[i] > filter) f_key.pushBack(key[i]);
-    }
-    LL << f_key.size();
-    auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(lc.remapIndex(f_key));
-    if (X) {
-      LL << X->index().eigenArray().maxCoeff();
-    }
-    // LL << X->debugString();
-  }
-}
+//     int filter = 4;
+//     SArray<uint64> f_key;
+//     for (int i = 0; i < key.size(); ++i) {
+//       if (freq[i] > filter) f_key.pushBack(key[i]);
+//     }
+//     LL << f_key.size();
+//     auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(lc.remapIndex(f_key));
+//     if (X) {
+//       LL << X->index().eigenArray().maxCoeff();
+//     }
+//     // LL << X->debugString();
+//   }
+// }

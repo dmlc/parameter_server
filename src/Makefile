@@ -83,7 +83,8 @@ all: dir $(addprefix $(BIN)/, ps) # text2proto
 data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
-t: ../bin/slot_reader_test
+# t: ../bin/slot_reader_test
+t: ../bin/localizer_test
 
 dir:
 	mkdir -p $(LIB)
