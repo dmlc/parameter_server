@@ -200,7 +200,7 @@ bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
   resize(range.size());
   if (range.begin() > 0) file->seek(range.begin() * sizeof(V));
   size_t length = range.size() * sizeof(V);
-  return (file->read(ptr_.get(), length) == length);
+  return (file->read(ptr_.get(), length) == length && file->close());
 }
 
 template <typename V>
