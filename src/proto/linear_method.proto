@@ -1,7 +1,7 @@
 package PS.LM;
 import "proto/range.proto";
 import "proto/evaluation.proto";
-import "proto/instance.proto";
+import "proto/example.proto";
 import "proto/config.proto";
 
 message Config {
@@ -46,7 +46,7 @@ message SolverConfig {
   // parameters, k and n.
   optional int32 countmin_k = 16 [default = 2];
   // n = the_first_arrive_key_length * num_workeres * countmin_n_ratio
-  optional double countmin_n_ratio = 17 [default = 4.0];
+  optional double countmin_n_ratio = 17 [default = 2.0];
 }
 
 message DarlingConfig {
@@ -96,7 +96,7 @@ message Progress {
 }
 
 message DataInfo {
-  optional InstanceInfo ins_info = 1;
+  optional ExampleInfo example_info = 1;
   optional int32 hit_cache = 2;
 }
 

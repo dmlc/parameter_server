@@ -9,7 +9,7 @@ class CountMin {
  public:
   // TODO prefetch to accelerate the memory access
   bool empty() { return n_ == 0; }
-
+  void clear() { data_.clear(); n_ = 0; }
   void resize(int n, int k) {
     n_ = std::max(n, 64);
     data_.resize(n_);

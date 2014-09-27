@@ -42,6 +42,8 @@ class SharedParameter : public Customer {
     taskpool(node)->finishIncomingTask(time);
   }
 
+  void clearKeyFilter(int chl) { key_filter_[chl].clear(); }
+
   // process a received message, will called by the thread of executor
   void process(const MessagePtr& msg);
 
@@ -79,6 +81,7 @@ class SharedParameter : public Customer {
   Range<K> keyRange(const NodeID& id) {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
+
  private:
   std::unordered_map<int, FreqencyFilter<K>> key_filter_;
 

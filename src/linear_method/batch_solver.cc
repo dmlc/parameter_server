@@ -3,6 +3,7 @@
 #include "base/matrix_io_inl.h"
 #include "base/localizer.h"
 #include "base/sparse_matrix.h"
+#include "data/common.h"
 
 namespace PS {
 namespace LM {
@@ -26,35 +27,36 @@ void BatchSolver::run() {
   active_nodes->submitAndWait(load, [this, &hit_cache](){
       DataInfo info; CHECK(info.ParseFromString(exec_.lastRecvReply()));
       // LL << info.DebugString();
-      g_train_ins_info_ = mergeInstanceInfo(g_train_ins_info_, info.ins_info());
+      g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
       hit_cache += info.hit_cache();
     });
   if (hit_cache > 0) {
     CHECK_EQ(hit_cache, FLAGS_num_workers) << "clear the local caches";
     LI << "Hit local caches for the training data";
   }
-  LI << "Loaded " << g_train_ins_info_.num_ins() << " examples in "
+  LI << "Loaded " << g_train_info_.num_ex() << " examples in "
      << toc(load_time) << " sec";
 
   // partition feature blocks
   CHECK(conf_.has_solver());
   auto sol_cf = conf_.solver();
-  for (int i = 0; i < g_train_ins_info_.fea_grp_size(); ++i) {
-    auto info = g_train_ins_info_.fea_grp(i);
+  for (int i = 0; i < g_train_info_.slot_size(); ++i) {
+    auto info = g_train_info_.slot(i);
+    CHECK(info.has_id());
+    if (info.id() == 0) continue;  // it's the label
     CHECK(info.has_nnz_ele());
-    CHECK(info.has_nnz_ins());
-    CHECK(info.has_grp_id());
-    fea_grp_.push_back(info.grp_id());
-    double nnz_per_row = (double)info.nnz_ele() / (double)info.nnz_ins();
+    CHECK(info.has_nnz_ex());
+    fea_grp_.push_back(info.id());
+    double nnz_per_row = (double)info.nnz_ele() / (double)info.nnz_ex();
     int n = 1;  // number of blocks for a feature group
     if (nnz_per_row > 1 + 1e-6) {
       // only parititon feature group whose features are correlated
       n = std::max((int)std::ceil(nnz_per_row * sol_cf.feature_block_ratio()), 1);
     }
     for (int i = 0; i < n; ++i) {
-      auto block = Range<Key>(info.fea_begin(), info.fea_end()).evenDivide(n, i);
+      auto block = Range<Key>(info.min_key(), info.max_key()).evenDivide(n, i);
       if (block.empty()) continue;
-      fea_blk_.push_back(std::make_pair(info.grp_id(), block));
+      fea_blk_.push_back(std::make_pair(info.id(), block));
     }
   }
 
@@ -144,6 +146,7 @@ void BatchSolver::runIteration() {
 
 bool BatchSolver::dataCache(const string& name, bool load) {
   if (!conf_.has_local_cache()) return false;
+  return false;  // FIXME
   // load / save label
   auto cache = conf_.local_cache();
   auto y_conf = ithFile(cache, 0, name + "_label_" + myNodeID());
@@ -182,23 +185,16 @@ bool BatchSolver::dataCache(const string& name, bool load) {
   return true;
 }
 
-int BatchSolver::loadData(const MessageCPtr& msg, InstanceInfo* info) {
+int BatchSolver::loadData(const MessageCPtr& msg, ExampleInfo* info) {
   if (!IamWorker()) return 0;
+  // FIXME put info into
   bool hit_cache = loadCache("train");
   if (!hit_cache) {
     CHECK(conf_.has_local_cache());
     slot_reader_.init(conf_.training_data(), conf_.local_cache());
-
-    // FIXME
-
-    // auto train = readMatricesOrDie<double>(
-    // CHECK_GE(train.size(), 2);
-    // y_ = train[0];
-    // for (int i = 1; i < train.size(); ++i) {
-    //   X_[train[i]->info().id()] = train[i];
-    // }
+    slot_reader_.read(info);
   }
-  *info = y_->info().ins_info();
+  // *info = y_->info().ins_info();
   return hit_cache;
 }
 
@@ -214,17 +210,14 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       if (hit_cache) continue;
-      // Time 0: send all unique keys with their count to servers
       int grp = fea_grp_[i];
+
+      // Time 0: send all unique keys with their count to servers
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
+      Localizer<Key> localizer;
+      localizer.countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
 
-      // Localizer<Key, double> localizer(X_[grp]);
-      // localizer.countUniqIndex(&uniq_key, &key_cnt);
-      // if (uniq_key.empty()) {
-      //   LL << myNodeID() << " " << grp;
-      //   if (X_[grp]) LL << X_[grp]->debugString();
-      // }
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       count->task.set_key_channel(grp);
@@ -238,14 +231,14 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->key = uniq_key;
       filter->task.set_key_channel(grp);
+      filter->task.set_erase_key_cache(true);
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
-      filter->fin_handle = [this, grp]() {
-        // // localize the training matrix
-        // if (!X_[grp]) return;
-        // auto X = localizer.remapIndex(w_->key(grp));
-        // if (!X) { X_.erase(grp); return; }
-        // if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
-        // { Lock l(mu_); X_[grp] = X; }
+      filter->fin_handle = [this, grp, localizer]() {
+        // localize the training matrix
+        auto X = localizer.remapIndex<double>(slot_reader_, grp, w_->key(grp));
+        if (!X) return;
+        if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
+        { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;
@@ -266,6 +259,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
       pull_val->key = w_->key(grp);
       pull_val->task.set_key_channel(grp);
+      pull_val->task.set_erase_key_cache(true);
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
       pull_time[i] = time + 2;
@@ -289,7 +283,12 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
         dual_.eigenVector() = *X * w_->value(grp).eigenVector();
       }
     }
-
+    // the label
+    if (!hit_cache) {
+      y_ = MatrixPtr<double>(new DenseMatrix<double>(
+          slot_reader_.info<double>(0), slot_reader_.value<double>(0)));
+      // CHECK_EQ(y_->value().size(), info->num_ex());
+    }
     // wait until all weight pull finished
     for (int i = 0; i < grp_size; ++i) {
       w_->waitOutMsg(kServerGroup, pull_time[i]);
@@ -304,8 +303,8 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
 
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
-
       int chl = fea_grp_[i];
+      w_->clearKeyFilter(chl);
       w_->value(chl).resize(w_->key(chl).size());
       w_->value(chl).setValue(conf_.init_w());
       w_->finish(kWorkerGroup, time+1);

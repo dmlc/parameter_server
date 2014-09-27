@@ -302,10 +302,17 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 key_channel() const;
   inline void set_key_channel(::google::protobuf::int32 value);
 
-  // repeated uint64 uncompressed_size = 10;
+  // optional bool erase_key_cache = 10 [default = false];
+  inline bool has_erase_key_cache() const;
+  inline void clear_erase_key_cache();
+  static const int kEraseKeyCacheFieldNumber = 10;
+  inline bool erase_key_cache() const;
+  inline void set_erase_key_cache(bool value);
+
+  // repeated uint64 uncompressed_size = 11;
   inline int uncompressed_size_size() const;
   inline void clear_uncompressed_size();
-  static const int kUncompressedSizeFieldNumber = 10;
+  static const int kUncompressedSizeFieldNumber = 11;
   inline ::google::protobuf::uint64 uncompressed_size(int index) const;
   inline void set_uncompressed_size(int index, ::google::protobuf::uint64 value);
   inline void add_uncompressed_size(::google::protobuf::uint64 value);
@@ -391,6 +398,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_key_signature();
   inline void set_has_key_channel();
   inline void clear_has_key_channel();
+  inline void set_has_erase_key_cache();
+  inline void clear_has_erase_key_cache();
   inline void set_has_msg();
   inline void clear_has_msg();
   inline void set_has_mng_node();
@@ -409,9 +418,10 @@ class Task : public ::google::protobuf::Message {
   int type_;
   ::google::protobuf::int32 time_;
   ::std::string* customer_;
+  ::google::protobuf::int32 wait_time_;
   bool request_;
   bool has_key_;
-  ::google::protobuf::int32 wait_time_;
+  bool erase_key_cache_;
   ::PS::PbRange* key_range_;
   ::google::protobuf::uint32 key_signature_;
   ::google::protobuf::int32 key_channel_;
@@ -424,7 +434,7 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSketch* sketch_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1456,7 +1466,29 @@ inline void Task::set_key_channel(::google::protobuf::int32 value) {
   key_channel_ = value;
 }
 
-// repeated uint64 uncompressed_size = 10;
+// optional bool erase_key_cache = 10 [default = false];
+inline bool Task::has_erase_key_cache() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Task::set_has_erase_key_cache() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Task::clear_has_erase_key_cache() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void Task::clear_erase_key_cache() {
+  erase_key_cache_ = false;
+  clear_has_erase_key_cache();
+}
+inline bool Task::erase_key_cache() const {
+  return erase_key_cache_;
+}
+inline void Task::set_erase_key_cache(bool value) {
+  set_has_erase_key_cache();
+  erase_key_cache_ = value;
+}
+
+// repeated uint64 uncompressed_size = 11;
 inline int Task::uncompressed_size_size() const {
   return uncompressed_size_.size();
 }
@@ -1483,13 +1515,13 @@ Task::mutable_uncompressed_size() {
 
 // optional bytes msg = 101;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1553,13 +1585,13 @@ inline void Task::set_allocated_msg(::std::string* msg) {
 
 // optional .PS.ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
@@ -1591,13 +1623,13 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
 
 // optional .PS.ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
@@ -1629,13 +1661,13 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
 
 // optional .PS.CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1667,13 +1699,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.LM.Call linear_method = 301;
 inline bool Task::has_linear_method() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_linear_method() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_linear_method() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_linear_method() {
   if (linear_method_ != NULL) linear_method_->::PS::LM::Call::Clear();
@@ -1705,13 +1737,13 @@ inline void Task::set_allocated_linear_method(::PS::LM::Call* linear_method) {
 
 // optional .PS.CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void Task::set_has_sketch() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void Task::clear_has_sketch() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Task::clear_sketch() {
   if (sketch_ != NULL) sketch_->::PS::CallSketch::Clear();

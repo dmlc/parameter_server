@@ -70,7 +70,7 @@ void Darling::runIteration() {
     // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
     double ratio = conf_.darling().kkt_filter_threshold_ratio();
-    KKT_filter_threshold_ = vio / (double)g_train_ins_info_.num_ins() * ratio;
+    KKT_filter_threshold_ = vio / (double)g_train_info_.num_ex() * ratio;
 
     // check if finished
     double rel = g_progress_[iter].relative_objv();

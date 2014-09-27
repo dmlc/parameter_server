@@ -17,7 +17,7 @@ class Localizer {
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   template<typename V>
   MatrixPtr<V> remapIndex(
-      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) {
+      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const {
     return remapIndex(reader.info<V>(grp_id), reader.offset(grp_id),
                       reader.index(grp_id), reader.value<V>(grp_id), idx_dict);
   }

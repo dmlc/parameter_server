@@ -27,7 +27,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/range.pb.h"
 #include "proto/evaluation.pb.h"
-#include "proto/instance.pb.h"
+#include "proto/example.pb.h"
 #include "proto/config.pb.h"
 // @@protoc_insertion_point(includes)
 
@@ -456,7 +456,7 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 countmin_k() const;
   inline void set_countmin_k(::google::protobuf::int32 value);
 
-  // optional double countmin_n_ratio = 17 [default = 4];
+  // optional double countmin_n_ratio = 17 [default = 2];
   inline bool has_countmin_n_ratio() const;
   inline void clear_countmin_n_ratio();
   static const int kCountminNRatioFieldNumber = 17;
@@ -1053,14 +1053,14 @@ class DataInfo : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional .PS.InstanceInfo ins_info = 1;
-  inline bool has_ins_info() const;
-  inline void clear_ins_info();
-  static const int kInsInfoFieldNumber = 1;
-  inline const ::PS::InstanceInfo& ins_info() const;
-  inline ::PS::InstanceInfo* mutable_ins_info();
-  inline ::PS::InstanceInfo* release_ins_info();
-  inline void set_allocated_ins_info(::PS::InstanceInfo* ins_info);
+  // optional .ExampleInfo example_info = 1;
+  inline bool has_example_info() const;
+  inline void clear_example_info();
+  static const int kExampleInfoFieldNumber = 1;
+  inline const ::ExampleInfo& example_info() const;
+  inline ::ExampleInfo* mutable_example_info();
+  inline ::ExampleInfo* release_example_info();
+  inline void set_allocated_example_info(::ExampleInfo* example_info);
 
   // optional int32 hit_cache = 2;
   inline bool has_hit_cache() const;
@@ -1071,14 +1071,14 @@ class DataInfo : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:PS.LM.DataInfo)
  private:
-  inline void set_has_ins_info();
-  inline void clear_has_ins_info();
+  inline void set_has_example_info();
+  inline void clear_has_example_info();
   inline void set_has_hit_cache();
   inline void clear_has_hit_cache();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PS::InstanceInfo* ins_info_;
+  ::ExampleInfo* example_info_;
   ::google::protobuf::int32 hit_cache_;
 
   mutable int _cached_size_;
@@ -2013,7 +2013,7 @@ inline void SolverConfig::set_countmin_k(::google::protobuf::int32 value) {
   countmin_k_ = value;
 }
 
-// optional double countmin_n_ratio = 17 [default = 4];
+// optional double countmin_n_ratio = 17 [default = 2];
 inline bool SolverConfig::has_countmin_n_ratio() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
@@ -2024,7 +2024,7 @@ inline void SolverConfig::clear_has_countmin_n_ratio() {
   _has_bits_[0] &= ~0x00000800u;
 }
 inline void SolverConfig::clear_countmin_n_ratio() {
-  countmin_n_ratio_ = 4;
+  countmin_n_ratio_ = 2;
   clear_has_countmin_n_ratio();
 }
 inline double SolverConfig::countmin_n_ratio() const {
@@ -2384,41 +2384,41 @@ Progress::mutable_busy_time() {
 
 // DataInfo
 
-// optional .PS.InstanceInfo ins_info = 1;
-inline bool DataInfo::has_ins_info() const {
+// optional .ExampleInfo example_info = 1;
+inline bool DataInfo::has_example_info() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void DataInfo::set_has_ins_info() {
+inline void DataInfo::set_has_example_info() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void DataInfo::clear_has_ins_info() {
+inline void DataInfo::clear_has_example_info() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void DataInfo::clear_ins_info() {
-  if (ins_info_ != NULL) ins_info_->::PS::InstanceInfo::Clear();
-  clear_has_ins_info();
+inline void DataInfo::clear_example_info() {
+  if (example_info_ != NULL) example_info_->::ExampleInfo::Clear();
+  clear_has_example_info();
 }
-inline const ::PS::InstanceInfo& DataInfo::ins_info() const {
-  return ins_info_ != NULL ? *ins_info_ : *default_instance_->ins_info_;
+inline const ::ExampleInfo& DataInfo::example_info() const {
+  return example_info_ != NULL ? *example_info_ : *default_instance_->example_info_;
 }
-inline ::PS::InstanceInfo* DataInfo::mutable_ins_info() {
-  set_has_ins_info();
-  if (ins_info_ == NULL) ins_info_ = new ::PS::InstanceInfo;
-  return ins_info_;
+inline ::ExampleInfo* DataInfo::mutable_example_info() {
+  set_has_example_info();
+  if (example_info_ == NULL) example_info_ = new ::ExampleInfo;
+  return example_info_;
 }
-inline ::PS::InstanceInfo* DataInfo::release_ins_info() {
-  clear_has_ins_info();
-  ::PS::InstanceInfo* temp = ins_info_;
-  ins_info_ = NULL;
+inline ::ExampleInfo* DataInfo::release_example_info() {
+  clear_has_example_info();
+  ::ExampleInfo* temp = example_info_;
+  example_info_ = NULL;
   return temp;
 }
-inline void DataInfo::set_allocated_ins_info(::PS::InstanceInfo* ins_info) {
-  delete ins_info_;
-  ins_info_ = ins_info;
-  if (ins_info) {
-    set_has_ins_info();
+inline void DataInfo::set_allocated_example_info(::ExampleInfo* example_info) {
+  delete example_info_;
+  example_info_ = example_info;
+  if (example_info) {
+    set_has_example_info();
   } else {
-    clear_has_ins_info();
+    clear_has_example_info();
   }
 }
 

@@ -37,7 +37,7 @@ void LinearMethod::process(const MessagePtr& msg) {
     }
     case Call::LOAD_DATA: {
       DataInfo info;
-      info.set_hit_cache(loadData(msg, info.mutable_ins_info()));
+      info.set_hit_cache(loadData(msg, info.mutable_example_info()));
       sys_.replyProtocalMessage(msg, info);
       break;
     }

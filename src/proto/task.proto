@@ -33,9 +33,11 @@ message Task {
   optional uint32 key_signature = 8;
   // namespace of keys
   optional int32 key_channel = 9;
+  // clear cache after finished
+  optional bool erase_key_cache = 10 [default = false];
 
   // set values if data are compressed, empty means data are not compressed
-  repeated uint64 uncompressed_size = 10;
+  repeated uint64 uncompressed_size = 11;
 
   // general task
   optional bytes msg = 101;

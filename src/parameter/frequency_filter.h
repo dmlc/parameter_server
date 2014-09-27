@@ -12,6 +12,8 @@ class FreqencyFilter {
   void insertKeys(const SArray<K>& key, const SArray<uint32>& count, int n, int k);
   // filter keys using the threadhold *freqency*
   SArray<K> queryKeys(const SArray<K>& key, int freqency);
+
+  void clear() { map_.clear(); count_.clear(); }
  private:
   CountMin count_;
   std::unordered_map<K, uint32> map_;

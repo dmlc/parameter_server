@@ -141,6 +141,7 @@ void RNode::cacheKeyRecver(const MessagePtr& msg) {
     CHECK_EQ(sig, cache.first) << msg->debugString();
     msg->key = cache.second;
   }
+  if (msg->task.erase_key_cache()) key_cache_.erase(cache_k);
 }
 
 } // namespace PS
