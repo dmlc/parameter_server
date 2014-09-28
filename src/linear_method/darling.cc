@@ -103,15 +103,14 @@ void Darling::preprocessData(const MessageCPtr& msg) {
     delta_[grp].setValue(conf_.darling().delta_init_value());
   }
 
-  size_t mem = 0;
-  for (const auto& it : X_) mem += it.second->memSize();
-  for (const auto& it : active_set_) mem += it.second.memSize();
-  for (const auto& it : delta_) mem += it.second.memSize();
-  mem += dual_.memSize();
-  mem += w_->memSize();
+  // size_t mem = 0;
+  // for (const auto& it : X_) mem += it.second->memSize();
+  // for (const auto& it : active_set_) mem += it.second.memSize();
+  // for (const auto& it : delta_) mem += it.second.memSize();
+  // mem += dual_.memSize();
+  // mem += w_->memSize();
+  // LL << ResUsage::myPhyMem() << " " << mem / 1e6 ;
 
-  LL << ResUsage::myPhyMem() << " " << mem / 1e6 << " " <<
-      g_mem_usage_sarray;
 
 }
 

@@ -14,7 +14,7 @@ THIRD_INC=$(THIRD)/include
 THIRD_LIB=$(THIRD)/lib
 
 #-Wconversion -fPIC
-WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare -fno-omit-frame-pointer
+WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-fno-omit-frame-pointer
 INCPATH = -I. -I${THIRD_INC}
 
 # STATIC=1

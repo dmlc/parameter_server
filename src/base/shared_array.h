@@ -13,8 +13,8 @@ template<typename V> class SArray;
 template<typename V> using SArrayList = std::vector<SArray<V>>;
 
 // static std::atomic<int64> g_mem_usage_sarray = ATOMIC_VAR_INIT(0);
-extern int64 g_mem_usage_sarray;
-extern std::mutex g_mu_sa_;
+// extern int64 g_mem_usage_sarray;
+// extern std::mutex g_mu_sa_;
 
 // Memory efficient array. Most operations are zero-copy, such as assign, slice
 // a segment, convert to Eigen3 vector/array. It shares the same semantic as a C
