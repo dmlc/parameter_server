@@ -14,7 +14,7 @@ THIRD_INC=$(THIRD)/include
 THIRD_LIB=$(THIRD)/lib
 
 #-Wconversion -fPIC
-WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare
+WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare -fno-omit-frame-pointer
 INCPATH = -I. -I${THIRD_INC}
 
 # STATIC=1
@@ -25,7 +25,9 @@ else
     CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fopenmp #-fPIC #
 endif
 
-LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lm -lpthread -lrt -lstdc++
+# -ltcmalloc
+LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
+-lsnappy -lm -lpthread -lrt  -lstdc++
 GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)

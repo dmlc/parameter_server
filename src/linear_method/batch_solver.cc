@@ -94,6 +94,7 @@ void BatchSolver::run() {
   }
   if (!hit_blk.empty()) LI << "Prior feature groups: " + join(hit_blk, ", ");
 
+
   total_timer_.restart();
   runIteration();
 
@@ -187,14 +188,12 @@ bool BatchSolver::dataCache(const string& name, bool load) {
 
 int BatchSolver::loadData(const MessageCPtr& msg, ExampleInfo* info) {
   if (!IamWorker()) return 0;
-  // FIXME put info into
   bool hit_cache = loadCache("train");
   if (!hit_cache) {
     CHECK(conf_.has_local_cache());
     slot_reader_.init(conf_.training_data(), conf_.local_cache());
     slot_reader_.read(info);
   }
-  // *info = y_->info().ins_info();
   return hit_cache;
 }
 
@@ -205,7 +204,6 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
   bool hit_cache = get(msg).hit_cache();
 
-  // FIXME
   if (IamWorker()) {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
@@ -215,8 +213,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       // Time 0: send all unique keys with their count to servers
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
-      Localizer<Key> localizer;
-      localizer.countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
+      // Localizer
+      Localizer<Key> *localizer = new Localizer<Key>();
+
+      localizer->countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
 
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
@@ -233,9 +233,11 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       filter->task.set_key_channel(grp);
       filter->task.set_erase_key_cache(true);
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
-      filter->fin_handle = [this, grp, localizer]() {
+      filter->fin_handle = [this, grp, localizer]() mutable {
         // localize the training matrix
-        auto X = localizer.remapIndex<double>(slot_reader_, grp, w_->key(grp));
+        auto X = localizer->remapIndex<double>(slot_reader_, grp, w_->key(grp));
+        delete localizer;
+        // localizer.clear();
         if (!X) return;
         if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }

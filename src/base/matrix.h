@@ -83,7 +83,7 @@ class Matrix {
   virtual bool writeToBinFile(string name) const = 0;
 
   // return the memory size, in Mbyte
-  virtual double memSize() const { return value_.size()*sizeof(V) / 1e6; }
+  virtual size_t memSize() const { return value_.size()*sizeof(V); }
 
   // accessors and mutators
   MatrixInfo info() const { return info_; }

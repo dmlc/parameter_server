@@ -18,6 +18,15 @@ class KVVector : public SharedParameter<K,V> {
     return key_[channel].findRange(key_range);
   }
 
+  size_t memSize() const {
+    size_t mem = 0;
+    for (const auto& it : key_) mem += it.second.memSize();
+    for (const auto& it : val_) mem += it.second.memSize();
+    for (const auto& it : recved_val_) {
+      for (const auto& v : it.second) mem += v.second.memSize();
+    }
+    return mem;
+  }
 
   // // slice a segment of the value using the local positions
   // SArray<V> slice(int channel, const SizeR& position) {

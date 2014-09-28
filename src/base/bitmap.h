@@ -49,6 +49,7 @@ class Bitmap {
   void flip() { }
 
   uint32 size() const { return size_; }
+  size_t memSize() const { return map_size_*sizeof(uint16); }
 
   // number of bit == true
   uint32 nnz() {

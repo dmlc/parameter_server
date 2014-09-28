@@ -9,6 +9,13 @@ namespace PS {
 template<typename I>
 class Localizer {
  public:
+  // Localizer() { LL << "xx"; }
+  // explicit Localizer(const Localizer& loc) {
+  //   LL << "yy";
+  //   pair_ = loc.pair_;
+  // }
+  // ~Localizer() { LL << pair_.size(); }
+
   // find the unique indeces with their number of occrus in *idx*
   void countUniqIndex(
       const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
@@ -24,7 +31,7 @@ class Localizer {
       const MatrixInfo& info, const SArray<size_t>& offset,
       const SArray<I>& index, const SArray<V>& value,
       const SArray<I>& idx_dict) const;
-
+  void clear() { pair_.clear(); }
  private:
 #pragma pack(4)
   struct Pair {

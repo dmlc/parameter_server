@@ -55,12 +55,18 @@ void SArray<V>::reset(V* data, size_t size) {
   capacity_ = size;
   size_ = size;
   data_ = data;
-  // int64 mem = capacity_*sizeof(V);
-  // g_mem_usage_sarray += mem;
-  // LL << "+ " << mem << " " << g_mem_usage_sarray.load();
-  ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) {
-      // g_mem_usage_sarray -= mem;
-      // LL << "- " << mem; << " " << g_mem_usage_sarray.load();
+  int64 mem = capacity_*sizeof(V);
+  {
+    Lock l(g_mu_sa_);
+    g_mem_usage_sarray += mem;
+    // LL << "+ " << mem << " " << g_mem_usage_sarray;
+  }
+  ptr_.reset(reinterpret_cast<char*>(data_), [mem](char *p) {
+      {
+        Lock l(g_mu_sa_);
+      g_mem_usage_sarray -= mem;
+      // LL << "- " << mem << " " << g_mem_usage_sarray;
+      }
       delete [] p;
     });
 }
