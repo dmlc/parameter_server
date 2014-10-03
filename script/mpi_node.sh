@@ -33,7 +33,7 @@ if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
     exit -1
 fi
 
-my_ip=`ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
+my_ip=`/sbin/ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
 if [ -z ${my_ip} ]; then
     echo "failed to get the ip address"
     exit -1

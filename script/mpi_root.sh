@@ -12,7 +12,7 @@ cd `dirname "$0"`
 
 source ${conf}
 
-my_ip=`ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
+my_ip=`/sbin/ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
 if [ -z ${my_ip} ]; then
     echo "failed to get the ip address"
     exit -1
