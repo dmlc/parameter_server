@@ -66,7 +66,6 @@ void Darling::runIteration() {
     time = pool->submitAndWait(
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
-
     // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
     double ratio = conf_.darling().kkt_filter_threshold_ratio();
@@ -395,6 +394,7 @@ void Darling::showProgress(int iter) {
 
 Progress Darling::evaluateProgress() {
   Progress prog;
+  showMem();
   if (IamWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());

@@ -235,9 +235,9 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
       filter->fin_handle = [this, grp, localizer]() mutable {
         // localize the training matrix
-        auto X = localizer->remapIndex<double>(slot_reader_, grp, w_->key(grp));
+        auto X = localizer->remapIndex<double>(grp, w_->key(grp), &slot_reader_);
         delete localizer;
-        // localizer.clear();
+        slot_reader_.clear(grp);
         if (!X) return;
         if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
         { Lock l(mu_); X_[grp] = X; }
@@ -245,10 +245,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;
     }
-
+    showMem();
     for (int i = 0; i < grp_size; ++i, time += kPace) {
-      if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
       // wait until the i-th channel's keys are ready
+      if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
@@ -302,7 +302,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->waitInMsg(kWorkerGroup, time);
       w_->finish(kWorkerGroup, time+1);
     }
-
+    showMem();
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
       int chl = fea_grp_[i];
@@ -312,6 +312,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->finish(kWorkerGroup, time+1);
     }
   }
+  showMem();
 }
 
 Progress BatchSolver::evaluateProgress() {

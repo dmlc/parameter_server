@@ -43,6 +43,7 @@ class Customer {
   // all child customer names
   const StringList& children() const { return child_customers_; }
 
+  void showMem() { LL << myNodeID() << " is using " << ResUsage::myPhyMem() << " Mbytes memory"; }
  protected:
   string name_;
   StringList child_customers_;

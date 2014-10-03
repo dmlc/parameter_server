@@ -23,8 +23,7 @@ class Localizer {
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   template<typename V>
-  MatrixPtr<V> remapIndex(
-      const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const;
+  MatrixPtr<V> remapIndex(int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
 
   template<typename V>
   MatrixPtr<V> remapIndex(
@@ -82,13 +81,13 @@ template<typename I> void Localizer<I>::countUniqIndex(
 template<typename I>
 template<typename V>
 MatrixPtr<V> Localizer<I>::remapIndex(
-    const SlotReader& reader, int grp_id, const SArray<I>& idx_dict) const {
+    int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const {
   SArray<V> val;
-  auto info = reader.info<V>(grp_id);
+  auto info = reader->info<V>(grp_id);
   CHECK_NE(info.type(), MatrixInfo::DENSE)
       << "dense matrix already have compact indeces\n" << info.DebugString();
-  if (info.type() == MatrixInfo::SPARSE) val = reader.value<V>(grp_id);
-  return remapIndex(info, reader.offset(grp_id), reader.index(grp_id), val, idx_dict);
+  if (info.type() == MatrixInfo::SPARSE) val = reader->value<V>(grp_id);
+  return remapIndex(info, reader->offset(grp_id), reader->index(grp_id), val, idx_dict);
 }
 
 template<typename I>

@@ -104,20 +104,26 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   return true;
 }
 
-SArray<uint64> SlotReader::index(int slot_id) const {
-  SArray<uint64> idx;
-  if (nnzEle(slot_id) == 0) return idx;
+SArray<uint64> SlotReader::index(int slot_id) {
+  auto nnz = nnzEle(slot_id);
+  if (nnz == 0) return SArray<uint64>();
+  SArray<uint64> idx = index_cache_[slot_id];
+  if (idx.size() == nnz) return idx;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".colidx";
     SArray<char> comp; CHECK(comp.readFromFile(file));
     SArray<uint64> uncomp; uncomp.uncompressFrom(comp);
     idx.append(uncomp);
   }
-  CHECK_EQ(idx.size(), nnzEle(slot_id));
+  CHECK_EQ(idx.size(), nnz);
+  index_cache_[slot_id] = idx;
   return idx;
 }
 
-SArray<size_t> SlotReader::offset(int slot_id) const {
+SArray<size_t> SlotReader::offset(int slot_id) {
+  if (offset_cache_[slot_id].size() == info_.num_ex()+1) {
+    return offset_cache_[slot_id];
+  }
   SArray<size_t> os(1); os[0] = 0;
   if (nnzEle(slot_id) == 0) return os;
   for (int i = 0; i < data_.file_size(); ++i) {
@@ -129,6 +135,7 @@ SArray<size_t> SlotReader::offset(int slot_id) const {
     for (size_t i = 0; i < uncomp.size(); ++i) os[i+n] = os[i+n-1] + uncomp[i];
   }
   CHECK_EQ(os.size(), info_.num_ex()+1);
+  offset_cache_[slot_id] = os;
   return os;
 }
 
