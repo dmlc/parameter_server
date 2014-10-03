@@ -4,7 +4,7 @@
 #include "base/shared_array_inl.h"
 namespace PS {
 
-// may support template key
+template <typename K, typename V>
 class CountMin {
  public:
   // TODO prefetch to accelerate the memory access
@@ -17,22 +17,30 @@ class CountMin {
     k_ = std::min(30, std::max(1, k));
   }
 
-  void bulkInsert(const SArray<uint64>& key, const SArray<uint32>& count) {
-    CHECK_GT(n_, 0);
-    CHECK_EQ(key.size(), count.size());
-    for (size_t i = 0; i < key.size(); ++i) {
-      uint32 h = hash(key[i]);
-      const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
-      for (int j = 0; j < k_; ++j) {
-        data_[h % n_] += count[i];
-        h += delta;
-      }
-    }
+  // void bulkInsert(const SArray<K>& key, const SArray<V>& count) {
+  //   CHECK_GT(n_, 0);
+  //   CHECK_EQ(key.size(), count.size());
+  //   for (size_t i = 0; i < key.size(); ++i) {
+  //     uint32 h = hash(key[i]);
+  //     const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+  //     for (int j = 0; j < k_; ++j) {
+  //       data_[h % n_] += count[i];
+  //       h += delta;
+  //     }
+  //   }
+  // }
 
+  void insert(const K& key, const V& count) {
+    uint32 h = hash(key);
+    const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    for (int j = 0; j < k_; ++j) {
+      data_[h % n_] += count;
+      h += delta;
+    }
   }
 
-  uint32 query(const uint64& key) const {
-    uint32 res = kuint32max;
+  V query(const K& key) const {
+    V res = (V)kuint64max;
     uint32 h = hash(key);
     const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
     for (int j = 0; j < k_; ++j) {
@@ -58,7 +66,7 @@ class CountMin {
     return h;
   }
 
-  SArray<uint32> data_;
+  SArray<V> data_;
   int n_ = 0;
   int k_ = 1;
 };
