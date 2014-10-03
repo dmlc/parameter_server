@@ -100,7 +100,7 @@ void Postoffice::recv() {
     CHECK(stat.ok()) << stat.ToString();
     auto& tk = msg->task;
     if (tk.request() && tk.type() == Task::TERMINATE) {
-      yellow_pages_.van().statistic();
+      // yellow_pages_.van().statistic();
       done_ = true;
       break;
     } else if (tk.request() && tk.type() == Task::MANAGE) {

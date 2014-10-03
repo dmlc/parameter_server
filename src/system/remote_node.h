@@ -89,5 +89,8 @@ class RNode {
   std::unordered_map<std::pair<int,Range<Key>>,
                      std::pair<uint32_t, SArray<char>>> key_cache_;
   std::mutex key_cache_mu_;
+
+  const size_t max_sig_len_ = 2048;  // hack, because crc32 is too slow...
+
 };
 } // namespace PS
