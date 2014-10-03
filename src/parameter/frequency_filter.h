@@ -15,7 +15,7 @@ class FreqencyFilter {
 
   void clear() { map_.clear(); count_.clear(); }
  private:
-  CountMin count_;
+  CountMin<K, uint8> count_;
   std::unordered_map<K, uint32> map_;
 };
 
@@ -23,6 +23,7 @@ class FreqencyFilter {
 
 template<typename K>
 SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
+  CHECK_LT(freqency, kuint8max) << "change to uint16 or uint32...";
   SArray<K> filtered_key;
   for (auto k : key) {
     if (count_.query(k) > freqency) filtered_key.pushBack(k);
@@ -36,7 +37,10 @@ void FreqencyFilter<K>::insertKeys(
   if (count_.empty()) {
     count_.resize(std::max(n, 64) * FLAGS_num_workers, k);
   }
-  count_.bulkInsert(key, count);
+  CHECK_EQ(key.size(), count.size());
+  for (size_t i = 0; i < key.size(); ++i) {
+    count_.insert(key[i], count[i]);
+  }
 }
 
 // hash implementation
