@@ -135,7 +135,7 @@ void SharedParameter<K,V>::process(const MessagePtr& msg) {
   }
   // reply if necessary
   if (pull && req) {
-    // taskpool(reply->recver)->cacheKeySender(reply);
+    taskpool(reply->recver)->cacheKeySender(reply);
     sys_.queue(reply);
     msg->replied = true;
   }

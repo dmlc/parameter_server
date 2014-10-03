@@ -46,21 +46,28 @@ my_port=$(( ${network_port} + ${my_rank} ))
 # rank num_servers + 1 to num_servers + num_workers : worker nodes
 # rest: unused (backup) nodes
 if (( ${my_rank} == 0 )); then
+    my_id="H";
     my_node=${1}
 elif (( ${my_rank} <= ${num_workers} )); then
-    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'W${my_rank}'"
+    my_id="W${my_rank}"
+    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
 elif (( ${my_rank} <= ${num_servers} + ${num_workers} )); then
-    my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'S${my_rank}'"
+    my_id="S${my_rank}"
+    my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
 else
-    my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'U${my_rank}'"
+    my_id="U${my_rank}"
+    my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
 fi
 
 mkdir -p ../output
 FLAGS_logtostderr=1
+# CPUPROFILE=/tmp/${my_id}.cpu \
+# HEAPPROFILE=/tmp/${my_id} \
 ../bin/ps \
+    -my_node ${my_node} \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
     -num_threads ${num_threads} \
     -scheduler ${1} \
-    -my_node ${my_node} \
-    -app ${app_conf}
+    -app ${app_conf} \
+|| { echo "${my_node} failed"; exit -1; }

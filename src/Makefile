@@ -25,7 +25,7 @@ else
     CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fopenmp #-fPIC #
 endif
 
-# -ltcmalloc
+# -ltcmalloc_and_profiler
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
 -lsnappy -lm -lpthread -lrt  -lstdc++
 GTEST = -lgtest_main -lgtest
