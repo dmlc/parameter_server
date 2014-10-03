@@ -42,6 +42,15 @@ int SlotReader::read(ExampleInfo* info) {
 }
 
 bool SlotReader::readOneFile(const DataConfig& data) {
+  string info_name = cache_ + getFilename(data.file(0)) + ".info";
+  ExampleInfo info;
+  if (readFileToProto(info_name, &info)) {
+    // the data is already in cache_dir
+    Lock l(mu_);
+    info_ = mergeExampleInfo(info_, info);
+    return true;
+  }
+
   ExampleParser parser;
   parser.init(data.text(), data.ignore_fea_grp());
   struct VSlot {
@@ -80,8 +89,8 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   reader.Reload();
 
   // save in cache
-  auto info = parser.info();
-  string name = getFilename(data.file(0));
+  info = parser.info();
+  writeProtoToASCIIFileOrDie(info, info_name);
   for (int i = 0; i < kSlotIDmax; ++i) {
     auto& vslot = vslots[i];
     if (vslot.row_siz.empty() && vslot.val.empty()) continue;
