@@ -19,7 +19,7 @@ message Config {
 }
 
 message SolverConfig {
-  // The minibatch size. If <= 0, then use the whole data
+  // The minibatch size. If <= 0, then use the batch training
   optional int64 minibatch_size = 1 [default = 0];
   // Divide a feature group into feature_block_ratio x nnz_feature_per_instance
   // blocks
@@ -47,6 +47,8 @@ message SolverConfig {
   optional int32 countmin_k = 16 [default = 2];
   // n = the_first_arrive_key_length * num_workeres * countmin_n_ratio
   optional double countmin_n_ratio = 17 [default = 2.0];
+
+  optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
 }
 
 message DarlingConfig {

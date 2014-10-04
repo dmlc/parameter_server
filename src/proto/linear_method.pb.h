@@ -463,6 +463,13 @@ class SolverConfig : public ::google::protobuf::Message {
   inline double countmin_n_ratio() const;
   inline void set_countmin_n_ratio(double value);
 
+  // optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
+  inline bool has_max_num_parallel_groups_in_preprocessing() const;
+  inline void clear_max_num_parallel_groups_in_preprocessing();
+  static const int kMaxNumParallelGroupsInPreprocessingFieldNumber = 18;
+  inline ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing() const;
+  inline void set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
  private:
   inline void set_has_minibatch_size();
@@ -487,6 +494,8 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_countmin_k();
   inline void set_has_countmin_n_ratio();
   inline void clear_has_countmin_n_ratio();
+  inline void set_has_max_num_parallel_groups_in_preprocessing();
+  inline void clear_has_max_num_parallel_groups_in_preprocessing();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -502,9 +511,10 @@ class SolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int64 auc_goodness_;
   double countmin_n_ratio_;
   ::google::protobuf::int32 countmin_k_;
+  ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -2033,6 +2043,28 @@ inline double SolverConfig::countmin_n_ratio() const {
 inline void SolverConfig::set_countmin_n_ratio(double value) {
   set_has_countmin_n_ratio();
   countmin_n_ratio_ = value;
+}
+
+// optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
+inline bool SolverConfig::has_max_num_parallel_groups_in_preprocessing() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void SolverConfig::set_has_max_num_parallel_groups_in_preprocessing() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void SolverConfig::clear_has_max_num_parallel_groups_in_preprocessing() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void SolverConfig::clear_max_num_parallel_groups_in_preprocessing() {
+  max_num_parallel_groups_in_preprocessing_ = 1000;
+  clear_has_max_num_parallel_groups_in_preprocessing();
+}
+inline ::google::protobuf::int32 SolverConfig::max_num_parallel_groups_in_preprocessing() const {
+  return max_num_parallel_groups_in_preprocessing_;
+}
+inline void SolverConfig::set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value) {
+  set_has_max_num_parallel_groups_in_preprocessing();
+  max_num_parallel_groups_in_preprocessing_ = value;
 }
 
 // -------------------------------------------------------------------

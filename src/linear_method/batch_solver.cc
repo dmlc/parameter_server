@@ -204,6 +204,8 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
   for (int i = 0; i < grp_size; ++i) fea_grp_.push_back(get(msg).fea_grp(i));
   bool hit_cache = get(msg).hit_cache();
 
+  int max_parallel = std::max(1, conf_.solver().max_num_parallel_groups_in_preprocessing());
+
   if (IamWorker()) {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += kPace) {
@@ -244,10 +246,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       };
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;
+
+      // wait
+      if (!hit_cache && i >= max_parallel) w_->waitOutMsg(kServerGroup, pull_time[i-max_parallel]);
     }
     for (int i = 0; i < grp_size; ++i, time += kPace) {
-      // wait until the i-th channel's keys are ready
-      if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
+      // wait
+      if (!hit_cache && i >= grp_size - max_parallel) w_->waitOutMsg(kServerGroup, pull_time[i]);
 
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
