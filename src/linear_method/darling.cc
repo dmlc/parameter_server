@@ -394,7 +394,6 @@ void Darling::showProgress(int iter) {
 
 Progress Darling::evaluateProgress() {
   Progress prog;
-  showMem();
   if (IamWorker()) {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());

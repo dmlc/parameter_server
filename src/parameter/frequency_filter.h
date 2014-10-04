@@ -35,7 +35,8 @@ template<typename K>
 void FreqencyFilter<K>::insertKeys(
     const SArray<K>& key, const SArray<uint32>& count, int n, int k) {
   if (count_.empty()) {
-    count_.resize(std::max(n, 64) * FLAGS_num_workers, k);
+    double w = (double)FLAGS_num_workers;
+    count_.resize(std::max((int)(w * n / log(w+1)), 64), k);
   }
   CHECK_EQ(key.size(), count.size());
   for (size_t i = 0; i < key.size(); ++i) {

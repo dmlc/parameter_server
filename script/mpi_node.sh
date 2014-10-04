@@ -61,8 +61,13 @@ fi
 
 mkdir -p ../output
 FLAGS_logtostderr=1
-# CPUPROFILE=/tmp/${my_id}.cpu \
-# HEAPPROFILE=/tmp/${my_id} \
+
+# ${my_id} = "W10" ||
+# if [[ ${my_id} = "S44" ]]; then
+# export HEAPPROFILE=../output/${my_id}
+# # export CPUPROFILE=../output/${my_id}.cpu \
+# fi
+
 ../bin/ps \
     -my_node ${my_node} \
     -num_servers ${num_servers} \

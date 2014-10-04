@@ -245,7 +245,6 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       CHECK_EQ(time+2, w_->pull(filter));
       pull_time[i] = time + 2;
     }
-    showMem();
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       // wait until the i-th channel's keys are ready
       if (!hit_cache) w_->waitOutMsg(kServerGroup, pull_time[i]);
@@ -302,7 +301,6 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->waitInMsg(kWorkerGroup, time);
       w_->finish(kWorkerGroup, time+1);
     }
-    showMem();
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
       int chl = fea_grp_[i];
@@ -312,7 +310,6 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->finish(kWorkerGroup, time+1);
     }
   }
-  showMem();
 }
 
 Progress BatchSolver::evaluateProgress() {
