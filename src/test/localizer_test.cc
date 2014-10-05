@@ -36,7 +36,7 @@ TEST(Localizer, RCV1) {
   EXPECT_EQ(f_key.size(), 19959);
 
   auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
-      lc.remapIndex<double>(sr, 1, f_key));
+      lc.remapIndex<double>( 1, f_key, &sr));
 
   EXPECT_EQ(X->offset().eigenArray().sum(), 14702421805);
   SArray<uint64> idx;

@@ -63,6 +63,7 @@ TESTS = \
 	countmin_test \
 	snappy_test \
 	shared_array_test \
+	grad_desc_test \
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \
@@ -72,7 +73,6 @@ TESTS = \
 	auc_layer_test \
 	# double_test \
 	# aggregated_gradient_test \
-	# grad_desc_test \
 	# strtonum_test
 	#partition_test
 	# van_test \

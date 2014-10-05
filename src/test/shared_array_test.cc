@@ -28,20 +28,15 @@ TEST(SArray, Mem) {
         SArray<int> sd(10000);
         SArray<int> sb(sa);
         EXPECT_LE(r.myPhyMem(), mem);
-        LL << x.gMemSize();
         {
           SArray<char> sc(sa);
           EXPECT_LE(r.myPhyMem(), mem);
-          LL << x.gMemSize();
         }
         EXPECT_LE(r.myPhyMem(), mem);
-        LL << x.gMemSize();
       }
       EXPECT_LE(r.myPhyMem(), mem);
-      LL << x.gMemSize();
     }
     EXPECT_LE(r.myPhyMem(), mem);
-    LL << x.gMemSize();
   }
 }
 

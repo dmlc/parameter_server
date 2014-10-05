@@ -80,10 +80,10 @@ class LogitLoss : public BinaryClassificationLoss<T> {
     // the performace.
     EArray tau = 1 / ( 1 + exp( y * Xw ));
 
-    if (gradient.size() != 0)
+    if (gradient.size())
       gradient = X->transTimes( -y * tau );
 
-    if (diag_hessian.size() != 0)
+    if (diag_hessian.size())
       diag_hessian = X->dotTimes(X)->transTimes( tau * ( 1 - tau ));
   }
 };
@@ -101,7 +101,6 @@ class SquareHingeLoss : public BinaryClassificationLoss<T> {
   void compute(const EArrayMap& y, const MatrixPtr<T>& X, const EArrayMap& Xw,
                EArrayMap gradient, EArrayMap diag_hessian) {
     gradient = - 2 *  X->transTimes(y * (y * Xw > 1.0).template cast<T>());
-    // LL << gradient.matrix().squaredNorm();
   }
 };
 

@@ -1,42 +1,31 @@
 #include "gtest/gtest.h"
-#include "base/matrix_io.h"
-#include "loss/loss_factory.h"
-#include "learner/learner_factory.h"
+#include "base/matrix_io_inl.h"
+#include "linear_method/loss_inl.h"
+#include "proto/linear_method.pb.h"
 
 using namespace PS;
+using namespace LM;
 TEST(GradientDescent, LogistRegression) {
-  AppConfig cf; readFileToProtoOrDie("../test/grad_desc.config", &cf);
-  MatrixPtrList<double> training = readMatrices<double>(cf.training());
+  // load data
+  typedef double V;
+  Config cf; readFileToProtoOrDie("../src/test/grad_desc.conf", &cf);
+  auto data = readMatricesOrDie<V>(cf.training_data());
+  CHECK_EQ(data.size(), 2);
+  auto X = data[1];
 
-  auto X = training[1];
-  SArray<double> w(X->cols()); w.setZero();
-  SArray<double> Xw(X->rows());
+  // allocate memories
+  SArray<V> w(X->cols()), Xw(X->rows()),  g(X->cols());
+  w.setZero();
 
-  double eta = 1;
+  auto loss = Loss<V>::create(cf.loss());
 
+  V eta = cf.learning_rate().eta();
+  for (int i = 0; i < 11; ++i) {
+    Xw.eigenArray() = *X * w.eigenArray();
+    loss->compute({data[0], data[1], Xw.matrix()}, {g.matrix()});
+    w.eigenArray() -= eta * g.eigenArray();
 
-  auto loss = LossFactory<double>::create(cf.loss());
-  auto learner = LearnerFactory<double>::create(cf.learner());
-
-  // for (int i = 0; i < 11; ++i) {
-  //   Xw.vec() = *X * w.vec();
-
-  //   auto grad = loss->
-  //   Xw.vec() = *X * w;
-  //   auto grad = loss->gradient(Y, Xw, X);
-  //   w -= eta * grad.vec();
-  //   double fval = loss->value(Y, Xw);
-  //   if (i == 2) EXPECT_LE(fabs(fval-10786), 1.0);
-  //   if (i == 10) EXPECT_LE(fabs(fval-110360), 1.0);
-  // }
-
+    V objv = loss->evaluate({data[0], Xw.matrix()});
+    LL << objv;
+  }
 }
-
-// TEST(GradDesc, tmp) {
-//   SArray<double> r;
-//   LL << r.array().size();
-//   LL << r.vec().size();
-
-//   // LL << r.vec().empty();
-//   LL << SArray<double>().array().size();
-// }
