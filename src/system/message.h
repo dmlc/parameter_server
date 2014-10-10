@@ -86,6 +86,42 @@ struct Message {
 };
 
 
+template <typename K>
+MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyList& sep) {
+  // find the positions in msg.key
+  size_t n = sep.size();
+  std::vector<size_t> pos; pos.reserve(n-1);
+  SArray<K> key(msg->key);
+  Range<K> msg_key_range(msg->task.key_range());
+  for (auto p : sep) {
+    K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
+    pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
+  }
+
+  // split the message according to *pos*
+  MessagePtrList ret(n-1);
+  for (int i = 0; i < n-1; ++i) {
+    MessagePtr piece(new Message(*msg));
+    if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
+      // the remote node does not maintain this key range. mark this message as
+      // valid, which will be not actually sent
+      piece->valid = false;
+    } else {
+      piece->valid = true;  // must set true, otherwise this piece might not be sent
+      piece->clearKV();
+      if (!key.empty()) {  // void be divided by 0
+        SizeR lr(pos[i], pos[i+1]);
+        piece->key = key.segment(lr);
+        for (auto& val : msg->value) {
+          piece->addValue(val.segment(lr*(val.size()/key.size())));
+        }
+      }
+    }
+    ret[i] = piece;
+  }
+  return ret;
+}
+
 template <typename V> using AlignedArray = std::pair<SizeR, SArray<V>>;
 template <typename V> using AlignedArrayList = std::vector<AlignedArray<V>>;
 

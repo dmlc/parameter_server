@@ -10,46 +10,27 @@ namespace PS {
 template <typename K, typename V>
 class KVVector : public SharedParameter<K> {
  public:
+  USING_SHARED_PARAMETER;
   SArray<K>& key(int channel) { return key_[channel]; }
   SArray<V>& value(int channel) { return val_[channel]; }
-  // find the local positions of a global key range
 
+  // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {
     return key_[channel].findRange(key_range);
   }
 
-  size_t memSize() const {
-    size_t mem = 0;
-    for (const auto& it : key_) mem += it.second.memSize();
-    for (const auto& it : val_) mem += it.second.memSize();
-    for (const auto& it : recved_val_) {
-      for (const auto& v : it.second) mem += v.second.memSize();
-    }
-    return mem;
-  }
-
-  // // slice a segment of the value using the local positions
-  // SArray<V> slice(int channel, const SizeR& position) {
-  //   return val_[channel].segment(local_range);
-  // }
-
   // return the data received at time t, then *delete* it.
   AlignedArrayList<V> received(int t);
-
-  // // # of keys, or the length of the vector
-  // size_t size() const { return key_[0].size(); }
-  // // # of nnz entries
-  // size_t nnz() const { return val_[0].nnz(); }
 
   // implement the virtual functions required
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
+
   // TODO
   void setReplica(const MessagePtr& msg) { }
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
-  USING_SHARED_PARAMETER;
  private:
 
   std::unordered_map<int, SArray<K>> key_;
@@ -135,39 +116,7 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
 template <typename K, typename V>
 MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
   if (get(msg).replica()) return Customer::slice(msg, sep);
-
-  // find the positions in msg.key
-  size_t n = sep.size();
-  std::vector<size_t> pos; pos.reserve(n-1);
-  SArray<K> key(msg->key);
-  Range<K> msg_key_range(msg->task.key_range());
-  for (auto p : sep) {
-    K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
-    pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
-  }
-
-  // split the message according to *pos*
-  MessagePtrList ret(n-1);
-  for (int i = 0; i < n-1; ++i) {
-    MessagePtr piece(new Message(*msg));
-    if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
-      // the remote node does not maintain this key range. mark this message as
-      // valid, which will be not actually sent
-      piece->valid = false;
-    } else {
-      piece->valid = true;  // must set true, otherwise this piece might not be sent
-      piece->clearKV();
-      if (!key.empty()) {  // void be divided by 0
-        SizeR lr(pos[i], pos[i+1]);
-        piece->key = key.segment(lr);
-        for (auto& val : msg->value) {
-          piece->addValue(val.segment(lr*(val.size()/key.size())));
-        }
-      }
-    }
-    ret[i] = piece;
-  }
-  return ret;
+  return sliceKeyOrderedMsg<K>(msg, sep);
 }
 
 
@@ -297,3 +246,23 @@ MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
 //   // val_ = recv[0].second;
 //   // CHECK_EQ(val_.size(), key_.size());
 // }
+
+
+  // size_t memSize() const {
+  //   size_t mem = 0;
+  //   for (const auto& it : key_) mem += it.second.memSize();
+  //   for (const auto& it : val_) mem += it.second.memSize();
+  //   for (const auto& it : recved_val_) {
+  //     for (const auto& v : it.second) mem += v.second.memSize();
+  //   }
+  //   return mem;
+  // }
+
+  // // slice a segment of the value using the local positions
+  // SArray<V> slice(int channel, const SizeR& position) {
+  //   return val_[channel].segment(local_range);
+  // }
+  // // # of keys, or the length of the vector
+  // size_t size() const { return key_[0].size(); }
+  // // # of nnz entries
+  // size_t nnz() const { return val_[0].nnz(); }
