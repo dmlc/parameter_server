@@ -8,7 +8,7 @@ namespace PS {
 // key-value vector, the (global) keys are sorted and unique. Both keys and
 // values are stored in arrays.
 template <typename K, typename V>
-class KVVector : public SharedParameter<K,V> {
+class KVVector : public SharedParameter<K> {
  public:
   SArray<K>& key(int channel) { return key_[channel]; }
   SArray<V>& value(int channel) { return val_[channel]; }

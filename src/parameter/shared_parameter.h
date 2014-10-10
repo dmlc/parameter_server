@@ -6,14 +6,14 @@ namespace PS {
 #define USING_SHARED_PARAMETER                  \
   using Customer::taskpool;                     \
   using Customer::myNodeID;                     \
-  using SharedParameter<K,V>::get;              \
-  using SharedParameter<K,V>::set;              \
-  using SharedParameter<K,V>::myKeyRange;       \
-  using SharedParameter<K,V>::keyRange;         \
-  using SharedParameter<K,V>::sync
+  using SharedParameter<K>::get;              \
+  using SharedParameter<K>::set;              \
+  using SharedParameter<K>::myKeyRange;       \
+  using SharedParameter<K>::keyRange;         \
+  using SharedParameter<K>::sync
 
 // the base class of shared parameters
-template <typename K, typename V>
+template <typename K>
 class SharedParameter : public Customer {
  public:
   // convenient wrappers of functions in remote_node.h
@@ -89,8 +89,8 @@ class SharedParameter : public Customer {
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
 };
 
-template <typename K, typename V>
-void SharedParameter<K,V>::process(const MessagePtr& msg) {
+template <typename K>
+void SharedParameter<K>::process(const MessagePtr& msg) {
   bool req = msg->task.request();
   int chl = msg->task.key_channel();
   auto call = get(msg);
