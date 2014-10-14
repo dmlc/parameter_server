@@ -19,6 +19,11 @@ void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
   }
 }
 
+void ExampleParser::clear() {
+  for (int i = 0; i < kSlotIDmax; ++i) slot_info_[i].Clear();
+  info_.Clear();
+  num_ex_ = 0;
+}
 
 bool ExampleParser::toProto(char* line, Example* ex) {
   // convert to protobuf format

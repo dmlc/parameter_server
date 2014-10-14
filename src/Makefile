@@ -64,6 +64,7 @@ TESTS = \
 	snappy_test \
 	shared_array_test \
 	grad_desc_test \
+	ftrl_test \
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \

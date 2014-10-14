@@ -11,10 +11,12 @@ class ExampleParser {
  public:
   typedef DataConfig::TextFormat TextFormat;
   void init(TextFormat format, bool ignore_fea_slot = false);
+  void clear();
 
   bool toProto(char*, Example*);
   ExampleInfo info();
 
+  int maxSlotID() { return ignore_fea_slot_ ? 2 : kSlotIDmax; }
  private:
   bool parseLibsvm(char*,  Example*);
   bool parseAdfea(char*,  Example*);

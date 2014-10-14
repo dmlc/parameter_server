@@ -3,14 +3,8 @@
 #include "parameter/frequency_filter.h"
 namespace PS {
 
-#define USING_SHARED_PARAMETER                  \
-  using Customer::taskpool;                     \
-  using Customer::myNodeID;                     \
-  using SharedParameter<K>::get;              \
-  using SharedParameter<K>::set;              \
-  using SharedParameter<K>::myKeyRange;       \
-  using SharedParameter<K>::keyRange;         \
-  using SharedParameter<K>::sync
+template <typename K> class SharedParameter;
+template <typename K> using SharedParameterPtr = std::shared_ptr<SharedParameter<K>>;
 
 // the base class of shared parameters
 template <typename K>
@@ -140,6 +134,16 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     msg->replied = true;
   }
 }
+
+#define USING_SHARED_PARAMETER                  \
+  using Customer::taskpool;                     \
+  using Customer::myNodeID;                     \
+  using SharedParameter<K>::get;                \
+  using SharedParameter<K>::set;                \
+  using SharedParameter<K>::myKeyRange;         \
+  using SharedParameter<K>::keyRange;           \
+  using SharedParameter<K>::sync
+
 
 // template <typename K, typename V>
 // void SharedParameter<K,V>::recover(Range<K> range) {

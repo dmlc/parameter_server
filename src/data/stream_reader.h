@@ -13,7 +13,6 @@ class StreamReader {
  public:
   StreamReader() { }
   StreamReader(const DataConfig& data) { init(data); }
-  ~StreamReader() { delete [] line_; delete [] vslots_; }
   void init(const DataConfig& data);
 
   // return false if error happens or reach the end of files. return true otherwise
@@ -29,13 +28,13 @@ class StreamReader {
     bool empty() { return val.empty() && col_idx.empty() && row_siz.empty(); }
     void clear() { val.clear(); col_idx.clear(); row_siz.clear(); }
   };
-  VSlot* vslots_ = nullptr;
+  std::vector<VSlot> vslots_;
   ExampleParser parser_;
   DataConfig data_;
   int cur_file_ = 0;
 
-  const int kMaxLineLength_ = 60 * 1024;
-  char* line_ = nullptr;
+  static const int kMaxLineLength_ = 60 * 1024;
+  char line_[kMaxLineLength_];
   File* data_file_ = nullptr;
   bool reach_data_end_ = false;
 };
@@ -44,8 +43,8 @@ template<typename V>
 void StreamReader<V>::init(const DataConfig& data) {
   data_ = data;
   parser_.init(data_.text(), data_.ignore_fea_grp());
-  vslots_ = new VSlot[parser_.maxSlotID()];
-  line_ = new char[kMaxLineLength_];
+  vslots_.resize(parser_.maxSlotID());
+  // line_ = new char[kMaxLineLength_];
 }
 
 template<typename V>
@@ -99,7 +98,7 @@ bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>*
 
   auto info = parser_.info();
 
-  for (int i = 0; i < parser_.maxSlotID(); ++i) {
+  for (int i = 0; i < vslots_.size(); ++i) {
     if (vslots_[i].empty()) continue;
     MatrixInfo mat_info = readMatrixInfo(info, i, sizeof(uint64), sizeof(V));
     if (mat_info.type() == MatrixInfo::DENSE) {

@@ -5,6 +5,9 @@
 
 namespace PS {
 
+template<typename K, typename V> class KVVector;
+template<typename K, typename V> using KVVectorPtr = std::shared_ptr<KVVector<K,V>>;
+
 // key-value vector, the (global) keys are sorted and unique. Both keys and
 // values are stored in arrays.
 template <typename K, typename V>

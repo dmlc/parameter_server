@@ -24,6 +24,7 @@ template<typename I, typename V>
 class SparseMatrix : public Matrix<V> {
  public:
   USING_MATRIX;
+  SparseMatrix() { }
   SparseMatrix(
       const MatrixInfo& info, SArray<size_t> offset, SArray<I> index, SArray<V> value)
       : Matrix<V>(info, value), offset_(offset), index_(index) {

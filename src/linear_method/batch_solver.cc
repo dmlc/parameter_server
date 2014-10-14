@@ -216,7 +216,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
       // Localizer
-      Localizer<Key> *localizer = new Localizer<Key>();
+      Localizer<Key, double> *localizer = new Localizer<Key, double>();
 
       localizer->countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
 
@@ -237,7 +237,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
       filter->fin_handle = [this, grp, localizer]() mutable {
         // localize the training matrix
-        auto X = localizer->remapIndex<double>(grp, w_->key(grp), &slot_reader_);
+        auto X = localizer->remapIndex(grp, w_->key(grp), &slot_reader_);
         delete localizer;
         slot_reader_.clear(grp);
         if (!X) return;

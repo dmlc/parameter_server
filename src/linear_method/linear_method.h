@@ -25,12 +25,12 @@ class LinearMethod : public App {
   void startSystem();
 
   // load the data, and return 1 if hit cache, 0 if normal
-  virtual int loadData(const MessageCPtr& msg, ExampleInfo* info) = 0;
-  virtual void preprocessData(const MessageCPtr& msg) = 0;
-  virtual void updateModel(const MessagePtr& msg) = 0;
-  virtual Progress evaluateProgress() = 0;
-  virtual void saveModel(const MessageCPtr& msg) = 0;
-  virtual void computeEvaluationAUC(AUCData *data) = 0;
+  virtual int loadData(const MessageCPtr& msg, ExampleInfo* info) { return 0; }
+  virtual void preprocessData(const MessageCPtr& msg) { }
+  virtual void saveModel(const MessageCPtr& msg) { }
+  virtual void updateModel(const MessagePtr& msg) { }
+  virtual Progress evaluateProgress() { return Progress(); }
+  virtual void computeEvaluationAUC(AUCData *data) { }
 
   void showTime(int iter);
   void showObjective(int iter);
