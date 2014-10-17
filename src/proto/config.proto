@@ -48,8 +48,8 @@ message LearningRateConfig {
   }
   required Type type = 1;
   optional double eta = 2 [default = 1];
-  optional double alpha = 3;
-  optional double beta = 4;
+  optional double alpha = 3 [default = 1];
+  optional double beta = 4 [default = 1];
 }
 
 

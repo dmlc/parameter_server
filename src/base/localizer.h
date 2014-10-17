@@ -34,12 +34,12 @@ class Localizer {
     I k; uint32 i;
   };
   SArray<Pair> pair_;
-  SparseMatrix<I,V> mat_;
+  SparseMatrixPtr<I,V> mat_;
 };
 
 template<typename I, typename V>
 void Localizer<I,V>::countUniqIndex(
-    const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
   mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
   countUniqIndex(mat_->index(), uniq_idx, idx_frq);
 }

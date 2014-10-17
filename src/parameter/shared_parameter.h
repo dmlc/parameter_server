@@ -36,7 +36,9 @@ class SharedParameter : public Customer {
     taskpool(node)->finishIncomingTask(time);
   }
 
-  void clearKeyFilter(int chl) { key_filter_[chl].clear(); }
+  FreqencyFilter<K>& keyFilter(int chl) { return key_filter_[chl]; }
+  void setKeyFilterIgnoreChl(bool flag) { key_filter_ignore_chl_ = flag; }
+  // void clearKeyFilter(int chl) { key_filter_[chl].clear(); }
 
   // process a received message, will called by the thread of executor
   void process(const MessagePtr& msg);
@@ -78,6 +80,9 @@ class SharedParameter : public Customer {
 
  private:
   std::unordered_map<int, FreqencyFilter<K>> key_filter_;
+  bool key_filter_ignore_chl_ = false;
+
+  // FreqencyFilter<K> key_filter_;
 
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
@@ -105,20 +110,24 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     } else if (pull && req) {
       getReplica(reply);
     }
-  } else if (call.insert_key_freq()) {
-    if (push && req && !msg->value.empty()) {
-      key_filter_[chl].insertKeys(
-          SArray<K>(msg->key), SArray<uint32>(msg->value[0]),
-          call.countmin_n(), call.countmin_k());
+  } else if (call.insert_key_freq() || call.has_query_key_freq()) {
+    // deal with tail features
+    if (key_filter_ignore_chl_) chl = 0;
+    if (call.insert_key_freq() && req && !msg->value.empty()) {
+      auto& filter = key_filter_[chl];
+      if (filter.empty()) {
+        double w = (double)FLAGS_num_workers;
+        filter.resize(
+            std::max((int)(w*call.countmin_n()/log(w+1)), 64), call.countmin_k());
+      }
+      filter.insertKeys(SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
     }
-  } else if (call.has_query_key_freq()) {
-    if (pull && req) {
-      reply->key = key_filter_[chl].queryKeys(
-          SArray<K>(msg->key), call.query_key_freq());
-      // LL << reply->key.size();
-    } else if (pull && !req) {
-      setValue(msg);
-      // LL << msg->key.size();
+    if (call.has_query_key_freq()) {
+      if (req) {
+        reply->key = key_filter_[chl].queryKeys(SArray<K>(msg->key), call.query_key_freq());
+      } else {
+        setValue(msg);
+      }
     }
   } else {
     if ((push && req) || (pull && !req)) {

@@ -3,16 +3,18 @@
 
 namespace PS {
 
+template<typename V>
 class LearningRate {
  public:
-  LearningRate(const LearningRateConfig& cf) : cf_(cf) { }
+  LearningRate() { }
+  LearningRate(const LearningRateConfig& cf) { set(cf); }
 
   void set(const LearningRateConfig& cf) { cf_ = cf; }
 
-  double evaluate(int t) {
+  V evaluate(int t) {
     typedef LearningRateConfig Type;
     if (cf_.type() == Type:CONSTANT) {
-      return cf_.eta();
+      return (V)cf_.eta();
     }
     return 1.0;
   }

@@ -223,10 +223,10 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
       count->task.set_key_channel(grp);
-      auto sc = w_->set(count);
-      sc->set_insert_key_freq(true);
-      sc->set_countmin_k(conf_.solver().countmin_k());
-      sc->set_countmin_n((int)(uniq_key.size()*conf_.solver().countmin_n_ratio()));
+      auto arg = w_->set(count);
+      arg->set_insert_key_freq(true);
+      arg->set_countmin_k(conf_.solver().countmin_k());
+      arg->set_countmin_n((int)(uniq_key.size()*conf_.solver().countmin_n_ratio()));
       CHECK_EQ(time, w_->push(count));
 
       // time 2: pull filered keys
@@ -309,7 +309,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
     for (int i = 0; i < grp_size; ++i, time += kPace) {
       w_->waitInMsg(kWorkerGroup, time);
       int chl = fea_grp_[i];
-      w_->clearKeyFilter(chl);
+      w_->keyFilter(chl).clear();
       w_->value(chl).resize(w_->key(chl).size());
       w_->value(chl).setValue(conf_.init_w());
       w_->finish(kWorkerGroup, time+1);
