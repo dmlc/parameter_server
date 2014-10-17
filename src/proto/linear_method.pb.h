@@ -42,6 +42,7 @@ void protobuf_ShutdownFile_proto_2flinear_5fmethod_2eproto();
 class Config;
 class SolverConfig;
 class DarlingConfig;
+class FTRLConfig;
 class LossConfig;
 class LearnerConfig;
 class Progress;
@@ -269,6 +270,15 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::LM::DarlingConfig* release_darling();
   inline void set_allocated_darling(::PS::LM::DarlingConfig* darling);
 
+  // optional .PS.LM.FTRLConfig ftrl = 16;
+  inline bool has_ftrl() const;
+  inline void clear_ftrl();
+  static const int kFtrlFieldNumber = 16;
+  inline const ::PS::LM::FTRLConfig& ftrl() const;
+  inline ::PS::LM::FTRLConfig* mutable_ftrl();
+  inline ::PS::LM::FTRLConfig* release_ftrl();
+  inline void set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl);
+
   // @@protoc_insertion_point(class_scope:PS.LM.Config)
  private:
   inline void set_has_training_data();
@@ -293,6 +303,8 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_solver();
   inline void set_has_darling();
   inline void clear_has_darling();
+  inline void set_has_ftrl();
+  inline void clear_has_ftrl();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -307,9 +319,10 @@ class Config : public ::google::protobuf::Message {
   ::PS::LM::LearnerConfig* learner_;
   ::PS::LM::SolverConfig* solver_;
   ::PS::LM::DarlingConfig* darling_;
+  ::PS::LM::FTRLConfig* ftrl_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -644,6 +657,78 @@ class DarlingConfig : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static DarlingConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class FTRLConfig : public ::google::protobuf::Message {
+ public:
+  FTRLConfig();
+  virtual ~FTRLConfig();
+
+  FTRLConfig(const FTRLConfig& from);
+
+  inline FTRLConfig& operator=(const FTRLConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FTRLConfig& default_instance();
+
+  void Swap(FTRLConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  FTRLConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const FTRLConfig& from);
+  void MergeFrom(const FTRLConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:PS.LM.FTRLConfig)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
+  friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
+  friend void protobuf_ShutdownFile_proto_2flinear_5fmethod_2eproto();
+
+  void InitAsDefaultInstance();
+  static FTRLConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1794,6 +1879,44 @@ inline void Config::set_allocated_darling(::PS::LM::DarlingConfig* darling) {
   }
 }
 
+// optional .PS.LM.FTRLConfig ftrl = 16;
+inline bool Config::has_ftrl() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void Config::set_has_ftrl() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void Config::clear_has_ftrl() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void Config::clear_ftrl() {
+  if (ftrl_ != NULL) ftrl_->::PS::LM::FTRLConfig::Clear();
+  clear_has_ftrl();
+}
+inline const ::PS::LM::FTRLConfig& Config::ftrl() const {
+  return ftrl_ != NULL ? *ftrl_ : *default_instance_->ftrl_;
+}
+inline ::PS::LM::FTRLConfig* Config::mutable_ftrl() {
+  set_has_ftrl();
+  if (ftrl_ == NULL) ftrl_ = new ::PS::LM::FTRLConfig;
+  return ftrl_;
+}
+inline ::PS::LM::FTRLConfig* Config::release_ftrl() {
+  clear_has_ftrl();
+  ::PS::LM::FTRLConfig* temp = ftrl_;
+  ftrl_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl) {
+  delete ftrl_;
+  ftrl_ = ftrl;
+  if (ftrl) {
+    set_has_ftrl();
+  } else {
+    clear_has_ftrl();
+  }
+}
+
 // -------------------------------------------------------------------
 
 // SolverConfig
@@ -2200,6 +2323,10 @@ inline void DarlingConfig::set_kkt_filter_threshold_ratio(double value) {
   set_has_kkt_filter_threshold_ratio();
   kkt_filter_threshold_ratio_ = value;
 }
+
+// -------------------------------------------------------------------
+
+// FTRLConfig
 
 // -------------------------------------------------------------------
 

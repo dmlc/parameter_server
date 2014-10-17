@@ -1,23 +1,29 @@
 #include "linear_method/ftrl.h"
 #include "linear_method/ftrl_model.h"
-
+#include "data/stream_reader.h"
+#include "base/localizer.h"
 namespace PS {
 namespace LM {
 
 void FTRL::init() {
   OnlineSolver::init();
- if (IamServer()) {
-    model_ = SharedParameterPtr<Key>(new FTRLModel<Key, Real>());
-    model_->keyFilter(0).resize(
+  if (IamServer()) {
+    server_w_ = FTRLModelPtr<Key, Real>(new FTRLModel<Key, Real>());
+    server_w_->setLearningRate(conf_.learning_rate());
+    server_w_->setPenalty(conf_.penalty());
+    server_w_->keyFilter(0).resize(
         conf_.solver().countmin_n()/FLAGS_num_servers, conf_.solver().countmin_k());
-    model_->setKeyFilterIgnoreChl(true);
-    model_->setLearningRate(conf_.learning_rate());
+    server_w_->setKeyFilterIgnoreChl(true);
+
+    server_w_->name() = app_cf_.parameter_name(0);
+    sys_.yp().add(std::static_pointer_cast<Customer>(server_w_));
   } else if (IamWorker()) {
-    model_ = SharedParameterPtr<Key>(new KVVector<Key, Real>());
+    worker_w_ = KVVectorPtr<Key, Real>(new KVVector<Key, Real>());
     loss_ = Loss<Real>::create(conf_.loss());
+
+    worker_w_->name() = app_cf_.parameter_name(0);
+    sys_.yp().add(std::static_pointer_cast<Customer>(worker_w_));
   }
-  model_->name() = app_cf_.parameter_name(0);
-  sys_.yp().add(std::static_pointer_cast<Customer>(model_));
 }
 
 void FTRL::run() {
@@ -52,13 +58,13 @@ void FTRL::updateModel(const MessagePtr& msg) {
       MessagePtr filter(new Message(kServerGroup));
       filter->addKV(uniq_key, {key_cnt});
       filter->task.set_key_channel(i);
-      auto arg = model_->set(filter);
+      auto arg = worker_w_->set(filter);
       arg->set_insert_key_freq(true);
       arg->set_query_key_freq(conf_.solver().tail_feature_freq());
-      int time = model_->pull(filter);
+      int time = worker_w_->pull(filter);
 
-      model_->waitOutMsg(kServerGroup, time);
-      auto Z = localizer.remapIndex(model_->key(i));
+      worker_w_->waitOutMsg(kServerGroup, time);
+      auto Z = localizer.remapIndex(worker_w_->key(i));
       auto Y = X[0];
       CHECK_EQ(Z->rows(), Y->rows());
 
@@ -68,23 +74,24 @@ void FTRL::updateModel(const MessagePtr& msg) {
 
       SArray<Real> Xw(Y->rows());
 
-      Xw.eigenArray() = *X * model_->value(i).eigenArray();
-      Real objv = loss_->evalute({Y, Xw.matrix()});
+      Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
+      Real objv = loss_->evaluate({Y, Xw.matrix()});
+      LL << objv;
 
       SArray<Real> grad;
-      loss_->compute({Y, Z, Xw.matrix()}, {grad});
+      loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
 
       // push local gradient
       MessagePtr push_msg(new Message(kServerGroup));
 
-      push_msg->addKV(model_->key(i), {pos, neg});
+      push_msg->addKV(worker_w_->key(i), {pos, neg});
       push_msg->addValue(grad);
       Range<Key>::all().to(push_msg->task.mutable_key_range());
-      push_msg->task.set_key_channel(grp);
+      push_msg->task.set_key_channel(i);
       push_msg->task.set_erase_key_cache(true);
-      time = model_->push(push_msg);
+      time = worker_w_->push(push_msg);
 
-      model_->waitOutMsg(kServerGroup, time);
+      worker_w_->waitOutMsg(kServerGroup, time);
     }
   } else if (IamServer()) {
 
@@ -96,7 +103,7 @@ void FTRL::countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
   CHECK(X->rowMajor());
   auto SX = std::static_pointer_cast<SparseMatrix<uint32, Real>>(X);
   SArray<size_t> os = SX->offset();
-  SArray<int32> idx = SX->index();
+  SArray<uint32> idx = SX->index();
   CHECK_EQ(os.back(), idx.size());
 
   SArray<Real> y = Y->value();
@@ -106,9 +113,9 @@ void FTRL::countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
   neg->resize(p); neg->setZero();
   for (int i = 0; i < os.size()-1; ++i) {
     if (y[i] > 0) {
-      for (size_t j = os[i]; j < os[i+1]; ++j) ++pos[idx[j]];
+      for (size_t j = os[i]; j < os[i+1]; ++j) ++(*pos)[idx[j]];
     } else {
-      for (size_t j = os[i]; j < os[i+1]; ++j) ++neg[idx[j]];
+      for (size_t j = os[i]; j < os[i+1]; ++j) ++(*neg)[idx[j]];
     }
   }
 }

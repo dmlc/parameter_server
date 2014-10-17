@@ -53,7 +53,8 @@ SRCS = $(PROTOS_CC) \
 	data/slot_reader.cc \
 	linear_method/linear_method.cc \
 	linear_method/batch_solver.cc \
-	linear_method/darling.cc
+	linear_method/darling.cc \
+	linear_method/ftrl.cc
 
 
 TESTS = \

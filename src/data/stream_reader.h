@@ -5,7 +5,7 @@
 #include "proto/matrix.pb.h"
 #include "data/example_parser.h"
 #include "util/filelinereader.h"
-
+#include "base/matrix_io_inl.h"
 namespace PS {
 
 template<typename V>

@@ -6,8 +6,8 @@
 namespace PS {
 namespace LM {
 
-template<typename K> class FTRLModel;
-template<typename K> using FTRLModelPtr = std::shared_ptr<FTRLModel<K>>;
+template<typename K, typename V> class FTRLModel;
+template<typename K, typename V> using FTRLModelPtr = std::shared_ptr<FTRLModel<K, V>>;
 
 template <typename K, typename V>
 class FTRLModel : public SharedParameter<K> {
@@ -52,7 +52,7 @@ void FTRLModel<K,V>::getValue(const MessagePtr& msg) {
   SArray<K> key(msg->key);
   size_t n = key.size();
   SArray<V> val(n);
-  for (size_t i = 0; i < n; ++i) val[i] = model_[key[i]].weight;
+  for (size_t i = 0; i < n; ++i) val[i] = model_[key[i]].w;
   msg->addValue(val);
 }
 
@@ -62,16 +62,16 @@ void FTRLModel<K,V>::setValue(const MessagePtr& msg) {
   size_t n = key.size();
 
   CHECK_EQ(msg->value.size(), 3);
-  SArray<uint32> pos(msg->value(0)); CHECK_EQ(pos.size(), n);
-  SArray<uint32> neg(msg->value(1)); CHECK_EQ(neg.size(), n);
-  SArray<V> grad(msg->value(2)); CHECK_EQ(grad.size(), n);
+  SArray<uint32> pos(msg->value[0]); CHECK_EQ(pos.size(), n);
+  SArray<uint32> neg(msg->value[1]); CHECK_EQ(neg.size(), n);
+  SArray<V> grad(msg->value[2]); CHECK_EQ(grad.size(), n);
 
   for (size_t i = 0; i < n; ++i) {
     auto& e = model_[key[i]];
     V sqrt_n = sqrt((V) e.pos * (V) e.neg / (V) (e.pos + e.neg));
     e.pos += pos[i]; e.neg += neg[i];
     V sqrt_n_new = sqrt((V) e.pos * (V) e.neg / (V) (e.pos + e.neg));
-    V sigma = (sqrt_n_new - sqrt_n) / alpha;
+    V sigma = (sqrt_n_new - sqrt_n) / alpha_;
     e.z += grad[i]  - sigma * e.w;
     e.w = -softThresholding(e.z, lambda1_, lambda2_ + (beta_ + sqrt_n_new) / alpha_);
   }

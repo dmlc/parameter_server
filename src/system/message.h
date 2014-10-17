@@ -16,7 +16,7 @@ typedef std::vector<MessagePtr> MessagePtrList;
 struct Message {
   const static int kInvalidTime = -1;
   Message() { }
-  Message(const NodeID& dest, int time, int wait_time = kInvalidTime);
+  Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
 
   // task, key, and value will be sent over network. while the rest are only

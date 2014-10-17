@@ -584,14 +584,14 @@ class LearningRateConfig : public ::google::protobuf::Message {
   inline double eta() const;
   inline void set_eta(double value);
 
-  // optional double alpha = 3;
+  // optional double alpha = 3 [default = 1];
   inline bool has_alpha() const;
   inline void clear_alpha();
   static const int kAlphaFieldNumber = 3;
   inline double alpha() const;
   inline void set_alpha(double value);
 
-  // optional double beta = 4;
+  // optional double beta = 4 [default = 1];
   inline bool has_beta() const;
   inline void clear_beta();
   static const int kBetaFieldNumber = 4;
@@ -1269,7 +1269,7 @@ inline void LearningRateConfig::set_eta(double value) {
   eta_ = value;
 }
 
-// optional double alpha = 3;
+// optional double alpha = 3 [default = 1];
 inline bool LearningRateConfig::has_alpha() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1280,7 +1280,7 @@ inline void LearningRateConfig::clear_has_alpha() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void LearningRateConfig::clear_alpha() {
-  alpha_ = 0;
+  alpha_ = 1;
   clear_has_alpha();
 }
 inline double LearningRateConfig::alpha() const {
@@ -1291,7 +1291,7 @@ inline void LearningRateConfig::set_alpha(double value) {
   alpha_ = value;
 }
 
-// optional double beta = 4;
+// optional double beta = 4 [default = 1];
 inline bool LearningRateConfig::has_beta() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1302,7 +1302,7 @@ inline void LearningRateConfig::clear_has_beta() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void LearningRateConfig::clear_beta() {
-  beta_ = 0;
+  beta_ = 1;
   clear_has_beta();
 }
 inline double LearningRateConfig::beta() const {

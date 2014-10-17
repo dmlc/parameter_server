@@ -1,6 +1,7 @@
 #pragma once
 #include "parameter/shared_parameter.h"
-#include "linear_method/online_sovler.h"
+#include "parameter/kv_vector.h"
+#include "linear_method/online_solver.h"
 #include "linear_method/ftrl_model.h"
 #include "linear_method/loss_inl.h"
 
@@ -26,7 +27,10 @@ class FTRL : public OnlineSolver {
 
   // void computeGradient();
 
-  SharedParameterPtr<Key> model_;
+  // SharedParameterPtr<Key> model_;
+  KVVectorPtr<Key, Real> worker_w_;
+  FTRLModelPtr<Key, Real> server_w_;
+
   LossPtr<Real> loss_;
 };
 
