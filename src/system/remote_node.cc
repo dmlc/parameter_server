@@ -16,7 +16,7 @@ int RNode::submit(const MessagePtr& msg) {
   msg->original_recver = id();
   {
     Lock l(mu_);
-    if (task.has_time()) {
+    if (task.has_time() && task.time() > Message::kInvalidTime) {
       time_ = std::max(task.time(), time_);
     } else {
       // choose a timestamp

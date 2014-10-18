@@ -58,12 +58,17 @@ void FTRL::updateModel(const MessagePtr& msg) {
       MessagePtr filter(new Message(kServerGroup));
       filter->addKV(uniq_key, {key_cnt});
       filter->task.set_key_channel(i);
+      filter->wait = true;
       auto arg = worker_w_->set(filter);
       arg->set_insert_key_freq(true);
       arg->set_query_key_freq(conf_.solver().tail_feature_freq());
-      int time = worker_w_->pull(filter);
+      worker_w_->pull(filter);
 
-      worker_w_->waitOutMsg(kServerGroup, time);
+      MessagePtr pull_val(new Message(kServerGroup));
+      pull_val->key = worker_w_->key(i);
+      pull_val->task.set_key_channel(i);
+      int time = worker_w_->pull(pull_val);
+
       auto Z = localizer.remapIndex(worker_w_->key(i));
       auto Y = X[0];
       CHECK_EQ(Z->rows(), Y->rows());
@@ -72,13 +77,18 @@ void FTRL::updateModel(const MessagePtr& msg) {
       SArray<uint32> pos, neg;
       countKeys(Y, Z, &pos, &neg);
 
-      SArray<Real> Xw(Y->rows());
 
+      worker_w_->waitOutMsg(kServerGroup, time);
+      auto w = worker_w_->received(time);
+      CHECK_EQ(w.size(), 1);
+      worker_w_->value(i) = w[0].second;
+
+      SArray<Real> Xw(Y->rows());
       Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
       Real objv = loss_->evaluate({Y, Xw.matrix()});
       LL << objv;
 
-      SArray<Real> grad;
+      SArray<Real> grad(Z->cols());
       loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
 
       // push local gradient

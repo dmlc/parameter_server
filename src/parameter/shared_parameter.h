@@ -82,7 +82,6 @@ class SharedParameter : public Customer {
   std::unordered_map<int, FreqencyFilter<K>> key_filter_;
   bool key_filter_ignore_chl_ = false;
 
-  // FreqencyFilter<K> key_filter_;
 
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
@@ -124,6 +123,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     }
     if (call.has_query_key_freq()) {
       if (req) {
+        reply->clearKV();
         reply->key = key_filter_[chl].queryKeys(SArray<K>(msg->key), call.query_key_freq());
       } else {
         setValue(msg);
