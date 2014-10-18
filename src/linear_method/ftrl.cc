@@ -34,6 +34,8 @@ void FTRL::run() {
   Task update = newTask(Call::UPDATE_MODEL);
   taskpool(kActiveGroup)->submitAndWait(update);
 
+  Task save_model = newTask(Call::SAVE_MODEL);
+  taskpool(kActiveGroup)->submitAndWait(save_model);
   // TODO collect progress
 
 }
@@ -137,7 +139,11 @@ void FTRL::countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
 }
 
 void FTRL::saveModel(const MessageCPtr& msg) {
-  // TODO
+  if (!IamServer()) return;
+  if (!conf_.has_model_output()) return;
+  auto out = ithFile(conf_.model_output(), 0, "_" + myNodeID());
+  server_w_->writeToFile(out);
+  LI << myNodeID() << " writes model to " << out.file(0);
 }
 
 } // namespace LM

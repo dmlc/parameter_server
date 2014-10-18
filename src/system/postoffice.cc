@@ -8,8 +8,8 @@ namespace PS {
 
 DEFINE_bool(enable_fault_tolerance, false, "enable fault tolerance feature");
 DEFINE_int32(num_replicas, 0, "number of replica");
-DEFINE_int32(num_servers, 1, "number of servers");
-DEFINE_int32(num_workers, 1, "number of clients");
+DEFINE_int32(num_servers, 0, "number of servers");
+DEFINE_int32(num_workers, 0, "number of clients");
 DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
 DEFINE_string(app, "../config/rcv1_l1lr.config", "the configuration file of app");
@@ -32,9 +32,11 @@ void Postoffice::run() {
     case Node::SCHEDULER: {
       // get all node information
       yellow_pages_.add(myNode());
-      nodes_are_ready_.get_future().wait();
-      LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
-         << FLAGS_num_workers << " workers";
+      if (FLAGS_num_workers || FLAGS_num_servers) {
+        nodes_are_ready_.get_future().wait();
+        LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
+           << FLAGS_num_workers << " workers";
+      }
 
       // run the application
       AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);

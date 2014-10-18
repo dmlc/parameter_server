@@ -37,11 +37,13 @@ void LinearMethod::init() {
   CHECK(app_cf_.has_linear_method());
   conf_ = app_cf_.linear_method();
 
-  CHECK(conf_.has_loss());
-  loss_ = Loss<double>::create(conf_.loss());
+  if (conf_.has_loss()) {
+    loss_ = Loss<double>::create(conf_.loss());
+  }
 
-  CHECK(conf_.has_penalty());
-  penalty_ = Penalty<double>::create(conf_.penalty());
+  if (conf_.has_penalty()) {
+    penalty_ = Penalty<double>::create(conf_.penalty());
+  }
 
   // bool has_learner = app_cf_.has_learner();
   // if (has_learner) {

@@ -21,6 +21,12 @@ class FTRLModel : public SharedParameter<K> {
     if (c.lambda_size() > 1) lambda2_ = c.lambda(1);
   }
 
+  void writeToFile(const DataConfig& data) {
+    std::ofstream out(data.file(0)); CHECK(out.good());
+    for (const auto& it : model_) {
+      if (it.second.w != 0) out << it.first << "\t" << it.second.w << "\n";
+    }
+  }
  public:  // implement required virtual functions
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
     return sliceKeyOrderedMsg<K>(msg, sep);

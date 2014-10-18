@@ -5,8 +5,8 @@
 
 namespace PS {
 
-DEFINE_string(my_node, "", "my node");
-DEFINE_string(scheduler, "", "the scheduler node");
+DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
+DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
 DEFINE_string(server_master, "", "the master of servers");
 DEFINE_int32(num_retries, 3, "number of retries for zmq");
 DEFINE_bool(compress_message, true, "");
