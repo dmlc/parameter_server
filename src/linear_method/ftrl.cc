@@ -94,7 +94,7 @@ void FTRL::updateModel(const MessagePtr& msg) {
       SArray<Real> Xw(Y->rows());
       Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
       Real objv = loss_->evaluate({Y, Xw.matrix()});
-      LL << objv;
+      // LL << objv;
 
       SArray<Real> grad(Z->cols());
       loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
