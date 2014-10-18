@@ -570,7 +570,7 @@ class LearningRateConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .PS.LearningRateConfig.Type type = 1;
+  // optional .PS.LearningRateConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
@@ -1224,7 +1224,7 @@ inline void ParameterInitConfig::set_allocated_file_name(::std::string* file_nam
 
 // LearningRateConfig
 
-// required .PS.LearningRateConfig.Type type = 1;
+// optional .PS.LearningRateConfig.Type type = 1;
 inline bool LearningRateConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }

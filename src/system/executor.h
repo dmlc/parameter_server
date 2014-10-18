@@ -21,7 +21,9 @@ const static NodeID kLiveGroup = Van::id("all_lives");
 // received tasks.
 class Executor {
  public:
-  Executor(Customer& obj) : obj_(obj) { }
+  Executor(Customer& obj) : obj_(obj) {
+    my_node_ = Postoffice::instance().myNode();
+  }
   ~Executor() { }
   // not thread-safe, so call it before being used by other threads
   void init(const std::vector<Node>& nodes);

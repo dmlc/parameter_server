@@ -148,8 +148,10 @@ void Postoffice::manageNode(const Task& tk) {
       for (auto n : nodes) yellow_pages_.add(n);
       if (obj != nullptr) {
         obj->exec().init(nodes);
-        for (auto c : obj->children())
-          yellow_pages_.customer(c)->exec().init(nodes);
+        for (auto c : obj->children()) {
+          auto child = yellow_pages_.customer(c);
+          if (child) child->exec().init(nodes);
+        }
       }
       break;
     case ManageNode::REPLACE:

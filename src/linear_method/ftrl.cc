@@ -32,7 +32,7 @@ void FTRL::run() {
 
   // run in the eventual consistency model
   Task update = newTask(Call::UPDATE_MODEL);
-  taskpool(kActiveGroup)->submit(update);
+  taskpool(kActiveGroup)->submitAndWait(update);
 
   // TODO collect progress
 

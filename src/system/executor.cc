@@ -62,7 +62,6 @@ void Executor::init(const std::vector<Node>& nodes) {
 void Executor::add(const Node& node) {
   auto id = node.id();
   CHECK_EQ(nodes_.count(id), 0);
-  if (id == Postoffice::instance().myNode().id()) my_node_ = node;
   RNodePtr w(new RNode(node, *this));
   nodes_[id] = w;
 
