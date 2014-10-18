@@ -1,7 +1,5 @@
 #include "system/app.h"
-#include "linear_method/darling.h"
-#include "linear_method/ftrl.h"
-#include "linear_method/batch_solver.h"
+#include "linear_method/linear_method.h"
 #include "neural_network/sgd_solver.h"
 namespace PS {
 
@@ -10,20 +8,8 @@ DEFINE_bool(test_fault_tol, false, "");
 AppPtr App::create(const AppConfig& conf) {
   AppPtr ptr;
   if (conf.has_linear_method()) {
-    const auto& lm = conf.linear_method();
-    if (lm.solver().minibatch_size() <= 0) {
-      // batch solver
-      if (lm.has_darling()) {
-        ptr = AppPtr(new LM::Darling());
-      } else {
-        ptr = AppPtr(new LM::BatchSolver());
-      }
-    } else {
-      if (lm.has_ftrl()) {
-        ptr = AppPtr(new LM::FTRL());
-      }
-      // online sovler
-    }
+    ptr = LM::LinearMethod::create(conf.linear_method());
+    CHECK(ptr);
   } else if (conf.has_neural_network()) {
     ptr = AppPtr(new NN::SGDSolver());
   } else {

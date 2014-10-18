@@ -10,6 +10,7 @@ message Config {
   optional DataConfig local_cache = 3;
   optional ParameterInitConfig init_w = 4;
   optional DataConfig model_output = 5;
+  optional DataConfig model_input = 6;
   optional LossConfig loss = 10;
   optional PenaltyConfig penalty = 11;
   optional LearningRateConfig learning_rate = 12;

@@ -4,6 +4,7 @@
 
 namespace PS {
 
+// distributed auc
 class AUC {
  public:
   void setGoodness(int64 goodness) { goodness_ = goodness; }

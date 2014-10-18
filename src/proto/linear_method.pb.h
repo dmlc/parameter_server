@@ -216,6 +216,15 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_model_output();
   inline void set_allocated_model_output(::PS::DataConfig* model_output);
 
+  // optional .PS.DataConfig model_input = 6;
+  inline bool has_model_input() const;
+  inline void clear_model_input();
+  static const int kModelInputFieldNumber = 6;
+  inline const ::PS::DataConfig& model_input() const;
+  inline ::PS::DataConfig* mutable_model_input();
+  inline ::PS::DataConfig* release_model_input();
+  inline void set_allocated_model_input(::PS::DataConfig* model_input);
+
   // optional .PS.LM.LossConfig loss = 10;
   inline bool has_loss() const;
   inline void clear_loss();
@@ -291,6 +300,8 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_init_w();
   inline void set_has_model_output();
   inline void clear_has_model_output();
+  inline void set_has_model_input();
+  inline void clear_has_model_input();
   inline void set_has_loss();
   inline void clear_has_loss();
   inline void set_has_penalty();
@@ -313,6 +324,7 @@ class Config : public ::google::protobuf::Message {
   ::PS::DataConfig* local_cache_;
   ::PS::ParameterInitConfig* init_w_;
   ::PS::DataConfig* model_output_;
+  ::PS::DataConfig* model_input_;
   ::PS::LM::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearningRateConfig* learning_rate_;
@@ -322,7 +334,7 @@ class Config : public ::google::protobuf::Message {
   ::PS::LM::FTRLConfig* ftrl_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -1651,15 +1663,53 @@ inline void Config::set_allocated_model_output(::PS::DataConfig* model_output) {
   }
 }
 
-// optional .PS.LM.LossConfig loss = 10;
-inline bool Config::has_loss() const {
+// optional .PS.DataConfig model_input = 6;
+inline bool Config::has_model_input() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void Config::set_has_loss() {
+inline void Config::set_has_model_input() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void Config::clear_has_loss() {
+inline void Config::clear_has_model_input() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void Config::clear_model_input() {
+  if (model_input_ != NULL) model_input_->::PS::DataConfig::Clear();
+  clear_has_model_input();
+}
+inline const ::PS::DataConfig& Config::model_input() const {
+  return model_input_ != NULL ? *model_input_ : *default_instance_->model_input_;
+}
+inline ::PS::DataConfig* Config::mutable_model_input() {
+  set_has_model_input();
+  if (model_input_ == NULL) model_input_ = new ::PS::DataConfig;
+  return model_input_;
+}
+inline ::PS::DataConfig* Config::release_model_input() {
+  clear_has_model_input();
+  ::PS::DataConfig* temp = model_input_;
+  model_input_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_model_input(::PS::DataConfig* model_input) {
+  delete model_input_;
+  model_input_ = model_input;
+  if (model_input) {
+    set_has_model_input();
+  } else {
+    clear_has_model_input();
+  }
+}
+
+// optional .PS.LM.LossConfig loss = 10;
+inline bool Config::has_loss() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Config::set_has_loss() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Config::clear_has_loss() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void Config::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LM::LossConfig::Clear();
@@ -1691,13 +1741,13 @@ inline void Config::set_allocated_loss(::PS::LM::LossConfig* loss) {
 
 // optional .PS.PenaltyConfig penalty = 11;
 inline bool Config::has_penalty() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void Config::set_has_penalty() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void Config::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Config::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
@@ -1729,13 +1779,13 @@ inline void Config::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
 
 // optional .PS.LearningRateConfig learning_rate = 12;
 inline bool Config::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void Config::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void Config::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void Config::clear_learning_rate() {
   if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
@@ -1767,13 +1817,13 @@ inline void Config::set_allocated_learning_rate(::PS::LearningRateConfig* learni
 
 // optional .PS.LM.LearnerConfig learner = 13;
 inline bool Config::has_learner() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void Config::set_has_learner() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void Config::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Config::clear_learner() {
   if (learner_ != NULL) learner_->::PS::LM::LearnerConfig::Clear();
@@ -1805,13 +1855,13 @@ inline void Config::set_allocated_learner(::PS::LM::LearnerConfig* learner) {
 
 // optional .PS.LM.SolverConfig solver = 14;
 inline bool Config::has_solver() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Config::set_has_solver() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Config::clear_has_solver() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Config::clear_solver() {
   if (solver_ != NULL) solver_->::PS::LM::SolverConfig::Clear();
@@ -1843,13 +1893,13 @@ inline void Config::set_allocated_solver(::PS::LM::SolverConfig* solver) {
 
 // optional .PS.LM.DarlingConfig darling = 15;
 inline bool Config::has_darling() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Config::set_has_darling() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Config::clear_has_darling() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Config::clear_darling() {
   if (darling_ != NULL) darling_->::PS::LM::DarlingConfig::Clear();
@@ -1881,13 +1931,13 @@ inline void Config::set_allocated_darling(::PS::LM::DarlingConfig* darling) {
 
 // optional .PS.LM.FTRLConfig ftrl = 16;
 inline bool Config::has_ftrl() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Config::set_has_ftrl() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Config::clear_has_ftrl() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Config::clear_ftrl() {
   if (ftrl_ != NULL) ftrl_->::PS::LM::FTRLConfig::Clear();

@@ -15,6 +15,7 @@ namespace LM {
 // linear classification/regerssion
 class LinearMethod : public App {
  public:
+  static AppPtr create(const Config& conf);
   virtual void init();
 
   void process(const MessagePtr& msg);
