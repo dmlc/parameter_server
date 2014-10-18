@@ -42,7 +42,7 @@ class StreamReader {
 template<typename V>
 void StreamReader<V>::init(const DataConfig& data) {
   data_ = data;
-  parser_.init(data_.text(), data_.ignore_fea_grp());
+  parser_.init(data_.text(), data_.ignore_feature_group());
   vslots_.resize(parser_.maxSlotID());
   // line_ = new char[kMaxLineLength_];
 }
@@ -58,10 +58,7 @@ bool StreamReader<V>::readOneLineFromText(uint32 num_read) {
         return false;
       }
       data_file_ = File::open(ithFile(data_, cur_file_), "r");
-      if (data_file_ == nullptr || !data_file_->open()) {
-        data_file_ = nullptr;
-        return false;
-      }
+      if (data_file_ == nullptr) return false;
     }
     // read a line
     result = data_file_->readLine(line_, kMaxLineLength_);
@@ -87,6 +84,7 @@ bool StreamReader<V>::readOneLineFromText(uint32 num_read) {
     while (vslot.row_siz.size() < num_read) vslot.row_siz.pushBack(0);
     vslot.row_siz.pushBack(std::max(key_size, val_size));
   }
+
   return true;
 }
 

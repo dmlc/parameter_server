@@ -203,7 +203,7 @@ bool readMatricesFromBin(const DataConfig& data, MatrixPtrList<V>* mat) {
 template<typename V>
 bool readMatricesFromText(const DataConfig& data, MatrixPtrList<V>* mat) {
   // TODO. multi-thread
-  TextParser parser(data.text(), data.ignore_fea_grp());
+  TextParser parser(data.text(), data.ignore_feature_group());
 
   SArray<V> label;
   struct Slot {

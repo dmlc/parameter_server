@@ -58,6 +58,7 @@ SRCS = $(PROTOS_CC) \
 
 
 TESTS = \
+	stream_reader_test \
 	slot_reader_test \
 	matrix_io_test \
 	localizer_test \

@@ -52,7 +52,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   }
 
   ExampleParser parser;
-  parser.init(data.text(), data.ignore_fea_grp());
+  parser.init(data.text(), data.ignore_feature_group());
   struct VSlot {
     SArray<float> val;
     SArray<uint64> col_idx;

@@ -298,12 +298,12 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_range();
   inline void set_allocated_range(::PS::PbRange* range);
 
-  // optional bool ignore_fea_grp = 6;
-  inline bool has_ignore_fea_grp() const;
-  inline void clear_ignore_fea_grp();
-  static const int kIgnoreFeaGrpFieldNumber = 6;
-  inline bool ignore_fea_grp() const;
-  inline void set_ignore_fea_grp(bool value);
+  // optional bool ignore_feature_group = 6;
+  inline bool has_ignore_feature_group() const;
+  inline void clear_ignore_feature_group();
+  static const int kIgnoreFeatureGroupFieldNumber = 6;
+  inline bool ignore_feature_group() const;
+  inline void set_ignore_feature_group(bool value);
 
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
@@ -315,8 +315,8 @@ class DataConfig : public ::google::protobuf::Message {
   inline void clear_has_hdfs();
   inline void set_has_range();
   inline void clear_has_range();
-  inline void set_has_ignore_fea_grp();
-  inline void clear_has_ignore_fea_grp();
+  inline void set_has_ignore_feature_group();
+  inline void clear_has_ignore_feature_group();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -325,7 +325,7 @@ class DataConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> file_;
   ::PS::HDFSConfig* hdfs_;
   ::PS::PbRange* range_;
-  bool ignore_fea_grp_;
+  bool ignore_feature_group_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
@@ -1035,26 +1035,26 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
   }
 }
 
-// optional bool ignore_fea_grp = 6;
-inline bool DataConfig::has_ignore_fea_grp() const {
+// optional bool ignore_feature_group = 6;
+inline bool DataConfig::has_ignore_feature_group() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void DataConfig::set_has_ignore_fea_grp() {
+inline void DataConfig::set_has_ignore_feature_group() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void DataConfig::clear_has_ignore_fea_grp() {
+inline void DataConfig::clear_has_ignore_feature_group() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void DataConfig::clear_ignore_fea_grp() {
-  ignore_fea_grp_ = false;
-  clear_has_ignore_fea_grp();
+inline void DataConfig::clear_ignore_feature_group() {
+  ignore_feature_group_ = false;
+  clear_has_ignore_feature_group();
 }
-inline bool DataConfig::ignore_fea_grp() const {
-  return ignore_fea_grp_;
+inline bool DataConfig::ignore_feature_group() const {
+  return ignore_feature_group_;
 }
-inline void DataConfig::set_ignore_fea_grp(bool value) {
-  set_has_ignore_fea_grp();
-  ignore_fea_grp_ = value;
+inline void DataConfig::set_ignore_feature_group(bool value) {
+  set_has_ignore_feature_group();
+  ignore_feature_group_ = value;
 }
 
 // -------------------------------------------------------------------

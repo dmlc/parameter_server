@@ -48,6 +48,10 @@ void FTRL::updateModel(const MessagePtr& msg) {
     uint32 minibatch = conf_.solver().minibatch_size();
 
     for (int i = 0; reader.readMatrices(minibatch, &X); ++i) {
+      CHECK_EQ(X.size(), 2);
+      // LL << X[0]->debugString();
+      // LL << X[1]->debugString();
+
       // if (i > 1) break;
       // read a minibatch
       SArray<Key> uniq_key;
