@@ -48,6 +48,7 @@ void FTRL::updateModel(const MessagePtr& msg) {
     uint32 minibatch = conf_.solver().minibatch_size();
 
     for (int i = 0; reader.readMatrices(minibatch, &X); ++i) {
+      // if (i > 1) break;
       // read a minibatch
       SArray<Key> uniq_key;
       SArray<uint32> key_cnt;
@@ -82,6 +83,7 @@ void FTRL::updateModel(const MessagePtr& msg) {
       auto w = worker_w_->received(time);
       CHECK_EQ(w.size(), 1);
       worker_w_->value(i) = w[0].second;
+      // LL << w[0].second;
 
       SArray<Real> Xw(Y->rows());
       Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
@@ -90,7 +92,7 @@ void FTRL::updateModel(const MessagePtr& msg) {
 
       SArray<Real> grad(Z->cols());
       loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
-
+      // LL << grad;
       // push local gradient
       MessagePtr push_msg(new Message(kServerGroup));
 

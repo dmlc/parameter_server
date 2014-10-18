@@ -45,6 +45,12 @@ class FTRLModel : public SharedParameter<K> {
     V z = 0;
   };
   std::unordered_map<K, Entry> model_;
+
+  // approximate sqrt(sum g_i^2) using feature counts. See sec 4.5
+  V grad_norm(V pos, V neg) {
+    V all = pos + neg;
+    return all == 0 ? 0 : sqrt(pos * neg / all);
+  }
 };
 
 template <typename K, typename V>
@@ -68,12 +74,14 @@ void FTRLModel<K,V>::setValue(const MessagePtr& msg) {
 
   for (size_t i = 0; i < n; ++i) {
     auto& e = model_[key[i]];
-    V sqrt_n = sqrt((V) e.pos * (V) e.neg / (V) (e.pos + e.neg));
+    V sqrt_n = grad_norm(e.pos, e.neg);
     e.pos += pos[i]; e.neg += neg[i];
-    V sqrt_n_new = sqrt((V) e.pos * (V) e.neg / (V) (e.pos + e.neg));
+    V sqrt_n_new = grad_norm(e.pos, e.neg);
     V sigma = (sqrt_n_new - sqrt_n) / alpha_;
     e.z += grad[i]  - sigma * e.w;
-    e.w = -softThresholding(e.z, lambda1_, lambda2_ + (beta_ + sqrt_n_new) / alpha_);
+    V lambda2 = lambda2_ + (beta_ + sqrt_n_new) / alpha_;
+    e.w = -softThresholding(e.z, lambda1_, lambda2);
+    // LL << e.z << " " << lambda2 << " " << e.w;
   }
 }
 
