@@ -62,6 +62,11 @@ void LinearMethod::process(const MessagePtr& msg) {
       sys_.replyProtocalMessage(msg, prog);
       break;
     }
+    case Call::REPORT_PROGRESS: {
+      Progress prog; CHECK(prog.ParseFromString(msg->task.msg()));
+      Lock l(progress_mu_);
+      recent_progress_[msg->sender] = prog;
+    }
     case Call::LOAD_DATA: {
       DataInfo info;
       info.set_hit_cache(loadData(msg, info.mutable_example_info()));

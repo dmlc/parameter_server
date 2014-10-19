@@ -98,11 +98,12 @@ enum Call_Command {
   Call_Command_EVALUATE_PROGRESS = 4,
   Call_Command_SAVE_MODEL = 5,
   Call_Command_RECOVER = 6,
-  Call_Command_COMPUTE_VALIDATION_AUC = 7
+  Call_Command_COMPUTE_VALIDATION_AUC = 7,
+  Call_Command_REPORT_PROGRESS = 8
 };
 bool Call_Command_IsValid(int value);
 const Call_Command Call_Command_Command_MIN = Call_Command_LOAD_DATA;
-const Call_Command Call_Command_Command_MAX = Call_Command_COMPUTE_VALIDATION_AUC;
+const Call_Command Call_Command_Command_MAX = Call_Command_REPORT_PROGRESS;
 const int Call_Command_Command_ARRAYSIZE = Call_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Call_Command_descriptor();
@@ -509,6 +510,13 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing() const;
   inline void set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value);
 
+  // optional int32 eval_interval = 21 [default = 5];
+  inline bool has_eval_interval() const;
+  inline void clear_eval_interval();
+  static const int kEvalIntervalFieldNumber = 21;
+  inline ::google::protobuf::int32 eval_interval() const;
+  inline void set_eval_interval(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
  private:
   inline void set_has_minibatch_size();
@@ -539,6 +547,8 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_countmin_n();
   inline void set_has_max_num_parallel_groups_in_preprocessing();
   inline void clear_has_max_num_parallel_groups_in_preprocessing();
+  inline void set_has_eval_interval();
+  inline void clear_has_eval_interval();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -557,9 +567,10 @@ class SolverConfig : public ::google::protobuf::Message {
   double countmin_n_ratio_;
   double countmin_n_;
   ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing_;
+  ::google::protobuf::int32 eval_interval_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -1064,6 +1075,20 @@ class Progress : public ::google::protobuf::Message {
   inline ::PS::AUCData* release_training_auc_data();
   inline void set_allocated_training_auc_data(::PS::AUCData* training_auc_data);
 
+  // optional uint64 num_ex_trained = 12;
+  inline bool has_num_ex_trained() const;
+  inline void clear_num_ex_trained();
+  static const int kNumExTrainedFieldNumber = 12;
+  inline ::google::protobuf::uint64 num_ex_trained() const;
+  inline void set_num_ex_trained(::google::protobuf::uint64 value);
+
+  // optional double acc = 13;
+  inline bool has_acc() const;
+  inline void clear_acc();
+  static const int kAccFieldNumber = 13;
+  inline double acc() const;
+  inline void set_acc(double value);
+
   // optional double total_time = 10;
   inline bool has_total_time() const;
   inline void clear_total_time();
@@ -1099,6 +1124,10 @@ class Progress : public ::google::protobuf::Message {
   inline void clear_has_training_auc();
   inline void set_has_training_auc_data();
   inline void clear_has_training_auc_data();
+  inline void set_has_num_ex_trained();
+  inline void clear_has_num_ex_trained();
+  inline void set_has_acc();
+  inline void clear_has_acc();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
@@ -1111,11 +1140,13 @@ class Progress : public ::google::protobuf::Message {
   ::google::protobuf::uint64 nnz_active_set_;
   double training_auc_;
   ::PS::AUCData* training_auc_data_;
+  ::google::protobuf::uint64 num_ex_trained_;
+  double acc_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -1280,6 +1311,7 @@ class Call : public ::google::protobuf::Message {
   static const Command SAVE_MODEL = Call_Command_SAVE_MODEL;
   static const Command RECOVER = Call_Command_RECOVER;
   static const Command COMPUTE_VALIDATION_AUC = Call_Command_COMPUTE_VALIDATION_AUC;
+  static const Command REPORT_PROGRESS = Call_Command_REPORT_PROGRESS;
   static inline bool Command_IsValid(int value) {
     return Call_Command_IsValid(value);
   }
@@ -2304,6 +2336,28 @@ inline void SolverConfig::set_max_num_parallel_groups_in_preprocessing(::google:
   max_num_parallel_groups_in_preprocessing_ = value;
 }
 
+// optional int32 eval_interval = 21 [default = 5];
+inline bool SolverConfig::has_eval_interval() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void SolverConfig::set_has_eval_interval() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void SolverConfig::clear_has_eval_interval() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void SolverConfig::clear_eval_interval() {
+  eval_interval_ = 5;
+  clear_has_eval_interval();
+}
+inline ::google::protobuf::int32 SolverConfig::eval_interval() const {
+  return eval_interval_;
+}
+inline void SolverConfig::set_eval_interval(::google::protobuf::int32 value) {
+  set_has_eval_interval();
+  eval_interval_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // DarlingConfig
@@ -2606,15 +2660,59 @@ inline void Progress::set_allocated_training_auc_data(::PS::AUCData* training_au
   }
 }
 
-// optional double total_time = 10;
-inline bool Progress::has_total_time() const {
+// optional uint64 num_ex_trained = 12;
+inline bool Progress::has_num_ex_trained() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void Progress::set_has_total_time() {
+inline void Progress::set_has_num_ex_trained() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void Progress::clear_has_total_time() {
+inline void Progress::clear_has_num_ex_trained() {
   _has_bits_[0] &= ~0x00000080u;
+}
+inline void Progress::clear_num_ex_trained() {
+  num_ex_trained_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_ex_trained();
+}
+inline ::google::protobuf::uint64 Progress::num_ex_trained() const {
+  return num_ex_trained_;
+}
+inline void Progress::set_num_ex_trained(::google::protobuf::uint64 value) {
+  set_has_num_ex_trained();
+  num_ex_trained_ = value;
+}
+
+// optional double acc = 13;
+inline bool Progress::has_acc() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Progress::set_has_acc() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Progress::clear_has_acc() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Progress::clear_acc() {
+  acc_ = 0;
+  clear_has_acc();
+}
+inline double Progress::acc() const {
+  return acc_;
+}
+inline void Progress::set_acc(double value) {
+  set_has_acc();
+  acc_ = value;
+}
+
+// optional double total_time = 10;
+inline bool Progress::has_total_time() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Progress::set_has_total_time() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Progress::clear_has_total_time() {
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Progress::clear_total_time() {
   total_time_ = 0;

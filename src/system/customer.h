@@ -25,7 +25,7 @@ class Customer {
   }
 
   // join the execution thread
-  void stop() { exec_.stop(); exec_thread_->join(); }
+  virtual void stop() { exec_.stop(); exec_thread_->join(); }
 
   // unique name of this customer
   const string& name() const { return name_; }
@@ -33,6 +33,7 @@ class Customer {
 
   // the uique node id running this customer
   NodeID myNodeID() { return exec_.myNode().id(); }
+  NodeID schedulerID() { return sys_.scheduler().id(); }
   bool IamWorker() { return exec_.myNode().role() == Node::WORKER; }
   bool IamServer() { return exec_.myNode().role() == Node::SERVER; }
 
@@ -43,7 +44,7 @@ class Customer {
   // all child customer names
   const StringList& children() const { return child_customers_; }
 
-  void showMem() { LL << myNodeID() << " is using " << ResUsage::myPhyMem() << " Mbytes memory"; }
+  // void showMem() { LL << myNodeID() << " is using " << ResUsage::myPhyMem() << " Mbytes memory"; }
  protected:
   string name_;
   StringList child_customers_;

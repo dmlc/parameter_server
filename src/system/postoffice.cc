@@ -43,7 +43,7 @@ void Postoffice::run() {
       AppPtr app = App::create(conf);
       yellow_pages_.add(app);
       app->run();
-      app->stop();
+      app->stopAll();
       break;
     } default:
       // run as a daemon

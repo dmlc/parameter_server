@@ -20,18 +20,31 @@ class FTRL : public OnlineSolver {
 
   void saveModel(const MessageCPtr& msg);
   void updateModel(const MessagePtr& msg);
+
+  void stop() { done_ = true; prog_thr_->join(); Customer::stop();}
  protected:
   typedef double Real;
   void countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
                  SArray<uint32>* pos, SArray<uint32>* neg);
-
+  void evalProgress();
+  void showProgress();
   // void computeGradient();
 
-  // SharedParameterPtr<Key> model_;
   KVVectorPtr<Key, Real> worker_w_;
   FTRLModelPtr<Key, Real> server_w_;
 
   LossPtr<Real> loss_;
+  bool done_ = false;
+
+  struct Status {
+    uint64 num_ex = 0;
+    Real objv = 0;
+    Real acc = 0;
+    void reset() { num_ex = 0; objv = 0; acc = 0; }
+  };
+  Status status_;
+  std::mutex status_mu_;
+  unique_ptr<std::thread> prog_thr_;
 };
 
 } // namespace LM

@@ -51,8 +51,12 @@ class LinearMethod : public App {
     return task;
   }
 
-  // progress of all iterations, only valid for the scheduler
+  // progress of all iterations, only valid for the scheduler. The progress of
+  // all nodes are merged for every iteration. It's for batch algorithms.
   std::map<int, Progress> g_progress_;
+  // recent progress for every node. It's for online algorithms.
+  std::map<NodeID, Progress> recent_progress_;
+  std::mutex progress_mu_;
 
   Config conf_;
   Timer total_timer_;

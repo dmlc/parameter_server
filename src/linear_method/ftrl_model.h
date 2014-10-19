@@ -27,6 +27,10 @@ class FTRLModel : public SharedParameter<K> {
       if (it.second.w != 0) out << it.first << "\t" << it.second.w << "\n";
     }
   }
+
+  V objv() { return norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_); }
+  size_t nnz() { return nnz_; }
+
  public:  // implement required virtual functions
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
     return sliceKeyOrderedMsg<K>(msg, sep);
@@ -57,6 +61,11 @@ class FTRLModel : public SharedParameter<K> {
     V all = pos + neg;
     return all == 0 ? 0 : sqrt(pos * neg / all);
   }
+
+  // status
+  V norm1_ = 0;
+  V norm2_ = 0;
+  size_t nnz_ = 0;
 };
 
 template <typename K, typename V>
@@ -79,6 +88,7 @@ void FTRLModel<K,V>::setValue(const MessagePtr& msg) {
   SArray<V> grad(msg->value[2]); CHECK_EQ(grad.size(), n);
 
   for (size_t i = 0; i < n; ++i) {
+    // update model
     auto& e = model_[key[i]];
     V sqrt_n = grad_norm(e.pos, e.neg);
     e.pos += pos[i]; e.neg += neg[i];
@@ -86,8 +96,18 @@ void FTRLModel<K,V>::setValue(const MessagePtr& msg) {
     V sigma = (sqrt_n_new - sqrt_n) / alpha_;
     e.z += grad[i]  - sigma * e.w;
     V lambda2 = lambda2_ + (beta_ + sqrt_n_new) / alpha_;
-    e.w = -softThresholding(e.z, lambda1_, lambda2);
-    // LL << e.z << " " << lambda2 << " " << e.w;
+    V w_old = e.w;
+    V w = -softThresholding(e.z, lambda1_, lambda2);
+    e.w = w;
+
+    // update status
+    norm1_ += fabs(w) - fabs(w_old);
+    norm2_ += w * w - w_old * w_old;
+    if (w == 0 && w_old != 0) {
+      -- nnz_;
+    } else if (w != 0 && w_old == 0) {
+      ++ nnz_;
+    }
   }
 }
 

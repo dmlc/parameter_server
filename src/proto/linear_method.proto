@@ -55,6 +55,9 @@ message SolverConfig {
   optional double countmin_n = 18 [default = 1e8];
 
   optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
+
+  // evaluate the progrss per *eval_interval* second
+  optional int32 eval_interval = 21 [default = 5];
 }
 
 message DarlingConfig {
@@ -101,6 +104,8 @@ message Progress {
   optional uint64 nnz_active_set = 7;
   optional double training_auc = 8;
   optional AUCData training_auc_data = 9;
+  optional uint64 num_ex_trained = 12;
+  optional double acc = 13;
 
   // performance
   optional double total_time = 10;
@@ -121,6 +126,7 @@ message Call {
     SAVE_MODEL = 5;  // save w
     RECOVER = 6;
     COMPUTE_VALIDATION_AUC = 7;
+    REPORT_PROGRESS = 8;
     // SAVE_AS_DENSE = 7;     // save X * w in a given key range
   }
   required Command cmd = 1;

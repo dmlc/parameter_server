@@ -30,6 +30,15 @@ void FTRL::run() {
   // start the system
   LinearMethod::startSystem();
 
+  // the thread collects progress from workers and servers
+  prog_thr_ = unique_ptr<std::thread>(new std::thread([this]() {
+        sleep(conf_.solver().eval_interval());
+        while (!done_) {
+          sleep(conf_.solver().eval_interval());
+          showProgress();
+        }
+      }));
+
   // run in the eventual consistency model
   Task update = newTask(Call::UPDATE_MODEL);
   taskpool(kActiveGroup)->submitAndWait(update);
@@ -41,6 +50,14 @@ void FTRL::run() {
 }
 
 void FTRL::updateModel(const MessagePtr& msg) {
+
+  // the thread reports progress to the scheduler
+  prog_thr_ = unique_ptr<std::thread>(new std::thread([this]() {
+        while (!done_) {
+          sleep(conf_.solver().eval_interval());
+          evalProgress();
+        }
+      }));
 
   // int time = msg->task.time() * 10;
   if (IamWorker()) {
@@ -94,7 +111,11 @@ void FTRL::updateModel(const MessagePtr& msg) {
       SArray<Real> Xw(Y->rows());
       Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
       Real objv = loss_->evaluate({Y, Xw.matrix()});
-      // LL << objv;
+      {
+        Lock l(status_mu_);
+        status_.objv += objv;
+        status_.num_ex += Xw.size();
+      }
 
       SArray<Real> grad(Z->cols());
       loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
@@ -144,6 +165,43 @@ void FTRL::saveModel(const MessageCPtr& msg) {
   auto out = ithFile(conf_.model_output(), 0, "_" + myNodeID());
   server_w_->writeToFile(out);
   LI << myNodeID() << " writes model to " << out.file(0);
+}
+
+void FTRL::evalProgress() {
+  Progress prog;
+  if (IamWorker()) {
+    Lock l(status_mu_);
+    prog.set_objv(status_.objv);
+    prog.set_acc(status_.acc);
+    prog.set_num_ex_trained(status_.num_ex);
+    status_.reset();
+  } else if (IamServer()) {
+    prog.set_objv(server_w_->objv());
+    prog.set_nnz_w(server_w_->nnz());
+  }
+  auto report = newTask(Call::REPORT_PROGRESS);
+  string str; CHECK(prog.SerializeToString(&str));
+  report.set_msg(str);
+  taskpool(schedulerID())->submit(report);
+}
+
+void FTRL::showProgress() {
+  Lock l(progress_mu_);
+  Real objv_worker = 0, objv_server = 0;
+  uint64 num_ex = 0, nnz_w = 0;
+  for (const auto& it : recent_progress_) {
+    auto prog = it.second;
+    if (prog.has_num_ex_trained()) {
+      num_ex += prog.num_ex_trained();
+      objv_worker += prog.objv();
+    } else {
+      nnz_w += prog.nnz_w();
+      objv_server += prog.objv();
+    }
+  }
+  status_.num_ex += num_ex;
+  printf("%10llu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
+         status_.num_ex, objv_worker/(Real)num_ex, objv_server, nnz_w);
 }
 
 } // namespace LM

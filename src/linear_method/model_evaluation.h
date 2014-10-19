@@ -61,6 +61,8 @@ void ModelEvaluation::run() {
   } while (good);
 
   // evaluation
+  label.writeToFile("L");
+  predict.writeToFile("P");
   LI << "auc: " << Evaluation<Real>::auc(label, predict);
 }
 

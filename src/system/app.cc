@@ -26,7 +26,8 @@ AppPtr App::create(const AppConfig& conf) {
   return ptr;
 }
 
-void App::stop() {
+void App::stopAll() {
+  // send terminate signal to all others
   Task terminate;
   terminate.set_type(Task::TERMINATE);
   auto pool = taskpool(kLiveGroup);
