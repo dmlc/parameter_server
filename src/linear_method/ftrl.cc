@@ -23,7 +23,16 @@ void FTRL::init() {
 
     worker_w_->name() = app_cf_.parameter_name(0);
     sys_.yp().add(std::static_pointer_cast<Customer>(worker_w_));
+
+    data_buf_.setMaxCapacity(conf_.solver().max_data_buf_size_in_mb() * 1000000);
   }
+}
+
+void FTRL::stop() {
+  done_ = true;
+  prog_thr_->join();
+  if (data_thr_) data_thr_->join();
+  Customer::stop();
 }
 
 void FTRL::run() {
@@ -59,81 +68,86 @@ void FTRL::updateModel(const MessagePtr& msg) {
         }
       }));
 
-  // int time = msg->task.time() * 10;
-  if (IamWorker()) {
+  if (IamServer()) return;
 
-    StreamReader<Real> reader(conf_.training_data());
-    MatrixPtrList<Real> X;
-    uint32 minibatch = conf_.solver().minibatch_size();
+  // read data minibatches
+  data_thr_ = unique_ptr<std::thread>(new std::thread([this]() {
+        StreamReader<Real> reader(conf_.training_data());
+        MatrixPtrList<Real> X;
+        uint32 minibatch = conf_.solver().minibatch_size();
+        while(!read_data_finished_) {
+          bool ret = reader.readMatrices(minibatch, &X);
+          CHECK_EQ(X.size(), 2);
+          // LL << X[0]->debugString();
+          // LL << X[1]->debugString();
+          data_buf_.push(X, X[0]->memSize() + X[1]->memSize());
+          if (!ret) read_data_finished_ = true;
+        }
+      }));
 
-    for (int i = 0; reader.readMatrices(minibatch, &X); ++i) {
-      CHECK_EQ(X.size(), 2);
-      // LL << X[0]->debugString();
-      // LL << X[1]->debugString();
+  MatrixPtrList<Real> X;
+  for (int i = 0; ; ++i) {
+    if (read_data_finished_ && data_buf_.empty()) break;
+    data_buf_.pop(X);
 
-      // if (i > 1) break;
-      // read a minibatch
-      SArray<Key> uniq_key;
-      SArray<uint32> key_cnt;
-      Localizer<Key, Real> localizer;
-      localizer.countUniqIndex(X[1], &uniq_key, &key_cnt);
+    SArray<Key> uniq_key;
+    SArray<uint32> key_cnt;
+    Localizer<Key, Real> localizer;
+    localizer.countUniqIndex(X[1], &uniq_key, &key_cnt);
 
-      // pull the working set
-      MessagePtr filter(new Message(kServerGroup));
-      filter->addKV(uniq_key, {key_cnt});
-      filter->task.set_key_channel(i);
-      filter->wait = true;
-      auto arg = worker_w_->set(filter);
-      arg->set_insert_key_freq(true);
-      arg->set_query_key_freq(conf_.solver().tail_feature_freq());
-      worker_w_->pull(filter);
+    // pull the working set
+    MessagePtr filter(new Message(kServerGroup));
+    filter->addKV(uniq_key, {key_cnt});
+    filter->task.set_key_channel(i);
+    filter->wait = true;
+    auto arg = worker_w_->set(filter);
+    arg->set_insert_key_freq(true);
+    arg->set_query_key_freq(conf_.solver().tail_feature_freq());
+    worker_w_->pull(filter);
 
-      MessagePtr pull_val(new Message(kServerGroup));
-      pull_val->key = worker_w_->key(i);
-      pull_val->task.set_key_channel(i);
-      int time = worker_w_->pull(pull_val);
+    MessagePtr pull_val(new Message(kServerGroup));
+    pull_val->key = worker_w_->key(i);
+    pull_val->task.set_key_channel(i);
+    int time = worker_w_->pull(pull_val);
 
-      auto Z = localizer.remapIndex(worker_w_->key(i));
-      auto Y = X[0];
-      CHECK_EQ(Z->rows(), Y->rows());
+    auto Z = localizer.remapIndex(worker_w_->key(i));
+    auto Y = X[0];
+    CHECK_EQ(Z->rows(), Y->rows());
 
-      // compute local gradient
-      SArray<uint32> pos, neg;
-      countKeys(Y, Z, &pos, &neg);
+    // compute local gradient
+    SArray<uint32> pos, neg;
+    countKeys(Y, Z, &pos, &neg);
 
 
-      worker_w_->waitOutMsg(kServerGroup, time);
-      auto w = worker_w_->received(time);
-      CHECK_EQ(w.size(), 1);
-      worker_w_->value(i) = w[0].second;
-      // LL << w[0].second;
+    worker_w_->waitOutMsg(kServerGroup, time);
+    auto w = worker_w_->received(time);
+    CHECK_EQ(w.size(), 1);
+    worker_w_->value(i) = w[0].second;
+    // LL << w[0].second;
 
-      SArray<Real> Xw(Y->rows());
-      Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
-      Real objv = loss_->evaluate({Y, Xw.matrix()});
-      {
-        Lock l(status_mu_);
-        status_.objv += objv;
-        status_.num_ex += Xw.size();
-      }
-
-      SArray<Real> grad(Z->cols());
-      loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
-      // LL << grad;
-      // push local gradient
-      MessagePtr push_msg(new Message(kServerGroup));
-
-      push_msg->addKV(worker_w_->key(i), {pos, neg});
-      push_msg->addValue(grad);
-      Range<Key>::all().to(push_msg->task.mutable_key_range());
-      push_msg->task.set_key_channel(i);
-      push_msg->task.set_erase_key_cache(true);
-      time = worker_w_->push(push_msg);
-
-      worker_w_->waitOutMsg(kServerGroup, time);
+    SArray<Real> Xw(Y->rows());
+    Xw.eigenArray() = *Z * worker_w_->value(i).eigenArray();
+    Real objv = loss_->evaluate({Y, Xw.matrix()});
+    {
+      Lock l(status_mu_);
+      status_.objv += objv;
+      status_.num_ex += Xw.size();
     }
-  } else if (IamServer()) {
 
+    SArray<Real> grad(Z->cols());
+    loss_->compute({Y, Z, Xw.matrix()}, {grad.matrix()});
+    // LL << grad;
+    // push local gradient
+    MessagePtr push_msg(new Message(kServerGroup));
+
+    push_msg->addKV(worker_w_->key(i), {pos, neg});
+    push_msg->addValue(grad);
+    Range<Key>::all().to(push_msg->task.mutable_key_range());
+    push_msg->task.set_key_channel(i);
+    push_msg->task.set_erase_key_cache(true);
+    time = worker_w_->push(push_msg);
+
+    worker_w_->waitOutMsg(kServerGroup, time);
   }
 }
 

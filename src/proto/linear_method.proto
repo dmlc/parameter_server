@@ -55,6 +55,7 @@ message SolverConfig {
   optional double countmin_n = 18 [default = 1e8];
 
   optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
+  optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
 
   // evaluate the progrss per *eval_interval* second
   optional int32 eval_interval = 21 [default = 5];

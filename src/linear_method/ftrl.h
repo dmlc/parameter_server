@@ -4,7 +4,7 @@
 #include "linear_method/online_solver.h"
 #include "linear_method/ftrl_model.h"
 #include "linear_method/loss_inl.h"
-
+#include "util/threadsafe_limited_queue.h"
 namespace PS {
 namespace LM {
 
@@ -21,7 +21,7 @@ class FTRL : public OnlineSolver {
   void saveModel(const MessageCPtr& msg);
   void updateModel(const MessagePtr& msg);
 
-  void stop() { done_ = true; prog_thr_->join(); Customer::stop();}
+  void stop();
  protected:
   typedef double Real;
   void countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
@@ -45,6 +45,11 @@ class FTRL : public OnlineSolver {
   Status status_;
   std::mutex status_mu_;
   unique_ptr<std::thread> prog_thr_;
+
+  // read minibatches
+  unique_ptr<std::thread> data_thr_;
+  bool read_data_finished_ = false;
+  threadsafeLimitedQueue<MatrixPtrList<Real> > data_buf_;
 };
 
 } // namespace LM

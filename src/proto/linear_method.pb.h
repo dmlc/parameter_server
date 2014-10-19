@@ -510,6 +510,13 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing() const;
   inline void set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value);
 
+  // optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
+  inline bool has_max_data_buf_size_in_mb() const;
+  inline void clear_max_data_buf_size_in_mb();
+  static const int kMaxDataBufSizeInMbFieldNumber = 22;
+  inline ::google::protobuf::int32 max_data_buf_size_in_mb() const;
+  inline void set_max_data_buf_size_in_mb(::google::protobuf::int32 value);
+
   // optional int32 eval_interval = 21 [default = 5];
   inline bool has_eval_interval() const;
   inline void clear_eval_interval();
@@ -547,6 +554,8 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_countmin_n();
   inline void set_has_max_num_parallel_groups_in_preprocessing();
   inline void clear_has_max_num_parallel_groups_in_preprocessing();
+  inline void set_has_max_data_buf_size_in_mb();
+  inline void clear_has_max_data_buf_size_in_mb();
   inline void set_has_eval_interval();
   inline void clear_has_eval_interval();
 
@@ -567,10 +576,11 @@ class SolverConfig : public ::google::protobuf::Message {
   double countmin_n_ratio_;
   double countmin_n_;
   ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing_;
+  ::google::protobuf::int32 max_data_buf_size_in_mb_;
   ::google::protobuf::int32 eval_interval_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -2336,15 +2346,37 @@ inline void SolverConfig::set_max_num_parallel_groups_in_preprocessing(::google:
   max_num_parallel_groups_in_preprocessing_ = value;
 }
 
-// optional int32 eval_interval = 21 [default = 5];
-inline bool SolverConfig::has_eval_interval() const {
+// optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
+inline bool SolverConfig::has_max_data_buf_size_in_mb() const {
   return (_has_bits_[0] & 0x00008000u) != 0;
 }
-inline void SolverConfig::set_has_eval_interval() {
+inline void SolverConfig::set_has_max_data_buf_size_in_mb() {
   _has_bits_[0] |= 0x00008000u;
 }
-inline void SolverConfig::clear_has_eval_interval() {
+inline void SolverConfig::clear_has_max_data_buf_size_in_mb() {
   _has_bits_[0] &= ~0x00008000u;
+}
+inline void SolverConfig::clear_max_data_buf_size_in_mb() {
+  max_data_buf_size_in_mb_ = 1000;
+  clear_has_max_data_buf_size_in_mb();
+}
+inline ::google::protobuf::int32 SolverConfig::max_data_buf_size_in_mb() const {
+  return max_data_buf_size_in_mb_;
+}
+inline void SolverConfig::set_max_data_buf_size_in_mb(::google::protobuf::int32 value) {
+  set_has_max_data_buf_size_in_mb();
+  max_data_buf_size_in_mb_ = value;
+}
+
+// optional int32 eval_interval = 21 [default = 5];
+inline bool SolverConfig::has_eval_interval() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void SolverConfig::set_has_eval_interval() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void SolverConfig::clear_has_eval_interval() {
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void SolverConfig::clear_eval_interval() {
   eval_interval_ = 5;

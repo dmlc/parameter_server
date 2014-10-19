@@ -5,6 +5,7 @@
 
 namespace PS {
 
+// TODO the code style is inconsistent with others
 template<typename T>
 class threadsafe_queue
 {
