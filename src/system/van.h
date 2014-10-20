@@ -61,6 +61,8 @@ class Van {
   std::ofstream debug_out_;
   int num_retries_ = 0;
   // std::ostream& debug_out_;
+
+  Node assembleMyNode();
 };
 
 } // namespace PS

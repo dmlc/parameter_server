@@ -2,6 +2,7 @@
 #include <string.h>
 #include <zmq.h>
 #include "base/shared_array_inl.h"
+#include "util/local_machine.h"
 
 namespace PS {
 
@@ -11,13 +12,28 @@ DEFINE_string(server_master, "", "the master of servers");
 DEFINE_int32(num_retries, 3, "number of retries for zmq");
 DEFINE_bool(compress_message, true, "");
 DEFINE_bool(print_van, false, "");
+DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
 
-void Van::init() {
-  my_node_ = parseNode(FLAGS_my_node);
-  scheduler_ = parseNode(FLAGS_scheduler);
+DECLARE_int32(num_workers);
+DECLARE_int32(num_servers);
 
+void Van::init() {
+  scheduler_ = parseNode(FLAGS_scheduler);
   num_retries_ = std::max(0, FLAGS_num_retries);
+
+  // assemble my_node_
+  if (FLAGS_my_rank < 0) {
+    LL << "You must pass me -my_rank with a valid value (GE 0)";
+    throw std::runtime_error("invalid my_rank");
+  }
+  else if (0 == FLAGS_my_rank) {
+    my_node_ = scheduler_;
+  } else {
+    my_node_ = assembleMyNode();
+  }
+  LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+
   context_ = zmq_ctx_new();
   // TODO the following does not work...
   // zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
@@ -222,6 +238,46 @@ void Van::statistic() {
 
   LI << my_node_.id() << " sent " << gb(data_sent_)
      << " Gbyte, received " << gb(data_received_) << " Gbyte";
+}
+
+Node Van::assembleMyNode() {
+  if (0 == FLAGS_my_rank) {
+    return scheduler_;
+  }
+
+  Node ret_node;
+  // role and id
+  if (FLAGS_my_rank <= FLAGS_num_workers) {
+    ret_node.set_role(Node::WORKER);
+    ret_node.set_id("W" + std::to_string(FLAGS_my_rank - 1));
+  } else if (FLAGS_my_rank <= FLAGS_num_workers + FLAGS_num_servers) {
+    ret_node.set_role(Node::SERVER);
+    ret_node.set_id("S" + std::to_string(FLAGS_my_rank - FLAGS_num_workers - 1));
+  } else {
+    ret_node.set_role(Node::UNUSED);
+    ret_node.set_id("U" + std::to_string(
+      FLAGS_my_rank - FLAGS_num_workers - FLAGS_num_servers - 1));
+  }
+
+  // IP, port and interface
+  string ip;
+  unsigned short port;
+  if (FLAGS_interface.empty()) {
+    LocalMachine::pickupAvailableInterfaceAndIP(FLAGS_interface, ip);
+  } else {
+    LocalMachine::IP(FLAGS_interface);
+  }
+  if (ip.empty() || FLAGS_interface.empty()) {
+    throw std::runtime_error("got interface/ip failed");
+  }
+  port = LocalMachine::pickupAvailablePort();
+  if (0 == port) {
+    throw std::runtime_error("got port failed");
+  }
+  ret_node.set_hostname(ip);
+  ret_node.set_port(static_cast<int32>(port));
+
+  return ret_node;
 }
 
 Status Van::connectivity(const string &node_id) {
