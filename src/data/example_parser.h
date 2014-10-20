@@ -20,6 +20,7 @@ class ExampleParser {
  private:
   bool parseLibsvm(char*,  Example*);
   bool parseAdfea(char*,  Example*);
+  bool parseTerafea(char*,  Example*);
 
   ExampleInfo info_;
 
