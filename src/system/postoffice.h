@@ -12,6 +12,7 @@ DECLARE_int32(num_workers);
 DECLARE_int32(num_unused);
 DECLARE_int32(num_replicas);
 DECLARE_string(node_file);
+DECLARE_bool(parallel_match);
 
 class Postoffice {
  public:

@@ -20,6 +20,7 @@ DEFINE_int32(report_interval, 0,
   "in every report_interval seconds. "
   "default: 0; if set to 0, heartbeat is disabled");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
+DEFINE_bool(parallel_match, false, "enable multi-threaded match operation");
 DECLARE_string(interface);
 
 Postoffice::~Postoffice() {
