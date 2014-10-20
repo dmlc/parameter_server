@@ -132,9 +132,13 @@ void Darling::updateModel(const MessagePtr& msg) {
   if (IamWorker()) {
     // compute local gradients
     mu_.lock();
+
+    this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
     busy_timer_.start();
     auto local_gradients = computeGradients(grp, seg_pos);
     busy_timer_.stop();
+    this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+
     mu_.unlock();
 
     // time 0: push local gradients
@@ -158,9 +162,13 @@ void Darling::updateModel(const MessagePtr& msg) {
         auto data = w_->received(time+2);
         CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
         mu_.lock();
+
+        this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
         busy_timer_.start();
         updateDual(grp, seg_pos, data[0].second);
         busy_timer_.stop();
+        this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+
         mu_.unlock();
       }
       // now finished, reply the scheduler
@@ -181,7 +189,10 @@ void Darling::updateModel(const MessagePtr& msg) {
       CHECK_EQ(data.size(), 2);
       CHECK_EQ(seg_pos, data[0].first);
       CHECK_EQ(seg_pos, data[1].first);
+
+      this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
       updateWeight(grp, seg_pos, data[0].second, data[1].second);
+      this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
     }
     w_->finish(kWorkerGroup, time+1);
 

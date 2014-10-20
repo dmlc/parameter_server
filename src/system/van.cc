@@ -11,6 +11,7 @@ DEFINE_string(server_master, "", "the master of servers");
 DEFINE_int32(num_retries, 3, "number of retries for zmq");
 DEFINE_bool(compress_message, true, "");
 DEFINE_bool(print_van, false, "");
+DEFINE_string(interface, "", "network interface");
 
 void Van::init() {
   my_node_ = parseNode(FLAGS_my_node);
@@ -88,7 +89,8 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // btw, it is not thread safe
-Status Van::send(const MessageCPtr& msg) {
+Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
+  send_bytes = 0;
 
   // find the socket
   NodeID id = msg->recver;
@@ -139,7 +141,7 @@ Status Van::send(const MessageCPtr& msg) {
   for (int i = 0; i < data.size(); ++i) {
     const auto& raw = data[i];
     if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
-
+    send_bytes += raw.size();
     while (true) {
       if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
       if (errno == EINTR) continue;  // maybe interupted by google profiler
@@ -156,7 +158,8 @@ Status Van::send(const MessageCPtr& msg) {
 }
 
 // TODO Zero copy
-Status Van::recv(const MessagePtr& msg) {
+Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
+  recv_bytes = 0;
   msg->key = SArray<char>();
   msg->value.clear();
   NodeID sender;
@@ -173,6 +176,7 @@ Status Van::recv(const MessagePtr& msg) {
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
     data_received_ += size;
+    recv_bytes += size;
     if (i == 0) {
       // identify
       sender = id(std::string(buf, size));
@@ -218,6 +222,16 @@ void Van::statistic() {
 
   LI << my_node_.id() << " sent " << gb(data_sent_)
      << " Gbyte, received " << gb(data_received_) << " Gbyte";
+}
+
+Status Van::connectivity(const string &node_id) {
+  auto it = senders_.find(node_id);
+  if (senders_.end() != it) {
+    return Status::OK();
+  }
+  else {
+    return Status::NotFound("there is no socket to node " + node_id);
+  }
 }
 
 } // namespace PS

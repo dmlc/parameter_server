@@ -43,6 +43,7 @@ SRCS = $(PROTOS_CC) \
 	system/van.cc \
 	system/message.cc \
 	system/postoffice.cc \
+	system/heartbeat_info.cc \
 	system/yellow_pages.cc \
 	system/remote_node.cc \
 	system/executor.cc \

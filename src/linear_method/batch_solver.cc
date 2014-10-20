@@ -218,7 +218,9 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       // Localizer
       Localizer<Key, double> *localizer = new Localizer<Key, double>();
 
+      this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
       localizer->countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
+      this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
 
       MessagePtr count(new Message(kServerGroup, time));
       count->addKV(uniq_key, {key_cnt});
@@ -237,11 +239,16 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
       filter->fin_handle = [this, grp, localizer]() mutable {
         // localize the training matrix
+        this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
         auto X = localizer->remapIndex(grp, w_->key(grp), &slot_reader_);
         delete localizer;
         slot_reader_.clear(grp);
+        this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
         if (!X) return;
+
+        this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
         if (conf_.solver().has_feature_block_ratio()) X = X->toColMajor();
+        this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
         { Lock l(mu_); X_[grp] = X; }
       };
       CHECK_EQ(time+2, w_->pull(filter));
