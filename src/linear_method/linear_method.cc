@@ -10,6 +10,11 @@
 #include "linear_method/model_evaluation.h"
 
 namespace PS {
+
+DEFINE_int32(load_limit, 0,
+  "the maximum training/validation file number "
+  "that scheduler could assign for each worker. ");
+
 namespace LM {
 
 AppPtr LinearMethod::create(const Config& conf) {
@@ -145,12 +150,10 @@ void LinearMethod::startSystem() {
   CHECK(conf_.has_training_data());
   std::vector<DataConfig> tr_parts, va_parts;
   auto tr_cf = searchFiles(conf_.training_data());
-  tr_parts = divideFiles(tr_cf, FLAGS_num_workers);
-  LI << "Found " << tr_cf.file_size() << " training files";
+  tr_parts = divideFiles(tr_cf, FLAGS_num_workers, FLAGS_load_limit);
   if (conf_.has_validation_data()) {
     auto va_cf = searchFiles(conf_.validation_data());
-    va_parts = divideFiles(va_cf, FLAGS_num_workers);
-    LI << "Found " << va_cf.file_size() << " validation files";
+    va_parts = divideFiles(va_cf, FLAGS_num_workers, FLAGS_load_limit);
   }
 
   // create the app on all other machines

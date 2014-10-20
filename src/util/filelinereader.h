@@ -17,10 +17,8 @@ class FileLineReader {
  public:
   // Creates a file line reader object that will read the file 'filename'
   // line by line.
-  explicit FileLineReader(const std::string& filename) :
-      FileLineReader(filename.c_str()) { }
-  explicit FileLineReader(const char* const filename)
-      : filename_(filename), loaded_successfully_(false) { }
+  explicit FileLineReader(const DataConfig& data_conf) :
+    data_conf_(data_conf), loaded_successfully_(false) {};
 
   ~FileLineReader() { }
 
@@ -36,7 +34,7 @@ class FileLineReader {
   bool loaded_successfully() const { return loaded_successfully_; }
 
  private:
-  const char* filename_;
+  DataConfig data_conf_;
   std::function<void(char*)> line_callback_;
   bool loaded_successfully_;
 };

@@ -50,6 +50,12 @@ File* File::open(const DataConfig& name,  const char* const flag) {
   auto filename = name.file(0);
   if (name.has_hdfs()) {
     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
+
+    // .gz
+    if (gzfile(filename)) {
+      cmd += " | gunzip";
+    }
+
     FILE* des = popen(cmd.c_str(), "r");
     if (des == NULL) {
       // LOG(ERROR) << "cannot open " << name.DebugString();
@@ -268,7 +274,14 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     auto ents = split(std::string(line), ' ', true);
     if (ents.size() != 8) continue;
     if (ents[0][0] == 'd') continue;
-    files.push_back(ents.back());
+
+    // remove tailing line break
+    string this_is_file = ents.back();
+    if ('\n' == this_is_file.back()) {
+      this_is_file.resize(this_is_file.size() - 1);
+    }
+
+    files.push_back(this_is_file);
   }
   pclose(des);
   return files;

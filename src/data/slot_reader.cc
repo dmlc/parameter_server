@@ -84,7 +84,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
     }
     ++ num_ex;
   };
-  FileLineReader reader(data.file(0));
+  FileLineReader reader(data);
   reader.set_line_callback(handle);
   reader.Reload();
 

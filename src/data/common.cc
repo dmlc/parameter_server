@@ -109,9 +109,9 @@ DataConfig searchFiles(const DataConfig& config) {
     // match regex
     auto files = readFilenamesInDirectory(dir);
     for (auto& f : files) {
-      if (std::regex_match(f, pattern)) {
+      if (std::regex_match(getFilename(f), pattern)) {
         auto l = config.format() == DataConfig::TEXT ? f : removeExtension(f);
-        matched_files.push_back(dir.file(0) + "/" + l);
+        matched_files.push_back(dir.file(0) + "/" + getFilename(l));
       }
     }
   }
@@ -124,7 +124,8 @@ DataConfig searchFiles(const DataConfig& config) {
   return ret;
 }
 
-std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
+std::vector<DataConfig> divideFiles(
+  const DataConfig& data, int num, const int load_limit) {
   CHECK_GT(data.file_size(), 0) << "empty files" << data.DebugString();
   CHECK_GE(data.file_size(), num) << "too many partitions";
   // evenly divide files
@@ -133,6 +134,10 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
     DataConfig dc = data; dc.clear_file();
     for (int j = 0; j < data.file_size(); ++j) {
       if (j % num == i) dc.add_file(data.file(j));
+
+      if (load_limit > 0 && dc.file_size() >= load_limit) {
+        break;
+      }
     }
     parts.push_back(dc);
   }
