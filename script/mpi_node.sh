@@ -1,7 +1,7 @@
 #!/bin/bash
 # set -x
-if [ $# -ne 2 ]; then
-    echo "usage: ./self scheduler_node mpi.conf"
+if [ $# -ne 3 ]; then
+    echo "usage: ./self scheduler_node mpi.conf dir_of_mpi_node_sh"
     exit -1;
 fi
 
@@ -33,46 +33,21 @@ if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
     exit -1
 fi
 
-my_ip=`/sbin/ifconfig ${network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
-if [ -z ${my_ip} ]; then
-    echo "failed to get the ip address"
-    exit -1
-fi
-
-my_port=$(( ${network_port} + ${my_rank} ))
-
-# rank 0 : scheduler
-# rank 1 to num_servers : server nodes
-# rank num_servers + 1 to num_servers + num_workers : worker nodes
-# rest: unused (backup) nodes
-if (( ${my_rank} == 0 )); then
-    my_id="H";
-    my_node=${1}
-elif (( ${my_rank} <= ${num_workers} )); then
-    my_id="W${my_rank}"
-    my_node="role:WORKER,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
-elif (( ${my_rank} <= ${num_servers} + ${num_workers} )); then
-    my_id="S${my_rank}"
-    my_node="role:SERVER,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
-else
-    my_id="U${my_rank}"
-    my_node="role:UNUSED,hostname:'${my_ip}',port:${my_port},id:'${my_id}'"
-fi
-
-mkdir -p ../output
-FLAGS_logtostderr=1
-
-# ${my_id} = "W10" ||
-# if [[ ${my_id} = "S44" ]]; then
-# export HEAPPROFILE=../output/${my_id}
-# # export CPUPROFILE=../output/${my_id}.cpu \
-# fi
-
-../bin/ps \
-    -my_node ${my_node} \
+mkdir -p ${3}/../output
+${3}/ps_cdn \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
     -num_threads ${num_threads} \
     -scheduler ${1} \
-    -app ${app_conf} \
-|| { echo "${my_node} failed"; exit -1; }
+    -my_rank ${my_rank} \
+    -app ${3}/${app_conf} \
+    -report_interval ${report_interval} \
+    -verbose ${verbose} \
+    -log_to_file ${log_to_file} \
+    -log_instant ${log_instant} \
+    -load_limit ${load_limit} \
+    -line_limit ${line_limit} \
+    -print_van ${print_van} \
+    -shuffle_fea_id ${shuffle_fea_id} \
+    -parallel_match ${parallel_match} \
+    || { echo "rank:${my_rank} launch failed"; exit -1; }
