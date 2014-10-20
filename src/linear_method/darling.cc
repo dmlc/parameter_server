@@ -3,6 +3,9 @@
 #include "base/sparse_matrix.h"
 
 namespace PS {
+
+DECLARE_bool(verbose);
+
 namespace LM {
 
 void Darling::init() {
@@ -120,6 +123,10 @@ void Darling::preprocessData(const MessageCPtr& msg) {
 }
 
 void Darling::updateModel(const MessagePtr& msg) {
+  if (FLAGS_verbose) {
+    LI << "updateModel; msg [" << msg->shortDebugString() << "]";
+  }
+
   CHECK_GT(FLAGS_num_threads, 0);
   auto time = msg->task.time() * kPace;
   auto call = get(msg);
@@ -415,6 +422,35 @@ Progress Darling::evaluateProgress() {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
     busy_timer_.restart();
+
+    // label statistics
+    if (FLAGS_verbose) {
+      size_t positive_label_count = 0;
+      size_t negative_label_count = 0;
+      size_t bad_label_count = 0;
+
+      for (size_t i = 0; i < y_->value().size(); ++i) {
+        int label = y_->value()[i];
+
+        if (1 == label) {
+          positive_label_count++;
+        } else if (-1 == label) {
+          negative_label_count++;
+        } else {
+          bad_label_count++;
+        }
+      }
+
+      LI << "dual_sum[" << dual_.eigenArray().sum() << "] " <<
+        "dual_.rows[" << dual_.eigenArray().rows() << "] " <<
+        "dual_.avg[" << dual_.eigenArray().sum() / static_cast<double>(
+          dual_.eigenArray().rows()) << "] " <<
+        "y_.positive[" << positive_label_count << "] " <<
+        "y_.negative[" << negative_label_count << "] " <<
+        "y_.bad[" << bad_label_count << "] " <<
+        "y_.positive_ratio[" << positive_label_count / static_cast<double>(
+          positive_label_count + negative_label_count + bad_label_count) << "] ";
+    }
   } else {
     size_t nnz_w = 0;
     size_t nnz_as = 0;

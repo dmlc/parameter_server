@@ -13,6 +13,8 @@
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
 
+DECLARE_bool(verbose);
+
 File* File::open(const std::string& name, const char* const flag) {
   File* f;
   if (name == "stdin") {
@@ -268,6 +270,11 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
   // read hdfs directory
   std::vector<std::string> files;
   string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
+
+  if (FLAGS_verbose) {
+    LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
+  }
+
   FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
   char line[10000];
   while (fgets(line, 10000, des)) {

@@ -3,6 +3,8 @@
 #include <thread>
 namespace PS {
 
+DECLARE_bool(verbose);
+
 void Executor::init(const std::vector<Node>& nodes) {
   // insert virtual group nodes
   for (auto id : {
@@ -89,6 +91,12 @@ string Executor::lastRecvReply() {
 void Executor::run() {
   while (!done_) {
     bool do_process = false;
+
+    if (FLAGS_verbose) {
+      LI << obj_.name() << " before entering task loop; recved_msgs_. size [" <<
+        recved_msgs_.size() << "]";
+    }
+
     {
       std::unique_lock<std::mutex> lk(recved_msg_mu_);
       // pickup a message with dependency satisfied
@@ -108,10 +116,25 @@ void Executor::run() {
           do_process = true;
           active_msg_ = msg;
           recved_msgs_.erase(it);
+
+          if (FLAGS_verbose) {
+            LI << obj_.name() << " picked up an active_msg_ from recved_msgs_. " <<
+              "remaining size [" << recved_msgs_.size() << "]; msg [" <<
+              active_msg_->shortDebugString() << "]";
+          }
+
           break;
         }
       }
-      if (!do_process) { dag_cond_.wait(lk); continue; }
+      if (!do_process) {
+        if (FLAGS_verbose) {
+          LI << obj_.name() << " picked nothing from recved_msgs_. size [" <<
+            recved_msgs_.size() << "] waiting Executor::accept";
+        }
+
+        dag_cond_.wait(lk);
+        continue;
+      }
     }
     // process the picked message
     bool req = active_msg_->task.request();
@@ -161,6 +184,11 @@ void Executor::run() {
       // run the finishing callback if necessary
       auto o_recver = rnode(original_recver_id);
       if (o_recver->tryWaitOutgoingTask(t)) {
+        if (FLAGS_verbose) {
+          LI << "Task [" << t << "] completed. msg [" <<
+            active_msg_->shortDebugString() << "]";
+        }
+
         Message::Callback h;
         {
           Lock lk(o_recver->mu_);
@@ -168,6 +196,9 @@ void Executor::run() {
           if (a != o_recver->msg_finish_handle_.end()) h = a->second;
         }
         if (h) h();
+      } else if (FLAGS_verbose) {
+        LI << "Task [" << t << "] still running. msg [" <<
+          active_msg_->shortDebugString() << "]";
       }
     }
   }
