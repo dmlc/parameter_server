@@ -30,6 +30,7 @@ void Darling::runIteration() {
   int max_iter = sol_cf.max_pass_of_data();
   auto pool = taskpool(kActiveGroup);
   int time = pool->time() + fea_grp_.size() * 2;
+  const int first_update_model_task_id = time + 1;
   for (int iter = 0; iter < max_iter; ++iter) {
     // pick up a updating order
     auto order = blk_order_;
@@ -41,14 +42,18 @@ void Darling::runIteration() {
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_time(time+1);
-      if (iter == 0 && i == 0) {
-        update.set_wait_time(-1);
-      } else if (iter == 0 && i < prior_blk_order_.size()) {
+      if (iter == 0 && i < prior_blk_order_.size()) {
         // force zero delay for important feature blocks
         update.set_wait_time(time);
       } else {
         update.set_wait_time(time - tau);
       }
+
+      // make sure leading UPDATE_MODEL tasks could be picked up by workers
+      if (update.time() - tau <= first_update_model_task_id) {
+        update.set_wait_time(-1);
+      }
+
       auto cmd = set(&update);
       if (i == 0) {
         cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
@@ -66,6 +71,7 @@ void Darling::runIteration() {
     time = pool->submitAndWait(
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
+
     // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
     double ratio = conf_.darling().kkt_filter_threshold_ratio();
