@@ -14,6 +14,7 @@ DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
 DEFINE_string(app, "../config/rcv1_l1lr.config", "the configuration file of app");
 DEFINE_string(node_file, "./nodes", "node information");
+DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
 
 Postoffice::~Postoffice() {
   recving_->join();
@@ -26,6 +27,12 @@ void Postoffice::run() {
   // omp_set_dynamic(0);
   // omp_set_num_threads(FLAGS_num_threads);
   yellow_pages_.init();
+
+  if (FLAGS_log_to_file) {
+    google::SetLogDestination(google::INFO, ("./log_" + myNode().id() + "_").c_str());
+    FLAGS_logtostderr = 0;
+  }
+
   recving_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
   switch(myNode().role()) {

@@ -1,11 +1,15 @@
 #include "system/postoffice.h"
 
-namespace PS {
+DEFINE_bool(log_instant, false, "disable buffer of glog");
 
-} // namespace
 int main(int argc, char *argv[]) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  FLAGS_logtostderr = 1;
+
+  if (FLAGS_log_instant) {
+    FLAGS_logbuflevel = -1;
+  }
 
   PS::Postoffice::instance().run();
 
