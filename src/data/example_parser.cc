@@ -69,6 +69,8 @@ ExampleInfo ExampleParser::info() {
         sinfo.set_format(SlotInfo::SPARSE);
       } else if (format_ == DataConfig::ADFEA) {
         sinfo.set_format(SlotInfo::SPARSE_BINARY);
+      } else if (format_ == DataConfig::TERAFEA) {
+        sinfo.set_format(SlotInfo::SPARSE_BINARY);
       }
     }
     *info_.add_slot() = sinfo;

@@ -100,6 +100,8 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     reply->task.set_request(false);
     std::swap(reply->sender, reply->recver);
   }
+
+  this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
   // process
   if (call.replica()) {
     if (pull && !req && Range<K>(msg->task.key_range()) == myKeyRange()) {
@@ -136,6 +138,8 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
       getValue(reply);
     }
   }
+  this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+
   // reply if necessary
   if (pull && req) {
     taskpool(reply->recver)->cacheKeySender(reply);
