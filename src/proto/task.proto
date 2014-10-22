@@ -3,6 +3,7 @@ import "proto/node.proto";
 import "proto/range.proto";
 import "proto/app.proto";
 import "proto/linear_method.proto";
+import "proto/filter.proto";
 
 message Task {
   enum Type {
@@ -25,20 +26,31 @@ message Task {
   // the higher the more important,
   // optional int32 priority = 6 [default = 0];
 
-  // if or not there is the key list
-  optional bool has_key = 6 [default = false];
   // the key range of this task
   optional PbRange key_range = 7;
-  // signature of the key lists, used to identity the key cache
-  optional uint32 key_signature = 8;
   // namespace of keys
   optional int32 key_channel = 9;
-  // clear cache after finished
-  optional bool erase_key_cache = 10 [default = false];
 
-  // set values if data are compressed, empty means data are not compressed
-  repeated uint64 uncompressed_size = 11;
+  // if or not there is the key list
+  optional bool has_key = 6 [default = false];
 
+  enum DataType {
+    OTHER = 0;
+    INT8 = 1;
+    INT16 = 2;
+    INT32 = 3;
+    INT64 = 4;
+    UINT8 = 5;
+    UINT16 = 6;
+    UINT32 = 7;
+    UINT64 = 8;
+    FLOAT = 9;
+    DOUBLE = 10;
+  }
+  optional DataType key_type = 13;
+  repeated DataType value_type = 14;
+
+  repeated FilterConfig filter = 12;
   // general task
   optional bytes msg = 101;
   optional ManageNode mng_node = 102;
@@ -50,6 +62,16 @@ message Task {
   // applications
   optional LM.Call linear_method = 301;
   optional CallSketch sketch = 302;
+
+  // deprecated
+
+  // signature of the key lists, used to identity the key cache
+  optional uint32 key_signature = 8;
+  // clear cache after finished
+  optional bool erase_key_cache = 10 [default = false];
+
+  // set values if data are compressed, empty means data are not compressed
+  repeated uint64 uncompressed_size = 11;
 }
 
 message ManageNode {
@@ -85,9 +107,6 @@ message CallSharedPara {
     PULL = 2;
   }
   required Command cmd= 1;
-
-  // key namespace
-  // optional int32 channel = 2;
 
   optional bool insert_key_freq = 3;
   optional int32 query_key_freq = 4;

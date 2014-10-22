@@ -11,22 +11,54 @@ typedef std::string NodeID;
 struct Message;
 typedef std::shared_ptr<Message> MessagePtr;
 typedef std::shared_ptr<const Message> MessageCPtr;
+
 typedef std::vector<MessagePtr> MessagePtrList;
 
 struct Message {
+ public:
   const static int kInvalidTime = -1;
   Message() { }
   Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
+  void miniCopyFrom(const Message& msg);
 
-  // task, key, and value will be sent over network. while the rest are only
-  // used by local process/node.
-  // a protobuf header, see proto/task.proto
+  // the header of the message, containing all metadata
   Task task;
-  // a list of keys
-  SArray<char> key;
-  // the according lists of values
-  std::vector<SArray<char>> value;
+  // the keys and values.
+  // CAUTION: do not write data directly unless you know how it works. Use
+  // key(), addKey(), value(i), addValue() instead.
+  std::list<SArray<char>> data;
+
+  bool hasKey() { return task.has_key(); }
+  const SArray<char>& key() { CHECK(hasKey()); return data.front(); }
+  template <typename T> void setKey(const SArray<T>& key) {
+    task.set_key_type(type<T>());
+    if (hasKey()) clearKey();
+    task.set_has_key(true);
+    data.push_front(SArray<char>(key));
+    if (!task.has_key_range()) Range<Key>::all().to(task.mutable_key_range());
+  }
+  void clearKey() {
+    if (hasKey()) { task.clear_has_key(); data.pop_front(); }
+  }
+
+  template <typename T> void addValue(const SArray<T>& value) {
+    task.add_value_type(type<T>());
+    data.push_back(SArray<char>(value));
+  }
+  int valueSize() { return data.size() - hasKey(); }
+  const SArray<char>& value(int i) {
+    int j = hasKey() + i; CHECK_LT(j, data.size());
+    auto it = data.cbegin();
+    while (j-- > 0) ++ it;
+    return *it;
+  }
+  void clearValue() {
+    task.clear_value_type();
+    while (data.size() > hasKey()) data.pop_back();
+  }
+
+  // more control signals
 
   // sender node id
   NodeID sender;
@@ -59,39 +91,37 @@ struct Message {
   // have been received.
   Callback fin_handle;
 
-  // add the key list and the lists of values
-  template <typename K, typename V>
-  void addKV(const SArray<K>& k, const std::initializer_list<SArray<V>>& v) {
-    key = SArray<char>(k);
-    for (const auto& w : v) addValue(w);
-  }
-  template <typename K, typename V>
-  void addKV(const SArray<K>& k, const SArrayList<V>& v) {
-    key = SArray<char>(k);
-    for (const auto& w : v) addValue(w);
-  }
-
-  template <typename V> void addValue(const SArray<V>& val) {
-    value.push_back(SArray<char>(val));
-  }
-  // clear the keys and values
-  void clearKV() {
-    key = SArray<char>();
-    value.clear();
-  }
 
   // debug
   std::string shortDebugString() const;
   std::string debugString() const;
+
+  // helper
+  template <typename V>
+  static Task::DataType type() {
+    // TODc
+    return Task::OTHER;
+  }
+ private:
 };
 
+void Message::miniCopyFrom(const Message& msg) {
+  task = msg.task;
+  task.clear_value_type();
+  task.clear_has_key();
+  terminate = msg.terminate;
+  wait = msg.wait;
+  recv_handle = msg.recv_handle;
+  fin_handle = msg.fin_handle;
+}
 
 template <typename K>
 MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyList& sep) {
   // find the positions in msg.key
   size_t n = sep.size();
   std::vector<size_t> pos; pos.reserve(n-1);
-  SArray<K> key(msg->key);
+  CHECK(msg->hasKey());
+  SArray<K> key(msg->key());
   Range<K> msg_key_range(msg->task.key_range());
   for (auto p : sep) {
     K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
@@ -101,23 +131,21 @@ MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyList& sep) {
   // split the message according to *pos*
   MessagePtrList ret(n-1);
   for (int i = 0; i < n-1; ++i) {
-    MessagePtr piece(new Message(*msg));
+    ret[i] = MessagePtr(new Message());
+    ret[i]->miniCopyFrom(msg);
     if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
-      // valid, which will be not actually sent
-      piece->valid = false;
+      // valid, which will not be sent
+      ret[i]->valid = false;
     } else {
-      piece->valid = true;  // must set true, otherwise this piece might not be sent
-      piece->clearKV();
-      if (!key.empty()) {  // void be divided by 0
-        SizeR lr(pos[i], pos[i+1]);
-        piece->key = key.segment(lr);
-        for (auto& val : msg->value) {
-          piece->addValue(val.segment(lr*(val.size()/key.size())));
-        }
+      ret[i]->valid = true;  // must set true, otherwise this piece might not be sent
+      if (key.empty()) continue;  // to void be divided by 0
+      SizeR lr(pos[i], pos[i+1]);
+      ret[i]->addKey(key.segment(lr));
+      for (auto it = msg->data.begin()+1; it != msg->data.end(); ++it) {
+        ret[i]->addValue(it->segment(lr*(it->size()/key.size())));
       }
     }
-    ret[i] = piece;
   }
   return ret;
 }

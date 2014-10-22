@@ -8,15 +8,14 @@ namespace PS {
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
 DEFINE_string(server_master, "", "the master of servers");
-DEFINE_int32(num_retries, 3, "number of retries for zmq");
-DEFINE_bool(compress_message, true, "");
+// DEFINE_int32(num_retries, 3, "number of retries for zmq");
+// DEFINE_bool(compress_message, true, "");
 DEFINE_bool(print_van, false, "");
 
 void Van::init() {
   my_node_ = parseNode(FLAGS_my_node);
   scheduler_ = parseNode(FLAGS_scheduler);
 
-  num_retries_ = std::max(0, FLAGS_num_retries);
   context_ = zmq_ctx_new();
   // TODO the following does not work...
   // zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
@@ -97,52 +96,28 @@ Status Van::send(const MessageCPtr& msg) {
     return Status::NotFound("there is no socket to node " + (id));
   void *socket = it->second;
 
-  // fill data
-  auto task = msg->task;
-  task.clear_uncompressed_size();
-  bool has_key = !msg->key.empty();
-  std::vector<SArray<char> > data;
-  if (FLAGS_compress_message) {
-    if (has_key) {
-      data.push_back(msg->key.compressTo());
-      task.add_uncompressed_size(msg->key.size());
-    }
-    for (auto& m : msg->value) {
-      if (m.empty()) continue;
-      data.push_back(m.compressTo());
-      task.add_uncompressed_size(m.size());
-    }
-  } else {
-    if (has_key) data.push_back(msg->key);
-    for (auto& m : msg->value) {
-      if (m.empty()) continue;
-      data.push_back(m);
-    }
-  }
-
   // send task
   string str;
-  task.set_has_key(has_key);
-  CHECK(task.SerializeToString(&str))
-      << "failed to serialize " << task.ShortDebugString();
+  CHECK(msg->task.SerializeToString(&str))
+      << "failed to serialize " << msg->task.ShortDebugString();
   int tag = ZMQ_SNDMORE;
-  if (data.size() == 0) tag = 0; // ZMQ_DONTWAIT;
+  if (msg->data.size() == 0) tag = 0; // ZMQ_DONTWAIT;
   while (true) {
     if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
-    if (errno == EINTR) continue;  // maybe interupted by google profiler
+    if (errno == EINTR) continue;  // may be interupted by google profiler
     return Status::NetError(
         "failed to send mailer to node " + (id) + zmq_strerror(errno));
   }
   data_sent_ += str.size();
 
-  // send key and value
-  for (int i = 0; i < data.size(); ++i) {
+  // send data
+  for (int i = 0; i < msg->data.size(); ++i) {
     const auto& raw = data[i];
-    if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
+    if (i == msg->data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
 
     while (true) {
       if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
-      if (errno == EINTR) continue;  // maybe interupted by google profiler
+      if (errno == EINTR) continue;  // may be interupted by google profiler
       return Status::NetError(
           "failed to send mailer to node " + (id) + zmq_strerror(errno));
     }
@@ -157,15 +132,14 @@ Status Van::send(const MessageCPtr& msg) {
 
 // TODO Zero copy
 Status Van::recv(const MessagePtr& msg) {
-  msg->key = SArray<char>();
-  msg->value.clear();
+  msg->data.clear();
   NodeID sender;
   for (int i = 0; ; ++i) {
     zmq_msg_t zmsg;
     CHECK(zmq_msg_init(&zmsg) == 0) << zmq_strerror(errno);
     while (true) {
       if (zmq_msg_recv(&zmsg, receiver_, 0) != -1) break;
-      if (errno == EINTR) continue;  // maybe interupted by google profiler
+      if (errno == EINTR) continue;  // may be interupted by google profiler
       return Status::NetError(
           "recv message failed: " + std::string(zmq_strerror(errno)));
     }
@@ -183,24 +157,9 @@ Status Van::recv(const MessagePtr& msg) {
       CHECK(msg->task.ParseFromString(std::string(buf, size)))
           << "parse string failed";
     } else {
-      // key and value
-      SArray<char> data;
-      int n = msg->task.uncompressed_size_size();
-      if (n > 0) {
-        // data are compressed
-        CHECK_GT(n, i - 2);
-        data.resize(msg->task.uncompressed_size(i-2)+16);
-        data.uncompressFrom(buf, size);
-      } else {
-        // data are not compressed
-        // data = SArray<char>(buf, buf+size);
-        data.copyFrom(buf, size);
-      }
-      if (i == 2 && msg->task.has_key()) {
-        msg->key = data;
-      } else {
-        msg->value.push_back(data);
-      }
+      // data
+      SArray<char> data; data.copyFrom(buf, size);
+      msg->data.push_back(data);
     }
     zmq_msg_close(&zmsg);
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }

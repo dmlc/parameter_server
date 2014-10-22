@@ -118,8 +118,8 @@ $(BIN)/%: test/%.cc $(LIB)/libps.a
 $(LIB)/libps.a: $(OBJS) #gtest
 	ar crv $@ $(OBJS)
 
-$(BIN)/ps: ps.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) ps.cc $(LDFLAGS) -o $@
+$(BIN)/ps: main.cc $(LIB)/libps.a
+	$(CC) $(CFLAGS) main.cc $(LDFLAGS) -o $@
 
 # =====================
 
