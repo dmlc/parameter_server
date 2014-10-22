@@ -68,6 +68,9 @@ class RNode {
   void finishIncomingTask(int time);
 
   int time() { Lock l(mu_); return time_; }
+
+  // memory usage in bytes
+  size_t memSize();
  private:
   DISALLOW_COPY_AND_ASSIGN(RNode);
   Postoffice& sys_;

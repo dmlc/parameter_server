@@ -15,6 +15,7 @@ message DataConfig {
     PS_DENSE = 1;
     ADFEA = 4;
     LIBSVM = 5;
+    TERAFEA = 6;
   }
   optional TextFormat text = 2;
 

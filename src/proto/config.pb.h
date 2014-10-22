@@ -66,11 +66,12 @@ enum DataConfig_TextFormat {
   DataConfig_TextFormat_PS_SPARSE = 2,
   DataConfig_TextFormat_PS_DENSE = 1,
   DataConfig_TextFormat_ADFEA = 4,
-  DataConfig_TextFormat_LIBSVM = 5
+  DataConfig_TextFormat_LIBSVM = 5,
+  DataConfig_TextFormat_TERAFEA = 6
 };
 bool DataConfig_TextFormat_IsValid(int value);
 const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MIN = DataConfig_TextFormat_PS_DENSE;
-const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_LIBSVM;
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_TERAFEA;
 const int DataConfig_TextFormat_TextFormat_ARRAYSIZE = DataConfig_TextFormat_TextFormat_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DataConfig_TextFormat_descriptor();
@@ -227,6 +228,7 @@ class DataConfig : public ::google::protobuf::Message {
   static const TextFormat PS_DENSE = DataConfig_TextFormat_PS_DENSE;
   static const TextFormat ADFEA = DataConfig_TextFormat_ADFEA;
   static const TextFormat LIBSVM = DataConfig_TextFormat_LIBSVM;
+  static const TextFormat TERAFEA = DataConfig_TextFormat_TERAFEA;
   static inline bool TextFormat_IsValid(int value) {
     return DataConfig_TextFormat_IsValid(value);
   }

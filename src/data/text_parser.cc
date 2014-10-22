@@ -2,10 +2,12 @@
 #include <functional>
 #include "util/strtonum.h"
 #include "util/resource_usage.h"
+#include "util/MurmurHash3.h"
 #include "base/matrix_io_inl.h"
 
 namespace PS {
 
+DECLARE_bool(shuffle_fea_id);
 
 // NOTICE: Do not use strtok, it is not thread-safe, use strtok_r instead
 TextParser::TextParser(TextFormat format, bool ignore_feature_group) {
@@ -19,6 +21,11 @@ TextParser::TextParser(TextFormat format, bool ignore_feature_group) {
       break;
     case DataConfig::ADFEA:
       convertor_ = std::bind(&TextParser::parseAdfea, this, _1, _2);
+      info_.set_fea_type(InstanceInfo::SPARSE_BINARY);
+      info_.set_label_type(InstanceInfo::BINARY);
+      break;
+    case DataConfig::TERAFEA:
+      convertor_ = std::bind(&TextParser::parseTerafea, this, _1, _2);
       info_.set_fea_type(InstanceInfo::SPARSE_BINARY);
       info_.set_label_type(InstanceInfo::BINARY);
       break;
@@ -153,6 +160,62 @@ bool TextParser::parseAdfea(char* line, Instance* ins) {
   return true;
 }
 
+// terafea format:
+//
+//   clicked_or_not line_id | uint64 uint64 ...
+//   uint64:
+//      the most significant 10 bits    - group id
+//      lower 54 bits                   - feature id
+//
+//  no guarantee that the same group ids stay contiguously
+//
+bool TextParser::parseTerafea(char* line, Instance* ins) {
+  // key:   group id
+  // value: index in Example::slot[]
+  std::unordered_map<uint32, uint32> gid_idx_map;
+
+  char *saveptr;
+  char* tk = strtok_r(line, " :", &saveptr);
+  for (int i = 0; tk != NULL; tk = strtok_r(NULL, " :", &saveptr), ++i) {
+    if (i == 0) {
+      // label
+      int32 label;
+      if (!strtoi32(tk, &label)) return false;
+      ins->set_label(label > 0 ? 1 : -1);
+    } else if (i == 1) {
+      // skip, line_id
+    } else if (i == 2) {
+      // skip, seperator
+    } else {
+      uint64 key = -1;
+      if (!strtou64(tk, &key)) return false;
+
+      uint64 grp_id = key >> 54;
+      uint64 fea_id = key & 0x3FFFFFFFFFFFFF;
+
+      if (FLAGS_shuffle_fea_id) {
+        uint64 murmur_out[2];
+        MurmurHash3_x64_128(&fea_id, 8, 512927377, murmur_out);
+        fea_id = (murmur_out[0] ^ murmur_out[1]);
+      }
+
+      FeatureGroup *grp = nullptr;
+      auto iter = gid_idx_map.find(grp_id);
+      if (gid_idx_map.end() != iter) {
+        grp = ins->mutable_fea_grp(iter->second);
+      } else {
+        // register in the map
+        gid_idx_map[grp_id] = ins->fea_grp_size();
+        // add new FeatureGroup in Instance
+        grp = ins->add_fea_grp();
+        grp->set_grp_id(grp_id);
+      }
+      grp->add_fea_id(fea_id);
+    }
+  }
+  // LL << ins->ShortDebugString();
+  return true;
+}
 
 // ps format: TODO
 //

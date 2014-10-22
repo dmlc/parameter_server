@@ -42,6 +42,11 @@ class KVVector : public SharedParameter<K> {
   std::unordered_map<int, AlignedArrayList<V> > recved_val_;
   std::mutex recved_val_mu_;
 
+  void serialGetValue(const MessagePtr& msg);
+  void serialSetValue(const MessagePtr& msg);
+  void parallelGetValue(const MessagePtr& msg);
+  void parallelSetValue(const MessagePtr& msg);
+
   // TODO
   // struct Replica {
   //   SArray<K> key;
@@ -67,6 +72,102 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
+  if (FLAGS_parallel_match) {
+    parallelSetValue(msg);
+  } else {
+    serialSetValue(msg);
+  }
+}
+
+template <typename K, typename V>
+void KVVector<K,V>::parallelSetValue(const MessagePtr& msg) {
+  // TODO review this logic. if received an empty message at time t, then call
+  // received(t) will get an error
+  int chl = msg->task.key_channel();
+  // only keys, insert them
+  SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
+  if (msg->value.empty()) {
+    key_[chl] = key_[chl].setUnion(recv_key);
+    val_[chl].clear();
+    return;
+  }
+
+  // get range
+  Range<K> key_range(msg->task.key_range());
+  SizeR range;
+  if (!key_[chl].empty() && !recv_key.empty()) {
+    range = key_[chl].findRange(key_range);
+  }
+
+  // merge values, and store them in recved_val
+  int t = msg->task.time();
+  for (int i = 0; i < msg->value.size(); ++i) {
+    SArray<V> recv_data(msg->value[i]);
+    CHECK_EQ(recv_data.size(), recv_key.size());
+
+    {
+      Lock l(recved_val_mu_);
+      size_t n = 0;
+
+      if (recved_val_[t].size() <= i) {
+
+        // construct SArray<V>
+        auto aligned = std::make_pair(range, SArray<V>());
+        if (!range.empty()) {
+          aligned.second = SArray<V>(range.size());
+        }
+        CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
+        recved_val_[t].push_back(aligned);
+
+        // match
+        match(range, key_[chl], aligned.second, recv_key, recv_data, &n,
+          MatchOperation::ASSIGN);
+      } else {
+        CHECK_EQ(range, recved_val_[t][i].first);
+        // match
+        match(recved_val_[t][i].first, key_[chl], recved_val_[t][i].second,
+          recv_key, recv_data, &n, MatchOperation::ADD);
+      }
+
+      CHECK_EQ(recv_key.size(), n);
+    }
+  }
+}
+
+template <typename K, typename V>
+void KVVector<K,V>::parallelGetValue(const MessagePtr& msg) {
+  SArray<K> recv_key(msg->key);
+  if (recv_key.empty()) return;
+  int ch = msg->task.key_channel();
+  CHECK_EQ(key_[ch].size(), val_[ch].size());
+
+  size_t n = 0;
+  Range<Key> union_range = recv_key.range().setUnion(key_[ch].range());
+
+  // get range
+  SizeR range;
+  if (!recv_key.empty() && !key_[ch].empty()) {
+    range = recv_key.findRange(union_range);
+  }
+
+  // construct new SArray holding updated values
+  SArray<V> new_value;
+  if (!range.empty()) {
+    new_value = SArray<V>(range.size());
+  }
+  CHECK_EQ(new_value.size(), recv_key.size()) << recv_key << "\n" << key_[ch];
+
+  // match
+  match(range, recv_key, new_value, key_[ch], val_[ch],
+    &n, MatchOperation::ASSIGN);
+  CHECK_GE(new_value.size(), n);
+
+  // store in msg
+  msg->addValue(new_value);
+}
+
+template <typename K, typename V>
+void KVVector<K,V>::serialSetValue(const MessagePtr& msg) {
   // TODO review this logic. if received an empty message at time t, then call
   // received(t) will get an error
   int chl = msg->task.key_channel();
@@ -84,7 +185,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     CHECK_EQ(recv_data.size(), recv_key.size());
     size_t n = 0;
     Range<K> key_range(msg->task.key_range());
-    auto aligned = match(key_[chl], recv_key, recv_data.data(), key_range, &n);
+    auto aligned = oldMatch(key_[chl], recv_key, recv_data.data(), key_range, &n);
     CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
     CHECK_EQ(recv_key.size(), n);
     {
@@ -102,13 +203,22 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
+  if (FLAGS_parallel_match) {
+    parallelGetValue(msg);
+  } else {
+    serialGetValue(msg);
+  }
+}
+
+template <typename K, typename V>
+void KVVector<K,V>::serialGetValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
   int ch = msg->task.key_channel();
   CHECK_EQ(key_[ch].size(), val_[ch].size());
   size_t n = 0;
   Range<Key> range = recv_key.range().setUnion(key_[ch].range());
-  auto aligned = match(recv_key, key_[ch], val_[ch].data(), range, &n);
+  auto aligned = oldMatch(recv_key, key_[ch], val_[ch].data(), range, &n);
   CHECK_EQ(aligned.second.size(), recv_key.size()) << recv_key << "\n" << key_[ch];
   CHECK_GE(aligned.second.size(), n);
   msg->addValue(aligned.second);

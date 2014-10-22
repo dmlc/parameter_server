@@ -12,7 +12,8 @@ namespace PS {
 DataConfig searchFiles(const DataConfig& config);
 
 // evenly parttion the files into *num* parts
-std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
+std::vector<DataConfig> divideFiles(
+  const DataConfig& data, int num, const int load_limit);
 
 // locate the i-th file in *conf*, append it with suffix, and keep the rest metadata
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix = "");

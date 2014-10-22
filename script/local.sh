@@ -4,7 +4,6 @@ if [ $# -lt 3 ]; then
     exit -1;
 fi
 dir=`dirname "$0"`
-cd ${dir}
 
 killall -q ps
 
@@ -12,30 +11,29 @@ num_servers=$1
 shift
 num_workers=$1
 shift
-bin="../bin/ps"
-arg="-num_servers ${num_servers} -num_workers ${num_workers} -app $@"
+bin=${dir}/../bin/ps
+Sch="role:SCHEDULER,hostname:'127.0.0.1',port:2060,id:'H'"
+arg="-num_servers ${num_servers} -num_workers ${num_workers} -scheduler ${Sch} -app ${dir}/$@"
 
 mkdir -p ../output
 FLAGS_logtostderr=1
 
-# start the scheduler
-Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'"
-${bin} -my_node ${Sch} -scheduler ${Sch} ${arg} &
-
-# start servers
-for ((i=0; i<${num_servers}; ++i)); do
-    port=$((8100 + ${i}))
-    N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'S${i}'"
-    # CPUPROFILE=/tmp/S${i} \
-    ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
-done
-
-# start workers
-for ((i=0; i<${num_workers}; ++i)); do
-    port=$((8200 + ${i}))
-    N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'W${i}'"
-    # CPUPROFILE=/tmp/W${i} \
-    ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
+# start instances
+for ((my_rank=0; my_rank<=${num_servers}+${num_workers}; ++my_rank)); do
+    ${bin} \
+    ${arg} \
+    -num_threads 4 \
+    -my_rank ${my_rank} \
+    -report_interval 0 \
+    -load_limit 0 \
+    -line_limit 0 \
+    -noverbose \
+    -nolog_to_file \
+    -nolog_instant \
+    -noprint_van \
+    -noshuffle_fea_id \
+    -noparallel_match \
+    &
 done
 
 wait

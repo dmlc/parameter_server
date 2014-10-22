@@ -42,7 +42,7 @@ class SlotReader {
   ExampleInfo info_;
   std::unordered_map<int, SlotInfo> slot_info_;
   std::mutex mu_;
-
+  size_t loaded_file_count_;
   std::unordered_map<int, SArray<size_t>> offset_cache_;
   std::unordered_map<int, SArray<uint64>> index_cache_;
 };

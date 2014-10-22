@@ -2,6 +2,7 @@
 #include <string.h>
 #include <zmq.h>
 #include "base/shared_array_inl.h"
+#include "util/local_machine.h"
 
 namespace PS {
 
@@ -11,10 +12,27 @@ DEFINE_string(server_master, "", "the master of servers");
 // DEFINE_int32(num_retries, 3, "number of retries for zmq");
 // DEFINE_bool(compress_message, true, "");
 DEFINE_bool(print_van, false, "");
+DEFINE_int32(my_rank, -1, "my rank among MPI peers");
+DEFINE_string(interface, "", "network interface");
+
+DECLARE_int32(num_workers);
+DECLARE_int32(num_servers);
 
 void Van::init() {
-  my_node_ = parseNode(FLAGS_my_node);
   scheduler_ = parseNode(FLAGS_scheduler);
+
+  // FIXME
+  // assemble my_node_
+  if (FLAGS_my_rank < 0) {
+    LL << "You must pass me -my_rank with a valid value (GE 0)";
+    throw std::runtime_error("invalid my_rank");
+  }
+  else if (0 == FLAGS_my_rank) {
+    my_node_ = scheduler_;
+  } else {
+    my_node_ = assembleMyNode();
+  }
+  LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
 
   context_ = zmq_ctx_new();
   // TODO the following does not work...
@@ -87,7 +105,8 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // btw, it is not thread safe
-Status Van::send(const MessageCPtr& msg) {
+Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
+  send_bytes = 0;
 
   // find the socket
   NodeID id = msg->recver;
@@ -113,8 +132,8 @@ Status Van::send(const MessageCPtr& msg) {
   // send data
   for (int i = 0; i < msg->data.size(); ++i) {
     const auto& raw = data[i];
-    if (i == msg->data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
-
+    if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
+    send_bytes += raw.size();
     while (true) {
       if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
       if (errno == EINTR) continue;  // may be interupted by google profiler
@@ -147,6 +166,7 @@ Status Van::recv(const MessagePtr& msg) {
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
     data_received_ += size;
+    recv_bytes += size;
     if (i == 0) {
       // identify
       sender = id(std::string(buf, size));
@@ -177,6 +197,56 @@ void Van::statistic() {
 
   LI << my_node_.id() << " sent " << gb(data_sent_)
      << " Gbyte, received " << gb(data_received_) << " Gbyte";
+}
+
+Node Van::assembleMyNode() {
+  if (0 == FLAGS_my_rank) {
+    return scheduler_;
+  }
+
+  Node ret_node;
+  // role and id
+  if (FLAGS_my_rank <= FLAGS_num_workers) {
+    ret_node.set_role(Node::WORKER);
+    ret_node.set_id("W" + std::to_string(FLAGS_my_rank - 1));
+  } else if (FLAGS_my_rank <= FLAGS_num_workers + FLAGS_num_servers) {
+    ret_node.set_role(Node::SERVER);
+    ret_node.set_id("S" + std::to_string(FLAGS_my_rank - FLAGS_num_workers - 1));
+  } else {
+    ret_node.set_role(Node::UNUSED);
+    ret_node.set_id("U" + std::to_string(
+      FLAGS_my_rank - FLAGS_num_workers - FLAGS_num_servers - 1));
+  }
+
+  // IP, port and interface
+  string ip;
+  unsigned short port;
+  if (FLAGS_interface.empty()) {
+    LocalMachine::pickupAvailableInterfaceAndIP(FLAGS_interface, ip);
+  } else {
+    LocalMachine::IP(FLAGS_interface);
+  }
+  if (ip.empty() || FLAGS_interface.empty()) {
+    throw std::runtime_error("got interface/ip failed");
+  }
+  port = LocalMachine::pickupAvailablePort();
+  if (0 == port) {
+    throw std::runtime_error("got port failed");
+  }
+  ret_node.set_hostname(ip);
+  ret_node.set_port(static_cast<int32>(port));
+
+  return ret_node;
+}
+
+Status Van::connectivity(const string &node_id) {
+  auto it = senders_.find(node_id);
+  if (senders_.end() != it) {
+    return Status::OK();
+  }
+  else {
+    return Status::NotFound("there is no socket to node " + node_id);
+  }
 }
 
 } // namespace PS

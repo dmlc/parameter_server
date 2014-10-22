@@ -18,9 +18,12 @@ class Van {
 
   Status connect(Node const& node);
 
+  // check whether I could connect to a specified node
+  Status connectivity(const string &node_id);
+
   // Status send(const MessagePtr& msg);
-  Status send(const MessageCPtr& msg);
-  Status recv(const MessagePtr& msg);
+  Status send(const MessageCPtr& msg, size_t& send_bytes);
+  Status recv(const MessagePtr& msg, size_t& recv_bytes);
 
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };
@@ -56,6 +59,8 @@ class Van {
   size_t data_sent_ = 0;
   size_t data_received_ = 0;
   std::ofstream debug_out_;
+
+  Node assembleMyNode();
 };
 
 } // namespace PS

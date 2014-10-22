@@ -4,6 +4,8 @@
 
 namespace PS {
 
+DECLARE_bool(verbose);
+
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix) {
   CHECK_GE(i, 0); CHECK_LT(i, conf.file_size());
   auto f = conf; f.clear_file(); f.add_file(conf.file(i) + suffix);
@@ -108,10 +110,29 @@ DataConfig searchFiles(const DataConfig& config) {
     dir.add_file(getPath(config.file(i)));
     // match regex
     auto files = readFilenamesInDirectory(dir);
+
+    // list all files found in dir
+    if (FLAGS_verbose) {
+      size_t file_idx = 1;
+      for (const auto& file : files) {
+        LI << "All files found in [" << dir.file(0) << "]; [" <<
+          file_idx++ << "/" << files.size() << "] [" << file << "]";
+      }
+    }
+
     for (auto& f : files) {
-      if (std::regex_match(f, pattern)) {
+      if (std::regex_match(getFilename(f), pattern)) {
         auto l = config.format() == DataConfig::TEXT ? f : removeExtension(f);
-        matched_files.push_back(dir.file(0) + "/" + l);
+        matched_files.push_back(dir.file(0) + "/" + getFilename(l));
+      }
+    }
+
+    // list all matched files
+    if (FLAGS_verbose) {
+      size_t file_idx = 1;
+      for (const auto& file : matched_files) {
+        LI << "All matched files [" << file_idx++ << "/" << matched_files.size() <<
+          "] [" << file << "]";
       }
     }
   }
@@ -124,7 +145,8 @@ DataConfig searchFiles(const DataConfig& config) {
   return ret;
 }
 
-std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
+std::vector<DataConfig> divideFiles(
+  const DataConfig& data, int num, const int load_limit) {
   CHECK_GT(data.file_size(), 0) << "empty files" << data.DebugString();
   CHECK_GE(data.file_size(), num) << "too many partitions";
   // evenly divide files
@@ -133,6 +155,10 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
     DataConfig dc = data; dc.clear_file();
     for (int j = 0; j < data.file_size(); ++j) {
       if (j % num == i) dc.add_file(data.file(j));
+
+      if (load_limit > 0 && dc.file_size() >= load_limit) {
+        break;
+      }
     }
     parts.push_back(dc);
   }
