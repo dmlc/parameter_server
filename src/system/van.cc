@@ -120,27 +120,28 @@ Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
   CHECK(msg->task.SerializeToString(&str))
       << "failed to serialize " << msg->task.ShortDebugString();
   int tag = ZMQ_SNDMORE;
-  if (msg->data.size() == 0) tag = 0; // ZMQ_DONTWAIT;
+  if (msg->value.size() == 0) tag = 0; // ZMQ_DONTWAIT;
   while (true) {
     if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
     if (errno == EINTR) continue;  // may be interupted by google profiler
     return Status::NetError(
         "failed to send mailer to node " + (id) + zmq_strerror(errno));
   }
-  data_sent_ += str.size();
+  send_bytes += str.size();
 
   // send data
-  for (int i = 0; i < msg->data.size(); ++i) {
-    const auto& raw = data[i];
-    if (i == data.size() - 1) tag = 0; // ZMQ_DONTWAIT;
-    send_bytes += raw.size();
+  int has_key = msg->hasKey();
+  int n = has_key + msg->value.size();
+  for (int i = 0; i < n; ++i) {
+    const auto& raw = (has_key && i == 0) ? msg->key : msg->value[i-has_key];
+    if (i == n - 1) tag = 0; // ZMQ_DONTWAIT;
     while (true) {
       if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
       if (errno == EINTR) continue;  // may be interupted by google profiler
       return Status::NetError(
           "failed to send mailer to node " + (id) + zmq_strerror(errno));
     }
-    data_sent_ += raw.size();
+    send_bytes += raw.size();
   }
 
   if (FLAGS_print_van) {
@@ -150,8 +151,8 @@ Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
 }
 
 // TODO Zero copy
-Status Van::recv(const MessagePtr& msg) {
-  msg->data.clear();
+Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
+  msg->clearData();
   NodeID sender;
   for (int i = 0; ; ++i) {
     zmq_msg_t zmsg;
@@ -179,7 +180,11 @@ Status Van::recv(const MessagePtr& msg) {
     } else {
       // data
       SArray<char> data; data.copyFrom(buf, size);
-      msg->data.push_back(data);
+      if (i == 2 && msg->hasKey()) {
+        msg->key = data;
+      } else {
+        msg->value.push_back(data);
+      }
     }
     zmq_msg_close(&zmsg);
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }

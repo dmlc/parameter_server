@@ -8,10 +8,19 @@ Message::Message(const NodeID& dest, int time, int wait_time)
   task.set_wait_time(wait_time);
 }
 
+void Message::miniCopyFrom(const Message& msg) {
+  task = msg.task;
+  task.clear_value_type();
+  task.clear_has_key();
+  terminate = msg.terminate;
+  wait = msg.wait;
+  recv_handle = msg.recv_handle;
+  fin_handle = msg.fin_handle;
+}
+
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   if (task.request()) ss << "REQ"; else ss << "RLY";
-
   ss << " " << task.time() << " ";
   if (task.wait_time() >= 0) ss << "(wait " << task.wait_time() << ") ";
   ss << sender << "=>" << recver << " ";

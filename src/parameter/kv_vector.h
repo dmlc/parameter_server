@@ -2,6 +2,7 @@
 
 #include "Eigen/Dense"
 #include "parameter/shared_parameter.h"
+#include "util/parallel_ordered_match.h"
 
 namespace PS {
 
@@ -22,8 +23,11 @@ class KVVector : public SharedParameter<K> {
     return key_[channel].findRange(key_range);
   }
 
-  // return the data received at time t, then *delete* it.
-  AlignedArrayList<V> received(int t);
+  // return the mareged data received at time t, then *delete* it. If no
+  // message, or empty messages are received at time t, then call received(t)
+  // will get an error
+  typedef std::pair<SizeR, std::vector<SArray<V>>> MergedData;
+  MergedData received(int t);
 
   // implement the virtual functions required
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
@@ -34,34 +38,18 @@ class KVVector : public SharedParameter<K> {
   void setReplica(const MessagePtr& msg) { }
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
- private:
 
+ private:
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;
 
-  std::unordered_map<int, AlignedArrayList<V> > recved_val_;
+  std::unordered_map<int, MergedData> recved_val_;
   std::mutex recved_val_mu_;
-
-  void serialGetValue(const MessagePtr& msg);
-  void serialSetValue(const MessagePtr& msg);
-  void parallelGetValue(const MessagePtr& msg);
-  void parallelSetValue(const MessagePtr& msg);
-
-  // TODO
-  // struct Replica {
-  //   SArray<K> key;
-  //   SArray<V> value;
-  //   std::vector<std::pair<NodeID, int> > clock;
-  //   void addTime(const Timestamp& t) {
-  //     clock.push_back(std::make_pair(t.sender(), t.time()));
-  //   }
-  // };
-  // std::unordered_map<Range<K>, Replica> replica_;
 };
 
 
 template <typename K, typename V>
-AlignedArrayList<V> KVVector<K, V>::received(int t) {
+KVVector<K,V>::MergedData KVVector<K,V>::received(int t) {
   Lock l(recved_val_mu_);
   auto it = recved_val_.find(t);
   CHECK(it != recved_val_.end()) << myNodeID() << " hasn't received data at time " << t;
@@ -72,158 +60,57 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
-  if (FLAGS_parallel_match) {
-    parallelSetValue(msg);
-  } else {
-    serialSetValue(msg);
-  }
-}
-
-template <typename K, typename V>
-void KVVector<K,V>::parallelSetValue(const MessagePtr& msg) {
-  // TODO review this logic. if received an empty message at time t, then call
-  // received(t) will get an error
-  int chl = msg->task.key_channel();
-  // only keys, insert them
-  SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
-  if (msg->value.empty()) {
-    key_[chl] = key_[chl].setUnion(recv_key);
-    val_[chl].clear();
-    return;
-  }
-
-  // get range
-  Range<K> key_range(msg->task.key_range());
-  SizeR range;
-  if (!key_[chl].empty() && !recv_key.empty()) {
-    range = key_[chl].findRange(key_range);
-  }
-
-  // merge values, and store them in recved_val
-  int t = msg->task.time();
-  for (int i = 0; i < msg->value.size(); ++i) {
-    SArray<V> recv_data(msg->value[i]);
-    CHECK_EQ(recv_data.size(), recv_key.size());
-
-    {
-      Lock l(recved_val_mu_);
-      size_t n = 0;
-
-      if (recved_val_[t].size() <= i) {
-
-        // construct SArray<V>
-        auto aligned = std::make_pair(range, SArray<V>());
-        if (!range.empty()) {
-          aligned.second = SArray<V>(range.size());
-        }
-        CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
-        recved_val_[t].push_back(aligned);
-
-        // match
-        match(range, key_[chl], aligned.second, recv_key, recv_data, &n,
-          MatchOperation::ASSIGN);
-      } else {
-        CHECK_EQ(range, recved_val_[t][i].first);
-        // match
-        match(recved_val_[t][i].first, key_[chl], recved_val_[t][i].second,
-          recv_key, recv_data, &n, MatchOperation::ADD);
-      }
-
-      CHECK_EQ(recv_key.size(), n);
-    }
-  }
-}
-
-template <typename K, typename V>
-void KVVector<K,V>::parallelGetValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
-  int ch = msg->task.key_channel();
-  CHECK_EQ(key_[ch].size(), val_[ch].size());
-
-  size_t n = 0;
-  Range<Key> union_range = recv_key.range().setUnion(key_[ch].range());
-
-  // get range
-  SizeR range;
-  if (!recv_key.empty() && !key_[ch].empty()) {
-    range = recv_key.findRange(union_range);
-  }
-
-  // construct new SArray holding updated values
-  SArray<V> new_value;
-  if (!range.empty()) {
-    new_value = SArray<V>(range.size());
-  }
-  CHECK_EQ(new_value.size(), recv_key.size()) << recv_key << "\n" << key_[ch];
-
-  // match
-  match(range, recv_key, new_value, key_[ch], val_[ch],
-    &n, MatchOperation::ASSIGN);
-  CHECK_GE(new_value.size(), n);
-
-  // store in msg
-  msg->addValue(new_value);
-}
-
-template <typename K, typename V>
-void KVVector<K,V>::serialSetValue(const MessagePtr& msg) {
-  // TODO review this logic. if received an empty message at time t, then call
-  // received(t) will get an error
   int chl = msg->task.key_channel();
-  // only keys, insert them
-  SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
-  if (msg->value.empty()) {
+  if (msg->value.size() == 0) {
+    // only keys, merge these keys, and also clear the values
     key_[chl] = key_[chl].setUnion(recv_key);
     val_[chl].clear();
     return;
   }
+
   // merge values, and store them in recved_val
   int t = msg->task.time();
+  Range<K> key_range(msg->task.key_range());
+  SizeR idx_range = key_[chl].findRange(key_range);
+
+  recved_val_mu_.lock();
+  auto& matched = recved_val_[t];
+  recved_val_mu_.unlock();
+
   for (int i = 0; i < msg->value.size(); ++i) {
     SArray<V> recv_data(msg->value[i]);
     CHECK_EQ(recv_data.size(), recv_key.size());
-    size_t n = 0;
-    Range<K> key_range(msg->task.key_range());
-    auto aligned = oldMatch(key_[chl], recv_key, recv_data.data(), key_range, &n);
-    CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
-    CHECK_EQ(recv_key.size(), n);
-    {
-      Lock l(recved_val_mu_);
-      if (recved_val_[t].size() <= i) {
-        recved_val_[t].push_back(aligned);
-      } else {
-        // LL << t << " "<< i << " "  << aligned.first;
-        CHECK_EQ(aligned.first, recved_val_[t][i].first);
-        recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
-      }
+    bool first = matched.second.size() <= i;
+    if (first) {
+      // it is the first node, create the memory
+      matched.first = idx_range;
+      matched.second.push_back(SArray<V>());
+    } else {
+      CHECK_EQ(matched.first, idx_range);
     }
+    size_t n = parallelOrderedMatch(
+        recv_key, recv_data, key_[chl].segment(idx_range),
+        matched.second[i], first ? matchOpAssign : matchOpPlus, FLAGS_num_threads);
+    CHECK_EQ(recv_key.size(), n);
   }
 }
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
-  if (FLAGS_parallel_match) {
-    parallelGetValue(msg);
-  } else {
-    serialGetValue(msg);
-  }
-}
-
-template <typename K, typename V>
-void KVVector<K,V>::serialGetValue(const MessagePtr& msg) {
-  SArray<K> recv_key(msg->key);
+  SArray<K> recv_key(msg->key());
   if (recv_key.empty()) return;
-  int ch = msg->task.key_channel();
-  CHECK_EQ(key_[ch].size(), val_[ch].size());
-  size_t n = 0;
-  Range<Key> range = recv_key.range().setUnion(key_[ch].range());
-  auto aligned = oldMatch(recv_key, key_[ch], val_[ch].data(), range, &n);
-  CHECK_EQ(aligned.second.size(), recv_key.size()) << recv_key << "\n" << key_[ch];
-  CHECK_GE(aligned.second.size(), n);
-  msg->addValue(aligned.second);
-}
+  int chl = msg->task.key_channel();
+  CHECK_EQ(key_[chl].size(), val_[chl].size());
 
+  SArray<V> val;
+  size_t n = parallelOrderedMatch(
+      key_[chl], val_[chl], recv_key, val, matchOpAssign, FLAGS_num_threads);
+  CHECK_EQ(n, val.size());
+  msg->clearValue();
+  msg->addValue(val);
+}
 
 // partition is a sorted key ranges
 template <typename K, typename V>
@@ -234,6 +121,18 @@ MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
 
 
 } // namespace PS
+
+
+// TODO
+// struct Replica {
+//   SArray<K> key;
+//   SArray<V> value;
+//   std::vector<std::pair<NodeID, int> > clock;
+//   void addTime(const Timestamp& t) {
+//     clock.push_back(std::make_pair(t.sender(), t.time()));
+//   }
+// };
+// std::unordered_map<Range<K>, Replica> replica_;
 
 // void setReplica(const MessagePtr& msg);
 // void getReplica(const Range<K>& range, const MessagePtr& msg);

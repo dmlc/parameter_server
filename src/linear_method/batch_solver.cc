@@ -234,7 +234,8 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       }
 
       MessagePtr count(new Message(kServerGroup, time));
-      count->addKV(uniq_key, {key_cnt});
+      count->setKey(uniq_key);
+      count->addValue(key_cnt);
       count->task.set_key_channel(grp);
       auto arg = w_->set(count);
       arg->set_insert_key_freq(true);
@@ -244,7 +245,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
 
       // time 2: pull filered keys
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
-      filter->key = uniq_key;
+      filter->setKey(uniq_key);
       filter->task.set_key_channel(grp);
       filter->task.set_erase_key_cache(true);
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
@@ -290,13 +291,13 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       // time 0: push the filtered keys to servers
       MessagePtr push_key(new Message(kServerGroup, time));
       int grp = fea_grp_[i];
-      push_key->key = w_->key(grp);
+      push_key->setKey(w_->key(grp));
       push_key->task.set_key_channel(grp);
       CHECK_EQ(time, w_->push(push_key));
 
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
-      pull_val->key = w_->key(grp);
+      pull_val->setKey(w_->key(grp));
       pull_val->task.set_key_channel(grp);
       pull_val->task.set_erase_key_cache(true);
       pull_val->wait = true;
@@ -305,9 +306,9 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       if (pull_val->key.empty()) continue; // otherwise received(time+2) will return error
 
       auto init_w = w_->received(time+2);
-      CHECK_EQ(init_w.size(), 1);
-      CHECK_EQ(w_->key(grp).size(), init_w[0].first.size());
-      w_->value(grp) = init_w[0].second;
+      CHECK_EQ(init_w.second.size(), 1);
+      CHECK_EQ(w_->key(grp).size(), init_w.first.size());
+      w_->value(grp) = init_w.second[0];
 
       // set the local variable
       auto X = X_[grp];

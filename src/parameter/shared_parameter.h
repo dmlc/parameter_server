@@ -125,8 +125,9 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     }
     if (call.has_query_key_freq()) {
       if (req) {
-        reply->clearKV();
-        reply->key = key_filter_[chl].queryKeys(SArray<K>(msg->key), call.query_key_freq());
+        reply->clearData();
+        reply->setKey(key_filter_[chl].queryKeys(
+            SArray<K>(msg->key), call.query_key_freq()));
       } else {
         setValue(msg);
       }

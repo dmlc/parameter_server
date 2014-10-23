@@ -97,7 +97,8 @@ void FTRL::updateModel(const MessagePtr& msg) {
 
     // pull the working set
     MessagePtr filter(new Message(kServerGroup));
-    filter->addKV(uniq_key, {key_cnt});
+    filter->setKey(uniq_key);
+    filter->addValue(key_cnt);
     filter->task.set_key_channel(i);
     filter->wait = true;
     auto arg = worker_w_->set(filter);
@@ -121,8 +122,8 @@ void FTRL::updateModel(const MessagePtr& msg) {
 
     worker_w_->waitOutMsg(kServerGroup, time);
     auto w = worker_w_->received(time);
-    CHECK_EQ(w.size(), 1);
-    worker_w_->value(i) = w[0].second;
+    CHECK_EQ(w.second.size(), 1);
+    worker_w_->value(i) = w.second[0];
     // LL << w[0].second;
 
     SArray<Real> Xw(Y->rows());
@@ -140,7 +141,8 @@ void FTRL::updateModel(const MessagePtr& msg) {
     // push local gradient
     MessagePtr push_msg(new Message(kServerGroup));
 
-    push_msg->addKV(worker_w_->key(i), {pos, neg});
+    push_msg->setKey(worker_w_->key(i));
+    push_msg->addValue({pos,neg});
     push_msg->addValue(grad);
     Range<Key>::all().to(push_msg->task.mutable_key_range());
     push_msg->task.set_key_channel(i);

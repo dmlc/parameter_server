@@ -157,7 +157,8 @@ void Darling::updateModel(const MessagePtr& msg) {
     // time 0: push local gradients
     MessagePtr push_msg(new Message(kServerGroup, time));
     auto local_keys = w_->key(grp).segment(seg_pos);
-    push_msg->addKV(local_keys, local_gradients);
+    push_msg->setKey(local_keys);
+    push_msg->addValue(local_gradients);
     g_key_range.to(push_msg->task.mutable_key_range());
     push_msg->task.set_key_channel(grp);
     CHECK_EQ(time, w_->push(push_msg));
@@ -166,19 +167,19 @@ void Darling::updateModel(const MessagePtr& msg) {
     // time 2: pull the updated model from servers
     msg->finished = false; // not finished until model updates are pulled
     MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
-    pull_msg->key = local_keys;
+    pull_msg->setKey(local_keys);
     g_key_range.to(pull_msg->task.mutable_key_range());
     pull_msg->task.set_key_channel(grp);
     // the callback for updating the local dual variable
     pull_msg->fin_handle = [this, grp, seg_pos, time, msg] () {
       if (!seg_pos.empty()) {
         auto data = w_->received(time+2);
-        CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
+        CHECK_EQ(seg_pos, data.first); CHECK_EQ(data.second.size(), 1);
         mu_.lock();
 
         this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
         busy_timer_.start();
-        updateDual(grp, seg_pos, data[0].second);
+        updateDual(grp, seg_pos, data.second[0]);
         busy_timer_.stop();
         this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
 
@@ -199,12 +200,11 @@ void Darling::updateModel(const MessagePtr& msg) {
     // time 1: update model
     if (!seg_pos.empty()) {
       auto data = w_->received(time);
-      CHECK_EQ(data.size(), 2);
-      CHECK_EQ(seg_pos, data[0].first);
-      CHECK_EQ(seg_pos, data[1].first);
+      CHECK_EQ(seg_pos, data.first);
+      CHECK_EQ(data.second.size(), 2);
 
       this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
-      updateWeight(grp, seg_pos, data[0].second, data[1].second);
+      updateWeight(grp, seg_pos, data.second[0], data.second[1]);
       this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
     }
     w_->finish(kWorkerGroup, time+1);

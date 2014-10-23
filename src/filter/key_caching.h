@@ -49,7 +49,7 @@ class KeyCachingFilter : public Filter {
     } else {
       // the cache is invalid... may ask the sender to resend this task
       CHECK_EQ(sig, cache.first) << msg->debugString();
-      msg->addKey(cache.second);
+      msg->setKey(cache.second);
     }
     if (conf->clear_cache_if_done() && isDone(msg->task)) cache_.erase(cache_k);
   }
