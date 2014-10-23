@@ -1,9 +1,7 @@
 #pragma once
-
 #include "Eigen/Dense"
 #include "parameter/shared_parameter.h"
 #include "util/parallel_ordered_match.h"
-
 namespace PS {
 
 template<typename K, typename V> class KVVector;
@@ -49,7 +47,7 @@ class KVVector : public SharedParameter<K> {
 
 
 template <typename K, typename V>
-KVVector<K,V>::MergedData KVVector<K,V>::received(int t) {
+typename KVVector<K,V>::MergedData KVVector<K,V>::received(int t) {
   Lock l(recved_val_mu_);
   auto it = recved_val_.find(t);
   CHECK(it != recved_val_.end()) << myNodeID() << " hasn't received data at time " << t;
@@ -90,23 +88,27 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     } else {
       CHECK_EQ(matched.first, idx_range);
     }
+    auto op = first ?
+              [](const V* src, V* dst) { *dst = *src; } :
+              [](const V* src, V* dst) { *dst += *src; };
     size_t n = parallelOrderedMatch(
-        recv_key, recv_data, key_[chl].segment(idx_range),
-        matched.second[i], first ? matchOpAssign : matchOpPlus, FLAGS_num_threads);
+        recv_key, recv_data, key_[chl].segment(idx_range), matched.second[i],
+        op, FLAGS_num_threads);
     CHECK_EQ(recv_key.size(), n);
   }
 }
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
-  SArray<K> recv_key(msg->key());
+  SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
   CHECK_EQ(key_[chl].size(), val_[chl].size());
 
   SArray<V> val;
+  auto op = [](const V* src, V* dst) { *dst = *src; };
   size_t n = parallelOrderedMatch(
-      key_[chl], val_[chl], recv_key, val, matchOpAssign, FLAGS_num_threads);
+      key(chl), value(chl), recv_key, val, op, FLAGS_num_threads);
   CHECK_EQ(n, val.size());
   msg->clearValue();
   msg->addValue(val);
@@ -118,7 +120,6 @@ MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
   if (get(msg).replica()) return Customer::slice(msg, sep);
   return sliceKeyOrderedMsg<K>(msg, sep);
 }
-
 
 } // namespace PS
 

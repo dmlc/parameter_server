@@ -43,7 +43,7 @@ class Van {
   }
 
   // print statistic info
-  void statistic();
+  // void statistic();
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Van);

@@ -30,7 +30,7 @@ struct Message {
   SArray<char> key;
   std::vector<SArray<char>> value;
 
-  bool hasKey() { return task.has_key(); }
+  bool hasKey() const { return task.has_key(); }
   template <typename T> void setKey(const SArray<T>& key) {
     task.set_key_type(type<T>());
     if (hasKey()) clearKey();
@@ -46,7 +46,8 @@ struct Message {
     task.add_value_type(type<T>());
     this->value.push_back(SArray<char>(value));
   }
-  template <typename T> void addValue(const SArrayList<V>& value) {
+
+  template <typename T> void addValue(const std::initializer_list<SArray<T>>& value) {
     for (const auto& v : value) addValue(v);
   }
   void clearValue() {

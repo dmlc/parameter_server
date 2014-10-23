@@ -6,7 +6,7 @@ template <typename K, typename V, class Op>
 void parallelOrderedMatch(
     const K* src_key, const K* src_key_end, const V* src_val,
     const K* dst_key, const K* dst_key_end, V* dst_val,
-    const Op op, size_t grainsize, size_t* n) {
+    const Op& op, size_t grainsize, size_t* n) {
   size_t src_len = std::distance(src_key, src_key_end);
   size_t dst_len = std::distance(dst_key, dst_key_end);
   if (dst_len == 0 || src_len == 0);
@@ -31,13 +31,14 @@ void parallelOrderedMatch(
   } else {
     std::thread thr(
         parallelOrderedMatch<K,V,Op>, src_key, src_key_end, src_val,
-        dst_key, dst_key + src_len / 2, dst_val, op, n);
+        dst_key, dst_key + dst_len / 2, dst_val, op, grainsize, n);
     size_t m = 0;
-    parallelOrderedMatch<K,V,Op>(
+    parallelOrderedMatch(
         src_key, src_key_end, src_val,
-        dst_key + src_len / 2, dst_key_end, dst_val + src_len / 2, op, &m);
+        dst_key + dst_len / 2, dst_key_end, dst_val + dst_len / 2, op,
+        grainsize, &m);
     thr.join();
-    *n += *m;
+    *n += m;
   }
 }
 
@@ -46,16 +47,14 @@ void parallelOrderedMatch(
 //
 // assign: op = [](const V* src, V* dst) { *dst = *src; }
 // plus: op = [](const V* src, V* dst) { *dst += *src; }
-template<typename V> void matchOpAssign(const V* src, V* dst) { *dst = *src; }
-template<typename V> void matchOpPlus(const V* src, V* dst) { *dst += *src; }
 
 template <typename K, typename V, class Op>
 size_t parallelOrderedMatch(
     const SArray<K>& src_key,
     const SArray<V>& src_val,
     const SArray<K>& dst_key,
-    const SArray<K>& dst_val,
-    const Op op, int num_threads) {
+    SArray<V> dst_val,
+    const Op& op, int num_threads) {
   // do check
   CHECK_GT(num_threads, 0);
   CHECK_EQ(src_key.size(), src_val.size());
@@ -71,7 +70,7 @@ size_t parallelOrderedMatch(
   parallelOrderedMatch(
       src_key.begin(), src_key.end(), src_val.begin(),
       dst_key.begin() + range.begin(), dst_key.begin() + range.end(),
-      dst_val.begin() + range.begin(), op, grainsize);
+      dst_val.begin() + range.begin(), op, grainsize, &n);
   return n;
 }
 

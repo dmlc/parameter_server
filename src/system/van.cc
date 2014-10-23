@@ -20,19 +20,12 @@ DECLARE_int32(num_servers);
 
 void Van::init() {
   scheduler_ = parseNode(FLAGS_scheduler);
-
-  // FIXME
-  // assemble my_node_
   if (FLAGS_my_rank < 0) {
-    LL << "You must pass me -my_rank with a valid value (GE 0)";
-    throw std::runtime_error("invalid my_rank");
-  }
-  else if (0 == FLAGS_my_rank) {
-    my_node_ = scheduler_;
+    my_node_ = parseNode(FLAGS_my_node);
   } else {
     my_node_ = assembleMyNode();
   }
-  LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+  // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
 
   context_ = zmq_ctx_new();
   // TODO the following does not work...
@@ -166,7 +159,6 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
-    data_received_ += size;
     recv_bytes += size;
     if (i == 0) {
       // identify
@@ -196,13 +188,13 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
   return Status::OK();;
 }
 
-void Van::statistic() {
-  if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
-  auto gb = [](size_t x) { return  x / 1e9; };
+// void Van::statistic() {
+//   if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
+//   auto gb = [](size_t x) { return  x / 1e9; };
 
-  LI << my_node_.id() << " sent " << gb(data_sent_)
-     << " Gbyte, received " << gb(data_received_) << " Gbyte";
-}
+//   LI << my_node_.id() << " sent " << gb(data_sent_)
+//      << " Gbyte, received " << gb(data_received_) << " Gbyte";
+// }
 
 Node Van::assembleMyNode() {
   if (0 == FLAGS_my_rank) {
