@@ -16,6 +16,7 @@ void Message::miniCopyFrom(const Message& msg) {
   wait = msg.wait;
   recv_handle = msg.recv_handle;
   fin_handle = msg.fin_handle;
+  original_recver = msg.original_recver;
 }
 
 std::string Message::shortDebugString() const {
