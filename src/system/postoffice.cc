@@ -14,14 +14,15 @@ DEFINE_int32(num_workers, 0, "number of clients");
 DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
 DEFINE_string(app, "../config/rcv1_l1lr.config", "the configuration file of app");
-DEFINE_string(node_file, "./nodes", "node information");
+DECLARE_string(interface);
+
+// TODO move to configure
 DEFINE_int32(report_interval, 0,
   "Servers/Workers report running status to scheduler "
   "in every report_interval seconds. "
   "default: 0; if set to 0, heartbeat is disabled");
 DEFINE_bool(verbose, false, "print extra debug info");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
-DECLARE_string(interface);
 
 Postoffice::~Postoffice() {
   recving_->join();
@@ -94,7 +95,7 @@ void Postoffice::reply(
   MessagePtr re(new Message(tk)); re->recver = recver; queue(re);
 }
 
-void Postoffice::queue(const MessageCPtr& msg) {
+void Postoffice::queue(const MessagePtr& msg) {
   if (msg->valid) {
     sending_queue_.push(msg);
   } else {
@@ -113,7 +114,7 @@ void Postoffice::queue(const MessageCPtr& msg) {
 
 //  TODO fault tolerance, check if node info has been changed
 void Postoffice::send() {
-  MessageCPtr msg;
+  MessagePtr msg;
   while (true) {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;

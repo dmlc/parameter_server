@@ -25,13 +25,15 @@ std::string Message::shortDebugString() const {
   if (task.wait_time() >= 0) ss << "(wait " << task.wait_time() << ") ";
   ss << sender << "=>" << recver << " ";
   if (!original_recver.empty()) ss << "(" << original_recver << ") ";
-  ss << "key [" << key.size() << "] value [";
+  ss << "key [";
+  if (key.size() > 0) ss << key.size();
+  ss << "] value [";
   for (int i = 0; i < value.size(); ++i) {
     ss << value[i].size();
     if (i < value.size() - 1) ss << ",";
   }
   auto t = task; t.clear_msg();
-  ss << "]. " << t.ShortDebugString();
+  ss << "]\n" << t.ShortDebugString();
   return ss.str();
 }
 

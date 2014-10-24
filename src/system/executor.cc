@@ -183,6 +183,7 @@ void Executor::run() {
       }
       // run the finishing callback if necessary
       auto o_recver = rnode(original_recver_id);
+      CHECK(o_recver) << "no such node: " << original_recver_id;
       if (o_recver->tryWaitOutgoingTask(t)) {
         if (FLAGS_verbose) {
           LI << "Task [" << t << "] completed. msg [" <<

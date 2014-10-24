@@ -9,8 +9,6 @@ namespace PS {
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
 DEFINE_string(server_master, "", "the master of servers");
-// DEFINE_int32(num_retries, 3, "number of retries for zmq");
-// DEFINE_bool(compress_message, true, "");
 DEFINE_bool(print_van, false, "");
 DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
@@ -98,7 +96,7 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // btw, it is not thread safe
-Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
+Status Van::send(const MessagePtr& msg, size_t& send_bytes) {
   send_bytes = 0;
 
   // find the socket
@@ -108,12 +106,17 @@ Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
     return Status::NotFound("there is no socket to node " + (id));
   void *socket = it->second;
 
+  // double check
+  bool has_key = !msg->key.empty();
+  msg->task.set_has_key(has_key);
+  int n = has_key + msg->value.size();
+
   // send task
   string str;
   CHECK(msg->task.SerializeToString(&str))
       << "failed to serialize " << msg->task.ShortDebugString();
   int tag = ZMQ_SNDMORE;
-  if (msg->value.size() == 0) tag = 0; // ZMQ_DONTWAIT;
+  if (n == 0) tag = 0; // ZMQ_DONTWAIT;
   while (true) {
     if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
     if (errno == EINTR) continue;  // may be interupted by google profiler
@@ -123,8 +126,6 @@ Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
   send_bytes += str.size();
 
   // send data
-  int has_key = msg->hasKey();
-  int n = has_key + msg->value.size();
   for (int i = 0; i < n; ++i) {
     const auto& raw = (has_key && i == 0) ? msg->key : msg->value[i-has_key];
     if (i == n - 1) tag = 0; // ZMQ_DONTWAIT;
@@ -138,7 +139,7 @@ Status Van::send(const MessageCPtr& msg, size_t& send_bytes) {
   }
 
   if (FLAGS_print_van) {
-    debug_out_ << "\tSND " << msg->shortDebugString()<< std::endl;
+    debug_out_ << "|>>>   " << msg->shortDebugString()<< std::endl;
   }
   return Status::OK();
 }
@@ -168,7 +169,8 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
     } else if (i == 1) {
       // task
       CHECK(msg->task.ParseFromString(std::string(buf, size)))
-          << "parse string failed";
+          << "parse string from " << sender << " I'm " << my_node_.id() << " "
+          << size;
     } else {
       // data
       SArray<char> data; data.copyFrom(buf, size);
@@ -183,7 +185,7 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
   }
 
   if (FLAGS_print_van) {
-    debug_out_ << "\tRCV " << msg->shortDebugString() << std::endl;
+    debug_out_ << "|<<<   " << msg->shortDebugString() << std::endl;
   }
   return Status::OK();;
 }

@@ -47,6 +47,9 @@ struct Message {
     this->value.push_back(SArray<char>(value));
   }
 
+  template <typename T> void addValue(const SArrayList<T>& value) {
+    for (const auto& v : value) addValue(v);
+  }
   template <typename T> void addValue(const std::initializer_list<SArray<T>>& value) {
     for (const auto& v : value) addValue(v);
   }
