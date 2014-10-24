@@ -1,5 +1,6 @@
 #pragma once
 #include "filter/filter.h"
+#include "util/crc32c.h"
 namespace PS {
 
 class KeyCachingFilter : public Filter {
@@ -12,7 +13,7 @@ class KeyCachingFilter : public Filter {
       conf->clear_signature();
       return;
     }
-    const auto& key = msg->key();
+    const auto& key = msg->key;
     auto sig = crc32c::Value(key.data(), std::min(key.size(), max_sig_len_));
     conf->set_signature(sig);
     auto cache_k = std::make_pair(
@@ -26,15 +27,16 @@ class KeyCachingFilter : public Filter {
       cache.first = sig;
       cache.second = key;
     }
-    if (conf->clear_cache_if_done() && isDone(msg->task)) cache_.erase(cache_k);
+    if (conf->clear_cache_if_done() && isDone(msg->task)) {
+      cache_.erase(cache_k);
+    }
   }
 
   void decode(const MessagePtr& msg) {
     // if (!msg->task.has_key_range()) return;
     auto conf = find(FilterConfig::KEY_CACHING, msg);
-    if (!conf) return;
-    if (!conf->has_signature()) return;
-    auto sig = conf->has_signature();
+    if (!conf || !conf->has_signature()) return;
+    auto sig = conf->signature();
     // do a double check
     if (msg->hasKey()) {
       CHECK_EQ(crc32c::Value(msg->key.data(), std::min(msg->key.size(), max_sig_len_)), sig);
@@ -51,7 +53,9 @@ class KeyCachingFilter : public Filter {
       CHECK_EQ(sig, cache.first) << msg->debugString();
       msg->setKey(cache.second);
     }
-    if (conf->clear_cache_if_done() && isDone(msg->task)) cache_.erase(cache_k);
+    if (conf->clear_cache_if_done() && isDone(msg->task)) {
+      cache_.erase(cache_k);
+    }
   }
 
  private:

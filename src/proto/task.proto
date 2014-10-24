@@ -63,16 +63,6 @@ message Task {
   // applications
   optional LM.Call linear_method = 301;
   optional CallSketch sketch = 302;
-
-  // deprecated
-
-  // signature of the key lists, used to identity the key cache
-  optional uint32 key_signature = 8;
-  // clear cache after finished
-  optional bool erase_key_cache = 10 [default = false];
-
-  // set values if data are compressed, empty means data are not compressed
-  repeated uint64 uncompressed_size = 11;
 }
 
 message ManageNode {
@@ -146,9 +136,9 @@ message HeartbeatReport {
   optional string hostname = 14;
 
   // time stamp
-  // latest heartbeat report the scheduler has ever received 
+  // latest heartbeat report the scheduler has ever received
   //    from a specified worker/server
-  optional uint32 seconds_since_epoch = 2; 
+  optional uint32 seconds_since_epoch = 2;
 
   optional uint32 total_time_milli = 13;
   optional uint32 busy_time_milli = 3;

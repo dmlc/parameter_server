@@ -237,6 +237,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       count->setKey(uniq_key);
       count->addValue(key_cnt);
       count->task.set_key_channel(grp);
+      count->addFilter(FilterConfig::KEY_CACHING);
       auto arg = w_->set(count);
       arg->set_insert_key_freq(true);
       arg->set_countmin_k(conf_.solver().countmin_k());
@@ -247,7 +248,7 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->setKey(uniq_key);
       filter->task.set_key_channel(grp);
-      filter->task.set_erase_key_cache(true);
+      filter->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
       w_->set(filter)->set_query_key_freq(conf_.solver().tail_feature_freq());
       filter->fin_handle = [this, grp, localizer, i, grp_size]() mutable {
         // localize the training matrix
@@ -293,13 +294,14 @@ void BatchSolver::preprocessData(const MessageCPtr& msg) {
       int grp = fea_grp_[i];
       push_key->setKey(w_->key(grp));
       push_key->task.set_key_channel(grp);
+      push_key->addFilter(FilterConfig::KEY_CACHING);
       CHECK_EQ(time, w_->push(push_key));
 
       // time 2: fetch initial value of w_
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
       pull_val->setKey(w_->key(grp));
       pull_val->task.set_key_channel(grp);
-      pull_val->task.set_erase_key_cache(true);
+      push_key->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
       pull_val->wait = true;
       CHECK_EQ(time+2, w_->pull(pull_val));
       pull_time[i] = time + 2;

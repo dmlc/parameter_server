@@ -176,7 +176,7 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
     } else {
       // data
       SArray<char> data; data.copyFrom(buf, size);
-      if (i == 2 && msg->hasKey()) {
+      if (i == 2 && msg->task.has_key()) {
         msg->key = data;
       } else {
         msg->value.push_back(data);

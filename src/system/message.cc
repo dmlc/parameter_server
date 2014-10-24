@@ -19,6 +19,12 @@ void Message::miniCopyFrom(const Message& msg) {
   original_recver = msg.original_recver;
 }
 
+FilterConfig* Message::addFilter(FilterConfig::Type type) {
+  auto ptr = task.add_filter();
+  ptr->set_type(type);
+  return ptr;
+}
+
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   if (task.request()) ss << "REQ"; else ss << "RLY";

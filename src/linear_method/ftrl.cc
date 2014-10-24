@@ -146,7 +146,7 @@ void FTRL::updateModel(const MessagePtr& msg) {
     push_msg->addValue(grad);
     Range<Key>::all().to(push_msg->task.mutable_key_range());
     push_msg->task.set_key_channel(i);
-    push_msg->task.set_erase_key_cache(true);
+    // push_msg->task.set_erase_key_cache(true);
     time = worker_w_->push(push_msg);
 
     worker_w_->waitOutMsg(kServerGroup, time);

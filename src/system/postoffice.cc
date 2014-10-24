@@ -128,6 +128,7 @@ void Postoffice::send() {
 }
 
 void Postoffice::recv() {
+  // TODO simply it...
   while (true) {
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
@@ -135,7 +136,6 @@ void Postoffice::recv() {
     CHECK(stat.ok()) << stat.ToString();
     heartbeat_info_.increaseInBytes(recv_bytes);
 
-    // TODO review it
     auto& tk = msg->task;
     if (tk.request() && tk.type() == Task::TERMINATE) {
       yellow_pages_.van().statistic();

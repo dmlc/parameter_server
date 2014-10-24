@@ -143,7 +143,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
 
   // reply if necessary
   if (pull && req) {
-    taskpool(reply->recver)->cacheKeySender(reply);
+    taskpool(reply->recver)->encodeFilter(reply);
     sys_.queue(reply);
     msg->replied = true;
   }
