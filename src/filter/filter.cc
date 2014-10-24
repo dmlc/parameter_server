@@ -16,4 +16,12 @@ FilterPtr Filter::create(const FilterConfig& conf) {
   return FilterPtr(nullptr);
 }
 
+
+FilterConfig* Filter::find(FilterConfig::Type type, Task* task) {
+  for (int i = 0; i < task->filter_size(); ++i) {
+    if (task->filter(i).type() == type) return task->mutable_filter(i);
+  }
+  return nullptr;
+}
+
 } // namespace PS

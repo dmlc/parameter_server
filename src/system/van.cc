@@ -62,7 +62,7 @@ void Van::bind() {
   }
 }
 
-Status Van::connect(Node const& node) {
+Status Van::connect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
@@ -239,14 +239,10 @@ Node Van::assembleMyNode() {
   return ret_node;
 }
 
-Status Van::connectivity(const string &node_id) {
-  auto it = senders_.find(node_id);
-  if (senders_.end() != it) {
-    return Status::OK();
-  }
-  else {
-    return Status::NotFound("there is no socket to node " + node_id);
-  }
+bool Van::connected(const Node& node) {
+  auto it = senders_.find(node.id());
+  return it != senders_.end();
 }
+
 
 } // namespace PS

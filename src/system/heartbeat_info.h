@@ -28,6 +28,7 @@ public:
   void startTimer(const HeartbeatInfo::TimerType type);
   void stopTimer(const HeartbeatInfo::TimerType type);
 
+  // TODO need lock?
   void increaseInBytes(const size_t delta) { Lock l(mu_); in_bytes_ += delta; }
   void increaseOutBytes(const size_t delta) { Lock l(mu_); out_bytes_ += delta; }
 

@@ -52,7 +52,8 @@ class Postoffice {
   void heartbeat();
   // monitor thread function only used by scheduler
   void monitor();
-  void addMyNode(const string& name, const Node& recver);
+
+  // void addMyNode(const string& name, const Node& recver);
 
   string printDashboardTitle();
   string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);

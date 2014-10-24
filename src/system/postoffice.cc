@@ -58,34 +58,42 @@ void Postoffice::run() {
     }
   }
 
-  switch(myNode().role()) {
-    case Node::SCHEDULER: {
-      // get all node information
-      yellow_pages_.add(myNode());
-      if (FLAGS_num_workers || FLAGS_num_servers) {
-        nodes_are_ready_.get_future().wait();
-        LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
-           << FLAGS_num_workers << " workers";
-      }
+  if (myNode().role() == Node::SCHEDULER) {
+    // get all node information
+    yellow_pages_.add(myNode());
+    if (FLAGS_num_workers || FLAGS_num_servers) {
+      nodes_are_ready_.get_future().wait();
+      LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
+         << FLAGS_num_workers << " workers";
+    }
 
-      // run the application
-      AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);
-      AppPtr app = App::create(conf);
-      yellow_pages_.add(app);
-      app->run();
-      app->stopAll();
-      break;
-    } default:
-      // run as a daemon
-      addMyNode("default", yellow_pages_.van().scheduler());
-      while (!done_) usleep(300);
-      break;
+    // run the application
+    AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);
+    AppPtr app = App::create(conf);
+    yellow_pages_.add(app);
+    app->run();
+    app->stopAll();
+  } else {
+    // sent my node info to the scheduler
+    Task task;
+    task.set_type(Task::MANAGE);
+    task.set_request(true);
+    task.set_do_not_reply(true);
+    auto mng_node = task.mutable_mng_node();
+    mng_node->set_cmd(ManageNode::ADD);
+    *(mng_node->add_node()) = myNode();
+    MessagePtr msg(new Message(task));
+    msg->recver = scheduler().id();
+    queue(msg);
+
+    // run as a daemon
+    while (!done_) usleep(300);
   }
 }
 
 void Postoffice::reply(
     const NodeID& recver, const Task& task, const string& reply_msg) {
-  if (!task.request()) return;
+  if (!task.request() || task.do_not_reply()) return;
   Task tk;
   tk.set_customer(task.customer());
   tk.set_request(false);
@@ -121,41 +129,26 @@ void Postoffice::send() {
     size_t send_bytes = 0;
     Status stat = yellow_pages_.van().send(msg, &send_bytes);
     if (!stat.ok()) {
-      LL << "sending " << msg->debugString() << " failed. error: " << stat.ToString();
+      LL << "sending " << *msg << " failed. error: " << stat.ToString();
     }
     heartbeat_info_.increaseOutBytes(send_bytes);
   }
 }
 
 void Postoffice::recv() {
-  // TODO simply it...
   while (true) {
+    // receive a message
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
     auto stat = yellow_pages_.van().recv(msg, &recv_bytes);
     CHECK(stat.ok()) << stat.ToString();
     heartbeat_info_.increaseInBytes(recv_bytes);
 
+    // process it
     auto& tk = msg->task;
-    if (tk.request() && tk.type() == Task::TERMINATE) {
-      yellow_pages_.van().statistic();
-      done_ = true;
-      break;
-    } else if (tk.request() && tk.type() == Task::MANAGE) {
-      if (tk.has_mng_app()) manageApp(tk);
-      if (tk.has_mng_node()) manageNode(tk);
-    } else if (Task::HEARTBEATING == tk.type()) {
-      // newly arrived heartbeat pack
-      CHECK(tk.has_msg());
-      HeartbeatReport report;
-      report.ParseFromString(tk.msg());
-      {
-        Lock l(dashboard_mu_);
-        report.set_task_id(dashboard_[msg->sender].task_id());
-        dashboard_[msg->sender] = report;
-      }
-    } else {
-      if (tk.customer() == "default") continue;
+    bool request = tk.request();
+    auto type = tk.type();
+    if (type == Task::CALL_CUSTOMER || type == Task::REPLY) {
       auto pt = yellow_pages_.customer(tk.customer());
       CHECK(pt) << "customer [" << tk.customer() << "] doesn't exist";
       pt->exec().accept(msg);
@@ -166,8 +159,26 @@ void Postoffice::recv() {
         Lock l(dashboard_mu_);
         dashboard_[msg->sender].set_task_id(msg->task.time());
       }
-
       continue;
+    }
+
+    if (type == Task::HEARTBEATING) {
+      // newly arrived heartbeat pack
+      CHECK(tk.has_msg());
+      HeartbeatReport report;
+      report.ParseFromString(tk.msg());
+      {
+        Lock l(dashboard_mu_);
+        report.set_task_id(dashboard_[msg->sender].task_id());
+        dashboard_[msg->sender] = report;
+      }
+    } else if (type == Task::MANAGE) {
+      if (request && tk.has_mng_app()) manageApp(tk);
+      if (request && tk.has_mng_node()) manageNode(tk);
+    } else if (type == Task::TERMINATE) {
+      // yellow_pages_.van().statistic();
+      done_ = true;
+      break;
     }
     auto ptr = yellow_pages_.customer(tk.customer());
     if (ptr != nullptr) ptr->exec().finish(msg);
@@ -222,42 +233,26 @@ void Postoffice::manageNode(const Task& tk) {
   }
 }
 
-void Postoffice::addMyNode(const string& name, const Node& recver) {
-  Task task;
-  task.set_request(true);
-  task.set_customer(name);
-  task.set_type(Task::MANAGE);
-  auto mng_node = task.mutable_mng_node();
-  mng_node->set_cmd(ManageNode::ADD);
-  *(mng_node->add_node()) = myNode();
-
-  MessagePtr msg(new Message(task));
-  msg->recver = recver.id();
-  queue(msg);
-}
-
 void Postoffice::heartbeat() {
   while (!done_) {
     // heartbeat won't work until I have connected to the scheduler
-    if (yellow_pages_.van().connectivity("H").ok()) {
+    std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
+    if (yellow_pages_.van().connected(scheduler())) {
       // serialize heartbeat report
       string report;
       heartbeat_info_.get().SerializeToString(&report);
 
       // pack msg
-      MessagePtr msg(new Message("H", 0));
-      msg->sender = myNode().id();
-      msg->valid = true;
-      msg->task.set_type(Task::HEARTBEATING);
-      msg->task.set_request(false);
-      msg->task.set_customer("HB");
-      msg->task.set_msg(report);
+      Task task;
+      task.set_type(Task::HEARTBEATING);
+      task.set_request(true);
+      task.set_msg(report);
+      task.set_do_not_reply(true);
+      MessagePtr msg(new Message(task));
+      msg->recver = scheduler().id();
 
       // push into sending queue
       queue(msg);
-
-      // take a rest
-      std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
     }
   }
 }

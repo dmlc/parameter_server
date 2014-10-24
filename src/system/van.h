@@ -16,10 +16,10 @@ class Van {
   void init();
   void destroy();
 
-  Status connect(Node const& node);
+  Status connect(const Node&  node);
 
   // check whether I could connect to a specified node
-  Status connectivity(const string &node_id);
+  bool connected(const Node& node);
 
   // Status send(const MessagePtr& msg);
   Status send(const MessagePtr& msg, size_t* send_bytes);

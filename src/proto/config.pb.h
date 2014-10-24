@@ -307,6 +307,20 @@ class DataConfig : public ::google::protobuf::Message {
   inline bool ignore_feature_group() const;
   inline void set_ignore_feature_group(bool value);
 
+  // optional int32 max_num_files_per_worker = 7 [default = -1];
+  inline bool has_max_num_files_per_worker() const;
+  inline void clear_max_num_files_per_worker();
+  static const int kMaxNumFilesPerWorkerFieldNumber = 7;
+  inline ::google::protobuf::int32 max_num_files_per_worker() const;
+  inline void set_max_num_files_per_worker(::google::protobuf::int32 value);
+
+  // optional int32 max_num_lines_per_file = 8 [default = -1];
+  inline bool has_max_num_lines_per_file() const;
+  inline void clear_max_num_lines_per_file();
+  static const int kMaxNumLinesPerFileFieldNumber = 8;
+  inline ::google::protobuf::int32 max_num_lines_per_file() const;
+  inline void set_max_num_lines_per_file(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
   inline void set_has_format();
@@ -319,6 +333,10 @@ class DataConfig : public ::google::protobuf::Message {
   inline void clear_has_range();
   inline void set_has_ignore_feature_group();
   inline void clear_has_ignore_feature_group();
+  inline void set_has_max_num_files_per_worker();
+  inline void clear_has_max_num_files_per_worker();
+  inline void set_has_max_num_lines_per_file();
+  inline void clear_has_max_num_lines_per_file();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -328,9 +346,11 @@ class DataConfig : public ::google::protobuf::Message {
   ::PS::HDFSConfig* hdfs_;
   ::PS::PbRange* range_;
   bool ignore_feature_group_;
+  ::google::protobuf::int32 max_num_files_per_worker_;
+  ::google::protobuf::int32 max_num_lines_per_file_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -1057,6 +1077,50 @@ inline bool DataConfig::ignore_feature_group() const {
 inline void DataConfig::set_ignore_feature_group(bool value) {
   set_has_ignore_feature_group();
   ignore_feature_group_ = value;
+}
+
+// optional int32 max_num_files_per_worker = 7 [default = -1];
+inline bool DataConfig::has_max_num_files_per_worker() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void DataConfig::set_has_max_num_files_per_worker() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void DataConfig::clear_has_max_num_files_per_worker() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void DataConfig::clear_max_num_files_per_worker() {
+  max_num_files_per_worker_ = -1;
+  clear_has_max_num_files_per_worker();
+}
+inline ::google::protobuf::int32 DataConfig::max_num_files_per_worker() const {
+  return max_num_files_per_worker_;
+}
+inline void DataConfig::set_max_num_files_per_worker(::google::protobuf::int32 value) {
+  set_has_max_num_files_per_worker();
+  max_num_files_per_worker_ = value;
+}
+
+// optional int32 max_num_lines_per_file = 8 [default = -1];
+inline bool DataConfig::has_max_num_lines_per_file() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void DataConfig::set_has_max_num_lines_per_file() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void DataConfig::clear_has_max_num_lines_per_file() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void DataConfig::clear_max_num_lines_per_file() {
+  max_num_lines_per_file_ = -1;
+  clear_has_max_num_lines_per_file();
+}
+inline ::google::protobuf::int32 DataConfig::max_num_lines_per_file() const {
+  return max_num_lines_per_file_;
+}
+inline void DataConfig::set_max_num_lines_per_file(::google::protobuf::int32 value) {
+  set_has_max_num_lines_per_file();
+  max_num_lines_per_file_ = value;
 }
 
 // -------------------------------------------------------------------

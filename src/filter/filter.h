@@ -19,13 +19,8 @@ class Filter {
   static FilterConfig* find(FilterConfig::Type type, const MessagePtr& msg) {
     return find(type, &(msg->task));
   }
+  static FilterConfig* find(FilterConfig::Type type, Task* task);
 
-  static FilterConfig* find(FilterConfig::Type type, Task* task) {
-    for (int i = 0; i < task->filter_size(); ++i) {
-      if (task->filter(i).type() == type) return task->mutable_filter(i);
-    }
-    return nullptr;
-  }
 };
 
 } // namespace

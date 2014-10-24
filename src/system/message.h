@@ -115,7 +115,6 @@ MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyList& sep) {
   // find the positions in msg.key
   size_t n = sep.size();
   std::vector<size_t> pos; pos.reserve(n-1);
-  CHECK(msg->hasKey());
   SArray<K> key(msg->key);
   Range<K> msg_key_range(msg->task.key_range());
   for (auto p : sep) {

@@ -45,9 +45,6 @@ ${3}/ps \
     ${verbose} \
     ${log_to_file} \
     ${log_instant} \
-    -load_limit ${load_limit} \
-    -line_limit ${line_limit} \
     ${print_van} \
     ${shuffle_fea_id} \
-    ${parallel_match} \
     || { echo "rank:${my_rank} launch failed"; exit -1; }

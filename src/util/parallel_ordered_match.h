@@ -42,12 +42,17 @@ void parallelOrderedMatch(
   }
 }
 
+
+template<typename T> struct OpAssign {
+  virtual void operator()(const T* src, T* dst) const { *dst = *src; }
+};
+
+template<typename T> struct OpPlus {
+  void operator()(const T* src, T* dst) const { *dst += *src; }
+};
+
 // assume both src_key and dst_key are ordered, apply
 //  op(src_val[i], dst_val[j]) if src_key[i] = dst_key[j]
-//
-// assign: op = [](const V* src, V* dst) { *dst = *src; }
-// plus: op = [](const V* src, V* dst) { *dst += *src; }
-
 template <typename K, typename V, class Op>
 size_t parallelOrderedMatch(
     const SArray<K>& src_key,

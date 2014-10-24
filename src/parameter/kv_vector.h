@@ -82,19 +82,22 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     CHECK_EQ(recv_data.size(), recv_key.size());
     bool first = matched.second.size() <= i;
     if (first) {
-      // it is the first node, create the memory
+      // it is the first node, allocate the memory
       matched.first = idx_range;
       matched.second.push_back(SArray<V>());
+      CHECK_EQ(parallelOrderedMatch(
+          recv_key, recv_data, key_[chl].segment(idx_range),
+          OpAssign<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
     } else {
       CHECK_EQ(matched.first, idx_range);
+      CHECK_EQ(parallelOrderedMatch(
+          recv_key, recv_data, key_[chl].segment(idx_range),
+          OpPlus<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
     }
-    auto op = first ?
-              [](const V* src, V* dst) { *dst = *src; } :
-              [](const V* src, V* dst) { *dst += *src; };
-    size_t n = parallelOrderedMatch(
-        recv_key, recv_data, key_[chl].segment(idx_range),
-        op, FLAGS_num_threads, &matched.second[i]);
-    CHECK_EQ(recv_key.size(), n);
+    // auto op = first ?  : OpPlus<V>();
+    //           // [](const V* src, V* dst) { *dst = *src; } :
+    //           // [](const V* src, V* dst) { *dst += *src; };
+    // CHECK_EQ(recv_key.size(), n);
   }
 }
 
@@ -106,9 +109,9 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
   CHECK_EQ(key_[chl].size(), val_[chl].size());
 
   SArray<V> val;
-  auto op = [](const V* src, V* dst) { *dst = *src; };
+  // auto op = [](const V* src, V* dst) { *dst = *src; };
   size_t n = parallelOrderedMatch(
-      key(chl), value(chl), recv_key, op, FLAGS_num_threads, &val);
+      key(chl), value(chl), recv_key, OpAssign<V>(), FLAGS_num_threads, &val);
   CHECK_EQ(n, val.size());
   msg->clearValue();
   msg->addValue(val);

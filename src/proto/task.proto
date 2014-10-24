@@ -15,25 +15,23 @@ message Task {
     HEARTBEATING = 6;
   }
   required Type type = 1;
+  // whether request or reply message
+  optional bool request = 2 [default = false];
+  // will not send a reply message if true
+  optional bool do_not_reply = 3 [default = false];
+  // the customer name
+  optional string customer = 4;
 
-  // request or reply message
-  required bool request = 2 [default = false];
-  // customer name
-  required string customer = 3;
-
-  optional int32 time = 4;
-  optional int32 wait_time = 5 [default = -1];
-
-  // the higher the more important,
-  // optional int32 priority = 6 [default = 0];
+  // time
+  optional int32 time = 5;
+  optional int32 wait_time = 6 [default = -1];
 
   // the key range of this task
   optional PbRange key_range = 7;
   // namespace of keys
-  optional int32 key_channel = 9;
-
-  // if or not there is the key list
-  optional bool has_key = 6 [default = false];
+  optional int32 key_channel = 8;
+  // indiciate whether or not has the key list
+  optional bool has_key = 9 [default = false];
 
   enum DataType {
     OTHER = 0;
