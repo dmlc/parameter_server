@@ -96,8 +96,7 @@ Status Van::connect(Node const& node) {
 
 // TODO use zmq_msg_t to allow zero_copy send
 // btw, it is not thread safe
-Status Van::send(const MessagePtr& msg, size_t& send_bytes) {
-  send_bytes = 0;
+Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
 
   // find the socket
   NodeID id = msg->recver;
@@ -123,7 +122,8 @@ Status Van::send(const MessagePtr& msg, size_t& send_bytes) {
     return Status::NetError(
         "failed to send mailer to node " + (id) + zmq_strerror(errno));
   }
-  send_bytes += str.size();
+  *send_bytes += str.size();
+  data_sent_ += str.size();
 
   // send data
   for (int i = 0; i < n; ++i) {
@@ -135,7 +135,8 @@ Status Van::send(const MessagePtr& msg, size_t& send_bytes) {
       return Status::NetError(
           "failed to send mailer to node " + (id) + zmq_strerror(errno));
     }
-    send_bytes += raw.size();
+    *send_bytes += raw.size();
+    data_sent_ += raw.size();
   }
 
   if (FLAGS_print_van) {
@@ -145,7 +146,7 @@ Status Van::send(const MessagePtr& msg, size_t& send_bytes) {
 }
 
 // TODO Zero copy
-Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
+Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   msg->clearData();
   NodeID sender;
   for (int i = 0; ; ++i) {
@@ -160,7 +161,8 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
-    recv_bytes += size;
+    *recv_bytes += size;
+    data_received_ += size;
     if (i == 0) {
       // identify
       sender = id(std::string(buf, size));
@@ -190,13 +192,12 @@ Status Van::recv(const MessagePtr& msg, size_t& recv_bytes) {
   return Status::OK();;
 }
 
-// void Van::statistic() {
-//   if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
-//   auto gb = [](size_t x) { return  x / 1e9; };
-
-//   LI << my_node_.id() << " sent " << gb(data_sent_)
-//      << " Gbyte, received " << gb(data_received_) << " Gbyte";
-// }
+void Van::statistic() {
+  if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
+  auto gb = [](size_t x) { return  x / 1e9; };
+  LI << my_node_.id() << " sent " << gb(data_sent_)
+     << " Gbyte, received " << gb(data_received_) << " Gbyte";
+}
 
 Node Van::assembleMyNode() {
   if (0 == FLAGS_my_rank) {

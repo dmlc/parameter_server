@@ -150,10 +150,12 @@ void LinearMethod::startSystem() {
   CHECK(conf_.has_training_data());
   std::vector<DataConfig> tr_parts, va_parts;
   auto tr_cf = searchFiles(conf_.training_data());
+  LI << "Found " << tr_cf.file_size() << " training files";
   tr_parts = divideFiles(tr_cf, FLAGS_num_workers, FLAGS_load_limit);
   if (conf_.has_validation_data()) {
     auto va_cf = searchFiles(conf_.validation_data());
     va_parts = divideFiles(va_cf, FLAGS_num_workers, FLAGS_load_limit);
+    LI << "Found " << va_cf.file_size() << " validation files";
   }
 
   // create the app on all other machines

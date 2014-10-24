@@ -22,8 +22,8 @@ class Van {
   Status connectivity(const string &node_id);
 
   // Status send(const MessagePtr& msg);
-  Status send(const MessagePtr& msg, size_t& send_bytes);
-  Status recv(const MessagePtr& msg, size_t& recv_bytes);
+  Status send(const MessagePtr& msg, size_t* send_bytes);
+  Status recv(const MessagePtr& msg, size_t* recv_bytes);
 
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };
@@ -43,7 +43,7 @@ class Van {
   }
 
   // print statistic info
-  // void statistic();
+  void statistic();
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Van);
@@ -56,6 +56,8 @@ class Van {
   std::mutex mu_;
   std::map<NodeID, void *> senders_;
 
+  size_t data_sent_ = 0;
+  size_t data_received_ = 0;
   std::ofstream debug_out_;
 
   Node assembleMyNode();

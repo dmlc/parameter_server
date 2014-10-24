@@ -119,7 +119,7 @@ void Postoffice::send() {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;
     size_t send_bytes = 0;
-    Status stat = yellow_pages_.van().send(msg, send_bytes);
+    Status stat = yellow_pages_.van().send(msg, &send_bytes);
     if (!stat.ok()) {
       LL << "sending " << msg->debugString() << " failed. error: " << stat.ToString();
     }
@@ -131,13 +131,14 @@ void Postoffice::recv() {
   while (true) {
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
-    auto stat = yellow_pages_.van().recv(msg, recv_bytes);
+    auto stat = yellow_pages_.van().recv(msg, &recv_bytes);
     CHECK(stat.ok()) << stat.ToString();
     heartbeat_info_.increaseInBytes(recv_bytes);
 
+    // TODO review it
     auto& tk = msg->task;
     if (tk.request() && tk.type() == Task::TERMINATE) {
-      // yellow_pages_.van().statistic();
+      yellow_pages_.van().statistic();
       done_ = true;
       break;
     } else if (tk.request() && tk.type() == Task::MANAGE) {

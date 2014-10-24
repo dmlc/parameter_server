@@ -1,7 +1,7 @@
 CC = g++
 
-# OPT = -O3 -ggdb
-OPT = -O0 -ggdb
+OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
