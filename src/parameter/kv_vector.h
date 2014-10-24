@@ -92,8 +92,8 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
               [](const V* src, V* dst) { *dst = *src; } :
               [](const V* src, V* dst) { *dst += *src; };
     size_t n = parallelOrderedMatch(
-        recv_key, recv_data, key_[chl].segment(idx_range), matched.second[i],
-        op, FLAGS_num_threads);
+        recv_key, recv_data, key_[chl].segment(idx_range),
+        op, FLAGS_num_threads, &matched.second[i]);
     CHECK_EQ(recv_key.size(), n);
   }
 }
@@ -108,7 +108,7 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
   SArray<V> val;
   auto op = [](const V* src, V* dst) { *dst = *src; };
   size_t n = parallelOrderedMatch(
-      key(chl), value(chl), recv_key, val, op, FLAGS_num_threads);
+      key(chl), value(chl), recv_key, op, FLAGS_num_threads, &val);
   CHECK_EQ(n, val.size());
   msg->clearValue();
   msg->addValue(val);

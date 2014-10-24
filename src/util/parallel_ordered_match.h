@@ -53,16 +53,16 @@ size_t parallelOrderedMatch(
     const SArray<K>& src_key,
     const SArray<V>& src_val,
     const SArray<K>& dst_key,
-    SArray<V> dst_val,
-    const Op& op, int num_threads) {
+    const Op& op, int num_threads,
+    SArray<V>* dst_val) {
   // do check
   CHECK_GT(num_threads, 0);
   CHECK_EQ(src_key.size(), src_val.size());
-  if (dst_val.empty()) {
-    dst_val.resize(dst_key.size());
-    dst_val.setZero();
+  if (dst_val->empty()) {
+    dst_val->resize(dst_key.size());
+    dst_val->setZero();
   } else {
-    CHECK_EQ(dst_val.size(), dst_key.size());
+    CHECK_EQ(dst_val->size(), dst_key.size());
   }
   SizeR range = dst_key.findRange(src_key.range());
   size_t grainsize = std::max(range.size() / num_threads + 5, (size_t)1024*1024);
@@ -70,7 +70,7 @@ size_t parallelOrderedMatch(
   parallelOrderedMatch(
       src_key.begin(), src_key.end(), src_val.begin(),
       dst_key.begin() + range.begin(), dst_key.begin() + range.end(),
-      dst_val.begin() + range.begin(), op, grainsize, &n);
+      dst_val->begin() + range.begin(), op, grainsize, &n);
   return n;
 }
 
