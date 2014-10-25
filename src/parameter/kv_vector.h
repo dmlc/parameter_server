@@ -15,6 +15,7 @@ class KVVector : public SharedParameter<K> {
   USING_SHARED_PARAMETER;
   SArray<K>& key(int channel) { return key_[channel]; }
   SArray<V>& value(int channel) { return val_[channel]; }
+  void clear(int channel) { key_.erase(channel); val_.erase(channel); }
 
   // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {

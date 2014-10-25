@@ -21,20 +21,17 @@ class FTRL : public OnlineSolver {
   void saveModel(const MessageCPtr& msg);
   void updateModel(const MessagePtr& msg);
 
-  void stop();
  protected:
   typedef double Real;
   void countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
                  SArray<uint32>* pos, SArray<uint32>* neg);
   void evalProgress();
   void showProgress();
-  // void computeGradient();
 
   KVVectorPtr<Key, Real> worker_w_;
   FTRLModelPtr<Key, Real> server_w_;
 
   LossPtr<Real> loss_;
-  bool done_ = false;
 
   struct Status {
     uint64 num_ex = 0;
