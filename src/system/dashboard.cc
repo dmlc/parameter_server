@@ -76,9 +76,9 @@ string Dashboard::report() {
   auto copy = data_;
   mu_.unlock();
   std::stringstream ss;
-ss << title() << "\n";
+  ss << title() << "\n";
   for (const auto& it : copy) {
-ss << report(it.first, it.second) << "\n";
+    ss << report(it.first, it.second) << "\n";
   }
   return ss.str();
 }

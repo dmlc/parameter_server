@@ -8,20 +8,13 @@ DECLARE_bool(verbose);
 
 namespace LM {
 
-void Darling::init() {
-  BatchSolver::init();
-  // set is as a nan. the reason choosing kuint64max is because snappy has good
-  // compression rate on 0xffff..ff
-  memcpy(&kInactiveValue_, &kuint64max, sizeof(double));
-}
-
 void Darling::runIteration() {
   CHECK(conf_.has_darling());
   CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
   auto sol_cf = conf_.solver();
   int tau = sol_cf.max_block_delay();
-  KKT_filter_threshold_ = 1e20;
+  kkt_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
   bool random_blk_order = sol_cf.random_feature_block_order();
   if (!random_blk_order) {
@@ -59,7 +52,7 @@ void Darling::runIteration() {
 
       auto cmd = set(&update);
       if (i == 0) {
-        cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
+        cmd->set_kkt_filter_threshold(kkt_filter_threshold_);
         if (reset_kkt_filter) cmd->set_kkt_filter_reset(true);
       }
       auto blk = fea_blk_[order[i]];
@@ -78,7 +71,7 @@ void Darling::runIteration() {
     // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
     double ratio = conf_.darling().kkt_filter_threshold_ratio();
-    KKT_filter_threshold_ = vio / (double)g_train_info_.num_ex() * ratio;
+    kkt_filter_threshold_ = vio / (double)g_train_info_.num_ex() * ratio;
 
     // check if finished
     double rel = g_progress_[iter].relative_objv();
@@ -110,16 +103,6 @@ void Darling::preprocessData(const MessageCPtr& msg) {
     delta_[grp].resize(n);
     delta_[grp].setValue(conf_.darling().delta_init_value());
   }
-
-  // size_t mem = 0;
-  // for (const auto& it : X_) mem += it.second->memSize();
-  // for (const auto& it : active_set_) mem += it.second.memSize();
-  // for (const auto& it : delta_) mem += it.second.memSize();
-  // mem += dual_.memSize();
-  // mem += w_->memSize();
-  // LL << ResUsage::myPhyMem() << " " << mem / 1e6 ;
-
-
 }
 
 void Darling::updateModel(const MessagePtr& msg) {
@@ -131,7 +114,7 @@ void Darling::updateModel(const MessagePtr& msg) {
   auto time = msg->task.time() * kPace;
   auto call = get(msg);
   if (call.has_kkt_filter_threshold()) {
-    KKT_filter_threshold_ = call.kkt_filter_threshold();
+    kkt_filter_threshold_ = call.kkt_filter_threshold();
     violation_ = 0;
   }
   if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
@@ -260,7 +243,8 @@ void Darling::computeGradients(
     if (!active_set.test(k)) {
       index += n;
       if (!binary) value += n;
-      G[j] = U[j] = kInactiveValue_;
+      kkt_filter_.mark(&G[j]);
+      kkt_filter_.mark(&U[j]);
       continue;
     }
     double g = 0, u = 0;
@@ -294,8 +278,7 @@ void Darling::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
     double& nw = new_w[i];
-    if (inactive(nw)) {
-      // marked as inactive
+    if (kkt_filter_.marked(nw)) {
       active_set.clear(j);
       cw = 0;
       delta_w[i] = 0;
@@ -375,9 +358,9 @@ void Darling::updateWeight(
         vio = - g_pos;
       } else if (g_neg > 0) {
         vio = g_neg;
-      } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
+      } else if (g_pos > kkt_filter_threshold_ && g_neg < - kkt_filter_threshold_) {
         active_set.clear(k);
-        w = kInactiveValue_;
+        kkt_filter_.mark(&w);
         continue;
       }
     }
@@ -404,7 +387,7 @@ void Darling::showKKTFilter(int iter) {
     fprintf(stderr, "+---------------------");
   } else {
     auto prog = g_progress_[iter];
-    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, (uint64)prog.nnz_active_set());
+    fprintf(stderr, "| %.1e %11llu ", kkt_filter_threshold_, (uint64)prog.nnz_active_set());
   }
 }
 
@@ -460,7 +443,7 @@ Progress Darling::evaluateProgress() {
     for (int grp : fea_grp_) {
       const auto& value = w_->value(grp);
       for (double w : value) {
-        if (inactive(w) || w == 0) continue;
+        if (kkt_filter_.marked(w) || w == 0) continue;
         ++ nnz_w;
         objv += fabs(w);
       }

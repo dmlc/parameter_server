@@ -20,7 +20,6 @@ class Filter {
     return find(type, &(msg->task));
   }
   static FilterConfig* find(FilterConfig::Type type, Task* task);
-
 };
 
 } // namespace
