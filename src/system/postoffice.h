@@ -4,6 +4,7 @@
 #include "system/yellow_pages.h"
 #include "system/heartbeat_info.h"
 #include "util/threadsafe_queue.h"
+#include "dashboard.h"
 
 namespace PS {
 
@@ -73,40 +74,7 @@ class Postoffice {
 
   // heartbeat info for workers/servers
   HeartbeatInfo heartbeat_info_;
-
-  // record all heartbeat info by scheduler
-  std::map<NodeID, HeartbeatReport,
-    bool (*)(const NodeID& a, const NodeID& b)> dashboard_{
-    [](const NodeID& a, const NodeID& b) -> bool {
-      // lambda: split NodeID into primary segment and secondary segment
-      auto splitNodeID = [] (const NodeID& in, string& primary, string& secondary) {
-        size_t tailing_alpha_idx = in.find_last_not_of("0123456789");
-        if (std::string::npos == tailing_alpha_idx) {
-          primary = in;
-          secondary = "";
-        } else {
-          primary = in.substr(0, tailing_alpha_idx + 1);
-          secondary = in.substr(tailing_alpha_idx + 1);
-        }
-        return;
-      };
-
-      // split
-      string a_primary, a_secondary;
-      splitNodeID(a, a_primary, a_secondary);
-      string b_primary, b_secondary;
-      splitNodeID(b, b_primary, b_secondary);
-
-      // compare
-      if (a_primary != b_primary) {
-        return a_primary < b_primary;
-      } else {
-        return std::stoul(a_secondary) < std::stoul(b_secondary);
-      }
-    }
-  };
-  // mutex protecting dashboard_
-  std::mutex dashboard_mu_;
+  Dashboard dashboard_;
 };
 
 } // namespace PS

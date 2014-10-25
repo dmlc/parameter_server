@@ -1,5 +1,5 @@
-#include <iomanip>
 #include "system/postoffice.h"
+#include "proto/heartbeat.pb.h"
 // #include <omp.h>
 #include "system/customer.h"
 #include "system/app.h"
@@ -155,23 +155,15 @@ void Postoffice::recv() {
 
       // if I am the scheduler,
       //   I also record the latest task id for W/S without extra trouble
-      if (Node::SCHEDULER == myNode().role() && FLAGS_report_interval > 0) {
-        Lock l(dashboard_mu_);
-        dashboard_[msg->sender].set_task_id(msg->task.time());
+      if (FLAGS_report_interval > 0 && Node::SCHEDULER == myNode().role()) {
+        dashboard_.addTask(msg->sender, msg->task.time());
       }
       continue;
     }
 
     if (type == Task::HEARTBEATING) {
       // newly arrived heartbeat pack
-      CHECK(tk.has_msg());
-      HeartbeatReport report;
-      report.ParseFromString(tk.msg());
-      {
-        Lock l(dashboard_mu_);
-        report.set_task_id(dashboard_[msg->sender].task_id());
-        dashboard_[msg->sender] = report;
-      }
+      dashboard_.addReport(msg->sender, tk.msg());
     } else if (type == Task::MANAGE) {
       if (request && tk.has_mng_app()) manageApp(tk);
       if (request && tk.has_mng_node()) manageNode(tk);
@@ -259,101 +251,9 @@ void Postoffice::heartbeat() {
 
 void Postoffice::monitor() {
   while (!done_) {
-    {
-      Lock l(dashboard_mu_);
-      if (!dashboard_.empty()) {
-        // prepare formatted dashboard
-        std::stringstream ss;
-        ss << printDashboardTitle() << "\n";
-        for (const auto& report : dashboard_) {
-          ss << printHeartbeatReport(report.first, report.second) << "\n";
-        }
-
-        // output
-        std::cerr << "\n\n" << ss.str();
-      }
-    }
-
+    std::cerr << dashboard_.report() << "\n\n";
     std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
   }
-}
-
-string Postoffice::printDashboardTitle() {
-  const size_t WIDTH = 10;
-
-  // time_t
-  std::time_t now_time = std::chrono::system_clock::to_time_t(
-    std::chrono::system_clock::now());
-  string time_str = ctime(&now_time);
-  time_str.resize(time_str.size() - 1);
-
-  std::stringstream ss;
-  ss << std::setiosflags(std::ios::left) <<
-    std::setw(WIDTH * 2) << std::setfill('=') << "" << " Dashboard " <<
-    time_str + " " << std::setw(WIDTH * 2) << std::setfill('=') << "" << "\n";
-
-  ss << std::setfill(' ') <<
-    std::setw(WIDTH) << "Node" <<
-    std::setw(WIDTH) << "Task" <<
-    std::setw(WIDTH) << "MyCPU(%)" <<
-    std::setw(WIDTH) << "MyRSS(M)" <<
-    std::setw(WIDTH) << "MyVir(M)" <<
-    std::setw(WIDTH) << "BusyTime" <<
-    std::setw(WIDTH) << "InMB" <<
-    std::setw(WIDTH) << "OutMB" <<
-    std::setw(WIDTH) << "HostCPU" <<
-    std::setw(WIDTH) << "HostUseGB" <<
-    std::setw(WIDTH) << "HostInBW" <<
-    std::setw(WIDTH) << "HostOutBW" <<
-    std::setw(WIDTH * 2) << "HostName";
-
-  return ss.str();
-}
-
-string Postoffice::printHeartbeatReport(
-  const string& node_id,
-  const HeartbeatReport& report) {
-  std::stringstream ss;
-  const size_t WIDTH = 10;
-
-  std::stringstream busy_time_with_ratio;
-  busy_time_with_ratio << report.busy_time_milli() <<
-    "(" << static_cast<uint32>(
-    100 * (static_cast<float>(report.busy_time_milli()) / report.total_time_milli())) <<
-    "%)";
-
-  std::stringstream net_in_mb_with_speed;
-  net_in_mb_with_speed << report.net_in_mb() <<
-    "(" << static_cast<uint32>(report.net_in_mb() / (report.total_time_milli() / 1e3)) <<
-    ")";
-
-  std::stringstream net_out_mb_with_speed;
-  net_out_mb_with_speed << report.net_out_mb() <<
-    "(" << static_cast<uint32>(report.net_out_mb() / (report.total_time_milli() / 1e3)) <<
-    ")";
-
-  std::stringstream host_memory_usage;
-  host_memory_usage << report.host_in_use_gb() << "(" <<
-    report.host_in_use_percentage() << "%)";
-
-  ss << std::setiosflags(std::ios::left) <<
-    std::setw(WIDTH) << node_id <<
-    std::setw(WIDTH) << report.task_id() <<
-    std::setw(WIDTH) << report.process_cpu_usage() <<
-    std::setw(WIDTH) << report.process_rss_mb() <<
-    std::setw(WIDTH) << report.process_virt_mb() <<
-    std::setw(WIDTH) << busy_time_with_ratio.str() <<
-    std::setw(WIDTH) << net_in_mb_with_speed.str() <<
-    std::setw(WIDTH) << net_out_mb_with_speed.str() <<
-    std::setw(WIDTH) << report.host_cpu_usage() <<
-    std::setw(WIDTH) << host_memory_usage.str() <<
-    std::setw(WIDTH) << (
-      report.host_net_in_bw() < 1024 ? std::to_string(report.host_net_in_bw()) : "INIT") <<
-    std::setw(WIDTH) << (
-      report.host_net_out_bw() < 1024 ? std::to_string(report.host_net_out_bw()) : "INIT") <<
-    std::setw(WIDTH * 2) << report.hostname();
-
-  return ss.str();
 }
 
 } // namespace PS

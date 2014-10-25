@@ -94,10 +94,6 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
           recv_key, recv_data, key_[chl].segment(idx_range),
           OpPlus<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
     }
-    // auto op = first ?  : OpPlus<V>();
-    //           // [](const V* src, V* dst) { *dst = *src; } :
-    //           // [](const V* src, V* dst) { *dst += *src; };
-    // CHECK_EQ(recv_key.size(), n);
   }
 }
 

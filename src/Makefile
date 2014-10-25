@@ -48,6 +48,7 @@ SRCS = $(PROTOS_CC) \
 	system/remote_node.cc \
 	system/executor.cc \
 	system/app.cc \
+	system/dashboard.cc \
 	filter/filter.cc \
 	data/common.cc \
 	data/text_parser.cc \
