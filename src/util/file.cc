@@ -51,6 +51,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
   CHECK_EQ(name.file_size(), 1);
   auto filename = name.file(0);
   if (name.has_hdfs()) {
+    // TODO can use -text here, compare which one is better
     string cmd = hadoopFS(name.hdfs()) + " -cat " + filename;
 
     // .gz

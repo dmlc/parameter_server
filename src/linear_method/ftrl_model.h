@@ -49,6 +49,7 @@ class FTRLModel : public SharedParameter<K> {
   V lambda1_ = 0, lambda2_ = 0;
   struct Entry {
     // TODO use variable length integers, support multi-model and Q2.13 float
+    // TODO ignore w
     uint64 pos = 0;
     uint64 neg = 0;
     V w = 0;
