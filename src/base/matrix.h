@@ -86,7 +86,8 @@ class Matrix {
   virtual size_t memSize() const { return value_.size()*sizeof(V); }
 
   // accessors and mutators
-  MatrixInfo info() const { return info_; }
+  const MatrixInfo&  info() const { return info_; }
+  MatrixInfo&  info() { return info_; }
   uint64 rows() const { return info_.row().end() - info_.row().begin(); }
   uint64 cols() const { return info_.col().end() - info_.col().begin(); }
   uint64 nnz() const { return info_.nnz(); }

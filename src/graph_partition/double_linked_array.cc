@@ -28,8 +28,10 @@ void DblinkArray::init(const sdt::vector<int>& data, , int cache_limit)) {
   cache_limit_ = std::max(std::min(cache_limit, data_.back().value), 1);
   cached_pos_.resize(cache_limit_);
 
-  // TODO
-
+  for (int i = cache_limit_-1, k = n; i >= 0; --i) {
+    while (k > 0 && datapair[k-1].second >= i) --k;
+    cached_pos_[i] = k == n ? -1 : datapair[k].first;
+  }
 }
 
 void DblinkArray::remove(int i) {
@@ -74,6 +76,13 @@ void DblinkArray::decrAndSort(int i) {
   data_[j].prev = i;
   data_[i].next = j;
   data_[i].prev = prev;
+  // update cache
+
+  if (new_v < cache_limit) {
+    for (; new_v > 0 && cached_pos_[new_v] == j; -- new_v) {
+      cached_pos_[new_v] = i;
+    }
+  }
 }
 
 } // namespace PARSA
