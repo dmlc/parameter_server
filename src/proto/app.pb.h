@@ -26,6 +26,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/neural_network.pb.h"
 #include "proto/linear_method.pb.h"
+#include "proto/parsa.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -139,6 +140,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::NN::Config* release_neural_network();
   inline void set_allocated_neural_network(::PS::NN::Config* neural_network);
 
+  // optional .PS.ParsaConf parsa = 5;
+  inline bool has_parsa() const;
+  inline void clear_parsa();
+  static const int kParsaFieldNumber = 5;
+  inline const ::PS::ParsaConf& parsa() const;
+  inline ::PS::ParsaConf* mutable_parsa();
+  inline ::PS::ParsaConf* release_parsa();
+  inline void set_allocated_parsa(::PS::ParsaConf* parsa);
+
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
   inline void set_has_app_name();
@@ -147,6 +157,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_linear_method();
   inline void set_has_neural_network();
   inline void clear_has_neural_network();
+  inline void set_has_parsa();
+  inline void clear_has_parsa();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -154,9 +166,10 @@ class AppConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
   ::PS::LM::Config* linear_method_;
   ::PS::NN::Config* neural_network_;
+  ::PS::ParsaConf* parsa_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fapp_2eproto();
   friend void protobuf_AssignDesc_proto_2fapp_2eproto();
@@ -359,6 +372,44 @@ inline void AppConfig::set_allocated_neural_network(::PS::NN::Config* neural_net
     set_has_neural_network();
   } else {
     clear_has_neural_network();
+  }
+}
+
+// optional .PS.ParsaConf parsa = 5;
+inline bool AppConfig::has_parsa() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void AppConfig::set_has_parsa() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void AppConfig::clear_has_parsa() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void AppConfig::clear_parsa() {
+  if (parsa_ != NULL) parsa_->::PS::ParsaConf::Clear();
+  clear_has_parsa();
+}
+inline const ::PS::ParsaConf& AppConfig::parsa() const {
+  return parsa_ != NULL ? *parsa_ : *default_instance_->parsa_;
+}
+inline ::PS::ParsaConf* AppConfig::mutable_parsa() {
+  set_has_parsa();
+  if (parsa_ == NULL) parsa_ = new ::PS::ParsaConf;
+  return parsa_;
+}
+inline ::PS::ParsaConf* AppConfig::release_parsa() {
+  clear_has_parsa();
+  ::PS::ParsaConf* temp = parsa_;
+  parsa_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_parsa(::PS::ParsaConf* parsa) {
+  delete parsa_;
+  parsa_ = parsa;
+  if (parsa) {
+    set_has_parsa();
+  } else {
+    clear_has_parsa();
   }
 }
 

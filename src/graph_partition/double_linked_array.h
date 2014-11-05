@@ -7,7 +7,7 @@ namespace PARSA {
 // double linked list supporting random access and cache, the value is sorted
 class DblinkArray {
  public:
-  void init(const sdt::vector<int>& data, int cache_limit);
+  void init(const std::vector<int>& data, int cache_limit);
   void remove(int i);
   void decrAndSort(int i);
   int minIdx() { return cached_pos_[0]; }

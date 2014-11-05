@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O3 -ggdb
-# OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
+OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -35,7 +35,7 @@ DEPS = $(SRCS:.cc=.d)
 PROTOS= $(wildcard proto/*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
 SRCS = $(PROTOS_CC) \
-	util/crc32c.cc \
+    util/crc32c.cc \
 	util/MurmurHash3.cc \
 	util/file.cc \
 	util/filelinereader.cc \
@@ -56,8 +56,10 @@ SRCS = $(PROTOS_CC) \
 	data/slot_reader.cc \
 	linear_method/linear_method.cc \
 	linear_method/batch_solver.cc \
-	linear_method/darling.cc \
-	linear_method/ftrl.cc
+    linear_method/darling.cc \
+    linear_method/ftrl.cc \
+    graph_partition/double_linked_array.cc \
+    graph_partition/parsa.cc
 
 
 TESTS = \

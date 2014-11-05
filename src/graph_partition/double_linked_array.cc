@@ -1,15 +1,15 @@
-
+#include "graph_partition/double_linked_array.h"
 namespace PS {
 namespace PARSA {
 
-void DblinkArray::init(const sdt::vector<int>& data, , int cache_limit)) {
+void DblinkArray::init(const std::vector<int>& data, int cache_limit) {
   // sort the values
   int n = data.size();
   typedef std::pair<int, int> C;
   std::vector<C> datapair(n);
   for (int i = 0; i < n; ++i) {
     datapair[i].first = i;
-    datapair[i].second = i;
+    datapair[i].second = data[i];
   }
   std::sort(datapair.begin(), datapair.end(), [](const C& a, const C&b){
       return a.second < b.second;
@@ -41,19 +41,19 @@ void DblinkArray::remove(int i) {
   if (e.next >= 0) data_[e.next].prev = e.prev;
 
   // update cache
-  for (int v = min(e.value, cache_limit_-1); v >= 0 && cached_pos_[v] == i; --v) {
+  for (int v = std::min(e.value, cache_limit_-1); v >= 0 && cached_pos_[v] == i; --v) {
     cached_pos_[v] = e.next;
   }
 }
 
 void DblinkArray::decrAndSort(int i) {
   // update
-  int new_v = --data_[i].value;
+  int new_v = --data_[i].value; CHECK_GE(new_v, 0);
   // find the new position
   int j = -1;
   if (new_v < cache_limit_) {
     j = cached_pos_[new_v];
-    if (new_v + 1 < cache_limit && cached_pos_[new_v+1] == i) {
+    if (new_v + 1 < cache_limit_ && cached_pos_[new_v+1] == i) {
       cached_pos_[new_v+1] = data_[i].next;
     }
   } else {
@@ -78,7 +78,7 @@ void DblinkArray::decrAndSort(int i) {
   data_[i].prev = prev;
   // update cache
 
-  if (new_v < cache_limit) {
+  if (new_v < cache_limit_) {
     for (; new_v > 0 && cached_pos_[new_v] == j; -- new_v) {
       cached_pos_[new_v] = i;
     }

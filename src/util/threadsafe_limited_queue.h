@@ -13,7 +13,10 @@ class threadsafeLimitedQueue {
   void setMaxCapacity(size_t capacity) { max_capacity_ = capacity; }
 
   void push(const T& value, size_t capacity) {
-    if (capacity > max_capacity_) { LL << "you will be blocked here forever..."; }
+    if (capacity > max_capacity_) {
+      LL << "too small capacity [" << max_capacity_
+         << "]. you will be blocked here forever...";
+    }
     std::unique_lock<std::mutex> l(mu_);
     full_cond_.wait(l, [this, capacity]{
         return (capacity + cur_capacity_ <= max_capacity_); });
