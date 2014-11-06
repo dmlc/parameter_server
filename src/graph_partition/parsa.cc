@@ -36,6 +36,7 @@ void Parsa::loadInputGraphPtr() {
   StreamReader<Empty> reader(conf_.input_graph());
   MatrixPtrList<Empty> X;
   uint32 block_size = conf_.block_size();
+  int i = 0;
   while(!read_data_finished_) {
     // load the graph
     bool ret = reader.readMatrices(block_size, &X);
@@ -57,7 +58,7 @@ void Parsa::loadInputGraphPtr() {
     Y[1] = std::static_pointer_cast<Graph>(Y[0]->toColMajor());
     data_buf_.push(Y, Y[0]->memSize() + Y[1]->memSize());
 
-    LL << *Y[0];
+    LL << i ++;
     if (!ret) read_data_finished_ = true;
   }
 }

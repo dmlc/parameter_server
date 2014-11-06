@@ -11,6 +11,8 @@ class DblinkArray {
   void remove(int i);
   void decrAndSort(int i);
   int minIdx() { return cached_pos_[0]; }
+  // valid check, for debug purpose
+  void check();
  private:
   struct Entry {
     int value;
@@ -21,6 +23,7 @@ class DblinkArray {
   // cached_pos_[i] is the first index whose value >= i
   std::vector<int> cached_pos_;
   int cache_limit_;
+  int size_ = 0;
 };
 
 } // namespace PARSA

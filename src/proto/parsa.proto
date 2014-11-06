@@ -1,0 +1,13 @@
+package PS;
+import "proto/config.proto";
+
+message ParsaConf {
+  optional DataConfig input_graph = 1;
+  optional DataConfig output_graph = 2;
+
+  optional int32 block_size = 4 [default = 100000];
+  optional int32 num_partitions = 5 [default = 8];
+  optional int32 V_size = 6 [default = 1000000];
+  optional int32 cost_cache_limit = 7 [default = 100];
+  optional int32 data_buff_size_in_MB = 8 [default = 1000];
+}

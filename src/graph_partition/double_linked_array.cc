@@ -16,34 +16,64 @@ void DblinkArray::init(const std::vector<int>& data, int cache_limit) {
     });
 
   // fill in values
+  size_ = n;
   data_.resize(n);
   for (int i = 0; i < n; ++i) {
     int j = datapair[i].first;
     data_[j].value = datapair[i].second;
-    if (i < n - 1) data_[j].next = datapair[i+1].first;
-    if (i > 0) data_[j].prev = datapair[i-1].first;
+    data_[j].next = i < n - 1 ? datapair[i+1].first : -1;
+    data_[j].prev = i > 0 ? datapair[i-1].first : -1;
   }
 
   // init the cache positions
-  cache_limit_ = std::max(std::min(cache_limit, data_.back().value), 1);
+  cache_limit_ = std::max(std::min(cache_limit, datapair.back().second), 1);
   cached_pos_.resize(cache_limit_);
 
   for (int i = cache_limit_-1, k = n; i >= 0; --i) {
     while (k > 0 && datapair[k-1].second >= i) --k;
     cached_pos_[i] = k == n ? -1 : datapair[k].first;
   }
+
+  check();
 }
 
 void DblinkArray::remove(int i) {
+  CHECK_LT(i, data_.size());
+  CHECK_GE(i, 0);
+
   // soft delete
   const auto& e = data_[i];
   if (e.prev >= 0) data_[e.prev].next = e.next;
   if (e.next >= 0) data_[e.next].prev = e.prev;
+  --size_;
 
   // update cache
   for (int v = std::min(e.value, cache_limit_-1); v >= 0 && cached_pos_[v] == i; --v) {
     cached_pos_[v] = e.next;
   }
+
+  check();
+}
+
+void DblinkArray::check() {
+  // check cache
+  if (size_ == 0) return;
+  for (int i = 0; i < cache_limit_; ++i) {
+    int p = cached_pos_[i];
+    if (p >= 0) CHECK_GE(data_[p].value, i);
+  }
+  int j = 0;
+  int p = cached_pos_[0];
+  CHECK_EQ(data_[p].prev, -1);
+  while (true) {
+    int q = data_[p].next;
+    if (q == -1) break;
+    ++ j; CHECK_LT(j, size_);
+    CHECK_LE(data_[p].value, data_[p].value);
+    CHECK_EQ(p, data_[q].prev);
+    p = q;
+  }
+  CHECK_EQ(j, size_ - 1);
 }
 
 void DblinkArray::decrAndSort(int i) {
@@ -76,13 +106,17 @@ void DblinkArray::decrAndSort(int i) {
   data_[j].prev = i;
   data_[i].next = j;
   data_[i].prev = prev;
+  ++ size_;
   // update cache
 
-  if (new_v < cache_limit_) {
-    for (; new_v > 0 && cached_pos_[new_v] == j; -- new_v) {
-      cached_pos_[new_v] = i;
-    }
+  // if (new_v < cache_limit_) {
+  new_v = std::min(new_v, cache_limit_-1);
+  for (; new_v >= 0 && cached_pos_[new_v] == j; -- new_v) {
+    cached_pos_[new_v] = i;
   }
+
+
+  check();
 }
 
 } // namespace PARSA
