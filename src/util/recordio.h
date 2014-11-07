@@ -17,11 +17,12 @@ static const int kMagicNumber = 0x3ed7230a;
 class RecordWriter {
  public:
   // Magic number when writing and reading protocol buffers.
-
+  RecordWriter() { file_ = NULL; }
   explicit RecordWriter(File* const file) : file_(file) { }
-  bool Close() { return file_->close(); }
+  bool Close() { return file_ && file_->close(); }
 
   template <class P> bool WriteProtocolMessage(const P& proto) {
+    if (file_ == NULL) return false;
     std::string buffer;
     proto.SerializeToString(&buffer);
     const uint32 buff_size = (uint32) buffer.size();

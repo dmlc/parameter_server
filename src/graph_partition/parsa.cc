@@ -1,6 +1,5 @@
 #include "graph_partition/parsa.h"
 #include "data/stream_reader.h"
-#include "util/producer_consumer.h"
 namespace PS {
 
 void Parsa::init() {
@@ -8,7 +7,6 @@ void Parsa::init() {
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
   num_partitions_ = conf_.num_partitions();
   num_V_ = conf_.v_size();
-  LL << num_V_;
   neighbor_set_.resize(num_partitions_);
   for (int k = 0; k < num_partitions_; ++k) {
     neighbor_set_[k].assigned_V.resize(num_V_);
@@ -20,14 +18,14 @@ void Parsa::run() {
 }
 
 void Parsa::partition() {
-  typedef std::pair<GraphPtrList, ExampleList> DataPair;
+  // reader
+  typedef std::pair<GraphPtrList, ExampleListPtr> DataPair;
   StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
-  // int block_size = conf_.block_size();
-  // int num_V = conf_.v_size();
   ProducerConsumer<DataPair> reader(conf_.data_buff_size_in_mb());
-  reader.setProducer([this, &stream](DataPair* data, size_t* size)->bool {
+  reader.startProducer([this, &stream](DataPair* data, size_t* size)->bool {
       MatrixPtrList<Empty> X;
-      bool ret = stream.readMatrices(conf_.block_size(), &X, &(data->second));
+      data->second = ExampleListPtr(new ExampleList());
+      bool ret = stream.readMatrices(conf_.block_size(), &X, data->second.get());
       if (X.empty()) return false;
 
       // map the columns id into small integers
@@ -49,13 +47,36 @@ void Parsa::partition() {
       return ret;
     });
 
+  // writer
+  proto_writers_1_.resize(num_partitions_);
+  for (int i = 0; i < num_partitions_; ++i) {
+    auto filename = ithFile(conf_.output_graph(), 0, "_part_"+to_string(i));
+    auto file = File::openOrDie(filename, "w");
+    proto_writers_1_[i] = RecordWriter(file);
+  }
+  writer_1_.setCapacity(conf_.data_buff_size_in_mb());
+  writer_1_.startConsumer([this](const ResultPair& data) {
+      const auto& examples = *data.first;
+      const auto& partition = data.second;
+      CHECK_EQ(examples.size(), partition.size());
+      for (int i = 0; i < examples.size(); ++i) {
+        CHECK(proto_writers_1_[partition[i]].WriteProtocolMessage(examples[i]));
+      }
+    });
+
+  // start partition
   DataPair data;
   SArray<int> map_U;
+  int i = 0;
   while (reader.pop(&data)) {
     CHECK_EQ(data.first.size(), 2);
     partitionU(data.first[0], data.first[1], &map_U);
-    // LL << "x";
+    writer_1_.push(std::make_pair(data.second, map_U));
+    LL << i ++;
   }
+  writer_1_.setFinished();
+  writer_1_.waitConsumer();
+
   partitionV();
 }
 

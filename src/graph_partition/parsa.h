@@ -1,10 +1,11 @@
 #pragma once
 #include "graph_partition/double_linked_array.h"
 #include "proto/parsa.pb.h"
-#include "util/threadsafe_limited_queue.h"
+#include "util/producer_consumer.h"
 #include "base/sparse_matrix.h"
 #include "base/bitmap.h"
 #include "system/app.h"
+#include "util/recordio.h"
 
 namespace PS {
 
@@ -13,6 +14,7 @@ typedef SparseMatrix<uint32, Empty> Graph;
 typedef std::shared_ptr<Graph> GraphPtr;
 typedef std::vector<GraphPtr> GraphPtrList;
 typedef std::vector<Example> ExampleList;
+typedef std::shared_ptr<ExampleList> ExampleListPtr;
 
 class Parsa : public App {
  public:
@@ -40,5 +42,12 @@ class Parsa : public App {
   int num_partitions_;
   int num_V_;
   ParsaConf conf_;
+
+
+  typedef std::pair<ExampleListPtr, SArray<int>> ResultPair;
+  ProducerConsumer<ResultPair> writer_1_;
+  ProducerConsumer<ResultPair> writer_2_;
+
+  std::vector<RecordWriter> proto_writers_1_;
 };
 } // namespace PS
