@@ -2,7 +2,9 @@
 #include "util/common.h"
 #include "system/message.h"
 #include "system/yellow_pages.h"
+#include "system/heartbeat_info.h"
 #include "util/threadsafe_queue.h"
+#include "dashboard.h"
 
 namespace PS {
 
@@ -20,7 +22,7 @@ class Postoffice {
   void run();
   // Queue a message into the sending buffer, which will be sent by the sending
   // thread.
-  void queue(const MessageCPtr& msg);
+  void queue(const MessagePtr& msg);
   // reply *task* from *recver* with *reply_msg*
   void reply(const NodeID& recver, const Task& task, const string& reply_msg = string());
   // reply message *msg* with protocal message *proto*
@@ -36,6 +38,9 @@ class Postoffice {
   // accessors and mutators
   YellowPages& yp() { return yellow_pages_; }
   Node& myNode() { return yellow_pages_.van().myNode(); }
+  Node& scheduler() { return yellow_pages_.van().scheduler(); }
+
+  HeartbeatInfo& hb() { return heartbeat_info_; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
@@ -44,7 +49,15 @@ class Postoffice {
   void manageApp(const Task& pt);
   void send();
   void recv();
-  void addMyNode(const string& name, const Node& recver);
+  // heartbeat thread function
+  void heartbeat();
+  // monitor thread function only used by scheduler
+  void monitor();
+
+  // void addMyNode(const string& name, const Node& recver);
+
+  string printDashboardTitle();
+  string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);
 
   std::mutex mutex_;
   bool done_ = false;
@@ -52,10 +65,16 @@ class Postoffice {
   std::promise<void> nodes_are_ready_;
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
-  threadsafe_queue<MessageCPtr> sending_queue_;
+  std::unique_ptr<std::thread> heartbeating_;
+  std::unique_ptr<std::thread> monitoring_;
+  threadsafe_queue<MessagePtr> sending_queue_;
 
   // yp_ should stay behind sending_queue_ so it will be destroied earlier
   YellowPages yellow_pages_;
+
+  // heartbeat info for workers/servers
+  HeartbeatInfo heartbeat_info_;
+  Dashboard dashboard_;
 };
 
 } // namespace PS

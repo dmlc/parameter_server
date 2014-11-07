@@ -18,7 +18,8 @@ class App : public Customer {
   virtual void init() = 0;
   // run the applications: load data, iterating...
   virtual void run() = 0;
-  void stop();
+  void stopAll();
+  // virtual void stop();
  protected:
   AppConfig app_cf_;
 

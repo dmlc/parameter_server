@@ -15,15 +15,22 @@ message DataConfig {
     PS_DENSE = 1;
     ADFEA = 4;
     LIBSVM = 5;
+    TERAFEA = 6;
   }
   optional TextFormat text = 2;
 
+  // filenames, supports regular expressions
   repeated string file = 3;
+  // files stored in hdfs
   optional HDFSConfig hdfs = 5;
   // only valid for the binary format
   optional PbRange range = 4;
   // ignore the feature group information
-  optional bool ignore_fea_grp = 6;
+  optional bool ignore_feature_group = 6;
+  // the maximal number of files will be assigned to a worker, -1 means no limit
+  optional int32 max_num_files_per_worker = 7 [default = -1];
+  // the maximal number of lines will be read from a file, -1 means no limit
+  optional int32 max_num_lines_per_file = 8 [default = -1];
 }
 
 message ParameterInitConfig {
@@ -46,10 +53,10 @@ message LearningRateConfig {
   enum Type {
     CONSTANT = 1;
   }
-  required Type type = 1;
+  optional Type type = 1;
   optional double eta = 2 [default = 1];
-  optional double alpha = 3;
-  optional double beta = 4;
+  optional double alpha = 3 [default = 1];
+  optional double beta = 4 [default = 1];
 }
 
 

@@ -27,4 +27,5 @@ ln -s /your/third/library third_party
 make -j8
 #+END_SRC
 
-More informations are in the [[https://github.com/mli/parameter_server/wiki][wiki]].
+*Run the system*
+See examples in [[config/rcv1]]. More information are in the [[https://github.com/mli/parameter_server/wiki][wiki]].

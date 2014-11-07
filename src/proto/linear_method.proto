@@ -10,12 +10,14 @@ message Config {
   optional DataConfig local_cache = 3;
   optional ParameterInitConfig init_w = 4;
   optional DataConfig model_output = 5;
+  optional DataConfig model_input = 6;
   optional LossConfig loss = 10;
   optional PenaltyConfig penalty = 11;
   optional LearningRateConfig learning_rate = 12;
   optional LearnerConfig learner = 13;
   optional SolverConfig solver = 14;
   optional DarlingConfig darling = 15;
+  optional FTRLConfig ftrl = 16;
 }
 
 message SolverConfig {
@@ -42,13 +44,21 @@ message SolverConfig {
   // features which occurs <= *tail_feature_freq* will be filtered before training
   optional int32 tail_feature_freq  = 15 [default = 4];
 
+  optional int32 tail_feature_filter_k = 20 [default = 2];
+
   // countmin sketch is used for filtering the tail features. It has two
   // parameters, k and n.
   optional int32 countmin_k = 16 [default = 2];
   // n = the_first_arrive_key_length * num_workeres * countmin_n_ratio
+  // deprecated
   optional double countmin_n_ratio = 17 [default = 2.0];
+  optional double countmin_n = 18 [default = 1e8];
 
-  optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
+  optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
+  optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
+
+  // evaluate the progrss per *eval_interval* second
+  optional int32 eval_interval = 21 [default = 5];
 }
 
 message DarlingConfig {
@@ -61,6 +71,10 @@ message DarlingConfig {
   // kkt_filter_threshold_ratio. increasing this number reduces the effect of
   // kkt filter.
   optional double kkt_filter_threshold_ratio = 10 [default = 10];
+}
+
+message FTRLConfig {
+
 }
 
 message LossConfig {
@@ -82,7 +96,7 @@ message LearnerConfig {
   required Type type = 1;
 }
 
-///////////// the followings protobufs are used by implementation ///////////
+///////////// the followings protobufs are used by the implementation ///////////
 message Progress {
   optional double objv = 1;
   optional double relative_objv = 2;
@@ -91,6 +105,8 @@ message Progress {
   optional uint64 nnz_active_set = 7;
   optional double training_auc = 8;
   optional AUCData training_auc_data = 9;
+  optional uint64 num_ex_trained = 12;
+  optional double acc = 13;
 
   // performance
   optional double total_time = 10;
@@ -111,6 +127,7 @@ message Call {
     SAVE_MODEL = 5;  // save w
     RECOVER = 6;
     COMPUTE_VALIDATION_AUC = 7;
+    REPORT_PROGRESS = 8;
     // SAVE_AS_DENSE = 7;     // save X * w in a given key range
   }
   required Command cmd = 1;

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <net/if.h>
 
 #include <string>
 
@@ -28,11 +29,12 @@ class LocalMachine {
     struct ifaddrs * ifAddrStruct = NULL;
     struct ifaddrs * ifa = NULL;
     void * tmpAddrPtr = NULL;
+    std::string ret_ip;
 
     getifaddrs(&ifAddrStruct);
     for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
       if (ifa->ifa_addr == NULL) continue;
-      if (ifa ->ifa_addr->sa_family==AF_INET) {
+      if (ifa->ifa_addr->sa_family==AF_INET) {
         // is a valid IP4 Address
         tmpAddrPtr=&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
         char addressBuffer[INET_ADDRSTRLEN];
@@ -40,20 +42,70 @@ class LocalMachine {
         if (strncmp(ifa->ifa_name,
                     interface.c_str(),
                     interface.size()) == 0) {
-                    // strlen(ifa->ifa_name)) == 0) {
-          return std::string(addressBuffer);
+          ret_ip = addressBuffer;
+          break;
         }
       }
-      // else if (ifa->ifa_addr->sa_family==AF_INET6) { // check it is IP6
-      //     // is a valid IP6 Address
-      //     tmpAddrPtr=&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
-      //     char addressBuffer[INET6_ADDRSTRLEN];
-      //     inet_ntop(AF_INET6, tmpAddrPtr, addressBuffer, INET6_ADDRSTRLEN);
-      //     printf("%s IP Address %s\n", ifa->ifa_name, addressBuffer);
-      // }
     }
     if (ifAddrStruct != NULL) freeifaddrs(ifAddrStruct);
-    return std::string();
+    return ret_ip;
+  }
+
+  // return the IP address and Interface
+  //    the first interface which is not loopback
+  //    only support IPv4
+  static void pickupAvailableInterfaceAndIP(std::string& interface, std::string& ip) {
+    struct ifaddrs * ifAddrStruct = nullptr;
+    struct ifaddrs * ifa = nullptr;
+
+    interface.clear();
+    ip.clear();
+    getifaddrs(&ifAddrStruct);
+    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
+      if (nullptr == ifa->ifa_addr) continue;
+
+      if (AF_INET == ifa->ifa_addr->sa_family &&
+        0 == (ifa->ifa_flags & IFF_LOOPBACK)) {
+
+        char address_buffer[INET_ADDRSTRLEN];
+        void* sin_addr_ptr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+        inet_ntop(AF_INET, sin_addr_ptr, address_buffer, INET_ADDRSTRLEN);
+
+        ip = address_buffer;
+        interface = ifa->ifa_name;
+
+        break;
+      }
+    }
+
+    if (nullptr != ifAddrStruct) freeifaddrs(ifAddrStruct);
+    return;
+  }
+
+  // return an available port on local machine
+  //    only support IPv4
+  //    return 0 on failure
+  static unsigned short pickupAvailablePort() {
+    struct sockaddr_in addr;
+    addr.sin_port = htons(0); // have system pick up a random port available for me
+    addr.sin_family = AF_INET; // IPV4
+    addr.sin_addr.s_addr = htonl(INADDR_ANY); // set our addr to any interface
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (0 != bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
+      perror("bind():");
+      return 0;
+    }
+
+    socklen_t addr_len = sizeof(struct sockaddr_in);
+    if (0 != getsockname(sock, (struct sockaddr*)&addr, &addr_len)) {
+      perror("getsockname():");
+      return 0;
+    }
+
+    unsigned short ret_port = ntohs(addr.sin_port);
+    close(sock);
+    return ret_port;
   }
 
  private:

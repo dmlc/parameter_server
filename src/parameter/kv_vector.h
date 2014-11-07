@@ -1,78 +1,54 @@
 #pragma once
-
 #include "Eigen/Dense"
 #include "parameter/shared_parameter.h"
-
+#include "util/parallel_ordered_match.h"
 namespace PS {
+
+template<typename K, typename V> class KVVector;
+template<typename K, typename V> using KVVectorPtr = std::shared_ptr<KVVector<K,V>>;
 
 // key-value vector, the (global) keys are sorted and unique. Both keys and
 // values are stored in arrays.
 template <typename K, typename V>
-class KVVector : public SharedParameter<K,V> {
+class KVVector : public SharedParameter<K> {
  public:
+  USING_SHARED_PARAMETER;
   SArray<K>& key(int channel) { return key_[channel]; }
   SArray<V>& value(int channel) { return val_[channel]; }
-  // find the local positions of a global key range
+  void clear(int channel) { key_.erase(channel); val_.erase(channel); }
 
+  // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {
     return key_[channel].findRange(key_range);
   }
 
-  size_t memSize() const {
-    size_t mem = 0;
-    for (const auto& it : key_) mem += it.second.memSize();
-    for (const auto& it : val_) mem += it.second.memSize();
-    for (const auto& it : recved_val_) {
-      for (const auto& v : it.second) mem += v.second.memSize();
-    }
-    return mem;
-  }
-
-  // // slice a segment of the value using the local positions
-  // SArray<V> slice(int channel, const SizeR& position) {
-  //   return val_[channel].segment(local_range);
-  // }
-
-  // return the data received at time t, then *delete* it.
-  AlignedArrayList<V> received(int t);
-
-  // // # of keys, or the length of the vector
-  // size_t size() const { return key_[0].size(); }
-  // // # of nnz entries
-  // size_t nnz() const { return val_[0].nnz(); }
+  // return the mareged data received at time t, then *delete* it. If no
+  // message, or empty messages are received at time t, then call received(t)
+  // will get an error
+  typedef std::pair<SizeR, std::vector<SArray<V>>> MergedData;
+  MergedData received(int t);
 
   // implement the virtual functions required
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
+
   // TODO
   void setReplica(const MessagePtr& msg) { }
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
-  USING_SHARED_PARAMETER;
- private:
 
+ private:
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;
 
-  std::unordered_map<int, AlignedArrayList<V> > recved_val_;
+  std::unordered_map<int, MergedData> recved_val_;
   std::mutex recved_val_mu_;
-
-  // TODO
-  // struct Replica {
-  //   SArray<K> key;
-  //   SArray<V> value;
-  //   std::vector<std::pair<NodeID, int> > clock;
-  //   void addTime(const Timestamp& t) {
-  //     clock.push_back(std::make_pair(t.sender(), t.time()));
-  //   }
-  // };
-  // std::unordered_map<Range<K>, Replica> replica_;
 };
 
 
 template <typename K, typename V>
-AlignedArrayList<V> KVVector<K, V>::received(int t) {
+typename KVVector<K,V>::MergedData KVVector<K,V>::received(int t) {
   Lock l(recved_val_mu_);
   auto it = recved_val_.find(t);
   CHECK(it != recved_val_.end()) << myNodeID() << " hasn't received data at time " << t;
@@ -83,35 +59,41 @@ AlignedArrayList<V> KVVector<K, V>::received(int t) {
 
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
-  // TODO review this logic. if received an empty message at time t, then call
-  // received(t) will get an error
+  SArray<K> recv_key(msg->key);
+  if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
-  // only keys, insert them
-  SArray<K> recv_key(msg->key); if (recv_key.empty()) return;
-  if (msg->value.empty()) {
+  if (msg->value.size() == 0) {
+    // only keys, merge these keys, and also clear the values
     key_[chl] = key_[chl].setUnion(recv_key);
     val_[chl].clear();
     return;
   }
+
   // merge values, and store them in recved_val
   int t = msg->task.time();
+  Range<K> key_range(msg->task.key_range());
+  SizeR idx_range = key_[chl].findRange(key_range);
+
+  recved_val_mu_.lock();
+  auto& matched = recved_val_[t];
+  recved_val_mu_.unlock();
+
   for (int i = 0; i < msg->value.size(); ++i) {
     SArray<V> recv_data(msg->value[i]);
     CHECK_EQ(recv_data.size(), recv_key.size());
-    size_t n = 0;
-    Range<K> key_range(msg->task.key_range());
-    auto aligned = match(key_[chl], recv_key, recv_data.data(), key_range, &n);
-    CHECK_GE(aligned.second.size(), recv_key.size()) << recv_key;
-    CHECK_EQ(recv_key.size(), n);
-    {
-      Lock l(recved_val_mu_);
-      if (recved_val_[t].size() <= i) {
-        recved_val_[t].push_back(aligned);
-      } else {
-        // LL << t << " "<< i << " "  << aligned.first;
-        CHECK_EQ(aligned.first, recved_val_[t][i].first);
-        recved_val_[t][i].second.eigenArray() += aligned.second.eigenArray();
-      }
+    bool first = matched.second.size() <= i;
+    if (first) {
+      // it is the first node, allocate the memory
+      matched.first = idx_range;
+      matched.second.push_back(SArray<V>());
+      CHECK_EQ(parallelOrderedMatch(
+          recv_key, recv_data, key_[chl].segment(idx_range),
+          OpAssign<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
+    } else {
+      CHECK_EQ(matched.first, idx_range);
+      CHECK_EQ(parallelOrderedMatch(
+          recv_key, recv_data, key_[chl].segment(idx_range),
+          OpPlus<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
     }
   }
 }
@@ -120,58 +102,38 @@ template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
-  int ch = msg->task.key_channel();
-  CHECK_EQ(key_[ch].size(), val_[ch].size());
-  size_t n = 0;
-  Range<Key> range = recv_key.range().setUnion(key_[ch].range());
-  auto aligned = match(recv_key, key_[ch], val_[ch].data(), range, &n);
-  CHECK_EQ(aligned.second.size(), recv_key.size()) << recv_key << "\n" << key_[ch];
-  CHECK_GE(aligned.second.size(), n);
-  msg->addValue(aligned.second);
-}
+  int chl = msg->task.key_channel();
+  CHECK_EQ(key_[chl].size(), val_[chl].size());
 
+  SArray<V> val;
+  // auto op = [](const V* src, V* dst) { *dst = *src; };
+  size_t n = parallelOrderedMatch(
+      key(chl), value(chl), recv_key, OpAssign<V>(), FLAGS_num_threads, &val);
+  CHECK_EQ(n, val.size());
+  msg->clearValue();
+  msg->addValue(val);
+}
 
 // partition is a sorted key ranges
 template <typename K, typename V>
 MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
   if (get(msg).replica()) return Customer::slice(msg, sep);
-
-  // find the positions in msg.key
-  size_t n = sep.size();
-  std::vector<size_t> pos; pos.reserve(n-1);
-  SArray<K> key(msg->key);
-  Range<K> msg_key_range(msg->task.key_range());
-  for (auto p : sep) {
-    K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
-    pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
-  }
-
-  // split the message according to *pos*
-  MessagePtrList ret(n-1);
-  for (int i = 0; i < n-1; ++i) {
-    MessagePtr piece(new Message(*msg));
-    if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
-      // the remote node does not maintain this key range. mark this message as
-      // valid, which will be not actually sent
-      piece->valid = false;
-    } else {
-      piece->valid = true;  // must set true, otherwise this piece might not be sent
-      piece->clearKV();
-      if (!key.empty()) {  // void be divided by 0
-        SizeR lr(pos[i], pos[i+1]);
-        piece->key = key.segment(lr);
-        for (auto& val : msg->value) {
-          piece->addValue(val.segment(lr*(val.size()/key.size())));
-        }
-      }
-    }
-    ret[i] = piece;
-  }
-  return ret;
+  return sliceKeyOrderedMsg<K>(msg, sep);
 }
 
-
 } // namespace PS
+
+
+// TODO
+// struct Replica {
+//   SArray<K> key;
+//   SArray<V> value;
+//   std::vector<std::pair<NodeID, int> > clock;
+//   void addTime(const Timestamp& t) {
+//     clock.push_back(std::make_pair(t.sender(), t.time()));
+//   }
+// };
+// std::unordered_map<Range<K>, Replica> replica_;
 
 // void setReplica(const MessagePtr& msg);
 // void getReplica(const Range<K>& range, const MessagePtr& msg);
@@ -297,3 +259,23 @@ MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
 //   // val_ = recv[0].second;
 //   // CHECK_EQ(val_.size(), key_.size());
 // }
+
+
+  // size_t memSize() const {
+  //   size_t mem = 0;
+  //   for (const auto& it : key_) mem += it.second.memSize();
+  //   for (const auto& it : val_) mem += it.second.memSize();
+  //   for (const auto& it : recved_val_) {
+  //     for (const auto& v : it.second) mem += v.second.memSize();
+  //   }
+  //   return mem;
+  // }
+
+  // // slice a segment of the value using the local positions
+  // SArray<V> slice(int channel, const SizeR& position) {
+  //   return val_[channel].segment(local_range);
+  // }
+  // // # of keys, or the length of the vector
+  // size_t size() const { return key_[0].size(); }
+  // // # of nnz entries
+  // size_t nnz() const { return val_[0].nnz(); }

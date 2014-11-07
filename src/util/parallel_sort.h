@@ -3,26 +3,21 @@
 #include "base/shared_array.h"
 
 namespace PS {
-
-// cmp = std::less<T>()
-
 template<typename T, class Fn>
 void parallelSort(T* data, size_t len, size_t grainsize, const Fn& cmp) {
   if (len <= grainsize) {
-    // Timer t; t.start();
     std::sort(data, data + len, cmp);
-    // LL << len << " " << t.get();
   } else {
     std::thread thr(parallelSort<T, Fn>, data, len/2, grainsize, cmp);
     parallelSort(data + len/2, len - len/2, grainsize, cmp);
     thr.join();
 
-    // Timer t; t.start();
     std::inplace_merge(data, data + len/2, data + len, cmp);
-    // LL << len << " " << t.get();
   }
 }
 
+// cmp typically is [](const T& a, const T& b) { return a < b; }
+// or an even simplier version: std::less<T>()
 template<typename T, class Fn>
 void parallelSort(SArray<T>* arr, int num_threads, const Fn& cmp) {
   CHECK_GT(num_threads, 0);

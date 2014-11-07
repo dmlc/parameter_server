@@ -6,26 +6,23 @@
 
 namespace PS {
 
-template<typename I>
+template<typename I, typename V>
 class Localizer {
  public:
-  // Localizer() { LL << "xx"; }
-  // explicit Localizer(const Localizer& loc) {
-  //   LL << "yy";
-  //   pair_ = loc.pair_;
-  // }
-  // ~Localizer() { LL << pair_.size(); }
-
+  Localizer() { }
   // find the unique indeces with their number of occrus in *idx*
   void countUniqIndex(
       const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
 
+  void countUniqIndex(
+      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
+
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
-  template<typename V>
   MatrixPtr<V> remapIndex(int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
 
-  template<typename V>
+  MatrixPtr<V> remapIndex(const SArray<I>& idx_dict);
+
   MatrixPtr<V> remapIndex(
       const MatrixInfo& info, const SArray<size_t>& offset,
       const SArray<I>& index, const SArray<V>& value,
@@ -37,9 +34,20 @@ class Localizer {
     I k; uint32 i;
   };
   SArray<Pair> pair_;
+  SparseMatrixPtr<I,V> mat_;
 };
 
-template<typename I> void Localizer<I>::countUniqIndex(
+template<typename I, typename V>
+void Localizer<I,V>::countUniqIndex(
+     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+  mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
+  countUniqIndex(mat_->index(), uniq_idx, idx_frq);
+}
+
+
+
+template<typename I, typename V>
+void Localizer<I,V>::countUniqIndex(
     const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
   if (idx.empty()) return;
   CHECK(uniq_idx);
@@ -78,9 +86,14 @@ template<typename I> void Localizer<I>::countUniqIndex(
   // idx_frq->writeToFile("cnt");
 }
 
-template<typename I>
-template<typename V>
-MatrixPtr<V> Localizer<I>::remapIndex(
+template<typename I, typename V>
+MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) {
+  CHECK(mat_);
+  return remapIndex(mat_->info(), mat_->offset(), mat_->index(), mat_->value(), idx_dict);
+}
+
+template<typename I, typename V>
+MatrixPtr<V> Localizer<I, V>::remapIndex(
     int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const {
   SArray<V> val;
   auto info = reader->info<V>(grp_id);
@@ -90,9 +103,8 @@ MatrixPtr<V> Localizer<I>::remapIndex(
   return remapIndex(info, reader->offset(grp_id), reader->index(grp_id), val, idx_dict);
 }
 
-template<typename I>
-template<typename V>
-MatrixPtr<V> Localizer<I>::remapIndex(
+template<typename I, typename V>
+MatrixPtr<V> Localizer<I, V>::remapIndex(
     const MatrixInfo& info, const SArray<size_t>& offset,
     const SArray<I>& index, const SArray<V>& value,
     const SArray<I>& idx_dict) const {

@@ -4,19 +4,45 @@
 #include "base/matrix_io_inl.h"
 #include "proto/instance.pb.h"
 #include "base/io.h"
-
+#include "linear_method/darling.h"
+#include "linear_method/ftrl.h"
+#include "linear_method/batch_solver.h"
+#include "linear_method/model_evaluation.h"
 namespace PS {
 namespace LM {
+
+AppPtr LinearMethod::create(const Config& conf) {
+  if (!conf.has_solver()) {
+    if (conf.has_validation_data() && conf.has_model_input()) {
+      return AppPtr(new ModelEvaluation());
+    }
+  } else if (conf.solver().minibatch_size() <= 0) {
+    // batch solver
+    if (conf.has_darling()) {
+      return AppPtr(new Darling());
+    } else {
+      return AppPtr(new BatchSolver());
+    }
+  } else {
+    // online sovler
+    if (conf.has_ftrl()) {
+      return AppPtr(new FTRL());
+    }
+  }
+  return AppPtr(nullptr);
+}
 
 void LinearMethod::init() {
   CHECK(app_cf_.has_linear_method());
   conf_ = app_cf_.linear_method();
 
-  CHECK(conf_.has_loss());
-  loss_ = Loss<double>::create(conf_.loss());
+  if (conf_.has_loss()) {
+    loss_ = Loss<double>::create(conf_.loss());
+  }
 
-  CHECK(conf_.has_penalty());
-  penalty_ = Penalty<double>::create(conf_.penalty());
+  if (conf_.has_penalty()) {
+    penalty_ = Penalty<double>::create(conf_.penalty());
+  }
 
   // bool has_learner = app_cf_.has_learner();
   // if (has_learner) {
@@ -34,6 +60,11 @@ void LinearMethod::process(const MessagePtr& msg) {
       // LL << myNodeID() << prog.DebugString();
       sys_.replyProtocalMessage(msg, prog);
       break;
+    }
+    case Call::REPORT_PROGRESS: {
+      Progress prog; CHECK(prog.ParseFromString(msg->task.msg()));
+      Lock l(progress_mu_);
+      recent_progress_[msg->sender] = prog;
     }
     case Call::LOAD_DATA: {
       DataInfo info;
@@ -113,8 +144,11 @@ void LinearMethod::startSystem() {
   CHECK(conf_.has_training_data());
   std::vector<DataConfig> tr_parts, va_parts;
   auto tr_cf = searchFiles(conf_.training_data());
-  tr_parts = divideFiles(tr_cf, FLAGS_num_workers);
   LI << "Found " << tr_cf.file_size() << " training files";
+  tr_parts = divideFiles(tr_cf, FLAGS_num_workers);
+  int n = 0; for (const auto& p : tr_parts) n += p.file_size();
+  LI << "Assigned " << n << " files to " << FLAGS_num_workers << " workers";
+
   if (conf_.has_validation_data()) {
     auto va_cf = searchFiles(conf_.validation_data());
     va_parts = divideFiles(va_cf, FLAGS_num_workers);

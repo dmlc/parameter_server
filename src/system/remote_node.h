@@ -1,11 +1,10 @@
 #pragma once
-
 #include "proto/task.pb.h"
 #include "util/common.h"
 #include "system/task_tracker.h"
 #include "system/van.h"
 #include "system/postoffice.h"
-
+#include "filter/filter.h"
 namespace PS {
 
 class Executor;
@@ -47,11 +46,14 @@ class RNode {
   }
 
 
+  void encodeFilter(const MessagePtr& msg);
+  void decodeFilter(const MessagePtr& msg);
+
   // cache the keys, return the message with keys removed but filled with a
   // key signature when *FLAGS_key_cache* is true
-  void cacheKeySender(const MessagePtr& msg);
-  void cacheKeyRecver(const MessagePtr& msg);
-  void clearCache() { key_cache_.clear(); }
+  // void cacheKeySender(const MessagePtr& msg);
+  // void cacheKeyRecver(const MessagePtr& msg);
+  // void clearCache() { key_cache_.clear(); }
 
   // wait a submitted task (send to the remote node from the local node) with
   // timestamp _time_ until it finished (received all replied message)
@@ -68,8 +70,12 @@ class RNode {
   void finishIncomingTask(int time);
 
   int time() { Lock l(mu_); return time_; }
+
+  // memory usage in bytes
+  // size_t memSize();
  private:
   DISALLOW_COPY_AND_ASSIGN(RNode);
+  FilterPtr findFilter(const FilterConfig& conf);
   Postoffice& sys_;
   Executor& exec_;
   // the remote node
@@ -85,12 +91,14 @@ class RNode {
   std::unordered_map<int, Message::Callback> msg_receive_handle_;
   std::unordered_map<int, Message::Callback> msg_finish_handle_;
 
-  // (channel, key_range) => (key signature, key list)
-  std::unordered_map<std::pair<int,Range<Key>>,
-                     std::pair<uint32_t, SArray<char>>> key_cache_;
-  std::mutex key_cache_mu_;
 
-  const size_t max_sig_len_ = 2048;  // hack, because crc32 is too slow...
+  // // (channel, key_range) => (key signature, key list)
+  // std::unordered_map<std::pair<int,Range<Key>>,
+  //                    std::pair<uint32_t, SArray<char>>> key_cache_;
+  // std::mutex key_cache_mu_;
 
+  // const size_t max_sig_len_ = 2048;  // hack, because crc32 is too slow...
+  std::unordered_map<int, FilterPtr> filter_;
+  std::mutex filter_mu_;
 };
 } // namespace PS

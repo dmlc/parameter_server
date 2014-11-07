@@ -8,21 +8,39 @@ Message::Message(const NodeID& dest, int time, int wait_time)
   task.set_wait_time(wait_time);
 }
 
+void Message::miniCopyFrom(const Message& msg) {
+  task = msg.task;
+  task.clear_value_type();
+  task.clear_has_key();
+  terminate = msg.terminate;
+  wait = msg.wait;
+  recv_handle = msg.recv_handle;
+  fin_handle = msg.fin_handle;
+  original_recver = msg.original_recver;
+}
+
+FilterConfig* Message::addFilter(FilterConfig::Type type) {
+  auto ptr = task.add_filter();
+  ptr->set_type(type);
+  return ptr;
+}
+
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   if (task.request()) ss << "REQ"; else ss << "RLY";
-
   ss << " " << task.time() << " ";
   if (task.wait_time() >= 0) ss << "(wait " << task.wait_time() << ") ";
   ss << sender << "=>" << recver << " ";
   if (!original_recver.empty()) ss << "(" << original_recver << ") ";
-  ss << "key [" << key.size() << "] value [";
+  ss << "key [";
+  if (key.size() > 0) ss << key.size();
+  ss << "] value [";
   for (int i = 0; i < value.size(); ++i) {
     ss << value[i].size();
     if (i < value.size() - 1) ss << ",";
   }
   auto t = task; t.clear_msg();
-  ss << "]. " << t.ShortDebugString();
+  ss << "]\n" << t.ShortDebugString();
   return ss.str();
 }
 

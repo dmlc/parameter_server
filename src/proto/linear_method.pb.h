@@ -42,6 +42,7 @@ void protobuf_ShutdownFile_proto_2flinear_5fmethod_2eproto();
 class Config;
 class SolverConfig;
 class DarlingConfig;
+class FTRLConfig;
 class LossConfig;
 class LearnerConfig;
 class Progress;
@@ -98,11 +99,12 @@ enum Call_Command {
   Call_Command_EVALUATE_PROGRESS = 4,
   Call_Command_SAVE_MODEL = 5,
   Call_Command_RECOVER = 6,
-  Call_Command_COMPUTE_VALIDATION_AUC = 7
+  Call_Command_COMPUTE_VALIDATION_AUC = 7,
+  Call_Command_REPORT_PROGRESS = 8
 };
 bool Call_Command_IsValid(int value);
 const Call_Command Call_Command_Command_MIN = Call_Command_LOAD_DATA;
-const Call_Command Call_Command_Command_MAX = Call_Command_COMPUTE_VALIDATION_AUC;
+const Call_Command Call_Command_Command_MAX = Call_Command_REPORT_PROGRESS;
 const int Call_Command_Command_ARRAYSIZE = Call_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Call_Command_descriptor();
@@ -216,6 +218,15 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_model_output();
   inline void set_allocated_model_output(::PS::DataConfig* model_output);
 
+  // optional .PS.DataConfig model_input = 6;
+  inline bool has_model_input() const;
+  inline void clear_model_input();
+  static const int kModelInputFieldNumber = 6;
+  inline const ::PS::DataConfig& model_input() const;
+  inline ::PS::DataConfig* mutable_model_input();
+  inline ::PS::DataConfig* release_model_input();
+  inline void set_allocated_model_input(::PS::DataConfig* model_input);
+
   // optional .PS.LM.LossConfig loss = 10;
   inline bool has_loss() const;
   inline void clear_loss();
@@ -270,6 +281,15 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::LM::DarlingConfig* release_darling();
   inline void set_allocated_darling(::PS::LM::DarlingConfig* darling);
 
+  // optional .PS.LM.FTRLConfig ftrl = 16;
+  inline bool has_ftrl() const;
+  inline void clear_ftrl();
+  static const int kFtrlFieldNumber = 16;
+  inline const ::PS::LM::FTRLConfig& ftrl() const;
+  inline ::PS::LM::FTRLConfig* mutable_ftrl();
+  inline ::PS::LM::FTRLConfig* release_ftrl();
+  inline void set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl);
+
   // @@protoc_insertion_point(class_scope:PS.LM.Config)
  private:
   inline void set_has_training_data();
@@ -282,6 +302,8 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_init_w();
   inline void set_has_model_output();
   inline void clear_has_model_output();
+  inline void set_has_model_input();
+  inline void clear_has_model_input();
   inline void set_has_loss();
   inline void clear_has_loss();
   inline void set_has_penalty();
@@ -294,6 +316,8 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_solver();
   inline void set_has_darling();
   inline void clear_has_darling();
+  inline void set_has_ftrl();
+  inline void clear_has_ftrl();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -302,15 +326,17 @@ class Config : public ::google::protobuf::Message {
   ::PS::DataConfig* local_cache_;
   ::PS::ParameterInitConfig* init_w_;
   ::PS::DataConfig* model_output_;
+  ::PS::DataConfig* model_input_;
   ::PS::LM::LossConfig* loss_;
   ::PS::PenaltyConfig* penalty_;
   ::PS::LearningRateConfig* learning_rate_;
   ::PS::LM::LearnerConfig* learner_;
   ::PS::LM::SolverConfig* solver_;
   ::PS::LM::DarlingConfig* darling_;
+  ::PS::LM::FTRLConfig* ftrl_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -450,6 +476,13 @@ class SolverConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 tail_feature_freq() const;
   inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
+  // optional int32 tail_feature_filter_k = 20 [default = 2];
+  inline bool has_tail_feature_filter_k() const;
+  inline void clear_tail_feature_filter_k();
+  static const int kTailFeatureFilterKFieldNumber = 20;
+  inline ::google::protobuf::int32 tail_feature_filter_k() const;
+  inline void set_tail_feature_filter_k(::google::protobuf::int32 value);
+
   // optional int32 countmin_k = 16 [default = 2];
   inline bool has_countmin_k() const;
   inline void clear_countmin_k();
@@ -464,12 +497,33 @@ class SolverConfig : public ::google::protobuf::Message {
   inline double countmin_n_ratio() const;
   inline void set_countmin_n_ratio(double value);
 
-  // optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
+  // optional double countmin_n = 18 [default = 100000000];
+  inline bool has_countmin_n() const;
+  inline void clear_countmin_n();
+  static const int kCountminNFieldNumber = 18;
+  inline double countmin_n() const;
+  inline void set_countmin_n(double value);
+
+  // optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
   inline bool has_max_num_parallel_groups_in_preprocessing() const;
   inline void clear_max_num_parallel_groups_in_preprocessing();
-  static const int kMaxNumParallelGroupsInPreprocessingFieldNumber = 18;
+  static const int kMaxNumParallelGroupsInPreprocessingFieldNumber = 19;
   inline ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing() const;
   inline void set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value);
+
+  // optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
+  inline bool has_max_data_buf_size_in_mb() const;
+  inline void clear_max_data_buf_size_in_mb();
+  static const int kMaxDataBufSizeInMbFieldNumber = 22;
+  inline ::google::protobuf::int32 max_data_buf_size_in_mb() const;
+  inline void set_max_data_buf_size_in_mb(::google::protobuf::int32 value);
+
+  // optional int32 eval_interval = 21 [default = 5];
+  inline bool has_eval_interval() const;
+  inline void clear_eval_interval();
+  static const int kEvalIntervalFieldNumber = 21;
+  inline ::google::protobuf::int32 eval_interval() const;
+  inline void set_eval_interval(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
  private:
@@ -491,12 +545,20 @@ class SolverConfig : public ::google::protobuf::Message {
   inline void clear_has_auc_goodness();
   inline void set_has_tail_feature_freq();
   inline void clear_has_tail_feature_freq();
+  inline void set_has_tail_feature_filter_k();
+  inline void clear_has_tail_feature_filter_k();
   inline void set_has_countmin_k();
   inline void clear_has_countmin_k();
   inline void set_has_countmin_n_ratio();
   inline void clear_has_countmin_n_ratio();
+  inline void set_has_countmin_n();
+  inline void clear_has_countmin_n();
   inline void set_has_max_num_parallel_groups_in_preprocessing();
   inline void clear_has_max_num_parallel_groups_in_preprocessing();
+  inline void set_has_max_data_buf_size_in_mb();
+  inline void clear_has_max_data_buf_size_in_mb();
+  inline void set_has_eval_interval();
+  inline void clear_has_eval_interval();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -510,12 +572,16 @@ class SolverConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 max_pass_of_data_;
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int64 auc_goodness_;
-  double countmin_n_ratio_;
+  ::google::protobuf::int32 tail_feature_filter_k_;
   ::google::protobuf::int32 countmin_k_;
+  double countmin_n_ratio_;
+  double countmin_n_;
   ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing_;
+  ::google::protobuf::int32 max_data_buf_size_in_mb_;
+  ::google::protobuf::int32 eval_interval_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -625,6 +691,78 @@ class DarlingConfig : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static DarlingConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class FTRLConfig : public ::google::protobuf::Message {
+ public:
+  FTRLConfig();
+  virtual ~FTRLConfig();
+
+  FTRLConfig(const FTRLConfig& from);
+
+  inline FTRLConfig& operator=(const FTRLConfig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const FTRLConfig& default_instance();
+
+  void Swap(FTRLConfig* other);
+
+  // implements Message ----------------------------------------------
+
+  FTRLConfig* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const FTRLConfig& from);
+  void MergeFrom(const FTRLConfig& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:PS.LM.FTRLConfig)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
+  friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
+  friend void protobuf_ShutdownFile_proto_2flinear_5fmethod_2eproto();
+
+  void InitAsDefaultInstance();
+  static FTRLConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -950,6 +1088,20 @@ class Progress : public ::google::protobuf::Message {
   inline ::PS::AUCData* release_training_auc_data();
   inline void set_allocated_training_auc_data(::PS::AUCData* training_auc_data);
 
+  // optional uint64 num_ex_trained = 12;
+  inline bool has_num_ex_trained() const;
+  inline void clear_num_ex_trained();
+  static const int kNumExTrainedFieldNumber = 12;
+  inline ::google::protobuf::uint64 num_ex_trained() const;
+  inline void set_num_ex_trained(::google::protobuf::uint64 value);
+
+  // optional double acc = 13;
+  inline bool has_acc() const;
+  inline void clear_acc();
+  static const int kAccFieldNumber = 13;
+  inline double acc() const;
+  inline void set_acc(double value);
+
   // optional double total_time = 10;
   inline bool has_total_time() const;
   inline void clear_total_time();
@@ -985,6 +1137,10 @@ class Progress : public ::google::protobuf::Message {
   inline void clear_has_training_auc();
   inline void set_has_training_auc_data();
   inline void clear_has_training_auc_data();
+  inline void set_has_num_ex_trained();
+  inline void clear_has_num_ex_trained();
+  inline void set_has_acc();
+  inline void clear_has_acc();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
@@ -997,11 +1153,13 @@ class Progress : public ::google::protobuf::Message {
   ::google::protobuf::uint64 nnz_active_set_;
   double training_auc_;
   ::PS::AUCData* training_auc_data_;
+  ::google::protobuf::uint64 num_ex_trained_;
+  double acc_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_proto_2flinear_5fmethod_2eproto();
@@ -1166,6 +1324,7 @@ class Call : public ::google::protobuf::Message {
   static const Command SAVE_MODEL = Call_Command_SAVE_MODEL;
   static const Command RECOVER = Call_Command_RECOVER;
   static const Command COMPUTE_VALIDATION_AUC = Call_Command_COMPUTE_VALIDATION_AUC;
+  static const Command REPORT_PROGRESS = Call_Command_REPORT_PROGRESS;
   static inline bool Command_IsValid(int value) {
     return Call_Command_IsValid(value);
   }
@@ -1549,15 +1708,53 @@ inline void Config::set_allocated_model_output(::PS::DataConfig* model_output) {
   }
 }
 
-// optional .PS.LM.LossConfig loss = 10;
-inline bool Config::has_loss() const {
+// optional .PS.DataConfig model_input = 6;
+inline bool Config::has_model_input() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void Config::set_has_loss() {
+inline void Config::set_has_model_input() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void Config::clear_has_loss() {
+inline void Config::clear_has_model_input() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void Config::clear_model_input() {
+  if (model_input_ != NULL) model_input_->::PS::DataConfig::Clear();
+  clear_has_model_input();
+}
+inline const ::PS::DataConfig& Config::model_input() const {
+  return model_input_ != NULL ? *model_input_ : *default_instance_->model_input_;
+}
+inline ::PS::DataConfig* Config::mutable_model_input() {
+  set_has_model_input();
+  if (model_input_ == NULL) model_input_ = new ::PS::DataConfig;
+  return model_input_;
+}
+inline ::PS::DataConfig* Config::release_model_input() {
+  clear_has_model_input();
+  ::PS::DataConfig* temp = model_input_;
+  model_input_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_model_input(::PS::DataConfig* model_input) {
+  delete model_input_;
+  model_input_ = model_input;
+  if (model_input) {
+    set_has_model_input();
+  } else {
+    clear_has_model_input();
+  }
+}
+
+// optional .PS.LM.LossConfig loss = 10;
+inline bool Config::has_loss() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Config::set_has_loss() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Config::clear_has_loss() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void Config::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LM::LossConfig::Clear();
@@ -1589,13 +1786,13 @@ inline void Config::set_allocated_loss(::PS::LM::LossConfig* loss) {
 
 // optional .PS.PenaltyConfig penalty = 11;
 inline bool Config::has_penalty() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void Config::set_has_penalty() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void Config::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Config::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::PenaltyConfig::Clear();
@@ -1627,13 +1824,13 @@ inline void Config::set_allocated_penalty(::PS::PenaltyConfig* penalty) {
 
 // optional .PS.LearningRateConfig learning_rate = 12;
 inline bool Config::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void Config::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void Config::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void Config::clear_learning_rate() {
   if (learning_rate_ != NULL) learning_rate_->::PS::LearningRateConfig::Clear();
@@ -1665,13 +1862,13 @@ inline void Config::set_allocated_learning_rate(::PS::LearningRateConfig* learni
 
 // optional .PS.LM.LearnerConfig learner = 13;
 inline bool Config::has_learner() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void Config::set_has_learner() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void Config::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Config::clear_learner() {
   if (learner_ != NULL) learner_->::PS::LM::LearnerConfig::Clear();
@@ -1703,13 +1900,13 @@ inline void Config::set_allocated_learner(::PS::LM::LearnerConfig* learner) {
 
 // optional .PS.LM.SolverConfig solver = 14;
 inline bool Config::has_solver() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Config::set_has_solver() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Config::clear_has_solver() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Config::clear_solver() {
   if (solver_ != NULL) solver_->::PS::LM::SolverConfig::Clear();
@@ -1741,13 +1938,13 @@ inline void Config::set_allocated_solver(::PS::LM::SolverConfig* solver) {
 
 // optional .PS.LM.DarlingConfig darling = 15;
 inline bool Config::has_darling() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Config::set_has_darling() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Config::clear_has_darling() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Config::clear_darling() {
   if (darling_ != NULL) darling_->::PS::LM::DarlingConfig::Clear();
@@ -1774,6 +1971,44 @@ inline void Config::set_allocated_darling(::PS::LM::DarlingConfig* darling) {
     set_has_darling();
   } else {
     clear_has_darling();
+  }
+}
+
+// optional .PS.LM.FTRLConfig ftrl = 16;
+inline bool Config::has_ftrl() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void Config::set_has_ftrl() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void Config::clear_has_ftrl() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void Config::clear_ftrl() {
+  if (ftrl_ != NULL) ftrl_->::PS::LM::FTRLConfig::Clear();
+  clear_has_ftrl();
+}
+inline const ::PS::LM::FTRLConfig& Config::ftrl() const {
+  return ftrl_ != NULL ? *ftrl_ : *default_instance_->ftrl_;
+}
+inline ::PS::LM::FTRLConfig* Config::mutable_ftrl() {
+  set_has_ftrl();
+  if (ftrl_ == NULL) ftrl_ = new ::PS::LM::FTRLConfig;
+  return ftrl_;
+}
+inline ::PS::LM::FTRLConfig* Config::release_ftrl() {
+  clear_has_ftrl();
+  ::PS::LM::FTRLConfig* temp = ftrl_;
+  ftrl_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl) {
+  delete ftrl_;
+  ftrl_ = ftrl;
+  if (ftrl) {
+    set_has_ftrl();
+  } else {
+    clear_has_ftrl();
   }
 }
 
@@ -2004,15 +2239,37 @@ inline void SolverConfig::set_tail_feature_freq(::google::protobuf::int32 value)
   tail_feature_freq_ = value;
 }
 
-// optional int32 countmin_k = 16 [default = 2];
-inline bool SolverConfig::has_countmin_k() const {
+// optional int32 tail_feature_filter_k = 20 [default = 2];
+inline bool SolverConfig::has_tail_feature_filter_k() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void SolverConfig::set_has_countmin_k() {
+inline void SolverConfig::set_has_tail_feature_filter_k() {
   _has_bits_[0] |= 0x00000400u;
 }
-inline void SolverConfig::clear_has_countmin_k() {
+inline void SolverConfig::clear_has_tail_feature_filter_k() {
   _has_bits_[0] &= ~0x00000400u;
+}
+inline void SolverConfig::clear_tail_feature_filter_k() {
+  tail_feature_filter_k_ = 2;
+  clear_has_tail_feature_filter_k();
+}
+inline ::google::protobuf::int32 SolverConfig::tail_feature_filter_k() const {
+  return tail_feature_filter_k_;
+}
+inline void SolverConfig::set_tail_feature_filter_k(::google::protobuf::int32 value) {
+  set_has_tail_feature_filter_k();
+  tail_feature_filter_k_ = value;
+}
+
+// optional int32 countmin_k = 16 [default = 2];
+inline bool SolverConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void SolverConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void SolverConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void SolverConfig::clear_countmin_k() {
   countmin_k_ = 2;
@@ -2028,13 +2285,13 @@ inline void SolverConfig::set_countmin_k(::google::protobuf::int32 value) {
 
 // optional double countmin_n_ratio = 17 [default = 2];
 inline bool SolverConfig::has_countmin_n_ratio() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void SolverConfig::set_has_countmin_n_ratio() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void SolverConfig::clear_has_countmin_n_ratio() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void SolverConfig::clear_countmin_n_ratio() {
   countmin_n_ratio_ = 2;
@@ -2048,15 +2305,37 @@ inline void SolverConfig::set_countmin_n_ratio(double value) {
   countmin_n_ratio_ = value;
 }
 
-// optional int32 max_num_parallel_groups_in_preprocessing = 18 [default = 1000];
+// optional double countmin_n = 18 [default = 100000000];
+inline bool SolverConfig::has_countmin_n() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void SolverConfig::set_has_countmin_n() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void SolverConfig::clear_has_countmin_n() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void SolverConfig::clear_countmin_n() {
+  countmin_n_ = 100000000;
+  clear_has_countmin_n();
+}
+inline double SolverConfig::countmin_n() const {
+  return countmin_n_;
+}
+inline void SolverConfig::set_countmin_n(double value) {
+  set_has_countmin_n();
+  countmin_n_ = value;
+}
+
+// optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
 inline bool SolverConfig::has_max_num_parallel_groups_in_preprocessing() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void SolverConfig::set_has_max_num_parallel_groups_in_preprocessing() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void SolverConfig::clear_has_max_num_parallel_groups_in_preprocessing() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void SolverConfig::clear_max_num_parallel_groups_in_preprocessing() {
   max_num_parallel_groups_in_preprocessing_ = 1000;
@@ -2068,6 +2347,50 @@ inline ::google::protobuf::int32 SolverConfig::max_num_parallel_groups_in_prepro
 inline void SolverConfig::set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value) {
   set_has_max_num_parallel_groups_in_preprocessing();
   max_num_parallel_groups_in_preprocessing_ = value;
+}
+
+// optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
+inline bool SolverConfig::has_max_data_buf_size_in_mb() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void SolverConfig::set_has_max_data_buf_size_in_mb() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void SolverConfig::clear_has_max_data_buf_size_in_mb() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void SolverConfig::clear_max_data_buf_size_in_mb() {
+  max_data_buf_size_in_mb_ = 1000;
+  clear_has_max_data_buf_size_in_mb();
+}
+inline ::google::protobuf::int32 SolverConfig::max_data_buf_size_in_mb() const {
+  return max_data_buf_size_in_mb_;
+}
+inline void SolverConfig::set_max_data_buf_size_in_mb(::google::protobuf::int32 value) {
+  set_has_max_data_buf_size_in_mb();
+  max_data_buf_size_in_mb_ = value;
+}
+
+// optional int32 eval_interval = 21 [default = 5];
+inline bool SolverConfig::has_eval_interval() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void SolverConfig::set_has_eval_interval() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void SolverConfig::clear_has_eval_interval() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void SolverConfig::clear_eval_interval() {
+  eval_interval_ = 5;
+  clear_has_eval_interval();
+}
+inline ::google::protobuf::int32 SolverConfig::eval_interval() const {
+  return eval_interval_;
+}
+inline void SolverConfig::set_eval_interval(::google::protobuf::int32 value) {
+  set_has_eval_interval();
+  eval_interval_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2139,6 +2462,10 @@ inline void DarlingConfig::set_kkt_filter_threshold_ratio(double value) {
   set_has_kkt_filter_threshold_ratio();
   kkt_filter_threshold_ratio_ = value;
 }
+
+// -------------------------------------------------------------------
+
+// FTRLConfig
 
 // -------------------------------------------------------------------
 
@@ -2368,15 +2695,59 @@ inline void Progress::set_allocated_training_auc_data(::PS::AUCData* training_au
   }
 }
 
-// optional double total_time = 10;
-inline bool Progress::has_total_time() const {
+// optional uint64 num_ex_trained = 12;
+inline bool Progress::has_num_ex_trained() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void Progress::set_has_total_time() {
+inline void Progress::set_has_num_ex_trained() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void Progress::clear_has_total_time() {
+inline void Progress::clear_has_num_ex_trained() {
   _has_bits_[0] &= ~0x00000080u;
+}
+inline void Progress::clear_num_ex_trained() {
+  num_ex_trained_ = GOOGLE_ULONGLONG(0);
+  clear_has_num_ex_trained();
+}
+inline ::google::protobuf::uint64 Progress::num_ex_trained() const {
+  return num_ex_trained_;
+}
+inline void Progress::set_num_ex_trained(::google::protobuf::uint64 value) {
+  set_has_num_ex_trained();
+  num_ex_trained_ = value;
+}
+
+// optional double acc = 13;
+inline bool Progress::has_acc() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Progress::set_has_acc() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Progress::clear_has_acc() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Progress::clear_acc() {
+  acc_ = 0;
+  clear_has_acc();
+}
+inline double Progress::acc() const {
+  return acc_;
+}
+inline void Progress::set_acc(double value) {
+  set_has_acc();
+  acc_ = value;
+}
+
+// optional double total_time = 10;
+inline bool Progress::has_total_time() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Progress::set_has_total_time() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Progress::clear_has_total_time() {
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Progress::clear_total_time() {
   total_time_ = 0;

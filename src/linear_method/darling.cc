@@ -3,14 +3,10 @@
 #include "base/sparse_matrix.h"
 
 namespace PS {
-namespace LM {
 
-void Darling::init() {
-  BatchSolver::init();
-  // set is as a nan. the reason choosing kuint64max is because snappy has good
-  // compression rate on 0xffff..ff
-  memcpy(&kInactiveValue_, &kuint64max, sizeof(double));
-}
+DECLARE_bool(verbose);
+
+namespace LM {
 
 void Darling::runIteration() {
   CHECK(conf_.has_darling());
@@ -18,7 +14,7 @@ void Darling::runIteration() {
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
   auto sol_cf = conf_.solver();
   int tau = sol_cf.max_block_delay();
-  KKT_filter_threshold_ = 1e20;
+  kkt_filter_threshold_ = 1e20;
   bool reset_kkt_filter = false;
   bool random_blk_order = sol_cf.random_feature_block_order();
   if (!random_blk_order) {
@@ -30,6 +26,7 @@ void Darling::runIteration() {
   int max_iter = sol_cf.max_pass_of_data();
   auto pool = taskpool(kActiveGroup);
   int time = pool->time() + fea_grp_.size() * 2;
+  const int first_update_model_task_id = time + 1;
   for (int iter = 0; iter < max_iter; ++iter) {
     // pick up a updating order
     auto order = blk_order_;
@@ -41,17 +38,21 @@ void Darling::runIteration() {
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(Call::UPDATE_MODEL);
       update.set_time(time+1);
-      if (iter == 0 && i == 0) {
-        update.set_wait_time(-1);
-      } else if (iter == 0 && i < prior_blk_order_.size()) {
+      if (iter == 0 && i < prior_blk_order_.size()) {
         // force zero delay for important feature blocks
         update.set_wait_time(time);
       } else {
         update.set_wait_time(time - tau);
       }
+
+      // make sure leading UPDATE_MODEL tasks could be picked up by workers
+      if (update.time() - tau <= first_update_model_task_id) {
+        update.set_wait_time(-1);
+      }
+
       auto cmd = set(&update);
       if (i == 0) {
-        cmd->set_kkt_filter_threshold(KKT_filter_threshold_);
+        cmd->set_kkt_filter_threshold(kkt_filter_threshold_);
         if (reset_kkt_filter) cmd->set_kkt_filter_reset(true);
       }
       auto blk = fea_blk_[order[i]];
@@ -66,10 +67,11 @@ void Darling::runIteration() {
     time = pool->submitAndWait(
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
+
     // update the kkt filter strategy
     double vio = g_progress_[iter].violation();
     double ratio = conf_.darling().kkt_filter_threshold_ratio();
-    KKT_filter_threshold_ = vio / (double)g_train_info_.num_ex() * ratio;
+    kkt_filter_threshold_ = vio / (double)g_train_info_.num_ex() * ratio;
 
     // check if finished
     double rel = g_progress_[iter].relative_objv();
@@ -101,24 +103,18 @@ void Darling::preprocessData(const MessageCPtr& msg) {
     delta_[grp].resize(n);
     delta_[grp].setValue(conf_.darling().delta_init_value());
   }
-
-  // size_t mem = 0;
-  // for (const auto& it : X_) mem += it.second->memSize();
-  // for (const auto& it : active_set_) mem += it.second.memSize();
-  // for (const auto& it : delta_) mem += it.second.memSize();
-  // mem += dual_.memSize();
-  // mem += w_->memSize();
-  // LL << ResUsage::myPhyMem() << " " << mem / 1e6 ;
-
-
 }
 
 void Darling::updateModel(const MessagePtr& msg) {
+  if (FLAGS_verbose) {
+    LI << "updateModel; msg [" << msg->shortDebugString() << "]";
+  }
+
   CHECK_GT(FLAGS_num_threads, 0);
   auto time = msg->task.time() * kPace;
   auto call = get(msg);
   if (call.has_kkt_filter_threshold()) {
-    KKT_filter_threshold_ = call.kkt_filter_threshold();
+    kkt_filter_threshold_ = call.kkt_filter_threshold();
     violation_ = 0;
   }
   if (call.has_kkt_filter_reset() && call.kkt_filter_reset()) {
@@ -132,35 +128,46 @@ void Darling::updateModel(const MessagePtr& msg) {
   if (IamWorker()) {
     // compute local gradients
     mu_.lock();
+
+    this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
     busy_timer_.start();
     auto local_gradients = computeGradients(grp, seg_pos);
     busy_timer_.stop();
+    this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+
     mu_.unlock();
 
     // time 0: push local gradients
     MessagePtr push_msg(new Message(kServerGroup, time));
     auto local_keys = w_->key(grp).segment(seg_pos);
-    push_msg->addKV(local_keys, local_gradients);
+    push_msg->setKey(local_keys);
+    push_msg->addValue(local_gradients);
     g_key_range.to(push_msg->task.mutable_key_range());
     push_msg->task.set_key_channel(grp);
+    push_msg->addFilter(FilterConfig::KEY_CACHING);
     CHECK_EQ(time, w_->push(push_msg));
 
     // time 1: servers do update, none of my business
     // time 2: pull the updated model from servers
     msg->finished = false; // not finished until model updates are pulled
     MessagePtr pull_msg(new Message(kServerGroup, time+2, time+1));
-    pull_msg->key = local_keys;
+    pull_msg->setKey(local_keys);
     g_key_range.to(pull_msg->task.mutable_key_range());
     pull_msg->task.set_key_channel(grp);
+    pull_msg->addFilter(FilterConfig::KEY_CACHING);
     // the callback for updating the local dual variable
     pull_msg->fin_handle = [this, grp, seg_pos, time, msg] () {
       if (!seg_pos.empty()) {
         auto data = w_->received(time+2);
-        CHECK_EQ(data.size(), 1); CHECK_EQ(seg_pos, data[0].first);
+        CHECK_EQ(seg_pos, data.first); CHECK_EQ(data.second.size(), 1);
         mu_.lock();
+
+        this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
         busy_timer_.start();
-        updateDual(grp, seg_pos, data[0].second);
+        updateDual(grp, seg_pos, data.second[0]);
         busy_timer_.stop();
+        this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+
         mu_.unlock();
       }
       // now finished, reply the scheduler
@@ -178,10 +185,12 @@ void Darling::updateModel(const MessagePtr& msg) {
     // time 1: update model
     if (!seg_pos.empty()) {
       auto data = w_->received(time);
-      CHECK_EQ(data.size(), 2);
-      CHECK_EQ(seg_pos, data[0].first);
-      CHECK_EQ(seg_pos, data[1].first);
-      updateWeight(grp, seg_pos, data[0].second, data[1].second);
+      CHECK_EQ(seg_pos, data.first);
+      CHECK_EQ(data.second.size(), 2);
+
+      this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+      updateWeight(grp, seg_pos, data.second[0], data.second[1]);
+      this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
     }
     w_->finish(kWorkerGroup, time+1);
 
@@ -234,7 +243,8 @@ void Darling::computeGradients(
     if (!active_set.test(k)) {
       index += n;
       if (!binary) value += n;
-      G[j] = U[j] = kInactiveValue_;
+      kkt_filter_.mark(&G[j]);
+      kkt_filter_.mark(&U[j]);
       continue;
     }
     double g = 0, u = 0;
@@ -268,8 +278,7 @@ void Darling::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
     double& nw = new_w[i];
-    if (inactive(nw)) {
-      // marked as inactive
+    if (kkt_filter_.marked(nw)) {
       active_set.clear(j);
       cw = 0;
       delta_w[i] = 0;
@@ -349,9 +358,9 @@ void Darling::updateWeight(
         vio = - g_pos;
       } else if (g_neg > 0) {
         vio = g_neg;
-      } else if (g_pos > KKT_filter_threshold_ && g_neg < - KKT_filter_threshold_) {
+      } else if (g_pos > kkt_filter_threshold_ && g_neg < - kkt_filter_threshold_) {
         active_set.clear(k);
-        w = kInactiveValue_;
+        kkt_filter_.mark(&w);
         continue;
       }
     }
@@ -378,7 +387,7 @@ void Darling::showKKTFilter(int iter) {
     fprintf(stderr, "+---------------------");
   } else {
     auto prog = g_progress_[iter];
-    fprintf(stderr, "| %.1e %11llu ", KKT_filter_threshold_, (uint64)prog.nnz_active_set());
+    fprintf(stderr, "| %.1e %11llu ", kkt_filter_threshold_, (uint64)prog.nnz_active_set());
   }
 }
 
@@ -398,6 +407,35 @@ Progress Darling::evaluateProgress() {
     prog.set_objv(log(1+1/dual_.eigenArray()).sum());
     prog.add_busy_time(busy_timer_.stop());
     busy_timer_.restart();
+
+    // label statistics
+    if (FLAGS_verbose) {
+      size_t positive_label_count = 0;
+      size_t negative_label_count = 0;
+      size_t bad_label_count = 0;
+
+      for (size_t i = 0; i < y_->value().size(); ++i) {
+        int label = y_->value()[i];
+
+        if (1 == label) {
+          positive_label_count++;
+        } else if (-1 == label) {
+          negative_label_count++;
+        } else {
+          bad_label_count++;
+        }
+      }
+
+      LI << "dual_sum[" << dual_.eigenArray().sum() << "] " <<
+        "dual_.rows[" << dual_.eigenArray().rows() << "] " <<
+        "dual_.avg[" << dual_.eigenArray().sum() / static_cast<double>(
+          dual_.eigenArray().rows()) << "] " <<
+        "y_.positive[" << positive_label_count << "] " <<
+        "y_.negative[" << negative_label_count << "] " <<
+        "y_.bad[" << bad_label_count << "] " <<
+        "y_.positive_ratio[" << positive_label_count / static_cast<double>(
+          positive_label_count + negative_label_count + bad_label_count) << "] ";
+    }
   } else {
     size_t nnz_w = 0;
     size_t nnz_as = 0;
@@ -405,7 +443,7 @@ Progress Darling::evaluateProgress() {
     for (int grp : fea_grp_) {
       const auto& value = w_->value(grp);
       for (double w : value) {
-        if (inactive(w) || w == 0) continue;
+        if (kkt_filter_.marked(w) || w == 0) continue;
         ++ nnz_w;
         objv += fabs(w);
       }

@@ -1,9 +1,14 @@
 #include "data/example_parser.h"
 #include <functional>
 #include "util/strtonum.h"
+#include "util/MurmurHash3.h"
 // #include "base/matrix_io_inl.h"
 
 namespace PS {
+
+DEFINE_bool(shuffle_fea_id, false,
+  "shuffle fea id of Terafea (lowest 54bits) with MurmurHash3 "
+  "on downloading");
 
 // NOTICE: Do not use strtok, it is not thread-safe, use strtok_r instead
 void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
@@ -14,11 +19,18 @@ void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
     parser_ = std::bind(&ExampleParser::parseLibsvm, this, _1, _2);
   } else if (format == DataConfig::ADFEA) {
     parser_ = std::bind(&ExampleParser::parseAdfea, this, _1, _2);
-  } else {
+  } else if (format == DataConfig::TERAFEA) {
+    parser_ = std::bind(&ExampleParser::parseTerafea, this, _1, _2);
+  }else {
     CHECK(false) << "unknown text format " << format;
   }
 }
 
+void ExampleParser::clear() {
+  for (int i = 0; i < kSlotIDmax; ++i) slot_info_[i].Clear();
+  info_.Clear();
+  num_ex_ = 0;
+}
 
 bool ExampleParser::toProto(char* line, Example* ex) {
   // convert to protobuf format
@@ -56,6 +68,8 @@ ExampleInfo ExampleParser::info() {
       if (format_ == DataConfig::LIBSVM) {
         sinfo.set_format(SlotInfo::SPARSE);
       } else if (format_ == DataConfig::ADFEA) {
+        sinfo.set_format(SlotInfo::SPARSE_BINARY);
+      } else if (format_ == DataConfig::TERAFEA) {
         sinfo.set_format(SlotInfo::SPARSE_BINARY);
       }
     }
@@ -136,6 +150,67 @@ bool ExampleParser::parseAdfea(char* line, Example* ex) {
         pre_slot_id = slot_id;
       }
       slot->add_key(key);
+    }
+  }
+  // LL << ex->ShortDebugString();
+  return true;
+}
+
+// terafea format:
+//
+//   clicked_or_not line_id | uint64 uint64 ...
+//   uint64:
+//      the most significant 10 bits    - group id
+//      lower 54 bits                   - feature id
+//
+//  no guarantee that the same group ids stay contiguously
+//
+bool ExampleParser::parseTerafea(char* line, Example* ex) {
+  // key:   group id
+  // value: index in Example::slot[]
+  std::unordered_map<uint32, uint32> gid_idx_map;
+
+  // add the very first slot
+  Slot* slot = ex->add_slot();
+  slot->set_id(0);
+  gid_idx_map[0] = 0;
+
+  char* saveptr;
+  char* tk = strtok_r(line, " |", &saveptr);
+  for (int i = 0; tk != NULL; tk = strtok_r(NULL, " |", &saveptr), ++i) {
+    if (i == 0) {
+      // label
+      int32 label;
+      if (!strtoi32(tk, &label)) return false;
+      slot->add_val(label > 0 ? 1.0 : -1.0);
+    } else if (i == 1) {
+      // skip, line_id
+    } else if (i == 2) {
+      // skip, seperator
+    } else {
+      uint64 key = -1;
+      if (!strtou64(tk, &key)) return false;
+
+      uint64 grp_id = key >> 54;
+      uint64 fea_id = key & 0x3FFFFFFFFFFFFF;
+
+      if (FLAGS_shuffle_fea_id) {
+        uint64 murmur_out[2];
+        MurmurHash3_x64_128(&fea_id, 8, 512927377, murmur_out);
+        fea_id = (murmur_out[0] ^ murmur_out[1]);
+      }
+
+      auto iter = gid_idx_map.find(grp_id);
+      if (gid_idx_map.end() != iter) {
+        slot = ex->mutable_slot(iter->second);
+      } else {
+        // register in the map
+        gid_idx_map[grp_id] = ex->slot_size();
+        // add new slot in Example
+        slot = ex->add_slot();
+        slot->set_id(grp_id);
+      }
+      slot->add_key(fea_id);
     }
   }
   // LL << ex->ShortDebugString();

@@ -66,11 +66,12 @@ enum DataConfig_TextFormat {
   DataConfig_TextFormat_PS_SPARSE = 2,
   DataConfig_TextFormat_PS_DENSE = 1,
   DataConfig_TextFormat_ADFEA = 4,
-  DataConfig_TextFormat_LIBSVM = 5
+  DataConfig_TextFormat_LIBSVM = 5,
+  DataConfig_TextFormat_TERAFEA = 6
 };
 bool DataConfig_TextFormat_IsValid(int value);
 const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MIN = DataConfig_TextFormat_PS_DENSE;
-const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_LIBSVM;
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_TERAFEA;
 const int DataConfig_TextFormat_TextFormat_ARRAYSIZE = DataConfig_TextFormat_TextFormat_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DataConfig_TextFormat_descriptor();
@@ -227,6 +228,7 @@ class DataConfig : public ::google::protobuf::Message {
   static const TextFormat PS_DENSE = DataConfig_TextFormat_PS_DENSE;
   static const TextFormat ADFEA = DataConfig_TextFormat_ADFEA;
   static const TextFormat LIBSVM = DataConfig_TextFormat_LIBSVM;
+  static const TextFormat TERAFEA = DataConfig_TextFormat_TERAFEA;
   static inline bool TextFormat_IsValid(int value) {
     return DataConfig_TextFormat_IsValid(value);
   }
@@ -298,12 +300,26 @@ class DataConfig : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_range();
   inline void set_allocated_range(::PS::PbRange* range);
 
-  // optional bool ignore_fea_grp = 6;
-  inline bool has_ignore_fea_grp() const;
-  inline void clear_ignore_fea_grp();
-  static const int kIgnoreFeaGrpFieldNumber = 6;
-  inline bool ignore_fea_grp() const;
-  inline void set_ignore_fea_grp(bool value);
+  // optional bool ignore_feature_group = 6;
+  inline bool has_ignore_feature_group() const;
+  inline void clear_ignore_feature_group();
+  static const int kIgnoreFeatureGroupFieldNumber = 6;
+  inline bool ignore_feature_group() const;
+  inline void set_ignore_feature_group(bool value);
+
+  // optional int32 max_num_files_per_worker = 7 [default = -1];
+  inline bool has_max_num_files_per_worker() const;
+  inline void clear_max_num_files_per_worker();
+  static const int kMaxNumFilesPerWorkerFieldNumber = 7;
+  inline ::google::protobuf::int32 max_num_files_per_worker() const;
+  inline void set_max_num_files_per_worker(::google::protobuf::int32 value);
+
+  // optional int32 max_num_lines_per_file = 8 [default = -1];
+  inline bool has_max_num_lines_per_file() const;
+  inline void clear_max_num_lines_per_file();
+  static const int kMaxNumLinesPerFileFieldNumber = 8;
+  inline ::google::protobuf::int32 max_num_lines_per_file() const;
+  inline void set_max_num_lines_per_file(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:PS.DataConfig)
  private:
@@ -315,8 +331,12 @@ class DataConfig : public ::google::protobuf::Message {
   inline void clear_has_hdfs();
   inline void set_has_range();
   inline void clear_has_range();
-  inline void set_has_ignore_fea_grp();
-  inline void clear_has_ignore_fea_grp();
+  inline void set_has_ignore_feature_group();
+  inline void clear_has_ignore_feature_group();
+  inline void set_has_max_num_files_per_worker();
+  inline void clear_has_max_num_files_per_worker();
+  inline void set_has_max_num_lines_per_file();
+  inline void clear_has_max_num_lines_per_file();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -325,10 +345,12 @@ class DataConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> file_;
   ::PS::HDFSConfig* hdfs_;
   ::PS::PbRange* range_;
-  bool ignore_fea_grp_;
+  bool ignore_feature_group_;
+  ::google::protobuf::int32 max_num_files_per_worker_;
+  ::google::protobuf::int32 max_num_lines_per_file_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fconfig_2eproto();
   friend void protobuf_AssignDesc_proto_2fconfig_2eproto();
@@ -570,7 +592,7 @@ class LearningRateConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .PS.LearningRateConfig.Type type = 1;
+  // optional .PS.LearningRateConfig.Type type = 1;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
@@ -584,14 +606,14 @@ class LearningRateConfig : public ::google::protobuf::Message {
   inline double eta() const;
   inline void set_eta(double value);
 
-  // optional double alpha = 3;
+  // optional double alpha = 3 [default = 1];
   inline bool has_alpha() const;
   inline void clear_alpha();
   static const int kAlphaFieldNumber = 3;
   inline double alpha() const;
   inline void set_alpha(double value);
 
-  // optional double beta = 4;
+  // optional double beta = 4 [default = 1];
   inline bool has_beta() const;
   inline void clear_beta();
   static const int kBetaFieldNumber = 4;
@@ -1035,26 +1057,70 @@ inline void DataConfig::set_allocated_range(::PS::PbRange* range) {
   }
 }
 
-// optional bool ignore_fea_grp = 6;
-inline bool DataConfig::has_ignore_fea_grp() const {
+// optional bool ignore_feature_group = 6;
+inline bool DataConfig::has_ignore_feature_group() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void DataConfig::set_has_ignore_fea_grp() {
+inline void DataConfig::set_has_ignore_feature_group() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void DataConfig::clear_has_ignore_fea_grp() {
+inline void DataConfig::clear_has_ignore_feature_group() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void DataConfig::clear_ignore_fea_grp() {
-  ignore_fea_grp_ = false;
-  clear_has_ignore_fea_grp();
+inline void DataConfig::clear_ignore_feature_group() {
+  ignore_feature_group_ = false;
+  clear_has_ignore_feature_group();
 }
-inline bool DataConfig::ignore_fea_grp() const {
-  return ignore_fea_grp_;
+inline bool DataConfig::ignore_feature_group() const {
+  return ignore_feature_group_;
 }
-inline void DataConfig::set_ignore_fea_grp(bool value) {
-  set_has_ignore_fea_grp();
-  ignore_fea_grp_ = value;
+inline void DataConfig::set_ignore_feature_group(bool value) {
+  set_has_ignore_feature_group();
+  ignore_feature_group_ = value;
+}
+
+// optional int32 max_num_files_per_worker = 7 [default = -1];
+inline bool DataConfig::has_max_num_files_per_worker() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void DataConfig::set_has_max_num_files_per_worker() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void DataConfig::clear_has_max_num_files_per_worker() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void DataConfig::clear_max_num_files_per_worker() {
+  max_num_files_per_worker_ = -1;
+  clear_has_max_num_files_per_worker();
+}
+inline ::google::protobuf::int32 DataConfig::max_num_files_per_worker() const {
+  return max_num_files_per_worker_;
+}
+inline void DataConfig::set_max_num_files_per_worker(::google::protobuf::int32 value) {
+  set_has_max_num_files_per_worker();
+  max_num_files_per_worker_ = value;
+}
+
+// optional int32 max_num_lines_per_file = 8 [default = -1];
+inline bool DataConfig::has_max_num_lines_per_file() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void DataConfig::set_has_max_num_lines_per_file() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void DataConfig::clear_has_max_num_lines_per_file() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void DataConfig::clear_max_num_lines_per_file() {
+  max_num_lines_per_file_ = -1;
+  clear_has_max_num_lines_per_file();
+}
+inline ::google::protobuf::int32 DataConfig::max_num_lines_per_file() const {
+  return max_num_lines_per_file_;
+}
+inline void DataConfig::set_max_num_lines_per_file(::google::protobuf::int32 value) {
+  set_has_max_num_lines_per_file();
+  max_num_lines_per_file_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -1224,7 +1290,7 @@ inline void ParameterInitConfig::set_allocated_file_name(::std::string* file_nam
 
 // LearningRateConfig
 
-// required .PS.LearningRateConfig.Type type = 1;
+// optional .PS.LearningRateConfig.Type type = 1;
 inline bool LearningRateConfig::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1269,7 +1335,7 @@ inline void LearningRateConfig::set_eta(double value) {
   eta_ = value;
 }
 
-// optional double alpha = 3;
+// optional double alpha = 3 [default = 1];
 inline bool LearningRateConfig::has_alpha() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1280,7 +1346,7 @@ inline void LearningRateConfig::clear_has_alpha() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void LearningRateConfig::clear_alpha() {
-  alpha_ = 0;
+  alpha_ = 1;
   clear_has_alpha();
 }
 inline double LearningRateConfig::alpha() const {
@@ -1291,7 +1357,7 @@ inline void LearningRateConfig::set_alpha(double value) {
   alpha_ = value;
 }
 
-// optional double beta = 4;
+// optional double beta = 4 [default = 1];
 inline bool LearningRateConfig::has_beta() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1302,7 +1368,7 @@ inline void LearningRateConfig::clear_has_beta() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void LearningRateConfig::clear_beta() {
-  beta_ = 0;
+  beta_ = 1;
   clear_has_beta();
 }
 inline double LearningRateConfig::beta() const {

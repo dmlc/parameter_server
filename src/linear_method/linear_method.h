@@ -15,6 +15,7 @@ namespace LM {
 // linear classification/regerssion
 class LinearMethod : public App {
  public:
+  static AppPtr create(const Config& conf);
   virtual void init();
 
   void process(const MessagePtr& msg);
@@ -25,12 +26,12 @@ class LinearMethod : public App {
   void startSystem();
 
   // load the data, and return 1 if hit cache, 0 if normal
-  virtual int loadData(const MessageCPtr& msg, ExampleInfo* info) = 0;
-  virtual void preprocessData(const MessageCPtr& msg) = 0;
-  virtual void updateModel(const MessagePtr& msg) = 0;
-  virtual Progress evaluateProgress() = 0;
-  virtual void saveModel(const MessageCPtr& msg) = 0;
-  virtual void computeEvaluationAUC(AUCData *data) = 0;
+  virtual int loadData(const MessageCPtr& msg, ExampleInfo* info) { return 0; }
+  virtual void preprocessData(const MessageCPtr& msg) { }
+  virtual void saveModel(const MessageCPtr& msg) { }
+  virtual void updateModel(const MessagePtr& msg) { }
+  virtual Progress evaluateProgress() { return Progress(); }
+  virtual void computeEvaluationAUC(AUCData *data) { }
 
   void showTime(int iter);
   void showObjective(int iter);
@@ -50,8 +51,12 @@ class LinearMethod : public App {
     return task;
   }
 
-  // progress of all iterations, only valid for the scheduler
+  // progress of all iterations, only valid for the scheduler. The progress of
+  // all nodes are merged for every iteration. It's for batch algorithms.
   std::map<int, Progress> g_progress_;
+  // recent progress for every node. It's for online algorithms.
+  std::map<NodeID, Progress> recent_progress_;
+  std::mutex progress_mu_;
 
   Config conf_;
   Timer total_timer_;

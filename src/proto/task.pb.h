@@ -29,6 +29,7 @@
 #include "proto/range.pb.h"
 #include "proto/app.pb.h"
 #include "proto/linear_method.pb.h"
+#include "proto/filter.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -51,11 +52,12 @@ enum Task_Type {
   Task_Type_TERMINATE_CONFIRM = 2,
   Task_Type_REPLY = 3,
   Task_Type_MANAGE = 4,
-  Task_Type_CALL_CUSTOMER = 5
+  Task_Type_CALL_CUSTOMER = 5,
+  Task_Type_HEARTBEATING = 6
 };
 bool Task_Type_IsValid(int value);
 const Task_Type Task_Type_Type_MIN = Task_Type_TERMINATE;
-const Task_Type Task_Type_Type_MAX = Task_Type_CALL_CUSTOMER;
+const Task_Type Task_Type_Type_MAX = Task_Type_HEARTBEATING;
 const int Task_Type_Type_ARRAYSIZE = Task_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Task_Type_descriptor();
@@ -67,6 +69,34 @@ inline bool Task_Type_Parse(
     const ::std::string& name, Task_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<Task_Type>(
     Task_Type_descriptor(), name, value);
+}
+enum Task_DataType {
+  Task_DataType_OTHER = 0,
+  Task_DataType_INT8 = 1,
+  Task_DataType_INT16 = 2,
+  Task_DataType_INT32 = 3,
+  Task_DataType_INT64 = 4,
+  Task_DataType_UINT8 = 5,
+  Task_DataType_UINT16 = 6,
+  Task_DataType_UINT32 = 7,
+  Task_DataType_UINT64 = 8,
+  Task_DataType_FLOAT = 9,
+  Task_DataType_DOUBLE = 10
+};
+bool Task_DataType_IsValid(int value);
+const Task_DataType Task_DataType_DataType_MIN = Task_DataType_OTHER;
+const Task_DataType Task_DataType_DataType_MAX = Task_DataType_DOUBLE;
+const int Task_DataType_DataType_ARRAYSIZE = Task_DataType_DataType_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* Task_DataType_descriptor();
+inline const ::std::string& Task_DataType_Name(Task_DataType value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    Task_DataType_descriptor(), value);
+}
+inline bool Task_DataType_Parse(
+    const ::std::string& name, Task_DataType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Task_DataType>(
+    Task_DataType_descriptor(), name, value);
 }
 enum ManageNode_Command {
   ManageNode_Command_INIT = 1,
@@ -209,6 +239,7 @@ class Task : public ::google::protobuf::Message {
   static const Type REPLY = Task_Type_REPLY;
   static const Type MANAGE = Task_Type_MANAGE;
   static const Type CALL_CUSTOMER = Task_Type_CALL_CUSTOMER;
+  static const Type HEARTBEATING = Task_Type_HEARTBEATING;
   static inline bool Type_IsValid(int value) {
     return Task_Type_IsValid(value);
   }
@@ -230,6 +261,39 @@ class Task : public ::google::protobuf::Message {
     return Task_Type_Parse(name, value);
   }
 
+  typedef Task_DataType DataType;
+  static const DataType OTHER = Task_DataType_OTHER;
+  static const DataType INT8 = Task_DataType_INT8;
+  static const DataType INT16 = Task_DataType_INT16;
+  static const DataType INT32 = Task_DataType_INT32;
+  static const DataType INT64 = Task_DataType_INT64;
+  static const DataType UINT8 = Task_DataType_UINT8;
+  static const DataType UINT16 = Task_DataType_UINT16;
+  static const DataType UINT32 = Task_DataType_UINT32;
+  static const DataType UINT64 = Task_DataType_UINT64;
+  static const DataType FLOAT = Task_DataType_FLOAT;
+  static const DataType DOUBLE = Task_DataType_DOUBLE;
+  static inline bool DataType_IsValid(int value) {
+    return Task_DataType_IsValid(value);
+  }
+  static const DataType DataType_MIN =
+    Task_DataType_DataType_MIN;
+  static const DataType DataType_MAX =
+    Task_DataType_DataType_MAX;
+  static const int DataType_ARRAYSIZE =
+    Task_DataType_DataType_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  DataType_descriptor() {
+    return Task_DataType_descriptor();
+  }
+  static inline const ::std::string& DataType_Name(DataType value) {
+    return Task_DataType_Name(value);
+  }
+  static inline bool DataType_Parse(const ::std::string& name,
+      DataType* value) {
+    return Task_DataType_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required .PS.Task.Type type = 1;
@@ -239,17 +303,24 @@ class Task : public ::google::protobuf::Message {
   inline ::PS::Task_Type type() const;
   inline void set_type(::PS::Task_Type value);
 
-  // required bool request = 2 [default = false];
+  // optional bool request = 2 [default = false];
   inline bool has_request() const;
   inline void clear_request();
   static const int kRequestFieldNumber = 2;
   inline bool request() const;
   inline void set_request(bool value);
 
-  // required string customer = 3;
+  // optional bool do_not_reply = 3 [default = false];
+  inline bool has_do_not_reply() const;
+  inline void clear_do_not_reply();
+  static const int kDoNotReplyFieldNumber = 3;
+  inline bool do_not_reply() const;
+  inline void set_do_not_reply(bool value);
+
+  // optional string customer = 4;
   inline bool has_customer() const;
   inline void clear_customer();
-  static const int kCustomerFieldNumber = 3;
+  static const int kCustomerFieldNumber = 4;
   inline const ::std::string& customer() const;
   inline void set_customer(const ::std::string& value);
   inline void set_customer(const char* value);
@@ -258,26 +329,19 @@ class Task : public ::google::protobuf::Message {
   inline ::std::string* release_customer();
   inline void set_allocated_customer(::std::string* customer);
 
-  // optional int32 time = 4;
+  // optional int32 time = 5;
   inline bool has_time() const;
   inline void clear_time();
-  static const int kTimeFieldNumber = 4;
+  static const int kTimeFieldNumber = 5;
   inline ::google::protobuf::int32 time() const;
   inline void set_time(::google::protobuf::int32 value);
 
-  // optional int32 wait_time = 5 [default = -1];
+  // optional int32 wait_time = 6 [default = -1];
   inline bool has_wait_time() const;
   inline void clear_wait_time();
-  static const int kWaitTimeFieldNumber = 5;
+  static const int kWaitTimeFieldNumber = 6;
   inline ::google::protobuf::int32 wait_time() const;
   inline void set_wait_time(::google::protobuf::int32 value);
-
-  // optional bool has_key = 6 [default = false];
-  inline bool has_has_key() const;
-  inline void clear_has_key();
-  static const int kHasKeyFieldNumber = 6;
-  inline bool has_key() const;
-  inline void set_has_key(bool value);
 
   // optional .PS.PbRange key_range = 7;
   inline bool has_key_range() const;
@@ -288,38 +352,48 @@ class Task : public ::google::protobuf::Message {
   inline ::PS::PbRange* release_key_range();
   inline void set_allocated_key_range(::PS::PbRange* key_range);
 
-  // optional uint32 key_signature = 8;
-  inline bool has_key_signature() const;
-  inline void clear_key_signature();
-  static const int kKeySignatureFieldNumber = 8;
-  inline ::google::protobuf::uint32 key_signature() const;
-  inline void set_key_signature(::google::protobuf::uint32 value);
-
-  // optional int32 key_channel = 9;
+  // optional int32 key_channel = 8;
   inline bool has_key_channel() const;
   inline void clear_key_channel();
-  static const int kKeyChannelFieldNumber = 9;
+  static const int kKeyChannelFieldNumber = 8;
   inline ::google::protobuf::int32 key_channel() const;
   inline void set_key_channel(::google::protobuf::int32 value);
 
-  // optional bool erase_key_cache = 10 [default = false];
-  inline bool has_erase_key_cache() const;
-  inline void clear_erase_key_cache();
-  static const int kEraseKeyCacheFieldNumber = 10;
-  inline bool erase_key_cache() const;
-  inline void set_erase_key_cache(bool value);
+  // optional bool has_key = 9 [default = false];
+  inline bool has_has_key() const;
+  inline void clear_has_key();
+  static const int kHasKeyFieldNumber = 9;
+  inline bool has_key() const;
+  inline void set_has_key(bool value);
 
-  // repeated uint64 uncompressed_size = 11;
-  inline int uncompressed_size_size() const;
-  inline void clear_uncompressed_size();
-  static const int kUncompressedSizeFieldNumber = 11;
-  inline ::google::protobuf::uint64 uncompressed_size(int index) const;
-  inline void set_uncompressed_size(int index, ::google::protobuf::uint64 value);
-  inline void add_uncompressed_size(::google::protobuf::uint64 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
-      uncompressed_size() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
-      mutable_uncompressed_size();
+  // optional .PS.Task.DataType key_type = 13;
+  inline bool has_key_type() const;
+  inline void clear_key_type();
+  static const int kKeyTypeFieldNumber = 13;
+  inline ::PS::Task_DataType key_type() const;
+  inline void set_key_type(::PS::Task_DataType value);
+
+  // repeated .PS.Task.DataType value_type = 14;
+  inline int value_type_size() const;
+  inline void clear_value_type();
+  static const int kValueTypeFieldNumber = 14;
+  inline ::PS::Task_DataType value_type(int index) const;
+  inline void set_value_type(int index, ::PS::Task_DataType value);
+  inline void add_value_type(::PS::Task_DataType value);
+  inline const ::google::protobuf::RepeatedField<int>& value_type() const;
+  inline ::google::protobuf::RepeatedField<int>* mutable_value_type();
+
+  // repeated .PS.FilterConfig filter = 12;
+  inline int filter_size() const;
+  inline void clear_filter();
+  static const int kFilterFieldNumber = 12;
+  inline const ::PS::FilterConfig& filter(int index) const;
+  inline ::PS::FilterConfig* mutable_filter(int index);
+  inline ::PS::FilterConfig* add_filter();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig >&
+      filter() const;
+  inline ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig >*
+      mutable_filter();
 
   // optional bytes msg = 101;
   inline bool has_msg() const;
@@ -384,22 +458,22 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_type();
   inline void set_has_request();
   inline void clear_has_request();
+  inline void set_has_do_not_reply();
+  inline void clear_has_do_not_reply();
   inline void set_has_customer();
   inline void clear_has_customer();
   inline void set_has_time();
   inline void clear_has_time();
   inline void set_has_wait_time();
   inline void clear_has_wait_time();
-  inline void set_has_has_key();
-  inline void clear_has_has_key();
   inline void set_has_key_range();
   inline void clear_has_key_range();
-  inline void set_has_key_signature();
-  inline void clear_has_key_signature();
   inline void set_has_key_channel();
   inline void clear_has_key_channel();
-  inline void set_has_erase_key_cache();
-  inline void clear_has_erase_key_cache();
+  inline void set_has_has_key();
+  inline void clear_has_has_key();
+  inline void set_has_key_type();
+  inline void clear_has_key_type();
   inline void set_has_msg();
   inline void clear_has_msg();
   inline void set_has_mng_node();
@@ -416,16 +490,17 @@ class Task : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   int type_;
-  ::google::protobuf::int32 time_;
-  ::std::string* customer_;
-  ::google::protobuf::int32 wait_time_;
   bool request_;
+  bool do_not_reply_;
   bool has_key_;
-  bool erase_key_cache_;
+  ::std::string* customer_;
+  ::google::protobuf::int32 time_;
+  ::google::protobuf::int32 wait_time_;
   ::PS::PbRange* key_range_;
-  ::google::protobuf::uint32 key_signature_;
   ::google::protobuf::int32 key_channel_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
+  int key_type_;
+  ::google::protobuf::RepeatedField<int> value_type_;
+  ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig > filter_;
   ::std::string* msg_;
   ::PS::ManageNode* mng_node_;
   ::PS::ManageApp* mng_app_;
@@ -434,7 +509,7 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSketch* sketch_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1226,7 +1301,7 @@ inline void Task::set_type(::PS::Task_Type value) {
   type_ = value;
 }
 
-// required bool request = 2 [default = false];
+// optional bool request = 2 [default = false];
 inline bool Task::has_request() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1248,15 +1323,37 @@ inline void Task::set_request(bool value) {
   request_ = value;
 }
 
-// required string customer = 3;
-inline bool Task::has_customer() const {
+// optional bool do_not_reply = 3 [default = false];
+inline bool Task::has_do_not_reply() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void Task::set_has_customer() {
+inline void Task::set_has_do_not_reply() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void Task::clear_has_customer() {
+inline void Task::clear_has_do_not_reply() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void Task::clear_do_not_reply() {
+  do_not_reply_ = false;
+  clear_has_do_not_reply();
+}
+inline bool Task::do_not_reply() const {
+  return do_not_reply_;
+}
+inline void Task::set_do_not_reply(bool value) {
+  set_has_do_not_reply();
+  do_not_reply_ = value;
+}
+
+// optional string customer = 4;
+inline bool Task::has_customer() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Task::set_has_customer() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Task::clear_has_customer() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void Task::clear_customer() {
   if (customer_ != &::google::protobuf::internal::kEmptyString) {
@@ -1318,15 +1415,15 @@ inline void Task::set_allocated_customer(::std::string* customer) {
   }
 }
 
-// optional int32 time = 4;
+// optional int32 time = 5;
 inline bool Task::has_time() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Task::set_has_time() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Task::clear_has_time() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Task::clear_time() {
   time_ = 0;
@@ -1340,15 +1437,15 @@ inline void Task::set_time(::google::protobuf::int32 value) {
   time_ = value;
 }
 
-// optional int32 wait_time = 5 [default = -1];
+// optional int32 wait_time = 6 [default = -1];
 inline bool Task::has_wait_time() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void Task::set_has_wait_time() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void Task::clear_has_wait_time() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void Task::clear_wait_time() {
   wait_time_ = -1;
@@ -1360,28 +1457,6 @@ inline ::google::protobuf::int32 Task::wait_time() const {
 inline void Task::set_wait_time(::google::protobuf::int32 value) {
   set_has_wait_time();
   wait_time_ = value;
-}
-
-// optional bool has_key = 6 [default = false];
-inline bool Task::has_has_key() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void Task::set_has_has_key() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void Task::clear_has_has_key() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void Task::clear_has_key() {
-  has_key_ = false;
-  clear_has_has_key();
-}
-inline bool Task::has_key() const {
-  return has_key_;
-}
-inline void Task::set_has_key(bool value) {
-  set_has_has_key();
-  has_key_ = value;
 }
 
 // optional .PS.PbRange key_range = 7;
@@ -1422,37 +1497,15 @@ inline void Task::set_allocated_key_range(::PS::PbRange* key_range) {
   }
 }
 
-// optional uint32 key_signature = 8;
-inline bool Task::has_key_signature() const {
+// optional int32 key_channel = 8;
+inline bool Task::has_key_channel() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void Task::set_has_key_signature() {
+inline void Task::set_has_key_channel() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void Task::clear_has_key_signature() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void Task::clear_key_signature() {
-  key_signature_ = 0u;
-  clear_has_key_signature();
-}
-inline ::google::protobuf::uint32 Task::key_signature() const {
-  return key_signature_;
-}
-inline void Task::set_key_signature(::google::protobuf::uint32 value) {
-  set_has_key_signature();
-  key_signature_ = value;
-}
-
-// optional int32 key_channel = 9;
-inline bool Task::has_key_channel() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void Task::set_has_key_channel() {
-  _has_bits_[0] |= 0x00000100u;
-}
 inline void Task::clear_has_key_channel() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Task::clear_key_channel() {
   key_channel_ = 0;
@@ -1466,62 +1519,112 @@ inline void Task::set_key_channel(::google::protobuf::int32 value) {
   key_channel_ = value;
 }
 
-// optional bool erase_key_cache = 10 [default = false];
-inline bool Task::has_erase_key_cache() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+// optional bool has_key = 9 [default = false];
+inline bool Task::has_has_key() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void Task::set_has_erase_key_cache() {
-  _has_bits_[0] |= 0x00000200u;
+inline void Task::set_has_has_key() {
+  _has_bits_[0] |= 0x00000100u;
 }
-inline void Task::clear_has_erase_key_cache() {
-  _has_bits_[0] &= ~0x00000200u;
+inline void Task::clear_has_has_key() {
+  _has_bits_[0] &= ~0x00000100u;
 }
-inline void Task::clear_erase_key_cache() {
-  erase_key_cache_ = false;
-  clear_has_erase_key_cache();
+inline void Task::clear_has_key() {
+  has_key_ = false;
+  clear_has_has_key();
 }
-inline bool Task::erase_key_cache() const {
-  return erase_key_cache_;
+inline bool Task::has_key() const {
+  return has_key_;
 }
-inline void Task::set_erase_key_cache(bool value) {
-  set_has_erase_key_cache();
-  erase_key_cache_ = value;
+inline void Task::set_has_key(bool value) {
+  set_has_has_key();
+  has_key_ = value;
 }
 
-// repeated uint64 uncompressed_size = 11;
-inline int Task::uncompressed_size_size() const {
-  return uncompressed_size_.size();
+// optional .PS.Task.DataType key_type = 13;
+inline bool Task::has_key_type() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
-inline void Task::clear_uncompressed_size() {
-  uncompressed_size_.Clear();
+inline void Task::set_has_key_type() {
+  _has_bits_[0] |= 0x00000200u;
 }
-inline ::google::protobuf::uint64 Task::uncompressed_size(int index) const {
-  return uncompressed_size_.Get(index);
+inline void Task::clear_has_key_type() {
+  _has_bits_[0] &= ~0x00000200u;
 }
-inline void Task::set_uncompressed_size(int index, ::google::protobuf::uint64 value) {
-  uncompressed_size_.Set(index, value);
+inline void Task::clear_key_type() {
+  key_type_ = 0;
+  clear_has_key_type();
 }
-inline void Task::add_uncompressed_size(::google::protobuf::uint64 value) {
-  uncompressed_size_.Add(value);
+inline ::PS::Task_DataType Task::key_type() const {
+  return static_cast< ::PS::Task_DataType >(key_type_);
 }
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
-Task::uncompressed_size() const {
-  return uncompressed_size_;
+inline void Task::set_key_type(::PS::Task_DataType value) {
+  assert(::PS::Task_DataType_IsValid(value));
+  set_has_key_type();
+  key_type_ = value;
 }
-inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
-Task::mutable_uncompressed_size() {
-  return &uncompressed_size_;
+
+// repeated .PS.Task.DataType value_type = 14;
+inline int Task::value_type_size() const {
+  return value_type_.size();
+}
+inline void Task::clear_value_type() {
+  value_type_.Clear();
+}
+inline ::PS::Task_DataType Task::value_type(int index) const {
+  return static_cast< ::PS::Task_DataType >(value_type_.Get(index));
+}
+inline void Task::set_value_type(int index, ::PS::Task_DataType value) {
+  assert(::PS::Task_DataType_IsValid(value));
+  value_type_.Set(index, value);
+}
+inline void Task::add_value_type(::PS::Task_DataType value) {
+  assert(::PS::Task_DataType_IsValid(value));
+  value_type_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField<int>&
+Task::value_type() const {
+  return value_type_;
+}
+inline ::google::protobuf::RepeatedField<int>*
+Task::mutable_value_type() {
+  return &value_type_;
+}
+
+// repeated .PS.FilterConfig filter = 12;
+inline int Task::filter_size() const {
+  return filter_.size();
+}
+inline void Task::clear_filter() {
+  filter_.Clear();
+}
+inline const ::PS::FilterConfig& Task::filter(int index) const {
+  return filter_.Get(index);
+}
+inline ::PS::FilterConfig* Task::mutable_filter(int index) {
+  return filter_.Mutable(index);
+}
+inline ::PS::FilterConfig* Task::add_filter() {
+  return filter_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig >&
+Task::filter() const {
+  return filter_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig >*
+Task::mutable_filter() {
+  return &filter_;
 }
 
 // optional bytes msg = 101;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1585,13 +1688,13 @@ inline void Task::set_allocated_msg(::std::string* msg) {
 
 // optional .PS.ManageNode mng_node = 102;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
@@ -1623,13 +1726,13 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
 
 // optional .PS.ManageApp mng_app = 103;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
@@ -1661,13 +1764,13 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
 
 // optional .PS.CallSharedPara shared_para = 201;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1699,13 +1802,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.LM.Call linear_method = 301;
 inline bool Task::has_linear_method() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void Task::set_has_linear_method() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void Task::clear_has_linear_method() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Task::clear_linear_method() {
   if (linear_method_ != NULL) linear_method_->::PS::LM::Call::Clear();
@@ -1737,13 +1840,13 @@ inline void Task::set_allocated_linear_method(::PS::LM::Call* linear_method) {
 
 // optional .PS.CallSketch sketch = 302;
 inline bool Task::has_sketch() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00020000u) != 0;
 }
 inline void Task::set_has_sketch() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00020000u;
 }
 inline void Task::clear_has_sketch() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00020000u;
 }
 inline void Task::clear_sketch() {
   if (sketch_ != NULL) sketch_->::PS::CallSketch::Clear();
@@ -2387,6 +2490,10 @@ namespace protobuf {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_Type>() {
   return ::PS::Task_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_DataType>() {
+  return ::PS::Task_DataType_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageNode_Command>() {

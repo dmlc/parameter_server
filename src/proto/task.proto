@@ -3,6 +3,7 @@ import "proto/node.proto";
 import "proto/range.proto";
 import "proto/app.proto";
 import "proto/linear_method.proto";
+import "proto/filter.proto";
 
 message Task {
   enum Type {
@@ -11,34 +12,44 @@ message Task {
     REPLY = 3;
     MANAGE = 4;
     CALL_CUSTOMER = 5;
+    HEARTBEATING = 6;
   }
   required Type type = 1;
+  // whether request or reply message
+  optional bool request = 2 [default = false];
+  // will not send a reply message if true
+  optional bool do_not_reply = 3 [default = false];
+  // the customer name
+  optional string customer = 4;
 
-  // request or reply message
-  required bool request = 2 [default = false];
-  // customer name
-  required string customer = 3;
+  // time
+  optional int32 time = 5;
+  optional int32 wait_time = 6 [default = -1];
 
-  optional int32 time = 4;
-  optional int32 wait_time = 5 [default = -1];
-
-  // the higher the more important,
-  // optional int32 priority = 6 [default = 0];
-
-  // if or not there is the key list
-  optional bool has_key = 6 [default = false];
   // the key range of this task
   optional PbRange key_range = 7;
-  // signature of the key lists, used to identity the key cache
-  optional uint32 key_signature = 8;
   // namespace of keys
-  optional int32 key_channel = 9;
-  // clear cache after finished
-  optional bool erase_key_cache = 10 [default = false];
+  optional int32 key_channel = 8;
+  // indiciate whether or not has the key list
+  optional bool has_key = 9 [default = false];
 
-  // set values if data are compressed, empty means data are not compressed
-  repeated uint64 uncompressed_size = 11;
+  enum DataType {
+    OTHER = 0;
+    INT8 = 1;
+    INT16 = 2;
+    INT32 = 3;
+    INT64 = 4;
+    UINT8 = 5;
+    UINT16 = 6;
+    UINT32 = 7;
+    UINT64 = 8;
+    FLOAT = 9;
+    DOUBLE = 10;
+  }
+  optional DataType key_type = 13;
+  repeated DataType value_type = 14;
 
+  repeated FilterConfig filter = 12;
   // general task
   optional bytes msg = 101;
   optional ManageNode mng_node = 102;
@@ -86,11 +97,9 @@ message CallSharedPara {
   }
   required Command cmd= 1;
 
-  // key namespace
-  // optional int32 channel = 2;
-
   optional bool insert_key_freq = 3;
   optional int32 query_key_freq = 4;
+
   optional bool insert_key = 5;
 
   optional int32 countmin_n = 6;

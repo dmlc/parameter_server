@@ -18,6 +18,7 @@ class TextParser {
   InstanceInfo info();
   bool parseLibsvm(char*, Instance*);
   bool parseAdfea(char*, Instance*);
+  bool parseTerafea(char*, Instance*);
 
  private:
 

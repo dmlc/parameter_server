@@ -4,6 +4,8 @@
 #include "util/filelinereader.h"
 namespace PS {
 
+DECLARE_bool(verbose);
+
 void SlotReader::init(const DataConfig& data, const DataConfig& cache) {
   CHECK(data.format() == DataConfig::TEXT);
   if (cache.file_size()) dump_to_disk_ = true;
@@ -27,6 +29,17 @@ size_t SlotReader::nnzEle(int slot_id) const {
 int SlotReader::read(ExampleInfo* info) {
   CHECK_GT(FLAGS_num_threads, 0);
   {
+    Lock l(mu_);
+    loaded_file_count_ = 0;
+  }
+  {
+    if (FLAGS_verbose) {
+      for (size_t i = 0; i < data_.file_size(); ++i) {
+        LI << "I will load data file [" << i + 1 << "/" <<
+          data_.file_size() << "] [" << data_.file(i) << "]";
+      }
+    }
+
     ThreadPool pool(FLAGS_num_threads);
     for (int i = 0; i < data_.file_size(); ++i) {
       auto one_file = ithFile(data_, i);
@@ -42,6 +55,12 @@ int SlotReader::read(ExampleInfo* info) {
 }
 
 bool SlotReader::readOneFile(const DataConfig& data) {
+  if (FLAGS_verbose) {
+    Lock l(mu_);
+    LI << "loading data file [" << data.file(0) << "]; loaded [" <<
+      loaded_file_count_ << "/" << data_.file_size() << "]";
+  }
+
   string info_name = cache_ + getFilename(data.file(0)) + ".info";
   ExampleInfo info;
   if (readFileToProto(info_name, &info)) {
@@ -52,7 +71,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   }
 
   ExampleParser parser;
-  parser.init(data.text(), data.ignore_fea_grp());
+  parser.init(data.text(), data.ignore_feature_group());
   struct VSlot {
     SArray<float> val;
     SArray<uint64> col_idx;
@@ -84,7 +103,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
     }
     ++ num_ex;
   };
-  FileLineReader reader(data.file(0));
+  FileLineReader reader(data);
   reader.set_line_callback(handle);
   reader.Reload();
 
@@ -100,6 +119,12 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   {
     Lock l(mu_);
     info_ = mergeExampleInfo(info_, info);
+    loaded_file_count_++;
+
+    if (FLAGS_verbose) {
+      LI << "loaded data file [" << data.file(0) << "]; loaded [" <<
+        loaded_file_count_ << "/" << data_.file_size() << "]";
+    }
   }
   return true;
 }
