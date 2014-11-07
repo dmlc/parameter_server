@@ -54,7 +54,8 @@ enum LossConfig_Type {
   LossConfig_Type_SQUARE = 1,
   LossConfig_Type_LOGIT = 2,
   LossConfig_Type_HINGE = 3,
-  LossConfig_Type_SQUARE_HINGE = 4
+  LossConfig_Type_SQUARE_HINGE = 4,
+  LossConfig_Type_SOFT_MAX = 5
 };
 bool LossConfig_Type_IsValid(int value);
 const LossConfig_Type LossConfig_Type_Type_MIN = LossConfig_Type_SQUARE;
@@ -822,6 +823,8 @@ class LossConfig : public ::google::protobuf::Message {
   static const Type LOGIT = LossConfig_Type_LOGIT;
   static const Type HINGE = LossConfig_Type_HINGE;
   static const Type SQUARE_HINGE = LossConfig_Type_SQUARE_HINGE;
+  static const Type SOFT_MAX = LossConfig_Type_SOFT_MAX;
+
   static inline bool Type_IsValid(int value) {
     return LossConfig_Type_IsValid(value);
   }

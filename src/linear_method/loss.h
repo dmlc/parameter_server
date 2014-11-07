@@ -11,6 +11,7 @@ template<typename T> class Loss;
 template<typename T> using LossPtr = std::shared_ptr<Loss<T>>;
 template<typename T> class LogitLoss;
 template<typename T> class SquareHingeLoss;
+template<typename T> class SoftMarginLoss;
 
 template<typename T> class Loss {
  public:
@@ -20,6 +21,8 @@ template<typename T> class Loss {
         return LossPtr<T>(new LogitLoss<T>());
       case LossConfig::SQUARE_HINGE:
         return LossPtr<T>(new SquareHingeLoss<T>());
+      case LossConfig::SOFT_MAX:
+        return LossPtr<T>(new SoftMarginLoss<T>());
       default:
         CHECK(false) << "unknown type: " << config.DebugString();
     }
@@ -89,6 +92,7 @@ class LogitLoss : public BinaryClassificationLoss<T> {
 };
 
 template <typename T>
+//this is actually squaresoftmargin loss @yipeiw
 class SquareHingeLoss : public BinaryClassificationLoss<T> {
  public:
   typedef Eigen::Array<T, Eigen::Dynamic, 1> EArray;
@@ -102,6 +106,24 @@ class SquareHingeLoss : public BinaryClassificationLoss<T> {
                EArrayMap gradient, EArrayMap diag_hessian) {
     gradient = - 2 *  X->transTimes(y * (y * Xw > 1.0).template cast<T>());
   }
+};
+
+template <typename T>
+class SoftMarginLoss : public BinaryClassificationLoss<T> {
+ public:
+  typedef Eigen::Array<T, Eigen::Dynamic, 1> EArray ;
+  typedef Eigen::Map<EArray> EArrayMap ;
+
+  T evaluate(const EArrayMap& y, const EArrayMap& Xw){
+    return (1 - y * Xw).max(EArray::Zero(y.size())).sum(); 
+  }
+
+  void compute(const EArrayMap& y, const MatrixPtr<T>& X, const EArrayMap& Xw, EArrayMap gradient, EArrayMap diag_hessian) {
+    //do I need to check gradient.size() as in logit loss?
+    gradient = - X->transTimes(y * (y * Xw > 1.0).template cast<T>());
+    //diag hessian = 0
+  }
+
 };
 
 } // namespace LM

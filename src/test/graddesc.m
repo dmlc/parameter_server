@@ -1,5 +1,6 @@
+addpath '/home/yipeiw/software/libsvm/matlab'
 
-load('rcv1');
+[Y, X]=libsvmread('/home/yipeiw/parameter_server/data/rcv1_train.binary');
 %%
 
 prec = @(y,py) nnz(y.*((py>0.5)*2-1)==1) / length(y);
