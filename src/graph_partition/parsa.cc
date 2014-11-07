@@ -1,13 +1,14 @@
 #include "graph_partition/parsa.h"
 #include "data/stream_reader.h"
-
+#include "util/producer_consumer.h"
 namespace PS {
 
 void Parsa::init() {
   conf_ = app_cf_.parsa();
+  conf_.mutable_input_graph()->set_ignore_feature_group(true);
   num_partitions_ = conf_.num_partitions();
   num_V_ = conf_.v_size();
-  data_buf_.setMaxCapacity((size_t)conf_.data_buff_size_in_mb() * 1000000);
+  LL << num_V_;
   neighbor_set_.resize(num_partitions_);
   for (int k = 0; k < num_partitions_; ++k) {
     neighbor_set_[k].assigned_V.resize(num_V_);
@@ -19,50 +20,43 @@ void Parsa::run() {
 }
 
 void Parsa::partition() {
-  data_thr_ = unique_ptr<std::thread>(new std::thread(&Parsa::loadInputGraphPtr, this));
-  data_thr_->detach();
+  typedef std::pair<GraphPtrList, ExampleList> DataPair;
+  StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
+  // int block_size = conf_.block_size();
+  // int num_V = conf_.v_size();
+  ProducerConsumer<DataPair> reader(conf_.data_buff_size_in_mb());
+  reader.setProducer([this, &stream](DataPair* data, size_t* size)->bool {
+      MatrixPtrList<Empty> X;
+      bool ret = stream.readMatrices(conf_.block_size(), &X, &(data->second));
+      if (X.empty()) return false;
 
-  GraphPtrList X;
+      // map the columns id into small integers
+      auto G = std::static_pointer_cast<SparseMatrix<Key,Empty>>(X.back());
+      size_t n = G->index().size(); CHECK_GT(n, 0);
+      SArray<uint32> new_index(n);
+      for (size_t i = 0; i < n; ++i) {
+        new_index[i] = G->index()[i] % num_V_;
+      }
+      auto info = G->info();
+      SizeR(0, num_V_).to(info.mutable_col());
+      info.set_type(MatrixInfo::SPARSE_BINARY);
+      info.set_sizeof_index(sizeof(uint32));
+      data->first.resize(2);
+      data->first[0] = GraphPtr(new Graph(info, G->offset(), new_index, SArray<Empty>()));
+      data->first[1] = std::static_pointer_cast<Graph>(data->first[0]->toColMajor());
+      // make a rough estimation for data->second
+      *size = (data->first[0]->memSize() + data->first[0]->memSize())*2;
+      return ret;
+    });
+
+  DataPair data;
   SArray<int> map_U;
-  for (int i = 0; ; ++i) {
-    if (read_data_finished_ && data_buf_.empty()) break;
-    data_buf_.pop(X);
-    partitionU(X[0], X[1], &map_U);
+  while (reader.pop(&data)) {
+    CHECK_EQ(data.first.size(), 2);
+    partitionU(data.first[0], data.first[1], &map_U);
+    // LL << "x";
   }
   partitionV();
-}
-
-void Parsa::loadInputGraphPtr() {
-  conf_.mutable_input_graph()->set_ignore_feature_group(true);
-  StreamReader<Empty> reader(searchFiles(conf_.input_graph()));
-  MatrixPtrList<Empty> X;
-  uint32 block_size = conf_.block_size();
-  int i = 0;
-  while(!read_data_finished_) {
-    // load the graph
-    bool ret = reader.readMatrices(block_size, &X);
-    CHECK(X.size());
-    auto G = std::static_pointer_cast<SparseMatrix<Key,Empty>>(X.back());
-
-    // map the columns id into small integers
-    size_t n = G->index().size(); CHECK_GT(n, 0);
-    SArray<uint32> new_index(n);
-    for (size_t i = 0; i < n; ++i) {
-      new_index[i] = G->index()[i] % num_V_;
-    }
-    auto info = G->info();
-    SizeR(0, num_V_).to(info.mutable_col());
-    info.set_type(MatrixInfo::SPARSE_BINARY);
-    info.set_sizeof_index(sizeof(uint32));
-
-    GraphPtrList Y(2);
-    Y[0] = GraphPtr(new Graph(info, G->offset(), new_index, SArray<Empty>()));
-    Y[1] = std::static_pointer_cast<Graph>(Y[0]->toColMajor());
-    data_buf_.push(Y, Y[0]->memSize() + Y[1]->memSize());
-
-    LL << i ++;
-    if (!ret) read_data_finished_ = true;
-  }
 }
 
 void Parsa::partitionV() {

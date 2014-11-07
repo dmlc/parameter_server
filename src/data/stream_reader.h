@@ -6,6 +6,7 @@
 #include "data/example_parser.h"
 #include "util/filelinereader.h"
 #include "base/matrix_io_inl.h"
+#include "util/recordio.h"
 namespace PS {
 
 template<typename V>
@@ -22,7 +23,8 @@ class StreamReader {
       std::vector<Example>* examples = nullptr);
 
  private:
-  bool readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat);
+  bool readMatricesFromText(uint32 num_example, MatrixPtrList<V>* matrices);
+  bool readMatricesFromProto(uint32 num_example, MatrixPtrList<V>* matrices);
   void parseExample(const Example& ex, int num_read);
   void fillMatrices(MatrixPtrList<V>* mat);
 
@@ -120,9 +122,31 @@ void StreamReader<V>::fillMatrices(MatrixPtrList<V>* mat) {
 }
 
 template<typename V>
-bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat) {
+bool StreamReader<V>::readMatricesFromProto(uint32 num_ex, MatrixPtrList<V>* mat) {
   uint32 num_read = 0;
-  while (num_read < num_example && !reach_data_end_) {
+  RecordReader reader(data_file_);
+  Example ex;
+  while (num_read < num_ex && !reach_data_end_) {
+    while (true) {
+      // read a record
+      if (reader.ReadProtocolMessage(&ex)) {
+        parseExample(ex, num_read);
+        ++ num_read;
+        break;
+      } else {
+        if (!openNextFile()) break;
+        reader = RecordReader(data_file_);
+      }
+    }
+  }
+  fillMatrices(mat);
+  return !reach_data_end_;
+}
+
+template<typename V>
+bool StreamReader<V>::readMatricesFromText(uint32 num_ex, MatrixPtrList<V>* mat) {
+  uint32 num_read = 0;
+  while (num_read < num_ex && !reach_data_end_) {
     while (true) {
       // read a line
       char* result = data_file_->readLine(line_, kMaxLineLength_);
@@ -150,9 +174,8 @@ bool StreamReader<V>::readMatrices(
   switch(data_.format()) {
     case DataConfig::TEXT:
       return readMatricesFromText(num_example, matrices);
-    // case DataConfig::RE
-      // case DataConfig::PROTO:
-      //   return readMatricesFromProto(data, mat);
+    case DataConfig::PROTO:
+      return readMatricesFromProto(num_example, matrices);
       // case DataConfig::BIN:
       //   return readMatricesFromBin(data, mat);
     default:

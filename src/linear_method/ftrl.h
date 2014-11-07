@@ -46,7 +46,7 @@ class FTRL : public OnlineSolver {
   // read minibatches
   unique_ptr<std::thread> data_thr_;
   bool read_data_finished_ = false;
-  threadsafeLimitedQueue<MatrixPtrList<Real> > data_buf_;
+  ThreadsafeLimitedQueue<MatrixPtrList<Real> > data_buf_;
 };
 
 } // namespace LM

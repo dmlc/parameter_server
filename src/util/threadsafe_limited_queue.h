@@ -1,3 +1,4 @@
+#pragma once
 #include <queue>
 #include <mutex>
 #include <condition_variable>
@@ -7,9 +8,10 @@
 namespace PS {
 
 template<typename T>
-class threadsafeLimitedQueue {
+class ThreadsafeLimitedQueue {
  public:
-  threadsafeLimitedQueue() { }
+  ThreadsafeLimitedQueue() { }
+  ThreadsafeLimitedQueue(size_t capacity) { setMaxCapacity(capacity); }
   void setMaxCapacity(size_t capacity) { max_capacity_ = capacity; }
 
   void push(const T& value, size_t capacity) {
