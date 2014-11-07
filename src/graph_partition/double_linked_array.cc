@@ -34,7 +34,7 @@ void DblinkArray::init(const std::vector<int>& data, int cache_limit) {
     cached_pos_[i] = k == n ? -1 : datapair[k].first;
   }
 
-  check();
+  // check();
 }
 
 void DblinkArray::remove(int i) {
@@ -52,7 +52,7 @@ void DblinkArray::remove(int i) {
     cached_pos_[v] = e.next;
   }
 
-  check();
+  // check();
 }
 
 void DblinkArray::check() {
@@ -109,14 +109,13 @@ void DblinkArray::decrAndSort(int i) {
   ++ size_;
   // update cache
 
-  // if (new_v < cache_limit_) {
   new_v = std::min(new_v, cache_limit_-1);
   for (; new_v >= 0 && cached_pos_[new_v] == j; -- new_v) {
     cached_pos_[new_v] = i;
   }
 
 
-  check();
+  // check();
 }
 
 } // namespace PARSA

@@ -16,11 +16,18 @@ class StreamReader {
   void init(const DataConfig& data);
 
   // return false if error happens or reach the end of files. return true otherwise
-  bool readMatrices(uint32 num_example, MatrixPtrList<V>* mat);
-  bool readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat);
+  bool readMatrices(
+      uint32 num_example,
+      MatrixPtrList<V>* matrices,
+      std::vector<Example>* examples = nullptr);
 
  private:
-  bool readOneLineFromText(uint32 num_read);
+  bool readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat);
+  void parseExample(const Example& ex, int num_read);
+  void fillMatrices(MatrixPtrList<V>* mat);
+
+  // return true if opened success, false if done
+  bool openNextFile();
   struct VSlot {
     SArray<V> val;
     SArray<uint64> col_idx;
@@ -31,47 +38,46 @@ class StreamReader {
   std::vector<VSlot> vslots_;
   ExampleParser parser_;
   DataConfig data_;
-  int cur_file_ = 0;
+  int next_file_ = 0;
+  int max_num_files_ = 0;
 
   static const int kMaxLineLength_ = 60 * 1024;
   char line_[kMaxLineLength_];
   File* data_file_ = nullptr;
   bool reach_data_end_ = false;
+  std::vector<Example>* examples_ = nullptr;
 };
+
+template<typename V>
+bool StreamReader<V>::openNextFile() {
+  if (data_file_) { data_file_->close(); data_file_ = nullptr; }
+  while (true) {
+    if (next_file_ >= max_num_files_) {
+      reach_data_end_ = true;
+      return false;
+    }
+    data_file_ = File::open(ithFile(data_, next_file_ ++), "r");
+    if (data_file_ != nullptr) break;
+  }
+  return true;
+}
 
 template<typename V>
 void StreamReader<V>::init(const DataConfig& data) {
   data_ = data;
   parser_.init(data_.text(), data_.ignore_feature_group());
   vslots_.resize(parser_.maxSlotID());
-  // line_ = new char[kMaxLineLength_];
+  max_num_files_ = data_.file_size();
+  if (data_.max_num_files_per_worker() >= 0) {
+    max_num_files_ = std::min(max_num_files_, data_.max_num_files_per_worker());
+  }
+  openNextFile();
 }
 
+
 template<typename V>
-bool StreamReader<V>::readOneLineFromText(uint32 num_read) {
-  char* result;
-  while (true) {
-    // open the file if necessary
-    if (data_file_ == nullptr) {
-      if (cur_file_ >= data_.file_size()) {
-        reach_data_end_ = true;
-        return false;
-      }
-      data_file_ = File::open(ithFile(data_, cur_file_), "r");
-      if (data_file_ == nullptr) return false;
-    }
-    // read a line
-    result = data_file_->readLine(line_, kMaxLineLength_);
-    if (result != nullptr) break;
-    // end of the file, try to open a new one
-    data_file_->close();
-    data_file_ = nullptr;
-    ++ cur_file_;
-  }
-
-  // parse
-  Example ex; if (!parser_.toProto(result, &ex)) return false;
-
+void StreamReader<V>::parseExample(const Example& ex, int num_read) {
+  if (examples_) examples_->push_back(ex);
   // store them in slots
   for (int i = 0; i < ex.slot_size(); ++i) {
     const auto& slot = ex.slot(i);
@@ -84,24 +90,17 @@ bool StreamReader<V>::readOneLineFromText(uint32 num_read) {
     while (vslot.row_siz.size() < num_read) vslot.row_siz.pushBack(0);
     vslot.row_siz.pushBack(std::max(key_size, val_size));
   }
-
-  return true;
 }
 
-
 template<typename V>
-bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat) {
-  uint32 num_read = 0;
-  while (num_read < num_example && readOneLineFromText(num_read)) { ++ num_read; }
-
+void StreamReader<V>::fillMatrices(MatrixPtrList<V>* mat) {
   auto info = parser_.info();
-
   for (int i = 0; i < vslots_.size(); ++i) {
     if (vslots_[i].empty()) continue;
     MatrixInfo mat_info = readMatrixInfo(info, i, sizeof(uint64), sizeof(V));
     if (mat_info.type() == MatrixInfo::DENSE) {
       mat->push_back(MatrixPtr<V>(new DenseMatrix<V>(mat_info, vslots_[i].val)));
-      CHECK_EQ(vslots_[i].val.size(), num_read);
+      // CHECK_EQ(vslots_[i].val.size(), num_read);
     } else {
       auto& rs = vslots_[i].row_siz;
       size_t n = rs.size();
@@ -109,7 +108,7 @@ bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>*
       for (size_t j = 0; j < n; ++j) offset[j+1] = offset[j] + rs[j];
       mat->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(
           mat_info, offset, vslots_[i].col_idx, vslots_[i].val)));
-      CHECK_EQ(n, num_read);
+      // CHECK_EQ(n, num_read);
       CHECK_EQ(vslots_[i].col_idx.size(), offset.back());
       if (!vslots_[i].val.empty()) {
         CHECK_EQ(vslots_[i].val.size(), offset.back());
@@ -118,16 +117,40 @@ bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>*
     vslots_[i].clear();
   }
   parser_.clear();
+}
+
+template<typename V>
+bool StreamReader<V>::readMatricesFromText(uint32 num_example, MatrixPtrList<V>* mat) {
+  uint32 num_read = 0;
+  while (num_read < num_example && !reach_data_end_) {
+    while (true) {
+      // read a line
+      char* result = data_file_->readLine(line_, kMaxLineLength_);
+      if (result != nullptr) {
+        Example ex;
+        if (!parser_.toProto(result, &ex)) continue;
+        parseExample(ex, num_read);
+        ++ num_read;
+        break;
+      } else {
+        if (!openNextFile()) break;
+      }
+    }
+  }
+  fillMatrices(mat);
   return !reach_data_end_;
 }
 
-
 template<typename V>
-bool StreamReader<V>::readMatrices(uint32 num_example, MatrixPtrList<V>* mat) {
-  mat->clear();
+bool StreamReader<V>::readMatrices(
+    uint32 num_example, MatrixPtrList<V>* matrices, std::vector<Example>* examples) {
+  examples_ = examples;
+  if (examples_) examples_->clear();
+  matrices->clear();
   switch(data_.format()) {
     case DataConfig::TEXT:
-      return readMatricesFromText(num_example, mat);
+      return readMatricesFromText(num_example, matrices);
+    // case DataConfig::RE
       // case DataConfig::PROTO:
       //   return readMatricesFromProto(data, mat);
       // case DataConfig::BIN:

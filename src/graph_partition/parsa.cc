@@ -29,17 +29,19 @@ void Parsa::partition() {
     data_buf_.pop(X);
     partitionU(X[0], X[1], &map_U);
   }
+  partitionV();
 }
 
 void Parsa::loadInputGraphPtr() {
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
-  StreamReader<Empty> reader(conf_.input_graph());
+  StreamReader<Empty> reader(searchFiles(conf_.input_graph()));
   MatrixPtrList<Empty> X;
   uint32 block_size = conf_.block_size();
   int i = 0;
   while(!read_data_finished_) {
     // load the graph
     bool ret = reader.readMatrices(block_size, &X);
+    CHECK(X.size());
     auto G = std::static_pointer_cast<SparseMatrix<Key,Empty>>(X.back());
 
     // map the columns id into small integers

@@ -1,7 +1,7 @@
 CC = g++
 
-# OPT = -O3 -ggdb
-OPT = -O0 -ggdb
+OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -27,7 +27,7 @@ endif
 
 # -ltcmalloc_and_profiler
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
--lsnappy -lm -lpthread -lrt  -lstdc++
+-lsnappy -lm -lpthread -lrt  -lstdc++ -ltcmalloc_and_profiler
 GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)
