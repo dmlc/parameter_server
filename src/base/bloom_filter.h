@@ -1,3 +1,4 @@
+#pragma once
 #include "base/sketch.h"
 namespace PS {
 
@@ -6,6 +7,7 @@ class BloomFilter : public Sketch {
  public:
   BloomFilter() { }
   BloomFilter(int m, int k) { resize(m, k); }
+  ~BloomFilter() { delete [] data_; }
   void resize(int m, int k) {
     delete [] data_;
     k_ = std::min(64, std::max(1, k));
@@ -13,7 +15,6 @@ class BloomFilter : public Sketch {
     data_size_ = (m / 8) + 1;
     data_ = new char[data_size_];
     memset(data_, 0, data_size_ * sizeof(char));
-    // LL << data_size_ << " " << k_;
   }
 
   bool operator[] (K key) const { return query(key); }

@@ -1,6 +1,6 @@
 CC = g++
 
-# OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
 OPT = -O3 -ggdb
 
 BIN = ../bin
@@ -104,11 +104,11 @@ test: $(addprefix $(BIN)/, $(TESTS))
 # t: ../bin/slot_reader_test
 # t: ../bin/prepare_test_data
 t: ../bin/bloom_filter_test/
-../bin/bloom_filter_test: test/bloom_filter_test.cc
+../bin/bloom_filter_test: test/bloom_filter_test.o
 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
 
-%.o: %.cc %.h
+%.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.d: %.cc

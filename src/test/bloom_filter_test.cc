@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "base/bloom_filter.h"
+#include "base/block_bloom_filter.h"
 #include "base/shared_array_inl.h"
 
 DEFINE_int32(m, 100, "");
@@ -21,12 +22,26 @@ using namespace PS;
   LL << key2.size() / toc(tv) << " query per sec";
 
   LL << "FPR: " << (double) res / (double) key2.size();
+
+
+  BlockBloomFilter<Key> blk_bloom(FLAGS_m, FLAGS_k);
+
+  tv = tic();
+  for (auto k : key1) blk_bloom.insert(k);
+  LL << key1.size() / toc(tv) << " insert per sec";
+
+  tv = tic();
+  res = 0;
+  for (auto k : key2)  res += blk_bloom[k];
+  LL << key2.size() / toc(tv) << " query per sec";
+
+  LL << "FPR: " << (double) res / (double) key2.size();
 }
 
 int main(int argc, char **argv) {
+  FLAGS_logtostderr = 1;
   testing::InitGoogleTest(&argc, argv);
   google::ParseCommandLineFlags(&argc, &argv, true);
-  FLAGS_logtostderr = 1;
 
   return RUN_ALL_TESTS();
 }
