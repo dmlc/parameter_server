@@ -193,7 +193,9 @@ MatrixPtr<V> SArray<V>::matrix(size_t rows, size_t cols) {
 
 template <typename V>
 bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
-  if (range == SizeR::all()) range = SizeR(0, File::size(data.file(0)));
+  if (range == SizeR::all()) {
+    range = SizeR(0, File::size(data.file(0))/sizeof(V));
+  }
   if (range.empty()) { clear(); return true; }
 
   File* file = File::open(data, "r");

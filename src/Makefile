@@ -73,7 +73,7 @@ TESTS = \
 	grad_desc_test \
 	ftrl_test \
 	prepare_test_data \
-	# bloom_filter_test \
+	bloom_filter_test \
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \

@@ -1,0 +1,24 @@
+#pragma once
+#include "util/common.h"
+namespace PS {
+
+// the basc class for bloom filters, countmin, etc...
+class Sketch {
+ public:
+ protected:
+  uint32 hash(const uint64& key) const {
+    // similar to murmurhash
+    const uint32 seed = 0xbc9f1d34;
+    const uint32 m = 0xc6a4a793;
+    const uint32 n = 8;  // sizeof uint64
+    uint32 h = seed ^ (n * m);
+
+    uint32 w = (uint32) key;
+    h += w; h *= m; h ^= (h >> 16);
+
+    w = (uint32) (key >> 32);
+    h += w; h *= m; h ^= (h >> 16);
+    return h;
+  }
+};
+} // namespace PS
