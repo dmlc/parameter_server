@@ -32,6 +32,8 @@ class Parsa : public App {
   void updateCostAndNeighborSet(
       const GraphPtr& row_major_blk, const GraphPtr& col_major_blk, int Ui, int partition);
 
+  uint32 hash(uint64 key) { return key % num_V_; }
+
   std::vector<PARSA::DblinkArray> cost_;
   struct NeighborSet {
     Bitmap assigned_V;
@@ -43,11 +45,7 @@ class Parsa : public App {
   int num_V_;
   ParsaConf conf_;
 
+  std::vector<int16> partition_V_;
 
-  typedef std::pair<ExampleListPtr, SArray<int>> ResultPair;
-  ProducerConsumer<ResultPair> writer_1_;
-  ProducerConsumer<ResultPair> writer_2_;
-
-  std::vector<RecordWriter> proto_writers_1_;
 };
 } // namespace PS
