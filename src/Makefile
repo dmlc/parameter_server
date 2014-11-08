@@ -1,7 +1,7 @@
 CC = g++
 
 # OPT = -O3 -ggdb
-OPT = -O0 -ggdb
+OPT = -O3 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -30,8 +30,8 @@ LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
 -lsnappy -lm -lpthread -lrt  -lstdc++ -ltcmalloc_and_profiler
 GTEST = -lgtest_main -lgtest
 
+
 OBJS = $(SRCS:.cc=.o)
-DEPS = $(SRCS:.cc=.d)
 PROTOS= $(wildcard proto/*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
 SRCS = $(PROTOS_CC) \
@@ -72,6 +72,8 @@ TESTS = \
 	shared_array_test \
 	grad_desc_test \
 	ftrl_test \
+	prepare_test_data \
+	# bloom_filter_test \
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \
@@ -89,23 +91,27 @@ TESTS = \
         sparse_matrix_multi_thread_perf \
 	fault_tolerance_press \
 
-all: dir $(addprefix $(BIN)/, ps) # text2proto
+ALL_SRCS = $(SRCS) $(addsuffix .cc, $(addprefix test/, $(TESTS)))
+DEPS = $(ALL_SRCS:.cc=.d)
+
+all: dir $(addprefix $(BIN)/, ps)
+
+clean:
+	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
 data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 # t: ../bin/slot_reader_test
-t: ../bin/ftrl_test
+# t: ../bin/prepare_test_data
+t: ../bin/bloom_filter_test/
+../bin/bloom_filter_test: test/bloom_filter_test.cc
+	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
-dir:
-	mkdir -p $(LIB)
-	mkdir -p $(BIN)
-clean:
-	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
 
 %.o: %.cc %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.d: %.cc %.h
+%.d: %.cc
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
 
 $(BIN)/%: data/%.cc $(LIB)/libps.a
@@ -117,8 +123,6 @@ $(BIN)/%: test/%.cc $(LIB)/libps.a
 ./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
 
--include $(DEPS)
-
 # static link, works fine for both mac and linux.
 $(LIB)/libps.a: $(OBJS) #gtest
 	ar crv $@ $(OBJS)
@@ -126,6 +130,14 @@ $(LIB)/libps.a: $(OBJS) #gtest
 $(BIN)/ps: main.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) main.cc $(LDFLAGS) -o $@
 
+# make directories
+dir: $(LIB) $(BIN)
+$(LIB):
+	mkdir -p $(LIB)
+$(BIN):
+	mkdir -p $(BIN)
+
+-include $(DEPS)
 # =====================
 
 # -Wl,-rpath=../lib $(LIB)/libps.so
