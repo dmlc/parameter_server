@@ -5,6 +5,7 @@
 #include "base/sparse_matrix.h"
 #include "base/bitmap.h"
 #include "system/app.h"
+#include "base/block_bloom_filter.h"
 #include "util/recordio.h"
 
 namespace PS {
@@ -32,23 +33,29 @@ class Parsa : public App {
   void updateCostAndNeighborSet(
       const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
       const SArray<Key>& global_key, int Ui, int partition);
+  void initWorkerNbset(
+      const SArray<Key>& global_key, const SArray<uint64>& nbset);
+  void sendWorkerUpdatedNbset();
 
-  uint32 hash(uint64 key) { return key % num_V_; }
+  typedef uint8 P;  //
+  typedef uint64 S;
+  // the neighbor sets of U
+  std::unordered_map<Key, S> server_nbset_;
+  std::vector<BlockBloomFilter<Key>> worker_nbset_;
+  typedef std::pair<Key, P> KP;
+  SArray<KP> worker_added_nbset_;
 
+  // about U
   std::vector<PARSA::DblinkArray> cost_;
-  struct NeighborSet {
-    // Bitmap assigned_V;
-    std::unordered_set<Key> assigned_V;
-  };
   Bitmap assigned_U_;
-  std::vector<NeighborSet> neighbor_set_;
-  // number of partitions
+
   int num_partitions_;
-  int num_V_;
   ParsaConf conf_;
 
   // std::vector<int16> partition_V_;
-  std::unordered_map<Key, uint8> partition_V_;
+  std::unordered_map<Key, P> partition_V_;
 
 };
 } // namespace PS
+  // uint32 hash(uint64 key) { return key % num_V_; }
+  // int num_V_;

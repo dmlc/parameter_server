@@ -7,14 +7,14 @@ void Parsa::init() {
   conf_ = app_cf_.parsa();
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
   num_partitions_ = conf_.num_partitions();
-  num_V_ = conf_.v_size();
-  neighbor_set_.resize(num_partitions_);
+  worker_nbset_.resize(num_partitions_);
   // for (int k = 0; k < num_partitions_; ++k) {
   //   neighbor_set_[k].assigned_V.resize(num_V_);
   // }
 }
 
 void Parsa::run() {
+  CHECK_LT(num_partitions_, 64) << " TODO, my appologies";
   partition();
 }
 
@@ -48,7 +48,6 @@ void Parsa::partition() {
     });
 
   // writer
-
   typedef std::pair<ExampleListPtr, SArray<int>> ResultPair;
   ProducerConsumer<ResultPair> writer_1;
   std::vector<RecordWriter> proto_writers_1;
@@ -118,69 +117,55 @@ void Parsa::partition() {
 }
 
 void Parsa::partitionV() {
-  // sort the neighbor set
-  std::vector<std::vector<Key>> ordered_nbset(num_partitions_);
-  for (int k = 0; k < num_partitions_; ++k) {
-    auto& part = ordered_nbset[k];
-    part.resize(neighbor_set_[k].assigned_V.size());
-    int i = 0;
-    for (const auto& e : neighbor_set_[k].assigned_V) {
-      part[i++] = e;
-    }
-    sort(part.begin(), part.end());
-  }
-
-  // partitioning
-  std::vector<std::vector<Key>::iterator> its(num_partitions_);
-  for (int k = 0; k < num_partitions_; ++k) {
-    its[k] = ordered_nbset[k].begin();
-  }
   std::vector<int> cost(num_partitions_);
-  bool done = false;
-  while (!done) {
-    Key cur = kMaxKey;
-    for (int k = 0; k < num_partitions_; ++k) {
-      if (its[k] != ordered_nbset[k].end() && *its[k] < cur) cur = *its[k];
-    }
-    if (cur == kMaxKey) break;
+  for (const auto& e : server_nbset_) {
     int max_cost = 0;
     int best_k = -1;
     for (int k = 0; k < num_partitions_; ++k) {
-      if (*its[k] == cur) {
+      if (e.second & (1 << k)) {
         int c = ++ cost[k];
         if (c > max_cost) { max_cost = c; best_k = k; }
-        ++ its[k];
       }
     }
-    CHECK_GE(best_k, 0);
-    partition_V_[cur] = best_k;
-    -- cost[best_k];
+    // CHECK_GE(best_k, 0);
+    if (best_k >= 0) {
+      // partition_V_[e.first] = best_k;
+      -- cost[best_k];
+    }
   }
-
-  // for (auto a)
-
-  // partition_V_.resize(num_V_);
-  // for (int i = 0; i < num_V_; ++i) {
-  //   int max_v = 0;
-  //   int max_j = -1;
-  //   for (int j = 0; j <
-  //     if (neighbor_set_[j].assigned_V[i]) {
-  //       int v = ++ cost[j];
-  //       if (v > max_v) { max_j = j; max_v = v; }
-  //     }
-  //   }
-  //   /// assign V_j to partitionn max_j
-  //   if (max_j >= 0) -- cost[max_j];
-  //   partition_V_[i] = max_j;
-  // }
 
   int v = 0;
   for (int j = 0; j < num_partitions_; ++j) v += cost[j];
   LL << v;
 }
+
+void Parsa::initWorkerNbset(const SArray<Key>& global_key, const SArray<uint64>& nbset) {
+  CHECK_EQ(global_key.size(), nbset.size());
+  int n = global_key.size();
+  int k = conf_.bloomfilter_k();
+  int m = n * k * 1.44 * conf_.bloomfilter_m_ratio();
+
+  worker_added_nbset_.resize(0);
+  for (int k = 0; k < num_partitions_; ++k) {
+    worker_nbset_[k].resize(m, k);
+  }
+  for (int i = 0; i < n; ++i) {
+    uint64 s = nbset[i];
+    if (s == 0) continue;
+    for (int k = 0; k < num_partitions_; ++k) {
+      if (s & (1 << k)) {
+        worker_nbset_[k].insert(global_key[i]);
+      }
+    }
+  }
+}
 void Parsa::partitionU(const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
                        const SArray<Key>& global_key, SArray<int>* map_U) {
   // initialization
+  SArray<uint64> nbset; nbset.reserve(global_key.size());
+  for (auto k : global_key) nbset.pushBack(server_nbset_[k]);
+  initWorkerNbset(global_key, nbset);
+
   int n = row_major_blk->rows();
   map_U->resize(n);
   assigned_U_.clear();
@@ -200,6 +185,37 @@ void Parsa::partitionU(const GraphPtr& row_major_blk, const GraphPtr& col_major_
     // update
     updateCostAndNeighborSet(row_major_blk, col_major_blk, global_key, Ui, k);
   }
+
+  // send results to servers
+  sendWorkerUpdatedNbset();
+}
+
+void Parsa::sendWorkerUpdatedNbset() {
+  // pack the local updates
+  std::sort(worker_added_nbset_.begin(), worker_added_nbset_.end(),
+            [](const KP& a, const KP& b) { return a.first < b.first; });
+  SArray<Key> key;
+  SArray<S> value;
+  Key pre = worker_added_nbset_[0].first;
+  S s = 0;
+  for (int i = 0; i < worker_added_nbset_.size(); ++i) {
+    Key cur = worker_added_nbset_[i].first;
+    if (cur == pre) {
+      s |= 1 << worker_added_nbset_[i].second;
+    } else {
+      key.pushBack(pre);
+      value.pushBack(s);
+      s = 0;
+      pre = cur;
+    }
+  }
+  key.pushBack(worker_added_nbset_.back().first);
+  value.pushBack(s);
+
+  // update server
+  for (int i = 0; i < key.size(); ++i) {
+    server_nbset_[key[i]] |= value[i];
+  }
 }
 
 // init the cost of assigning U_i to partition k
@@ -210,11 +226,11 @@ void Parsa::initCost(const GraphPtr& row_major_blk, const SArray<Key>& global_ke
   std::vector<int> cost(n);
   cost_.resize(num_partitions_);
   for (int k = 0; k < num_partitions_; ++k) {
-    const auto& assigned_V = neighbor_set_[k].assigned_V;
+    const auto& assigned_V = worker_nbset_[k];
     for (int i = 0; i < n; ++ i) {
       for (size_t j = row_os[i]; j < row_os[i+1]; ++j) {
-       // cost[i] += !assigned_V[row_idx[j]];
-        cost[i] += assigned_V.count(global_key[row_idx[j]]) == 0;
+       cost[i] += !assigned_V[global_key[row_idx[j]]];
+        // cost[i] += assigned_V.count(global_key[row_idx[j]]) == 0;
       }
     }
     cost_[k].init(cost, conf_.cost_cache_limit());
@@ -230,15 +246,14 @@ void Parsa::updateCostAndNeighborSet(
   size_t* col_os = col_major_blk->offset().begin();
   uint32* row_idx = row_major_blk->index().begin();
   uint32* col_idx = col_major_blk->index().begin();
-  auto& assigned_V = neighbor_set_[partition].assigned_V;
+  auto& assigned_V = worker_nbset_[partition];
   auto& cost = cost_[partition];
   for (size_t i = row_os[Ui]; i < row_os[Ui+1]; ++i) {
     int Vj = row_idx[i];
-    // if (assigned_V[Vj]) continue;
-    // assigned_V.set(Vj);
     auto key = global_key[Vj];
-    if (assigned_V.count(key) != 0) continue;
+    if (assigned_V[key]) continue;
     assigned_V.insert(key);
+    worker_added_nbset_.pushBack(std::make_pair(key, (uint8)partition));
     for (size_t s = col_os[Vj]; s < col_os[Vj+1]; ++s) {
       int Uk = col_idx[s];
       if (assigned_U_[Uk]) continue;

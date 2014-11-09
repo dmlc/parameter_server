@@ -14,13 +14,19 @@ class BlockBloomFilter : public Sketch {
   BlockBloomFilter(int m, int k) { resize(m, k); }
   ~BlockBloomFilter() { delete [] data_; }
   void resize(int m, int k) {
-    delete [] data_;
-    k_ = std::min(64, std::max(1, k));
-    m_ = m;
     num_bin_ = (m / 8 / bin_size_) + 1;
     data_size_ = num_bin_ * bin_size_;
-    data_ = new char[data_size_];
-    // CHECK_EQ(posix_memalign((void**)&data_, bin_size_*8, data_size_), 0);
+    if (m > m_) {
+      delete [] data_;
+      data_ = new char[data_size_];
+      // CHECK_EQ(posix_memalign((void**)&data_, bin_size_*8, data_size_), 0);
+    }
+    k_ = std::min(64, std::max(1, k));
+    m_ = m;
+    reset();
+  }
+
+  void reset() {
     memset(data_, 0, data_size_ * sizeof(char));
   }
 
