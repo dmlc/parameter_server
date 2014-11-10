@@ -14,6 +14,7 @@ class BlockBloomFilter : public Sketch {
   BlockBloomFilter(int m, int k) { resize(m, k); }
   ~BlockBloomFilter() { delete [] data_; }
   void resize(int m, int k) {
+    m = std::max(m, 1024);
     num_bin_ = (m / 8 / bin_size_) + 1;
     data_size_ = num_bin_ * bin_size_;
     if (m > m_) {
@@ -30,6 +31,8 @@ class BlockBloomFilter : public Sketch {
     memset(data_, 0, data_size_ * sizeof(char));
   }
 
+  // make the api be similar to std::set
+  bool count(K key) const { return query(key); }
   bool operator[] (K key) const { return query(key); }
   bool query(K key) const {
     uint32 h = hash(key);

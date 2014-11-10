@@ -26,7 +26,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/neural_network.pb.h"
 #include "proto/linear_method.pb.h"
-#include "proto/parsa.pb.h"
+#include "graph_partition/parsa.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {

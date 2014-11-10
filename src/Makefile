@@ -30,25 +30,20 @@ LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
 -lsnappy -lm -lpthread -lrt  -lstdc++ -ltcmalloc_and_profiler
 GTEST = -lgtest_main -lgtest
 
+-include */BUILD
 
 OBJS = $(SRCS:.cc=.o)
-PROTOS= $(wildcard proto/*.proto)
+PROTOS= $(wildcard */*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
+
 SRCS = $(PROTOS_CC) \
+	$(addprefix graph_partition/, $(graph_partition_srcs)) \
+	$(addprefix system/, $(system_srcs)) \
     util/crc32c.cc \
 	util/MurmurHash3.cc \
 	util/file.cc \
 	util/filelinereader.cc \
 	util/threadpool.cc \
-	system/van.cc \
-	system/message.cc \
-	system/postoffice.cc \
-	system/heartbeat_info.cc \
-	system/yellow_pages.cc \
-	system/remote_node.cc \
-	system/executor.cc \
-	system/app.cc \
-	system/dashboard.cc \
 	filter/filter.cc \
 	data/common.cc \
 	data/text_parser.cc \
@@ -58,8 +53,6 @@ SRCS = $(PROTOS_CC) \
 	linear_method/batch_solver.cc \
     linear_method/darling.cc \
     linear_method/ftrl.cc \
-    graph_partition/double_linked_array.cc \
-    graph_partition/parsa.cc
 
 
 TESTS = \
@@ -107,7 +100,6 @@ t: ../bin/bloom_filter_test/
 ../bin/bloom_filter_test: test/bloom_filter_test.o
 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
-
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -120,7 +112,7 @@ $(BIN)/%: data/%.cc $(LIB)/libps.a
 $(BIN)/%: test/%.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS) -o $@
 
-./proto/%.pb.cc ./proto/%.pb.h : ./proto/%.proto
+%.pb.cc %.pb.h : %.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
 
 # static link, works fine for both mac and linux.
@@ -138,6 +130,7 @@ $(BIN):
 	mkdir -p $(BIN)
 
 -include $(DEPS)
+
 # =====================
 
 # -Wl,-rpath=../lib $(LIB)/libps.so
