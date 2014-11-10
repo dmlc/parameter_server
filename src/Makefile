@@ -30,29 +30,18 @@ LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
 -lsnappy -lm -lpthread -lrt  -lstdc++ -ltcmalloc_and_profiler
 GTEST = -lgtest_main -lgtest
 
--include */BUILD
-
 OBJS = $(SRCS:.cc=.o)
 PROTOS= $(wildcard */*.proto)
 PROTOS_CC = $(PROTOS:.proto=.pb.cc)
 
+-include */BUILD
 SRCS = $(PROTOS_CC) \
 	$(addprefix graph_partition/, $(graph_partition_srcs)) \
 	$(addprefix system/, $(system_srcs)) \
-    util/crc32c.cc \
-	util/MurmurHash3.cc \
-	util/file.cc \
-	util/filelinereader.cc \
-	util/threadpool.cc \
-	filter/filter.cc \
-	data/common.cc \
-	data/text_parser.cc \
-	data/example_parser.cc \
-	data/slot_reader.cc \
-	linear_method/linear_method.cc \
-	linear_method/batch_solver.cc \
-    linear_method/darling.cc \
-    linear_method/ftrl.cc \
+	$(addprefix util/, $(util_srcs)) \
+	$(addprefix data/, $(data_srcs)) \
+	$(addprefix linear_method/, $(linear_method_srcs)) \
+	filter/filter.cc
 
 
 TESTS = \
