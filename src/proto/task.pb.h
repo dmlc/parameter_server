@@ -30,6 +30,7 @@
 #include "proto/app.pb.h"
 #include "proto/linear_method.pb.h"
 #include "proto/filter.pb.h"
+#include "proto/common.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -69,34 +70,6 @@ inline bool Task_Type_Parse(
     const ::std::string& name, Task_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<Task_Type>(
     Task_Type_descriptor(), name, value);
-}
-enum Task_DataType {
-  Task_DataType_OTHER = 0,
-  Task_DataType_INT8 = 1,
-  Task_DataType_INT16 = 2,
-  Task_DataType_INT32 = 3,
-  Task_DataType_INT64 = 4,
-  Task_DataType_UINT8 = 5,
-  Task_DataType_UINT16 = 6,
-  Task_DataType_UINT32 = 7,
-  Task_DataType_UINT64 = 8,
-  Task_DataType_FLOAT = 9,
-  Task_DataType_DOUBLE = 10
-};
-bool Task_DataType_IsValid(int value);
-const Task_DataType Task_DataType_DataType_MIN = Task_DataType_OTHER;
-const Task_DataType Task_DataType_DataType_MAX = Task_DataType_DOUBLE;
-const int Task_DataType_DataType_ARRAYSIZE = Task_DataType_DataType_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* Task_DataType_descriptor();
-inline const ::std::string& Task_DataType_Name(Task_DataType value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Task_DataType_descriptor(), value);
-}
-inline bool Task_DataType_Parse(
-    const ::std::string& name, Task_DataType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Task_DataType>(
-    Task_DataType_descriptor(), name, value);
 }
 enum ManageNode_Command {
   ManageNode_Command_INIT = 1,
@@ -261,39 +234,6 @@ class Task : public ::google::protobuf::Message {
     return Task_Type_Parse(name, value);
   }
 
-  typedef Task_DataType DataType;
-  static const DataType OTHER = Task_DataType_OTHER;
-  static const DataType INT8 = Task_DataType_INT8;
-  static const DataType INT16 = Task_DataType_INT16;
-  static const DataType INT32 = Task_DataType_INT32;
-  static const DataType INT64 = Task_DataType_INT64;
-  static const DataType UINT8 = Task_DataType_UINT8;
-  static const DataType UINT16 = Task_DataType_UINT16;
-  static const DataType UINT32 = Task_DataType_UINT32;
-  static const DataType UINT64 = Task_DataType_UINT64;
-  static const DataType FLOAT = Task_DataType_FLOAT;
-  static const DataType DOUBLE = Task_DataType_DOUBLE;
-  static inline bool DataType_IsValid(int value) {
-    return Task_DataType_IsValid(value);
-  }
-  static const DataType DataType_MIN =
-    Task_DataType_DataType_MIN;
-  static const DataType DataType_MAX =
-    Task_DataType_DataType_MAX;
-  static const int DataType_ARRAYSIZE =
-    Task_DataType_DataType_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  DataType_descriptor() {
-    return Task_DataType_descriptor();
-  }
-  static inline const ::std::string& DataType_Name(DataType value) {
-    return Task_DataType_Name(value);
-  }
-  static inline bool DataType_Parse(const ::std::string& name,
-      DataType* value) {
-    return Task_DataType_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
 
   // required .PS.Task.Type type = 1;
@@ -366,20 +306,20 @@ class Task : public ::google::protobuf::Message {
   inline bool has_key() const;
   inline void set_has_key(bool value);
 
-  // optional .PS.Task.DataType key_type = 13;
+  // optional .PS.DataType key_type = 13;
   inline bool has_key_type() const;
   inline void clear_key_type();
   static const int kKeyTypeFieldNumber = 13;
-  inline ::PS::Task_DataType key_type() const;
-  inline void set_key_type(::PS::Task_DataType value);
+  inline ::PS::DataType key_type() const;
+  inline void set_key_type(::PS::DataType value);
 
-  // repeated .PS.Task.DataType value_type = 14;
+  // repeated .PS.DataType value_type = 14;
   inline int value_type_size() const;
   inline void clear_value_type();
   static const int kValueTypeFieldNumber = 14;
-  inline ::PS::Task_DataType value_type(int index) const;
-  inline void set_value_type(int index, ::PS::Task_DataType value);
-  inline void add_value_type(::PS::Task_DataType value);
+  inline ::PS::DataType value_type(int index) const;
+  inline void set_value_type(int index, ::PS::DataType value);
+  inline void add_value_type(::PS::DataType value);
   inline const ::google::protobuf::RepeatedField<int>& value_type() const;
   inline ::google::protobuf::RepeatedField<int>* mutable_value_type();
 
@@ -1541,7 +1481,7 @@ inline void Task::set_has_key(bool value) {
   has_key_ = value;
 }
 
-// optional .PS.Task.DataType key_type = 13;
+// optional .PS.DataType key_type = 13;
 inline bool Task::has_key_type() const {
   return (_has_bits_[0] & 0x00000200u) != 0;
 }
@@ -1552,34 +1492,34 @@ inline void Task::clear_has_key_type() {
   _has_bits_[0] &= ~0x00000200u;
 }
 inline void Task::clear_key_type() {
-  key_type_ = 0;
+  key_type_ = 1;
   clear_has_key_type();
 }
-inline ::PS::Task_DataType Task::key_type() const {
-  return static_cast< ::PS::Task_DataType >(key_type_);
+inline ::PS::DataType Task::key_type() const {
+  return static_cast< ::PS::DataType >(key_type_);
 }
-inline void Task::set_key_type(::PS::Task_DataType value) {
-  assert(::PS::Task_DataType_IsValid(value));
+inline void Task::set_key_type(::PS::DataType value) {
+  assert(::PS::DataType_IsValid(value));
   set_has_key_type();
   key_type_ = value;
 }
 
-// repeated .PS.Task.DataType value_type = 14;
+// repeated .PS.DataType value_type = 14;
 inline int Task::value_type_size() const {
   return value_type_.size();
 }
 inline void Task::clear_value_type() {
   value_type_.Clear();
 }
-inline ::PS::Task_DataType Task::value_type(int index) const {
-  return static_cast< ::PS::Task_DataType >(value_type_.Get(index));
+inline ::PS::DataType Task::value_type(int index) const {
+  return static_cast< ::PS::DataType >(value_type_.Get(index));
 }
-inline void Task::set_value_type(int index, ::PS::Task_DataType value) {
-  assert(::PS::Task_DataType_IsValid(value));
+inline void Task::set_value_type(int index, ::PS::DataType value) {
+  assert(::PS::DataType_IsValid(value));
   value_type_.Set(index, value);
 }
-inline void Task::add_value_type(::PS::Task_DataType value) {
-  assert(::PS::Task_DataType_IsValid(value));
+inline void Task::add_value_type(::PS::DataType value) {
+  assert(::PS::DataType_IsValid(value));
   value_type_.Add(value);
 }
 inline const ::google::protobuf::RepeatedField<int>&
@@ -2490,10 +2430,6 @@ namespace protobuf {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_Type>() {
   return ::PS::Task_Type_descriptor();
-}
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_DataType>() {
-  return ::PS::Task_DataType_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageNode_Command>() {

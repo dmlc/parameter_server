@@ -220,19 +220,18 @@ Node Van::assembleMyNode() {
 
   // IP, port and interface
   string ip;
+  string interface = FLAGS_interface;
   unsigned short port;
-  if (FLAGS_interface.empty()) {
-    LocalMachine::pickupAvailableInterfaceAndIP(FLAGS_interface, ip);
+
+  if (interface.empty()) {
+    LocalMachine::pickupAvailableInterfaceAndIP(interface, ip);
   } else {
-    LocalMachine::IP(FLAGS_interface);
+    ip = LocalMachine::IP(interface);
   }
-  if (ip.empty() || FLAGS_interface.empty()) {
-    throw std::runtime_error("got interface/ip failed");
-  }
+  CHECK(!ip.empty()) << "failed to got ip";
+  CHECK(!interface.empty()) << "failed to got the interface";
   port = LocalMachine::pickupAvailablePort();
-  if (0 == port) {
-    throw std::runtime_error("got port failed");
-  }
+  CHECK_NE(port, 0) << "failed to get port";
   ret_node.set_hostname(ip);
   ret_node.set_port(static_cast<int32>(port));
 

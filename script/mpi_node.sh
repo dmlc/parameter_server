@@ -24,9 +24,16 @@ else
     echo "failed to get the rank size"
     exit -1
 fi
-# echo "$my_rank $rank_size"
 
 source ${2}
+
+if (( ${rank_size} == 0 )); then
+    root_node=`${dir}/get_root_node.sh ${network_interface} ${network_port}`
+    if [${root_node} -ne ${my_node}]; then
+        echo "start ./mpi_root.sh on the first machine in your hostfile"
+        exit -1
+    fi
+fi
 
 if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
     echo "too small rank size ${rank_size}"
@@ -34,17 +41,13 @@ if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
 fi
 
 mkdir -p ${3}/../output
-${3}/ps \
+${3}/../bin/ps \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
     -num_threads ${num_threads} \
     -scheduler ${1} \
     -my_rank ${my_rank} \
     -app ${3}/${app_conf} \
-    -report_interval ${report_interval} \
-    ${verbose} \
-    ${log_to_file} \
-    ${log_instant} \
-    ${print_van} \
-    ${shuffle_fea_id} \
+    -interface ${network_interface} \
+    ${args} \
     || { echo "rank:${my_rank} launch failed"; exit -1; }

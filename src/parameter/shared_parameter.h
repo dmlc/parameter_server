@@ -1,6 +1,7 @@
 #pragma once
 #include "system/customer.h"
 #include "parameter/frequency_filter.h"
+#include "proto/common.pb.h"
 namespace PS {
 
 template <typename K> class SharedParameter;
@@ -158,7 +159,26 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
   using SharedParameter<K>::keyRange;           \
   using SharedParameter<K>::sync
 
-
+template<typename V> using CompAssOp = std::function<void(V&, V)>;
+template<typename V> CompAssOp<V> newCompAssOp(const Operator& op) {
+  switch (op) {
+    case Operator::PLUS:
+      return [](V& right, V left) { right += left; };
+    case Operator::MINUS:
+      return [](V& right, V left) { right -= left; };
+    case Operator::TIMES:
+      return [](V& right, V left) { right *= left; };
+    case Operator::DIVIDE:
+      return [](V& right, V left) { right /= left; };
+    case Operator::AND:
+      return [](V& right, V left) { right &= left; };
+    case Operator::OR:
+      return [](V& right, V left) { right |= left; };
+    case Operator::XOR:
+      return [](V& right, V left) { right ^= left; };
+  }
+  return [](V& right, V left) { };
+}
 // template <typename K, typename V>
 // void SharedParameter<K,V>::recover(Range<K> range) {
 //   // TODO recover from checkpoint

@@ -3,10 +3,14 @@
 #include "graph_partition/parsa_server.h"
 namespace PS {
 
+Parsa::~Parsa() {
+  delete worker_;
+  delete server_;
+}
+
 void Parsa::init() {
   conf_ = app_cf_.parsa();
   CHECK_LT(conf_.num_partitions(), 64) << " TODO, my appologies";
-  num_partitions_ = conf_.num_partitions();
   // worker_ = std::unique_ptr<ParsaWorker>(new ParsaWorker(conf_));
   worker_ = new ParsaWorker(conf_);
 }

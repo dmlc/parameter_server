@@ -4,6 +4,7 @@ import "proto/range.proto";
 import "proto/app.proto";
 import "proto/linear_method.proto";
 import "proto/filter.proto";
+import "proto/common.proto";
 
 message Task {
   enum Type {
@@ -33,19 +34,6 @@ message Task {
   // indiciate whether or not has the key list
   optional bool has_key = 9 [default = false];
 
-  enum DataType {
-    OTHER = 0;
-    INT8 = 1;
-    INT16 = 2;
-    INT32 = 3;
-    INT64 = 4;
-    UINT8 = 5;
-    UINT16 = 6;
-    UINT32 = 7;
-    UINT64 = 8;
-    FLOAT = 9;
-    DOUBLE = 10;
-  }
   optional DataType key_type = 13;
   repeated DataType value_type = 14;
 

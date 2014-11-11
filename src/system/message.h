@@ -5,6 +5,7 @@
 #include "base/shared_array.h"
 #include "proto/task.pb.h"
 #include "proto/filter.pb.h"
+#include "proto/common.pb.h"
 
 namespace PS {
 
@@ -89,9 +90,9 @@ struct Message {
 
   // helper
   template <typename V>
-  static Task::DataType type() {
+  static DataType type() {
     // TODO
-    return Task::OTHER;
+    return DataType::OTHER;
   }
  private:
 };

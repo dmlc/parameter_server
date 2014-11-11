@@ -31,9 +31,9 @@ class ParsaWorker {
   void updateCostAndNeighborSet(
       const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
       const SArray<Key>& global_key, int Ui, int partition);
-  void initWorkerNbset(
+  void initNeighborSet(
       const SArray<Key>& global_key, const SArray<uint64>& nbset);
-  void sendWorkerUpdatedNbset();
+  void sendUpdatedNeighborSet();
 
  private:
   typedef uint8 P;  //
@@ -41,13 +41,13 @@ class ParsaWorker {
   // the neighbor sets of U
   std::unordered_map<Key, S> server_nbset_;
 #ifdef EXACT_NBSET
-  std::vector<std::unordered_set<Key>> worker_nbset_;
+  std::vector<std::unordered_set<Key>> neighbor_set_;
 #else
-  std::vector<BlockBloomFilter<Key>> worker_nbset_;
+  std::vector<BlockBloomFilter<Key>> neighbor_set_;
 #endif
 
   typedef std::pair<Key, P> KP;
-  SArray<KP> worker_added_nbset_;
+  SArray<KP> added_neighbor_set_;
 
   // about U
   std::vector<PARSA::DblinkArray> cost_;

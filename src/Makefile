@@ -25,9 +25,8 @@ else
     CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-fopenmp #-fPIC #
 endif
 
-# -ltcmalloc_and_profiler
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
--lsnappy -lm -lpthread -lrt  -lstdc++ -ltcmalloc_and_profiler
+-lsnappy -lm -lpthread -lrt  -lstdc++ #-ltcmalloc_and_profiler
 GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)
@@ -55,7 +54,8 @@ TESTS = \
 	grad_desc_test \
 	ftrl_test \
 	prepare_test_data \
-	bloom_filter_test \
+	bloom_filter_test
+	# test
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \
@@ -80,14 +80,9 @@ all: dir $(addprefix $(BIN)/, ps)
 
 clean:
 	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
+
 data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
-
-# t: ../bin/slot_reader_test
-# t: ../bin/prepare_test_data
-t: ../bin/bloom_filter_test/
-../bin/bloom_filter_test: test/bloom_filter_test.o
-	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -120,6 +115,12 @@ $(BIN):
 
 -include $(DEPS)
 
-# =====================
+###  tmp junks
+
+# t: ../bin/slot_reader_test
+# t: ../bin/prepare_test_data
+t: ../bin/bloom_filter_test/
+../bin/bloom_filter_test: test/bloom_filter_test.o
+	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
 # -Wl,-rpath=../lib $(LIB)/libps.so

@@ -8,17 +8,11 @@ fi
 
 dir=`dirname "$0"`
 conf=${dir}/${1}
-mpirun=${dir}/mpirun
+# mpirun=${dir}/mpirun
 
 source ${conf}
 
-my_ip=`/sbin/ifconfig ${scheduler_network_interface} | grep inet | grep -v inet6 | awk '{print $2}' | sed -e 's/[a-z]*:/''/'`
-if [ -z ${my_ip} ]; then
-    echo "failed to get the ip address"
-    exit -1
-fi
-
-root_node="role:SCHEDULER,hostname:'${my_ip}',port:${scheduler_network_port},id:'H'"
+root_node=`${dir}/get_root_node.sh ${network_interface} ${network_port}`
 np=$((${num_workers} + ${num_servers} + 1))
 
 if [ ! -z ${hostfile} ]; then
@@ -28,4 +22,4 @@ fi
 # mpirun ${hf} killall -q ps
 # mpirun ${hf} md5sum ../bin/ps
 
-${mpirun} ${hf} -np ${np} ${dir}/mpi_node.sh ${root_node} ${conf} ${dir}
+mpirun ${hf} -np ${np} ${dir}/mpi_node.sh ${root_node} ${conf} ${dir}

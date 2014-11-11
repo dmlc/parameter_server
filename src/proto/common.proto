@@ -1,0 +1,25 @@
+package PS;
+
+enum Operator {
+  PLUS = 1;
+  MINUS = 2;
+  TIMES = 3;
+  DIVIDE = 4;
+  AND = 5;
+  OR = 6;
+  XOR = 7;
+}
+
+enum DataType {
+  OTHER = 0;
+  INT8 = 1;
+  INT16 = 2;
+  INT32 = 3;
+  INT64 = 4;
+  UINT8 = 5;
+  UINT16 = 6;
+  UINT32 = 7;
+  UINT64 = 8;
+  FLOAT = 9;
+  DOUBLE = 10;
+}
