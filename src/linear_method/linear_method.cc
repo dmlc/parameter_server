@@ -4,9 +4,9 @@
 #include "base/matrix_io_inl.h"
 #include "proto/instance.pb.h"
 #include "base/io.h"
-#include "linear_method/darling.h"
 #include "linear_method/ftrl.h"
-#include "linear_method/batch_solver.h"
+// #include "linear_method/darling.h"
+// #include "linear_method/batch_solver.h"
 #include "linear_method/model_evaluation.h"
 namespace PS {
 namespace LM {
@@ -17,12 +17,12 @@ AppPtr LinearMethod::create(const Config& conf) {
       return AppPtr(new ModelEvaluation());
     }
   } else if (conf.solver().minibatch_size() <= 0) {
-    // batch solver
-    if (conf.has_darling()) {
-      return AppPtr(new Darling());
-    } else {
-      return AppPtr(new BatchSolver());
-    }
+    // // batch solver
+    // if (conf.has_darling()) {
+    //   return AppPtr(new Darling());
+    // } else {
+    //   return AppPtr(new BatchSolver());
+    // }
   } else {
     // online sovler
     if (conf.has_ftrl()) {

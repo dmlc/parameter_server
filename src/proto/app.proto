@@ -1,6 +1,6 @@
 package PS;
 import "proto/neural_network.proto";
-import "proto/linear_method.proto";
+import "linear_method/linear_method.proto";
 import "graph_partition/parsa.proto";
 
 message AppConfig {

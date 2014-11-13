@@ -2,9 +2,9 @@ package PS;
 import "proto/node.proto";
 import "proto/range.proto";
 import "proto/app.proto";
-import "proto/linear_method.proto";
 import "proto/filter.proto";
 import "proto/common.proto";
+import "linear_method/linear_method.proto";
 import "parameter/shared_parameter.proto";
 
 message Task {

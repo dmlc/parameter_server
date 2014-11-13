@@ -1,7 +1,8 @@
 #pragma once
 #include "system/app.h"
 #include "parameter/kv_vector.h"
-#include "proto/linear_method.pb.h"
+
+#include "linear_method/linear_method.pb.h"
 
 #include "linear_method/loss_inl.h"
 #include "linear_method/penalty_inl.h"

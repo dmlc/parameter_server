@@ -28,9 +28,9 @@
 #include "proto/node.pb.h"
 #include "proto/range.pb.h"
 #include "proto/app.pb.h"
-#include "proto/linear_method.pb.h"
 #include "proto/filter.pb.h"
 #include "proto/common.pb.h"
+#include "linear_method/linear_method.pb.h"
 #include "parameter/shared_parameter.pb.h"
 // @@protoc_insertion_point(includes)
 
