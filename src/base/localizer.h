@@ -3,8 +3,12 @@
 #include "base/sparse_matrix.h"
 #include "util/parallel_sort.h"
 #include "data/slot_reader.h"
-
+#include "util/crc32c.h"
 namespace PS {
+
+template<typename I, typename V> class Localizer;
+template<typename I, typename V> using LocalizerPtr = std::shared_ptr<Localizer<I,V>>;
+
 
 template<typename I, typename V>
 class Localizer {
@@ -83,7 +87,8 @@ void Localizer<I,V>::countUniqIndex(
   uniq_idx->pushBack(curr);
   if (idx_frq) idx_frq->pushBack(cnt);
 
-  LL << uniq_idx->size();
+  // LL << pair_.size() << " " << idx.size() << " " << uniq_idx->size();
+  // LL << crc32c::Value((char*)uniq_idx->data(), uniq_idx->size()*sizeof(V));
   // for debug
   // index_.writeToFile("index");
   // uniq_idx->writeToFile("uniq");
@@ -137,7 +142,8 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
     }
   }
 
-  LL << matched << " " << index.size() << " " << pair_.size() << " " << idx_dict.size();
+  // LL << crc32c::Value((char*)idx_dict.data(), idx_dict.size()*sizeof(V));
+  // LL << matched << " " << index.size() << " " << pair_.size() << " " << idx_dict.size();
 
   // construct the new matrix
   SArray<uint32> new_index(matched);
@@ -155,6 +161,7 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
     }
     new_offset[i+1] = new_offset[i] + n;
   }
+  // LL << offset.back();
   CHECK_EQ(k, matched);
 
   auto new_info = info;

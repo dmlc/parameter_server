@@ -19,7 +19,7 @@ class FTRLWorker {
 
   struct Minibatch {
     MatrixPtr<real> label;
-    Localizer<Key, real> localizer;
+    LocalizerPtr<Key, real> localizer;
     int batch_id;
     int pull_time;
   };

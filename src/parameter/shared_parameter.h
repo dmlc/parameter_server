@@ -114,7 +114,6 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
   } else if (call.insert_key_freq() || call.has_query_key_freq()) {
     // deal with tail features
     if (key_filter_ignore_chl_) chl = 0;
-    LL << chl;
     if (call.insert_key_freq() && req && !msg->value.empty()) {
       auto& filter = key_filter_[chl];
       if (filter.empty()) {
@@ -126,14 +125,11 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     }
     if (call.has_query_key_freq()) {
       if (req) {
-        // LL << SArray<K>(msg->key);
         reply->clearData();
         reply->setKey(key_filter_[chl].queryKeys(
             SArray<K>(msg->key), call.query_key_freq()));
         getValue(reply);
-        // LL << SArray<K>(reply->key);
       } else {
-        // LL << SArray<K>(msg->key);
         setValue(msg);
       }
     }

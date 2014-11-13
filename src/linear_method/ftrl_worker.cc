@@ -15,7 +15,6 @@ void FTRLWorker::init(const string& name, const Config& conf) {
 }
 
 void FTRLWorker::computeGradient() {
-
   // start the data prefectcher thread
   StreamReader<real> reader(conf_.training_data());
   int batch_id = 0;
@@ -30,7 +29,8 @@ void FTRLWorker::computeGradient() {
         // find all unique features,
         SArray<Key> uniq_key;
         SArray<uint32> key_cnt;
-        data->localizer.countUniqIndex(ins[1], &uniq_key, &key_cnt);
+        data->localizer = LocalizerPtr<Key, real>(new Localizer<Key, real>());
+        data->localizer->countUniqIndex(ins[1], &uniq_key, &key_cnt);
         // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
 
         // pull the features and weights from servers with tails filtered
@@ -45,7 +45,7 @@ void FTRLWorker::computeGradient() {
         data->pull_time = model_->pull(msg);
 
         data->batch_id = batch_id ++;
-        *size = data->label->memSize() + data->localizer.memSize();
+        *size = data->label->memSize() + data->localizer->memSize();
         return ret;
       });
 
@@ -62,7 +62,7 @@ void FTRLWorker::computeGradient() {
     model_->waitOutMsg(kServerGroup, batch.pull_time);
 
     // localize the feature matrix
-    auto X = batch.localizer.remapIndex(model_->key(id));
+    auto X = batch.localizer->remapIndex(model_->key(id));
     auto Y = batch.label;
     CHECK_EQ(X->rows(), Y->rows());
 
