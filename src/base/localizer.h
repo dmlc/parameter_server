@@ -83,6 +83,7 @@ void Localizer<I,V>::countUniqIndex(
   uniq_idx->pushBack(curr);
   if (idx_frq) idx_frq->pushBack(cnt);
 
+  LL << uniq_idx->size();
   // for debug
   // index_.writeToFile("index");
   // uniq_idx->writeToFile("uniq");
@@ -111,6 +112,7 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
     const MatrixInfo& info, const SArray<size_t>& offset,
     const SArray<I>& index, const SArray<V>& value,
     const SArray<I>& idx_dict) const {
+  // LL << index << "\n" << idx_dict;
   if (index.empty() || idx_dict.empty()) return MatrixPtr<V>();
   CHECK_LT(idx_dict.size(), kuint32max);
   CHECK_EQ(offset.back(), index.size());
@@ -134,6 +136,8 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
       ++ cur_pair;
     }
   }
+
+  LL << matched << " " << index.size() << " " << pair_.size() << " " << idx_dict.size();
 
   // construct the new matrix
   SArray<uint32> new_index(matched);

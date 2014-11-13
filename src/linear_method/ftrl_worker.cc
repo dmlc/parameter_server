@@ -31,13 +31,14 @@ void FTRLWorker::computeGradient() {
         SArray<Key> uniq_key;
         SArray<uint32> key_cnt;
         data->localizer.countUniqIndex(ins[1], &uniq_key, &key_cnt);
+        // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
 
         // pull the features and weights from servers with tails filtered
         MessagePtr msg(new Message(kServerGroup));
         msg->task.set_key_channel(batch_id);
         msg->setKey(uniq_key);
         msg->addValue(key_cnt);
-        msg->addFilter(FilterConfig::KEY_CACHING);
+        // msg->addFilter(FilterConfig::KEY_CACHING);
         auto arg = model_->set(msg);
         arg->set_insert_key_freq(true);
         arg->set_query_key_freq(conf_.solver().tail_feature_freq());
@@ -82,7 +83,7 @@ void FTRLWorker::computeGradient() {
     msg->setKey(model_->key(i));
     msg->addValue(grad);
     msg->task.set_key_channel(id);
-    msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    // msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     model_->push(msg);
   }
 }

@@ -13,9 +13,9 @@ template <typename K, typename V>
 class KVVector : public SharedParameter<K> {
  public:
   USING_SHARED_PARAMETER;
-  SArray<K>& key(int channel) { return key_[channel]; }
-  SArray<V>& value(int channel) { return val_[channel]; }
-  void clear(int channel) { key_.erase(channel); val_.erase(channel); }
+  SArray<K>& key(int channel) { Lock l(mu_); return key_[channel]; }
+  SArray<V>& value(int channel) { Lock l(mu_); return val_[channel]; }
+  void clear(int channel) { Lock l(mu_); key_.erase(channel); val_.erase(channel); }
 
   // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {
@@ -32,6 +32,7 @@ class KVVector : public SharedParameter<K> {
   void recoverFrom(const MessagePtr& msg) { }
 
  private:
+  std::mutex mu_;
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;
 };
@@ -47,8 +48,15 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
 
   // allocate the memory if necessary
   int chl = msg->task.key_channel();
-  auto& my_key = key_[chl];
-  auto& my_val = val_[chl];
+
+  auto& my_key = key(chl);
+  auto& my_val = value(chl);
+
+  if (my_key.empty()) {
+    my_key = recv_key;
+    my_val = recv_val;
+    return;
+  }
   if (my_val.empty()) {
     my_val.resize(my_key.size());
     my_val.setZero();
@@ -66,7 +74,7 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
-  CHECK_EQ(key_[chl].size(), val_[chl].size());
+  CHECK_EQ(key(chl).size(), value(chl).size());
 
   // get the data
   SArray<V> val;

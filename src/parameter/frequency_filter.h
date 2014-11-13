@@ -14,7 +14,7 @@ class FreqencyFilter {
   SArray<K> queryKeys(const SArray<K>& key, int freqency);
 
   bool empty() { return count_.empty(); }
-  void resize(int n, int k) { count_.resize(n,k); }
+  void resize(int n, int k) { count_.resize(n, k, 255); }
   void clear() { map_.clear(); count_.clear(); }
 
  private:
@@ -23,13 +23,14 @@ class FreqencyFilter {
 };
 
 // countmin implementation
-
 template<typename K>
 SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
   CHECK_LT(freqency, kuint8max) << "change to uint16 or uint32...";
   SArray<K> filtered_key;
   for (auto k : key) {
-    if (count_.query(k) > freqency) filtered_key.pushBack(k);
+    if (count_.query(k) > freqency) {
+     filtered_key.pushBack(k);
+    }
   }
   return filtered_key;
 }
@@ -54,8 +55,7 @@ void FreqencyFilter<K>::insertKeys(const SArray<K>& key, const SArray<uint32>& c
 // }
 
 // template<typename K>
-// void FreqencyFilter<K>::insertKeys(
-//     const SArray<K>& key, const SArray<uint32>& count, int n, int k) {
+// void FreqencyFilter<K>::insertKeys(const SArray<K>& key, const SArray<uint32>& count) {
 //   CHECK_EQ(key.size(), count.size());
 //   for (size_t i = 0; i < key.size(); ++i) {
 //     map_[key[i]] += count[i];
