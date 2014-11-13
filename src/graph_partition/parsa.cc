@@ -4,8 +4,9 @@
 namespace PS {
 
 Parsa::~Parsa() {
-  delete worker_;
-  delete server_;
+  // TODO
+  // delete worker_;
+  // delete server_;
 }
 
 void Parsa::init() {

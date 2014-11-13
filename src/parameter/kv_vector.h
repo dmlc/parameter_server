@@ -34,9 +34,6 @@ class KVVector : public SharedParameter<K> {
  private:
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;
-
-  std::unordered_map<int, MergedData> recved_val_;
-  std::mutex recved_val_mu_;
 };
 
 template <typename K, typename V>
@@ -46,7 +43,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
   if (recv_key.empty()) return;
   CHECK_EQ(msg->value.size(), 1);
   SArray<V> recv_val(msg->value[0]);
-  CHECK_EEQ(recv_key.size(), recv_val.size());
+  CHECK_EQ(recv_key.size(), recv_val.size());
 
   // allocate the memory if necessary
   int chl = msg->task.key_channel();
@@ -59,7 +56,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
 
   // merge the data
   size_t n = parallelOrderedMatch(
-      recv_key, recv_val, my_key OpPlus<V>(), FLAGS_num_threads, &my_val);
+      recv_key, recv_val, my_key, OpPlus<V>(), FLAGS_num_threads, &my_val);
   CHECK_EQ(n, recv_key.size());
 }
 

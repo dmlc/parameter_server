@@ -79,7 +79,7 @@ class SharedParameter : public Customer {
     return Range<K>(exec_.rnode(id)->keyRange());
   }
 
- private:
+ protected:
   std::unordered_map<int, FreqencyFilter<K>> key_filter_;
   bool key_filter_ignore_chl_ = false;
 

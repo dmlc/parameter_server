@@ -1,13 +1,22 @@
 #pragma once
 #include "linear_method/ftrl.h"
 #include "parameter/kv_map.h"
+#include "base/soft_thresholding.h"
 namespace PS {
 namespace LM {
 
 struct FTRLEntry {
-  Real w = 0;  // not necessary to store w, because it can be computed from z
-  Real z = 0;
-  Real sqrt_n = 0;
+  real w = 0;  // not necessary to store w, because it can be computed from z
+  real z = 0;
+  real sqrt_n = 0;
+
+  FTRLEntry& operator+=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator-=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator/=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator*=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator&=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator|=(const FTRLEntry& rhs) { return *this; }
+  FTRLEntry& operator^=(const FTRLEntry& rhs) { return *this; }
 };
 
 class FTRLServer : public KVMap<Key, FTRLEntry> {
@@ -18,8 +27,8 @@ class FTRLServer : public KVMap<Key, FTRLEntry> {
     beta_ = conf.learning_rate().beta();
 
     // set penalty
-    if (conf_.penalty().lambda_size() > 0) lambda1_ = conf_.penalty().lambda(0);
-    if (conf_.penalty().lambda_size() > 1) lambda2_ = conf_.penalty().lambda(1);
+    if (conf.penalty().lambda_size() > 0) lambda1_ = conf.penalty().lambda(0);
+    if (conf.penalty().lambda_size() > 1) lambda2_ = conf.penalty().lambda(1);
 
     // tail feature filter
     key_filter_[0].resize(
@@ -28,8 +37,8 @@ class FTRLServer : public KVMap<Key, FTRLEntry> {
   }
 
   void evaluateProgress(Progress* prog) {
-    prog.set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
-    prog.set_nnz_w(nnz_);
+    prog->set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
+    prog->set_nnz_w(nnz_);
   }
 
   void writeToFile(const DataConfig& data) {
@@ -45,44 +54,45 @@ class FTRLServer : public KVMap<Key, FTRLEntry> {
 
  protected:
   // learning rate
-  V alpha_, beta_;
+  real alpha_, beta_;
 
   // penalty
-  V lambda1_ = 0, lambda2_ = 0;
+  real lambda1_ = 0, lambda2_ = 0;
 
   // status
-  V norm1_ = 0;
-  V norm2_ = 0;
+  real norm1_ = 0;
+  real norm2_ = 0;
   size_t nnz_ = 0;
 };
 
-void FTRLModel::getValue(const MessagePtr& msg) {
+
+void FTRLServer::getValue(const MessagePtr& msg) {
   SArray<Key> key(msg->key);
   size_t n = key.size();
-  SArray<Real> val(n);
+  SArray<real> val(n);
   for (size_t i = 0; i < n; ++i) {
     val[i] = data_[key[i]].w;
   }
   msg->addValue(val);
 }
 
-void FTRLModel::setValue(const MessagePtr& msg) {
+void FTRLServer::setValue(const MessagePtr& msg) {
   SArray<Key> key(msg->key);
   size_t n = key.size();
   CHECK_EQ(msg->value.size(), 1);
-  SArray<Real> grad(msg->value[0]);
+  SArray<real> grad(msg->value[0]);
   CHECK_EQ(grad.size(), n);
 
   for (size_t i = 0; i < n; ++i) {
     // update model
     auto& e = data_[key[i]];
-    Real sqrt_n_new = sqrt(e.sqrt_n * e.sqrt_n + grad[i]*grad[i]);
-    Real sigma = (sqrt_n_new - e.sqrt_n) / alpha_;
+    real sqrt_n_new = sqrt(e.sqrt_n * e.sqrt_n + grad[i]*grad[i]);
+    real sigma = (sqrt_n_new - e.sqrt_n) / alpha_;
     e.z += grad[i]  - sigma * e.w;
     e.sqrt_n = sqrt_n_new;
-    V lambda2 = lambda2_ + (beta_ + sqrt_n_new) / alpha_;
-    Real w = -softThresholding(e.z, lambda1_, lambda2);
-    Real w_old = e.w;
+    real lambda2 = lambda2_ + (beta_ + sqrt_n_new) / alpha_;
+    real w = - softThresholding(e.z, lambda1_, lambda2);
+    real w_old = e.w;
     e.w = w;
 
     // update status

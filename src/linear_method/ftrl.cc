@@ -1,6 +1,7 @@
 #include "linear_method/ftrl.h"
 #include "linear_method/ftrl_server.h"
 #include "linear_method/ftrl_worker.h"
+#include "data/common.h"
 namespace PS {
 namespace LM {
 
@@ -10,12 +11,10 @@ void FTRL::init() {
     server_ = new FTRLServer();
     server_->init(conf_);
     server_->name() = app_cf_.parameter_name(0);
-    sys_.yp().add(CustomerPtr(std::static_cast<Customer*>(server_)));
+    sys_.yp().add(CustomerPtr((Customer*)server_));
   } else if (IamWorker()) {
     worker_ = new FTRLWorker();
-    worker_->init(conf_);
-    worker_->name() = app_cf_.parameter_name(0);
-    sys_.yp().add(CustomerPtr(std::static_cast<Customer*>(worker_)));
+    worker_->init(app_cf_.parameter_name(0), conf_);
   }
 }
 
@@ -75,7 +74,7 @@ void FTRL::saveModel(const MessageCPtr& msg) {
 
 void FTRL::showProgress() {
   Lock l(progress_mu_);
-  Real objv_worker = 0, objv_server = 0;
+  real objv_worker = 0, objv_server = 0;
   uint64 num_ex = 0, nnz_w = 0;
   for (const auto& it : recent_progress_) {
     auto prog = it.second;
@@ -87,9 +86,9 @@ void FTRL::showProgress() {
       objv_server += prog.objv();
     }
   }
-  status_.num_ex += num_ex;
-  printf("%10llu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
-         status_.num_ex, objv_worker/(Real)num_ex, objv_server, nnz_w);
+  num_ex_processed_ += num_ex;
+  printf("%10lu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
+         num_ex_processed_ , objv_worker/(real)num_ex, objv_server, nnz_w);
 }
 
 } // namespace LM

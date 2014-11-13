@@ -2,23 +2,24 @@
 #include "linear_method/ftrl.h"
 #include "parameter/kv_vector.h"
 #include "util/producer_consumer.h"
-
+#include "base/localizer.h"
+#include "linear_method/loss_inl.h"
 namespace PS {
 namespace LM {
 
 class FTRLWorker {
  public:
-  void init(const Config& conf);
+  void init(const string& name, const Config& conf);
   void computeGradient();
   void evaluateProgress(Progress* prog);
  private:
   Config conf_;
-  LossPtr<Real> loss_;
-  KVVector<Key, Real> model_;
+  LossPtr<real> loss_;
+  KVVectorPtr<Key, real> model_;
 
   struct Minibatch {
-    MatrixPtr<Real> label;
-    Localizer<Key, Real> localizer;
+    MatrixPtr<real> label;
+    Localizer<Key, real> localizer;
     int batch_id;
     int pull_time;
   };
@@ -26,8 +27,8 @@ class FTRLWorker {
 
   struct Status {
     uint64 num_ex = 0;
-    Real objv = 0;
-    Real acc = 0;
+    real objv = 0;
+    real acc = 0;
     void reset() { num_ex = 0; objv = 0; acc = 0; }
   };
   Status status_;
@@ -37,5 +38,5 @@ class FTRLWorker {
 } // namespace LM
 } // namespace PS
 
-// void countFrequency(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
+// void countFrequency(const MatrixPtr<real>& Y, const MatrixPtr<real>& X,
 //                     SArray<uint32>* pos, SArray<uint32>* neg);

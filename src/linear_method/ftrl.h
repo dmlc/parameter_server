@@ -1,9 +1,5 @@
 #pragma once
-#include "parameter/shared_parameter.h"
 #include "linear_method/online_solver.h"
-#include "linear_method/ftrl_model.h"
-#include "linear_method/loss_inl.h"
-#include "util/threadsafe_limited_queue.h"
 namespace PS {
 namespace LM {
 
@@ -12,7 +8,7 @@ namespace LM {
 //
 // H. McMahan. et.al, Ad Click Prediction: a View from the Trenches, KDD'13
 //
-typedef double Real;
+typedef double real;
 class FTRLWorker;
 class FTRLServer;
 
@@ -30,6 +26,7 @@ class FTRL : public OnlineSolver {
   FTRLServer* server_ = nullptr;
 
   unique_ptr<std::thread> prog_thr_;
+  size_t num_ex_processed_ = 0;
 };
 
 } // namespace LM

@@ -25,12 +25,12 @@ class KVMap : public SharedParameter<K> {
   virtual void setValue(const MessagePtr& msg) {
     SArray<K> key(msg->key);
     CHECK_GT(msg->value.size(), 0);
-    SArray<K> value(msg->value[0]);
+    SArray<V> value(msg->value[0]);
     size_t n = key.size();
     CHECK_EQ(n, value.size());
     auto op = msg->task.shared_para().op();
     for (size_t i = 0; i < n; ++i) {
-      compAssOp(data_[key[i]], value[i], op);
+      compAssOp<V>(data_[key[i]], value[i], op);
     }
   }
   // TODO
