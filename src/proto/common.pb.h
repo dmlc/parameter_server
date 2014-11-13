@@ -34,13 +34,13 @@ void protobuf_ShutdownFile_proto_2fcommon_2eproto();
 
 
 enum Operator {
-  PLUS = 1,
-  MINUS = 2,
-  TIMES = 3,
-  DIVIDE = 4,
-  AND = 5,
-  OR = 6,
-  XOR = 7
+  PLUS = 0,
+  MINUS = 1,
+  TIMES = 2,
+  DIVIDE = 3,
+  AND = 4,
+  OR = 5,
+  XOR = 6
 };
 bool Operator_IsValid(int value);
 const Operator Operator_MIN = PLUS;

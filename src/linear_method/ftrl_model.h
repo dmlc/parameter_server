@@ -1,3 +1,4 @@
+// deprecated, see ftrl_server.h
 #pragma once
 #include <cmath>
 #include "parameter/shared_parameter.h"

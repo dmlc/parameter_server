@@ -43,6 +43,7 @@ void parallelOrderedMatch(
 }
 
 
+// TODO unify with class Operator
 template<typename T> struct OpAssign {
   virtual void operator()(const T* src, T* dst) const { *dst = *src; }
 };

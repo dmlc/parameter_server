@@ -28,6 +28,9 @@ class Localizer {
       const SArray<I>& index, const SArray<V>& value,
       const SArray<I>& idx_dict) const;
   void clear() { pair_.clear(); }
+  size_t memSize() {
+    return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
+  }
  private:
 #pragma pack(4)
   struct Pair {

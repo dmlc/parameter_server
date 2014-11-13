@@ -54,8 +54,8 @@ TESTS = \
 	grad_desc_test \
 	ftrl_test \
 	prepare_test_data \
-	bloom_filter_test
-	# test
+	bloom_filter_test \
+	test
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \
@@ -81,7 +81,6 @@ all: dir $(addprefix $(BIN)/, ps)
 clean:
 	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
 
-data: $(addprefix $(BIN)/, showins proto2bin)
 test: $(addprefix $(BIN)/, $(TESTS))
 
 %.o: %.cc
@@ -123,4 +122,7 @@ t: ../bin/bloom_filter_test/
 ../bin/bloom_filter_test: test/bloom_filter_test.o
 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
+e: ../bin/test
+
 # -Wl,-rpath=../lib $(LIB)/libps.so
+# data: $(addprefix $(BIN)/, showins proto2bin)

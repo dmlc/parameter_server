@@ -83,7 +83,6 @@ class SharedParameter : public Customer {
   std::unordered_map<int, FreqencyFilter<K>> key_filter_;
   bool key_filter_ignore_chl_ = false;
 
-
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;
 };
@@ -129,6 +128,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
         reply->clearData();
         reply->setKey(key_filter_[chl].queryKeys(
             SArray<K>(msg->key), call.query_key_freq()));
+        getValue(reply);
       } else {
         setValue(msg);
       }
@@ -159,26 +159,28 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
   using SharedParameter<K>::keyRange;           \
   using SharedParameter<K>::sync
 
-template<typename V> using CompAssOp = std::function<void(V&, V)>;
-template<typename V> CompAssOp<V> newCompAssOp(const Operator& op) {
+template<typename V>
+void compAssOp(V& right, V left, Operator op) {
   switch (op) {
     case Operator::PLUS:
-      return [](V& right, V left) { right += left; };
+      right += left; break;
     case Operator::MINUS:
-      return [](V& right, V left) { right -= left; };
+      right -= left; break;
     case Operator::TIMES:
-      return [](V& right, V left) { right *= left; };
+      right *= left; break;
     case Operator::DIVIDE:
-      return [](V& right, V left) { right /= left; };
+      right /= left; break;
     case Operator::AND:
-      return [](V& right, V left) { right &= left; };
+      right &= left; break;
     case Operator::OR:
-      return [](V& right, V left) { right |= left; };
+      right |= left; break;
     case Operator::XOR:
-      return [](V& right, V left) { right ^= left; };
+      right ^= left; break;
+    default:
+      break;
   }
-  return [](V& right, V left) { };
 }
+
 // template <typename K, typename V>
 // void SharedParameter<K,V>::recover(Range<K> range) {
 //   // TODO recover from checkpoint

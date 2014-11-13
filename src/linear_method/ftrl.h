@@ -1,6 +1,5 @@
 #pragma once
 #include "parameter/shared_parameter.h"
-#include "parameter/kv_vector.h"
 #include "linear_method/online_solver.h"
 #include "linear_method/ftrl_model.h"
 #include "linear_method/loss_inl.h"
@@ -13,6 +12,10 @@ namespace LM {
 //
 // H. McMahan. et.al, Ad Click Prediction: a View from the Trenches, KDD'13
 //
+typedef double Real;
+class FTRLWorker;
+class FTRLServer;
+
 class FTRL : public OnlineSolver {
  public:
   void init();
@@ -22,31 +25,11 @@ class FTRL : public OnlineSolver {
   void updateModel(const MessagePtr& msg);
 
  protected:
-  typedef double Real;
-  void countKeys(const MatrixPtr<Real>& Y, const MatrixPtr<Real>& X,
-                 SArray<uint32>* pos, SArray<uint32>* neg);
-  void evalProgress();
   void showProgress();
+  FTRLWorker* worker_ = nullptr;
+  FTRLServer* server_ = nullptr;
 
-  KVVectorPtr<Key, Real> worker_w_;
-  FTRLModelPtr<Key, Real> server_w_;
-
-  LossPtr<Real> loss_;
-
-  struct Status {
-    uint64 num_ex = 0;
-    Real objv = 0;
-    Real acc = 0;
-    void reset() { num_ex = 0; objv = 0; acc = 0; }
-  };
-  Status status_;
-  std::mutex status_mu_;
   unique_ptr<std::thread> prog_thr_;
-
-  // read minibatches
-  unique_ptr<std::thread> data_thr_;
-  bool read_data_finished_ = false;
-  ThreadsafeLimitedQueue<MatrixPtrList<Real> > data_buf_;
 };
 
 } // namespace LM

@@ -11,18 +11,17 @@ ParsaWorker::ParsaWorker(const ParsaConf& conf) {
 }
 
 void ParsaWorker::partition() {
-  // reader
-  using std::get;
-  typedef std::tuple<GraphPtr, GraphPtr, SArray<Key>, ExampleListPtr> DataPair;
   StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
-  ProducerConsumer<DataPair> reader(conf_.data_buff_size_in_mb());
-  reader.startProducer([this, &stream](DataPair* data, size_t* size)->bool {
+  ProducerConsumer<BlockData> reader(conf_.data_buff_size_in_mb());
+  int blk_id = 0;
+  reader.startProducer([this, &stream, &blk_id](BlockData* blk, size_t* size)->bool {
+      // read a block
       MatrixPtrList<Empty> X;
       auto examples = ExampleListPtr(new ExampleList());
       bool ret = stream.readMatrices(conf_.block_size(), &X, examples.get());
       if (X.empty()) return false;
 
-      // localize
+      // find the unique keys
       auto G = std::static_pointer_cast<SparseMatrix<Key,Empty>>(X.back());
       G->info().set_type(MatrixInfo::SPARSE_BINARY);
       G->value().clear();
@@ -30,12 +29,23 @@ void ParsaWorker::partition() {
       SArray<Key> key;
       localizer.countUniqIndex(G, &key);
 
-      get<0>(*data) = std::static_pointer_cast<Graph>(localizer.remapIndex(key));
-      get<1>(*data) = std::static_pointer_cast<Graph>(get<0>(*data)->toColMajor());
-      get<2>(*data) = key;
-      get<3>(*data) = examples;
+      // pull the current partition from servers
+      MessagePtr pull(new Message(kServerGroup));
+      pull->task.set_key_channel(blk_id);
+      pull->setKey(key);
+      pull->addFilter(FilterConfig::KEY_CACHING);
+      sync_nbset_.key(blk_id) = key;
+      int time = sync_nbset_.pull(pull);
 
-      *size = 1;
+      // preprocess data and store the results
+      blk->row_major  = std::static_pointer_cast<Graph>(localizer.remapIndex(key));
+      blk->col_major  = std::static_pointer_cast<Graph>(blk->row_major->toColMajor());
+      blk->examples   = examples;
+      blk->pull_time  = time;
+      blk->blk_id     = blk_id ++;
+      *size           = 1;
+
+      // blk->global_key = key;
       return ret;
     });
 
@@ -61,19 +71,16 @@ void ParsaWorker::partition() {
     });
 
   // partition U
-  DataPair data;
+  BlockData blk;
   SArray<int> map_U;
   int i = 0;
-  while (reader.pop(&data)) {
-    partitionU(get<0>(data), get<1>(data), get<2>(data), &map_U);
-    writer_1.push(std::make_pair(get<3>(data), map_U));
+  while (reader.pop(&blk)) {
+    partitionU(blk, &map_U);
+    writer_1.push(std::make_pair(blk.examples, map_U));
     LL << i ++;
   }
   writer_1.setFinished();
   writer_1.waitConsumer();
-
-  // partition V
-  partitionV();
 
   // reader & write
   // uint64 cost = 0;
@@ -108,40 +115,17 @@ void ParsaWorker::partition() {
   // reader.startProducer([this, &stream](DataPair* data, size_t* size)->bool {
 }
 
-void ParsaWorker::partitionV() {
-  std::vector<int> cost(num_partitions_);
-  for (const auto& e : server_nbset_) {
-    if (!e.second) continue;
-    int max_cost = 0;
-    int best_k = -1;
-    for (int k = 0; k < num_partitions_; ++k) {
-      if (e.second & (1 << k)) {
-        int c = ++ cost[k];
-        if (c > max_cost) { max_cost = c; best_k = k; }
-      }
-    }
-    CHECK_GE(best_k, 0);
-    // partition_V_[e.first] = best_k;
-    -- cost[best_k];
-  }
+void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
+  sync_nbset_.waitOutMsg(kServerGroup, blk.pull_time);
+  int id = blk.blk_id;
+  auto key = sync_nbset_.key(id);
+  initNeighborSet(key, sync_nbset_.value(id));
 
-  int v = 0;
-  for (int j = 0; j < num_partitions_; ++j) v += cost[j];
-  LL << v;
-}
-
-void ParsaWorker::partitionU(const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
-                       const SArray<Key>& global_key, SArray<int>* map_U) {
-  // initialization
-  SArray<uint64> nbset; nbset.reserve(global_key.size());
-  for (auto k : global_key) nbset.pushBack(server_nbset_[k]);
-  initNeighborSet(global_key, nbset);
-
-  int n = row_major_blk->rows();
+  int n = blk.row_major->rows();
   map_U->resize(n);
   assigned_U_.clear();
   assigned_U_.resize(n);
-  initCost(row_major_blk, global_key);
+  initCost(blk.row_major, key);
 
   // partitioning
   for (int i = 0; i < n; ++i) {
@@ -154,14 +138,15 @@ void ParsaWorker::partitionU(const GraphPtr& row_major_blk, const GraphPtr& col_
     (*map_U)[Ui] = k;
 
     // update
-    updateCostAndNeighborSet(row_major_blk, col_major_blk, global_key, Ui, k);
+    updateCostAndNeighborSet(blk.row_major, blk.col_major, key, Ui, k);
   }
 
   // send results to servers
-  sendUpdatedNeighborSet();
+  sendUpdatedNeighborSet(id);
 }
 
-void ParsaWorker::initNeighborSet(const SArray<Key>& global_key, const SArray<uint64>& nbset) {
+void ParsaWorker::initNeighborSet(
+    const SArray<Key>& global_key, const SArray<uint64>& nbset) {
   CHECK_EQ(global_key.size(), nbset.size());
   int n = global_key.size();
 
@@ -187,16 +172,17 @@ void ParsaWorker::initNeighborSet(const SArray<Key>& global_key, const SArray<ui
   }
 }
 
-void ParsaWorker::sendUpdatedNeighborSet() {
+void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   auto& nbset = added_neighbor_set_;
   if (nbset.empty()) return;
+
   // pack the local updates
   std::sort(nbset.begin(), nbset.end(),
             [](const KP& a, const KP& b) { return a.first < b.first; });
   SArray<Key> key;
-  SArray<S> value;
+  SArray<uint64> value;
   Key pre = nbset[0].first;
-  S s = 0;
+  uint64 s = 0;
   for (int i = 0; i < nbset.size(); ++i) {
     Key cur = nbset[i].first;
     if (cur != pre) {
@@ -210,10 +196,15 @@ void ParsaWorker::sendUpdatedNeighborSet() {
   key.pushBack(nbset.back().first);
   value.pushBack(s);
 
-  // update server
-  for (int i = 0; i < key.size(); ++i) {
-    server_nbset_[key[i]] |= value[i];
-  }
+  // send local updates
+  MessagePtr push(new Message(kServerGroup));
+  push->task.set_key_channel(blk_id);
+  push->setKey(key);
+  push->addValue(value);
+  push->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+  sync_nbset_.set(push)->set_op(Operator::OR);
+  sync_nbset_.push(push);
+
 }
 
 // init the cost of assigning U_i to partition k

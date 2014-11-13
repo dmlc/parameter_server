@@ -22,13 +22,6 @@ class KVVector : public SharedParameter<K> {
     return key_[channel].findRange(key_range);
   }
 
-  // return the mareged data received at time t, then *delete* it. If no
-  // message, or empty messages are received at time t, then call received(t)
-  // will get an error
-  typedef std::pair<SizeR, std::vector<SArray<V>>> MergedData;
-  MergedData received(int t);
-
-  // implement the virtual functions required
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
@@ -46,67 +39,40 @@ class KVVector : public SharedParameter<K> {
   std::mutex recved_val_mu_;
 };
 
-
-template <typename K, typename V>
-typename KVVector<K,V>::MergedData KVVector<K,V>::received(int t) {
-  Lock l(recved_val_mu_);
-  auto it = recved_val_.find(t);
-  CHECK(it != recved_val_.end()) << myNodeID() << " hasn't received data at time " << t;
-  auto ret = it->second;
-  recved_val_.erase(it);
-  return ret;
-}
-
 template <typename K, typename V>
 void KVVector<K,V>::setValue(const MessagePtr& msg) {
+  // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
+  CHECK_EQ(msg->value.size(), 1);
+  SArray<V> recv_val(msg->value[0]);
+  CHECK_EEQ(recv_key.size(), recv_val.size());
+
+  // allocate the memory if necessary
   int chl = msg->task.key_channel();
-  if (msg->value.size() == 0) {
-    // only keys, merge these keys, and also clear the values
-    key_[chl] = key_[chl].setUnion(recv_key);
-    val_[chl].clear();
-    return;
+  auto& my_key = key_[chl];
+  auto& my_val = val_[chl];
+  if (my_val.empty()) {
+    my_val.resize(my_key.size());
+    my_val.setZero();
   }
 
-  // merge values, and store them in recved_val
-  int t = msg->task.time();
-  Range<K> key_range(msg->task.key_range());
-  SizeR idx_range = key_[chl].findRange(key_range);
-
-  recved_val_mu_.lock();
-  auto& matched = recved_val_[t];
-  recved_val_mu_.unlock();
-
-  for (int i = 0; i < msg->value.size(); ++i) {
-    SArray<V> recv_data(msg->value[i]);
-    CHECK_EQ(recv_data.size(), recv_key.size());
-    bool first = matched.second.size() <= i;
-    if (first) {
-      // it is the first node, allocate the memory
-      matched.first = idx_range;
-      matched.second.push_back(SArray<V>());
-      CHECK_EQ(parallelOrderedMatch(
-          recv_key, recv_data, key_[chl].segment(idx_range),
-          OpAssign<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
-    } else {
-      CHECK_EQ(matched.first, idx_range);
-      CHECK_EQ(parallelOrderedMatch(
-          recv_key, recv_data, key_[chl].segment(idx_range),
-          OpPlus<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
-    }
-  }
+  // merge the data
+  size_t n = parallelOrderedMatch(
+      recv_key, recv_val, my_key OpPlus<V>(), FLAGS_num_threads, &my_val);
+  CHECK_EQ(n, recv_key.size());
 }
 
 template <typename K, typename V>
 void KVVector<K,V>::getValue(const MessagePtr& msg) {
+  // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
   CHECK_EQ(key_[chl].size(), val_[chl].size());
 
+  // get the data
   SArray<V> val;
-  // auto op = [](const V* src, V* dst) { *dst = *src; };
   size_t n = parallelOrderedMatch(
       key(chl), value(chl), recv_key, OpAssign<V>(), FLAGS_num_threads, &val);
   CHECK_EQ(n, val.size());

@@ -5,6 +5,7 @@ import "proto/app.proto";
 import "proto/linear_method.proto";
 import "proto/filter.proto";
 import "proto/common.proto";
+import "parameter/shared_parameter.proto";
 
 message Task {
   enum Type {
@@ -73,30 +74,6 @@ message ManageApp {
   required AppConfig app_config = 2;
 }
 
-message Timestamp {
-  required string sender = 1;
-  required int32 time = 2;
-}
-
-message CallSharedPara {
-  enum Command {
-    PUSH = 1;
-    PULL = 2;
-  }
-  required Command cmd= 1;
-
-  optional bool insert_key_freq = 3;
-  optional int32 query_key_freq = 4;
-
-  optional bool insert_key = 5;
-
-  optional int32 countmin_n = 6;
-  optional int32 countmin_k = 7;
-
-  // it's a replica request
-  optional bool replica = 10;
-  repeated Timestamp backup = 11;
-}
 
 message CallSketch {
   enum Command {
