@@ -46,23 +46,25 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
   SArray<V> recv_val(msg->value[0]);
   CHECK_EQ(recv_key.size(), recv_val.size());
 
-  // allocate the memory if necessary
   int chl = msg->task.key_channel();
-
   auto& my_key = key(chl);
   auto& my_val = value(chl);
 
-  if (my_key.empty()) {
-    my_key = recv_key;
-    my_val = recv_val;
-    return;
-  }
-  if (my_val.empty()) {
-    my_val.resize(my_key.size());
-    my_val.setZero();
+  if (get(msg).has_tail_filter()) {
+    auto old_key = my_key;
+    auto old_val = my_val;
+    my_key = old_key.setUnion(recv_key);
+    if (!recv_val.empty()) {
+      my_val.resize(my_key.size());
+      my_val.setZero();
+    }
+    if (!old_val.empty()) {
+      size_t n = parallelOrderedMatch(
+          old_key, old_val, my_key, OpPlus<V>(), FLAGS_num_threads, &my_val);
+      CHECK_EQ(n, old_key.size());
+    }
   }
 
-  // merge the data
   size_t n = parallelOrderedMatch(
       recv_key, recv_val, my_key, OpPlus<V>(), FLAGS_num_threads, &my_val);
   CHECK_EQ(n, recv_key.size());

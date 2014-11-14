@@ -5,26 +5,25 @@
 
 namespace PS {
 
-template<typename K>
+template<typename K, typename V>
 class FreqencyFilter {
  public:
   // add unique keys with their key count
-  void insertKeys(const SArray<K>& key, const SArray<uint32>& count);
+  void insertKeys(const SArray<K>& key, const SArray<V>& count);
   // filter keys using the threadhold *freqency*
   SArray<K> queryKeys(const SArray<K>& key, int freqency);
 
   bool empty() { return count_.empty(); }
-  void resize(int n, int k) { count_.resize(n, k, 255); }
-  void clear() { map_.clear(); count_.clear(); }
+  void resize(int n, int k) { count_.resize(n, k, 254); }
+  void clear() { count_.clear(); }
 
  private:
-  CountMin<K, uint8> count_;
-  std::unordered_map<K, uint32> map_;
+  CountMin<K, V> count_;
 };
 
 // countmin implementation
-template<typename K>
-SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
+template<typename K, typename V>
+SArray<K> FreqencyFilter<K,V>::queryKeys(const SArray<K>& key, int freqency) {
   CHECK_LT(freqency, kuint8max) << "change to uint16 or uint32...";
   SArray<K> filtered_key;
   for (auto k : key) {
@@ -35,8 +34,8 @@ SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
   return filtered_key;
 }
 
-template<typename K>
-void FreqencyFilter<K>::insertKeys(const SArray<K>& key, const SArray<uint32>& count) {
+template<typename K, typename V>
+void FreqencyFilter<K,V>::insertKeys(const SArray<K>& key, const SArray<V>& count) {
   CHECK_EQ(key.size(), count.size());
   for (size_t i = 0; i < key.size(); ++i) {
     count_.insert(key[i], count[i]);
@@ -44,6 +43,7 @@ void FreqencyFilter<K>::insertKeys(const SArray<K>& key, const SArray<uint32>& c
 }
 
 // hash implementation
+// std::unordered_map<K, V> map_;
 
 // template<typename K>
 // SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {

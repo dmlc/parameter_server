@@ -37,8 +37,8 @@ class SharedParameter : public Customer {
     taskpool(node)->finishIncomingTask(time);
   }
 
-  FreqencyFilter<K>& keyFilter(int chl) { return key_filter_[chl]; }
-  void setKeyFilterIgnoreChl(bool flag) { key_filter_ignore_chl_ = flag; }
+  // FreqencyFilter<K,V>& keyFilter(int chl) { return key_filter_[chl]; }
+  // void setKeyFilterIgnoreChl(bool flag) { key_filter_ignore_chl_ = flag; }
   // void clearKeyFilter(int chl) { key_filter_[chl].clear(); }
 
   // process a received message, will called by the thread of executor
@@ -80,7 +80,7 @@ class SharedParameter : public Customer {
   }
 
  protected:
-  std::unordered_map<int, FreqencyFilter<K>> key_filter_;
+  std::unordered_map<int, FreqencyFilter<K, uint8>> key_filter_;
   bool key_filter_ignore_chl_ = false;
 
   // add key_range in the future, it is not necessary now
@@ -111,24 +111,28 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     } else if (pull && req) {
       getReplica(reply);
     }
-  } else if (call.insert_key_freq() || call.has_query_key_freq()) {
-    // deal with tail features
+  } else if (call.has_tail_filter()) {
     if (key_filter_ignore_chl_) chl = 0;
-    if (call.insert_key_freq() && req && !msg->value.empty()) {
+    auto cmd = call.tail_filter();
+    // push the key count
+    if (cmd.insert_count() && req) {
+      CHECK(!msg->value.empty());
       auto& filter = key_filter_[chl];
       if (filter.empty()) {
         double w = (double)FLAGS_num_workers;
-        filter.resize(
-            std::max((int)(w*call.countmin_n()/log(w+1)), 64), call.countmin_k());
+        filter.resize(w*cmd.countmin_n()/log(w+1), cmd.countmin_k());
       }
-      filter.insertKeys(SArray<K>(msg->key), SArray<uint32>(msg->value[0]));
+      filter.insertKeys(SArray<K>(msg->key), SArray<uint8>(msg->value[0]));
     }
-    if (call.has_query_key_freq()) {
+    // pull the filtered keys
+    if (cmd.has_query_key() && pull) {
       if (req) {
         reply->clearData();
         reply->setKey(key_filter_[chl].queryKeys(
-            SArray<K>(msg->key), call.query_key_freq()));
-        getValue(reply);
+            SArray<K>(msg->key), cmd.query_key()));
+        if (cmd.has_query_value()) {
+          getValue(reply);
+        }
       } else {
         setValue(msg);
       }

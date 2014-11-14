@@ -14,24 +14,34 @@ template<typename I, typename V>
 class Localizer {
  public:
   Localizer() { }
-  // find the unique indeces with their number of occrus in *idx*
-  void countUniqIndex(
-      const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
 
-  void countUniqIndex(
-      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq = nullptr);
+  // find the unique indeces with their number of occrus in *idx*
+  void countUniqIndex(const SArray<I>& idx, SArray<I>* uniq_idx) {
+    countUniqIndex<char>(idx, uniq_idx, nullptr);
+  }
+  void countUniqIndex(const MatrixPtr<V>&mat, SArray<I>* uniq_idx) {
+    countUniqIndex<char>(mat, uniq_idx, nullptr);
+  }
+  template<typename C> void countUniqIndex(
+      const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq);
+
+  template<typename C> void countUniqIndex(
+      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq);
 
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
   MatrixPtr<V> remapIndex(int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
 
+  // valid only if used countUniqIndex(mat, ...) before
   MatrixPtr<V> remapIndex(const SArray<I>& idx_dict);
 
   MatrixPtr<V> remapIndex(
       const MatrixInfo& info, const SArray<size_t>& offset,
       const SArray<I>& index, const SArray<V>& value,
       const SArray<I>& idx_dict) const;
+
   void clear() { pair_.clear(); }
+
   size_t memSize() {
     return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
   }
@@ -45,8 +55,9 @@ class Localizer {
 };
 
 template<typename I, typename V>
+template<typename C>
 void Localizer<I,V>::countUniqIndex(
-     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
   mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
   countUniqIndex(mat_->index(), uniq_idx, idx_frq);
 }
@@ -54,8 +65,9 @@ void Localizer<I,V>::countUniqIndex(
 
 
 template<typename I, typename V>
+template<typename C>
 void Localizer<I,V>::countUniqIndex(
-    const SArray<I>& idx, SArray<I>* uniq_idx, SArray<uint32>* idx_frq) {
+    const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
   if (idx.empty()) return;
   CHECK(uniq_idx);
   CHECK_LT(idx.size(), kuint32max)
@@ -79,13 +91,13 @@ void Localizer<I,V>::countUniqIndex(
     if (v.k != curr) {
       uniq_idx->pushBack(curr);
       curr = v.k;
-      if (idx_frq) idx_frq->pushBack(cnt);
+      if (idx_frq) idx_frq->pushBack((C)cnt);
       cnt = 0;
     }
     ++ cnt;
   }
   uniq_idx->pushBack(curr);
-  if (idx_frq) idx_frq->pushBack(cnt);
+  if (idx_frq) idx_frq->pushBack((C)cnt);
 
   // LL << pair_.size() << " " << idx.size() << " " << uniq_idx->size();
   // LL << crc32c::Value((char*)uniq_idx->data(), uniq_idx->size()*sizeof(V));

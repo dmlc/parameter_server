@@ -28,7 +28,7 @@ void FTRLWorker::computeGradient() {
 
         // find all unique features,
         SArray<Key> uniq_key;
-        SArray<uint32> key_cnt;
+        SArray<uint8> key_cnt;
         data->localizer = LocalizerPtr<Key, real>(new Localizer<Key, real>());
         data->localizer->countUniqIndex(ins[1], &uniq_key, &key_cnt);
         // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
@@ -40,8 +40,10 @@ void FTRLWorker::computeGradient() {
         msg->addValue(key_cnt);
         // msg->addFilter(FilterConfig::KEY_CACHING);
         auto arg = model_->set(msg);
-        arg->set_insert_key_freq(true);
-        arg->set_query_key_freq(conf_.solver().tail_feature_freq());
+        auto tail = arg->mutable_tail_filter();
+        tail->set_insert_count(true);
+        tail->set_query_key(conf_.solver().tail_feature_freq());
+        tail->set_query_value(true);
         data->pull_time = model_->pull(msg);
 
         data->batch_id = batch_id ++;

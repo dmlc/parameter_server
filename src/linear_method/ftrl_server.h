@@ -10,6 +10,7 @@ struct FTRLEntry {
   real z = 0;
   real sqrt_n = 0;
 
+  // TODO ugly...
   FTRLEntry& operator+=(const FTRLEntry& rhs) { return *this; }
   FTRLEntry& operator-=(const FTRLEntry& rhs) { return *this; }
   FTRLEntry& operator/=(const FTRLEntry& rhs) { return *this; }
