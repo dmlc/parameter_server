@@ -22,8 +22,10 @@ class FTRL : public OnlineSolver {
 
  protected:
   void showProgress();
-  FTRLWorker* worker_ = nullptr;
-  FTRLServer* server_ = nullptr;
+  std::shared_ptr<FTRLWorker> worker_;
+  std::shared_ptr<FTRLServer> server_;
+  // FTRLWorker* worker_ = nullptr;
+  // FTRLServer* server_ = nullptr;
 
   unique_ptr<std::thread> prog_thr_;
   size_t num_ex_processed_ = 0;

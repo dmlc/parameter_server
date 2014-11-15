@@ -1,7 +1,6 @@
 #pragma once
 #include "linear_method/linear_method.h"
 #include "data/slot_reader.h"
-
 namespace PS {
 namespace LM {
 

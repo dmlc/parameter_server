@@ -8,12 +8,12 @@ namespace LM {
 void FTRL::init() {
   OnlineSolver::init();
   if (IamServer()) {
-    server_ = new FTRLServer();
+    server_ = std::shared_ptr<FTRLServer>(new FTRLServer());
     server_->init(conf_);
     server_->name() = app_cf_.parameter_name(0);
-    sys_.yp().add(CustomerPtr((Customer*)server_));
+    sys_.yp().add(CustomerPtr(std::static_pointer_cast<Customer>(server_)));
   } else if (IamWorker()) {
-    worker_ = new FTRLWorker();
+    worker_ = std::shared_ptr<FTRLWorker>(new FTRLWorker());
     worker_->init(app_cf_.parameter_name(0), conf_);
   }
 }

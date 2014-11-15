@@ -61,13 +61,13 @@ class SharedParameter : public Customer {
   // the message contains the backup KV pairs sent by the master node of the key
   // segment to its replica node. merge these pairs into my replica, say
   // replica_[msg->sender] = ...
-  virtual void setReplica(const MessagePtr& msg) = 0; //
+  virtual void setReplica(const MessagePtr& msg) { }
   // retrieve the replica. a new server node replacing a dead server will first
   // ask for the dead's replica node for the data
-  virtual void getReplica(const MessagePtr& msg)  = 0;
+  virtual void getReplica(const MessagePtr& msg) { }
   // a new server node fill its own datastructure via the the replica data from
   // the dead's replica node
-  virtual void recoverFrom(const MessagePtr& msg) = 0; //
+  virtual void recoverFrom(const MessagePtr& msg) { }
   // recover from a replica node
   void recover(Range<K> range);
 

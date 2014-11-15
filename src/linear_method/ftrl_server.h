@@ -1,6 +1,6 @@
 #pragma once
 #include "linear_method/ftrl.h"
-#include "parameter/kv_map.h"
+#include "parameter/shared_parameter.h"
 #include "base/soft_thresholding.h"
 namespace PS {
 namespace LM {
@@ -9,18 +9,9 @@ struct FTRLEntry {
   real w = 0;  // not necessary to store w, because it can be computed from z
   real z = 0;
   real sqrt_n = 0;
-
-  // TODO ugly...
-  FTRLEntry& operator+=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator-=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator/=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator*=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator&=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator|=(const FTRLEntry& rhs) { return *this; }
-  FTRLEntry& operator^=(const FTRLEntry& rhs) { return *this; }
 };
 
-class FTRLServer : public KVMap<Key, FTRLEntry> {
+class FTRLServer : public SharedParameter<Key> {
  public:
   void init(const Config& conf) {
     // set learning rate
@@ -44,16 +35,21 @@ class FTRLServer : public KVMap<Key, FTRLEntry> {
 
   void writeToFile(const DataConfig& data) {
     std::ofstream out(data.file(0)); CHECK(out.good());
-    for (const auto& it : data_) {
+    for (const auto& it : model_) {
       if (it.second.w != 0) out << it.first << "\t" << it.second.w << "\n";
     }
   }
 
-  // overide the default setValue and getValue functions
   void setValue(const MessagePtr& msg);
   void getValue(const MessagePtr& msg);
 
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
+    return sliceKeyOrderedMsg<Key>(msg, sep);
+  }
+
  protected:
+  std::unordered_map<Key, FTRLEntry> model_;
+
   // learning rate
   real alpha_, beta_;
 
@@ -72,7 +68,7 @@ void FTRLServer::getValue(const MessagePtr& msg) {
   size_t n = key.size();
   SArray<real> val(n);
   for (size_t i = 0; i < n; ++i) {
-    val[i] = data_[key[i]].w;
+    val[i] = model_[key[i]].w;
   }
   msg->addValue(val);
 }
@@ -86,7 +82,7 @@ void FTRLServer::setValue(const MessagePtr& msg) {
 
   for (size_t i = 0; i < n; ++i) {
     // update model
-    auto& e = data_[key[i]];
+    auto& e = model_[key[i]];
     real sqrt_n_new = sqrt(e.sqrt_n * e.sqrt_n + grad[i]*grad[i]);
     real sigma = (sqrt_n_new - e.sqrt_n) / alpha_;
     e.z += grad[i]  - sigma * e.w;
