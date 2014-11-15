@@ -135,7 +135,7 @@ message Call {
   // optional int32 feature_group_id = 3;
 
   optional double kkt_filter_threshold = 4;
-  optional bool kkt_filter_reset = 5;
+  optional bool reset_kkt_filter = 5;
 
   repeated int32 fea_grp = 8;
   optional bool hit_cache = 9;

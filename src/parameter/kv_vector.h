@@ -19,7 +19,7 @@ class KVVector : public SharedParameter<K> {
 
   // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {
-    return key_[channel].findRange(key_range);
+    return key(channel).findRange(key_range);
   }
 
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
