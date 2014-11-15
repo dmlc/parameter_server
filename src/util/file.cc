@@ -246,8 +246,10 @@ void writeProtoToFileOrDie(const GProto& proto,
 
 // TODO read home from $HDFS_HOME if empty
 std::string hadoopFS(const HDFSConfig& conf) {
-  return (conf.home() + "/bin/hadoop dfs -D fs.default.name=" + conf.namenode()
-          + " -D hadoop.job.ugi=" + conf.ugi());
+  string str = conf.home() + "/bin/hadoop fs";
+  if (conf.has_namenode()) str += " -D fs.default.name=" + conf.namenode();
+  if (conf.has_ugi()) str += " -D hadoop.job.ugi=" + conf.ugi();
+  return str;
 }
 
 

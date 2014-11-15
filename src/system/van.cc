@@ -10,6 +10,7 @@ DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
 DEFINE_string(server_master, "", "the master of servers");
 DEFINE_bool(print_van, false, "");
+DEFINE_int32(bind_to, 0, "binding port");
 DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
 
@@ -51,9 +52,15 @@ void Van::bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
   CHECK(receiver_ != NULL)
       << "create receiver socket failed: " << zmq_strerror(errno);
-  CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
-  string addr = "tcp://*:" + std::to_string(my_node_.port());
-  // string addr = "tcp://" + address(my_node_);
+  string addr = "tcp://*:";
+  if (FLAGS_bind_to) {
+    addr += std::to_string(FLAGS_bind_to);
+  }
+  else {	
+    CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
+    addr += std::to_string(my_node_.port());
+    // string addr = "tcp://" + address(my_node_);
+  }
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
