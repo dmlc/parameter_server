@@ -114,7 +114,7 @@ void Executor::run() {
         if (!process) {
           // check if the dependency constraints are satisfied
           bool satisfied = true;
-          for (int i = 0; i < task.wait_time_size(); ++i) {
+          for (int i = 0; i < msg->task.wait_time_size(); ++i) {
             int wait_time = msg->task.wait_time(i);
             if (wait_time > Message::kInvalidTime &&
                 !sender->tryWaitIncomingTask(wait_time)) {

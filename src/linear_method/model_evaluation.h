@@ -8,6 +8,8 @@ namespace LM {
 class ModelEvaluation : public LinearMethod {
  public:
   void run();
+  virtual void process(const MessagePtr& msg) { }
+
  private:
   typedef float Real;
 };

@@ -1,4 +1,4 @@
-#include "linear_method/batch_solver.h"
+#include "linear_method/batch_scheduler.h"
 
 #include "util/split.h"
 #include "base/matrix_io_inl.h"

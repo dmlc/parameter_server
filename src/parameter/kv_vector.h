@@ -31,7 +31,7 @@ class KVVector : public SharedParameter<K> {
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
 
- private:
+ protected:
   std::mutex mu_;
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;

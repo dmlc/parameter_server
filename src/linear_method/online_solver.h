@@ -7,6 +7,7 @@ namespace LM {
 class OnlineSolver : public LinearMethod {
  public:
   void init() { LinearMethod::init(); }
+  virtual void process(const MessagePtr& msg) { }
 };
 
 } // namespace LM

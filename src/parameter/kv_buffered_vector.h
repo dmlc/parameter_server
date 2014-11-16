@@ -11,7 +11,6 @@ using KVBufferedVectorPtr = std::shared_ptr<KVBufferedVector<K,V>>;
 template <typename K, typename V>
 class KVBufferedVector : public KVVector<K, V> {
  public:
-
   // return the mareged data received at time t, then *delete* it. If no
   // message, or empty messages are received at time t, then call received(t)
   // will get an error
@@ -24,16 +23,27 @@ class KVBufferedVector : public KVVector<K, V> {
   std::unordered_map<int, MergedData> recved_val_;
 };
 
+template <typename K, typename V> typename KVBufferedVector<K,V>::MergedData
+KVBufferedVector<K,V>::received(int t) {
+  Lock l(this->mu_);
+  auto it = recved_val_.find(t);
+  CHECK(it != recved_val_.end()) << this->myNodeID()
+                                 << " hasn't received data at time " << t;
+  auto ret = it->second;
+  recved_val_.erase(it);
+  return ret;
+}
+
 template <typename K, typename V>
 void KVBufferedVector<K,V>::setValue(const MessagePtr& msg) {
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
-  auto& my_key = key(chl);
+  auto& my_key = this->key(chl);
   if (msg->value.size() == 0) {
     // only keys, merge these keys, and also clear the values
     my_key = my_key.setUnion(recv_key);
-    val_[chl].clear();
+    this->value(chl).clear();
     return;
   }
 
@@ -42,9 +52,9 @@ void KVBufferedVector<K,V>::setValue(const MessagePtr& msg) {
   Range<K> key_range(msg->task.key_range());
   SizeR idx_range = my_key.findRange(key_range);
 
-  mu_.lock();
+  this->mu_.lock();
   auto& matched = recved_val_[t];
-  mu_.unlock();
+  this->mu_.unlock();
 
   for (int i = 0; i < msg->value.size(); ++i) {
     SArray<V> recv_data(msg->value[i]);

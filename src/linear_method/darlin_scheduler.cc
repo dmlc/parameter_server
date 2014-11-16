@@ -1,4 +1,4 @@
-#include "linear_method/darlin.h"
+#include "linear_method/darlin_scheduler.h"
 #include "base/matrix_io.h"
 #include "base/sparse_matrix.h"
 namespace PS {
@@ -22,7 +22,7 @@ void DarlinScheduler::runIteration() {
   int max_iter = sol_cf.max_pass_of_data();
   auto pool = taskpool(kActiveGroup);
   // pick up a large enough time stamp to avoid any possible conflict
-  int time = std::max(10000, pool->time() + fea_grp_.size() * k_time_ratio_);
+  int time = std::max(10000, pool->time() + (int)fea_grp_.size() * 10);
   const int first_time = time + 1;
   for (int iter = 0; iter < max_iter; ++iter) {
     // pick up a updating order
@@ -66,7 +66,7 @@ void DarlinScheduler::runIteration() {
     Task eval = newTask(Call::EVALUATE_PROGRESS);
     eval.add_wait_time(time - tau);
     time = pool->submitAndWait(
-        eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
+        eval, [this, iter](){ Scheduler::mergeProgress(iter); });
     showProgress(iter);
 
     // update the kkt filter strategy

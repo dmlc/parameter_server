@@ -6,7 +6,8 @@ namespace LM {
 // the base class for the scheduler
 class Scheduler : public LinearMethod {
  public:
-  virtual init() { LinearMethod::init(); }
+  virtual void init() { LinearMethod::init(); }
+  virtual void process(const MessagePtr& msg);
 
   void mergeProgress(int iter);
   void mergeAUC(AUC* auc);

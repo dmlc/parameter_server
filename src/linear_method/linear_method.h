@@ -18,8 +18,6 @@ class LinearMethod : public App {
   static AppPtr create(const Config& conf);
   virtual void init();
 
-  void process(const MessagePtr& msg);
-
  protected:
   static Call get(const MessageCPtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
@@ -35,7 +33,6 @@ class LinearMethod : public App {
     return task;
   }
 
-
   Config conf_;
   Timer total_timer_;
   Timer busy_timer_;
@@ -43,9 +40,7 @@ class LinearMethod : public App {
   LossPtr<double> loss_;
   PenaltyPtr<double> penalty_;
   // shared_ptr<AggGradLearner<double>> learner_;
-
 };
 
 } // namespace LM
 } // namespace PS
-  // virtual void saveAsDenseData(const Message& msg) { }

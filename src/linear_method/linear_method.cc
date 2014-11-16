@@ -5,31 +5,43 @@
 #include "proto/instance.pb.h"
 #include "base/io.h"
 #include "linear_method/ftrl.h"
-// #include "linear_method/darling.h"
-// #include "linear_method/batch_solver.h"
+#include "linear_method/darlin_worker.h"
+#include "linear_method/darlin_server.h"
+#include "linear_method/darlin_scheduler.h"
+#include "linear_method/batch_worker.h"
+#include "linear_method/batch_server.h"
+#include "linear_method/batch_scheduler.h"
 #include "linear_method/model_evaluation.h"
 namespace PS {
 namespace LM {
 
-  if (IamWorker()) {
-    worker_ = std::shared_ptr<BatchWorker>(new BatchWorker());
-    worker_->init(app_cf_.parameter_name(0), conf_, this);
-  } else if (IamServer()) {
-    server_ = std::shared_ptr<BatchServer>(new BatchServer());
-    server_->init(app_cf_.parameter_name(0), conf_);
-  }
 AppPtr LinearMethod::create(const Config& conf) {
+  auto my_role = Postoffice::instance().myNode().role();
   if (!conf.has_solver()) {
     if (conf.has_validation_data() && conf.has_model_input()) {
       return AppPtr(new ModelEvaluation());
     }
   } else if (conf.solver().minibatch_size() <= 0) {
-    // // batch solver
-    // if (conf.has_darling()) {
-    //   return AppPtr(new Darling());
-    // } else {
-    //   return AppPtr(new BatchSolver());
-    // }
+    // batch solver
+    if (conf.has_darling()) {
+      // darlin
+      if (my_role == Node::SCHEDULER) {
+        return AppPtr(new DarlinScheduler());
+      } else if (my_role == Node::WORKER) {
+        return AppPtr(new DarlinWorker());
+      } else if (my_role == Node::SERVER) {
+        return AppPtr(new DarlinServer());
+      }
+    } else {
+      // general batch solver
+      if (my_role == Node::SCHEDULER) {
+        return AppPtr(new BatchScheduler());
+      } else if (my_role == Node::WORKER) {
+        return AppPtr(new BatchWorker());
+      } else if (my_role == Node::SERVER) {
+        return AppPtr(new BatchServer());
+      }
+    }
   } else {
     // online solver
     if (conf.has_ftrl()) {
@@ -58,48 +70,6 @@ void LinearMethod::init() {
   // }
   // if (has_learner) learner_->setLoss(loss_);
   // if (has_learner) learner_->setPenalty(penalty_);
-}
-
-void LinearMethod::process(const MessagePtr& msg) {
-  switch (get(msg).cmd()) {
-    case Call::EVALUATE_PROGRESS: {
-      Progress prog; evaluateProgress(&prog);
-      sys_.replyProtocalMessage(msg, prog);
-      break;
-    }
-    case Call::REPORT_PROGRESS: {
-      Progress prog; CHECK(prog.ParseFromString(msg->task.msg()));
-      Lock l(progress_mu_);
-      recent_progress_[msg->sender] = prog;
-    }
-    case Call::LOAD_DATA: {
-      DataInfo info;
-      info.set_hit_cache(loadData(msg, info.mutable_example_info()));
-      sys_.replyProtocalMessage(msg, info);
-      break;
-    }
-    case Call::PREPROCESS_DATA:
-      preprocessData(msg);
-      break;
-    case Call::UPDATE_MODEL:
-      updateModel(msg);
-      break;
-    case Call::SAVE_MODEL:
-      saveModel(msg);
-      break;
-    case Call::RECOVER:
-      // FIXME
-      // W_.recover();
-      break;
-    case Call::COMPUTE_VALIDATION_AUC: {
-      AUCData data;
-      computeEvaluationAUC(&data);
-      sys_.replyProtocalMessage(msg, data);
-      break;
-    }
-    default:
-      CHECK(false) << "unknown cmd: " << get(msg).cmd();
-  }
 }
 
 

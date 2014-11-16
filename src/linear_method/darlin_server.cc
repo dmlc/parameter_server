@@ -3,7 +3,7 @@ namespace PS {
 namespace LM {
 
 void DarlinServer::preprocessData(const MessagePtr& msg) {
-  BatchSolver::preprocessData(msg);
+  BatchServer::preprocessData(msg);
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
     active_set_[grp].resize(n, true);
@@ -53,6 +53,7 @@ void DarlinServer::updateWeight(
 
   double eta = conf_.learning_rate().eta();
   double lambda = conf_.penalty().lambda(0);
+  double delta_max = conf_.darling().delta_max_value();
   auto& value = model_->value(grp);
   auto& active_set = active_set_[grp];
   auto& delta = delta_[grp];
@@ -83,7 +84,7 @@ void DarlinServer::updateWeight(
       d = - g_neg / u;
     }
     d = std::min(delta[k], std::max(-delta[k], d));
-    delta[k] = newDelta(d);
+    delta[k] = newDelta(delta_max, d);
     w += d;
   }
 }

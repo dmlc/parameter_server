@@ -1,6 +1,20 @@
 #include "linear_method/scheduler.h"
+#include "data/common.h"
 namespace PS {
 namespace LM {
+
+void Scheduler::process(const MessagePtr& msg) {
+  switch (get(msg).cmd()) {
+    // the computation nodes report progress to the scheduler
+    case Call::REPORT_PROGRESS: {
+      Progress prog; CHECK(prog.ParseFromString(msg->task.msg()));
+      Lock l(progress_mu_);
+      recent_progress_[msg->sender] = prog;
+    }
+    default:
+      CHECK(false) << "unknown cmd: " << get(msg).cmd();
+  }
+}
 
 void Scheduler::startSystem() {
   Task start;

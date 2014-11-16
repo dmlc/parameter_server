@@ -7,13 +7,12 @@ namespace LM {
 class DarlinServer : public BatchServer, public DarlinCommon {
  public:
   virtual void preprocessData(const MessagePtr& msg);
-  virtual vodi iterate(const MessagePtr& msg) { updateWeight(msg); }
+  virtual void iterate(const MessagePtr& msg) { updateWeight(msg); }
   virtual void evaluateProgress(Progress* prog);
  protected:
   void updateWeight(const MessagePtr& msg);
-  double newDelta(double delta_w) {
-    return std::min(conf_.darling().delta_max_value(), 2 * fabs(delta_w) + .1);
-  }
+  void updateWeight(int grp, SizeR range, SArray<double> G, SArray<double> U);
+
   double kkt_filter_threshold_;
   double violation_;
 };

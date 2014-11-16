@@ -4,10 +4,10 @@
 namespace PS {
 namespace LM {
 
-class BatchServer : public CompNode {
+class BatchServer : public CompNode, public BatchCommon {
  public:
   virtual void init();
-  virtual void preprocessData(const MessagePtr& msg) { }
+  virtual void preprocessData(const MessagePtr& msg);
   virtual void iterate(const MessagePtr& msg) { updateWeight(msg); }
   // TODO
   virtual void evaluateProgress(Progress* prog) { }

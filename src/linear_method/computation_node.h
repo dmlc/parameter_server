@@ -7,6 +7,7 @@ namespace LM {
 class CompNode : public LinearMethod {
  public:
   virtual void init() { LinearMethod::init(); }
+  virtual void process(const MessagePtr& msg);
   void run() { }
 
  protected:
@@ -19,3 +20,5 @@ class CompNode : public LinearMethod {
 };
 } // namespace LM
 } // namespace PS
+
+  // virtual void saveAsDenseData(const Message& msg) { }

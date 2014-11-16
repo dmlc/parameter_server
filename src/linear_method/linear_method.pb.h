@@ -1368,12 +1368,12 @@ class Call : public ::google::protobuf::Message {
   inline double kkt_filter_threshold() const;
   inline void set_kkt_filter_threshold(double value);
 
-  // optional bool kkt_filter_reset = 5;
-  inline bool has_kkt_filter_reset() const;
-  inline void clear_kkt_filter_reset();
-  static const int kKktFilterResetFieldNumber = 5;
-  inline bool kkt_filter_reset() const;
-  inline void set_kkt_filter_reset(bool value);
+  // optional bool reset_kkt_filter = 5;
+  inline bool has_reset_kkt_filter() const;
+  inline void clear_reset_kkt_filter();
+  static const int kResetKktFilterFieldNumber = 5;
+  inline bool reset_kkt_filter() const;
+  inline void set_reset_kkt_filter(bool value);
 
   // repeated int32 fea_grp = 8;
   inline int fea_grp_size() const;
@@ -1402,8 +1402,8 @@ class Call : public ::google::protobuf::Message {
   inline void clear_has_key();
   inline void set_has_kkt_filter_threshold();
   inline void clear_has_kkt_filter_threshold();
-  inline void set_has_kkt_filter_reset();
-  inline void clear_has_kkt_filter_reset();
+  inline void set_has_reset_kkt_filter();
+  inline void clear_has_reset_kkt_filter();
   inline void set_has_hit_cache();
   inline void clear_has_hit_cache();
 
@@ -1412,7 +1412,7 @@ class Call : public ::google::protobuf::Message {
   ::PS::PbRange* key_;
   double kkt_filter_threshold_;
   int cmd_;
-  bool kkt_filter_reset_;
+  bool reset_kkt_filter_;
   bool hit_cache_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int32 > fea_grp_;
 
@@ -2934,26 +2934,26 @@ inline void Call::set_kkt_filter_threshold(double value) {
   kkt_filter_threshold_ = value;
 }
 
-// optional bool kkt_filter_reset = 5;
-inline bool Call::has_kkt_filter_reset() const {
+// optional bool reset_kkt_filter = 5;
+inline bool Call::has_reset_kkt_filter() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void Call::set_has_kkt_filter_reset() {
+inline void Call::set_has_reset_kkt_filter() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void Call::clear_has_kkt_filter_reset() {
+inline void Call::clear_has_reset_kkt_filter() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void Call::clear_kkt_filter_reset() {
-  kkt_filter_reset_ = false;
-  clear_has_kkt_filter_reset();
+inline void Call::clear_reset_kkt_filter() {
+  reset_kkt_filter_ = false;
+  clear_has_reset_kkt_filter();
 }
-inline bool Call::kkt_filter_reset() const {
-  return kkt_filter_reset_;
+inline bool Call::reset_kkt_filter() const {
+  return reset_kkt_filter_;
 }
-inline void Call::set_kkt_filter_reset(bool value) {
-  set_has_kkt_filter_reset();
-  kkt_filter_reset_ = value;
+inline void Call::set_reset_kkt_filter(bool value) {
+  set_has_reset_kkt_filter();
+  reset_kkt_filter_ = value;
 }
 
 // repeated int32 fea_grp = 8;

@@ -1,3 +1,4 @@
+#include "linear_method/batch_worker.h"
 #include "util/split.h"
 #include "base/matrix_io_inl.h"
 #include "base/localizer.h"
@@ -9,11 +10,11 @@ namespace LM {
 
 void BatchWorker::init() {
   CompNode::init();
-  model_ = KVBufferedVectorPtr(new KVBufferedVector<Key, double>());
+  model_ = KVBufferedVectorPtr<Key, double>(new KVBufferedVector<Key, double>());
   REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
 }
 
-int BatchWorker::loadData(ExampleInfo* info, int *hit_cache) {
+void BatchWorker::loadData(ExampleInfo* info, int *hit_cache) {
   *hit_cache = loadCache("train");
   if (!(*hit_cache)) {
     CHECK(conf_.has_local_cache());
@@ -23,7 +24,7 @@ int BatchWorker::loadData(ExampleInfo* info, int *hit_cache) {
 }
 
 void BatchWorker::preprocessData(const MessagePtr& msg) {
-  int time = msg->task().time() * k_time_ratio_;
+  int time = msg->task.time() * k_time_ratio_;
   auto cmd = get(msg);
   int grp_size = cmd.fea_grp_size();
   fea_grp_.clear();
@@ -82,6 +83,7 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
         LI << "started remapIndex [" << i + 1 << "/" << grp_size << "]";
       }
 
+      auto& hb = sys_.hb();
       hb.startTimer(HeartbeatInfo::TimerType::BUSY);
       auto X = localizer->remapIndex(grp, model_->key(grp), &slot_reader_);
       delete localizer;
@@ -125,7 +127,7 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
     // push the filtered keys to servers
     MessagePtr push_key(new Message(kServerGroup, time));
     int grp = fea_grp_[i];
-    push_key->setKey(w_->key(grp));
+    push_key->setKey(model_->key(grp));
     push_key->task.set_key_channel(grp);
     push_key->addFilter(FilterConfig::KEY_CACHING);
     CHECK_EQ(time, model_->push(push_key));

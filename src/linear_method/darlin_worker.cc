@@ -1,9 +1,11 @@
 #include "linear_method/darlin_worker.h"
+#include "base/sparse_matrix.h"
+
 namespace PS {
 namespace LM {
 
 void DarlinWorker::preprocessData(const MessagePtr& msg) {
-  BatchSolver::preprocessData(msg);
+  BatchWorker::preprocessData(msg);
   dual_.setValue(1);
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
@@ -44,9 +46,9 @@ void DarlinWorker::computeGradient(const MessagePtr& msg) {
     sys.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
 
     // mark the message finished, and reply the sender
-    solver_->taskpool(msg->sender)->finishIncomingTask(msg->task.time());
+    taskpool(msg->sender)->finishIncomingTask(msg->task.time());
 
-    sys.reply(msg->sender, msg->task);
+    sys_.reply(msg->sender, msg->task);
   };
 
   CHECK_EQ(time, model_->pull(pull));
@@ -148,6 +150,7 @@ void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
   auto& active_set = active_set_[grp];
   auto& delta = delta_[grp];
 
+  double delta_max = conf_.darling().delta_max_value();
   for (size_t i = 0; i < new_w.size(); ++i) {
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
@@ -159,7 +162,7 @@ void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
       continue;
     }
     delta_w[i] = nw - cw;
-    delta[j] = newDelta(delta_w[i]);
+    delta[j] = newDelta(delta_max, delta_w[i]);
     cw = nw;
   }
 

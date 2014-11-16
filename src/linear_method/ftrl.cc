@@ -19,7 +19,8 @@ void FTRL::init() {
 
 void FTRL::run() {
   // start the system
-  LinearMethod::startSystem();
+  // FIXME
+  // LinearMethod::startSystem();
 
   // the thread collects progress from workers and servers
   prog_thr_ = unique_ptr<std::thread>(new std::thread([this]() {
@@ -72,22 +73,22 @@ void FTRL::saveModel(const MessageCPtr& msg) {
 }
 
 void FTRL::showProgress() {
-  Lock l(progress_mu_);
-  real objv_worker = 0, objv_server = 0;
-  uint64 num_ex = 0, nnz_w = 0;
-  for (const auto& it : recent_progress_) {
-    auto prog = it.second;
-    if (prog.has_num_ex_trained()) {
-      num_ex += prog.num_ex_trained();
-      objv_worker += prog.objv();
-    } else {
-      nnz_w += prog.nnz_w();
-      objv_server += prog.objv();
-    }
-  }
-  num_ex_processed_ += num_ex;
-  printf("%10lu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
-         num_ex_processed_ , objv_worker/(real)num_ex, objv_server, nnz_w);
+  // Lock l(progress_mu_);
+  // real objv_worker = 0, objv_server = 0;
+  // uint64 num_ex = 0, nnz_w = 0;
+  // for (const auto& it : recent_progress_) {
+  //   auto prog = it.second;
+  //   if (prog.has_num_ex_trained()) {
+  //     num_ex += prog.num_ex_trained();
+  //     objv_worker += prog.objv();
+  //   } else {
+  //     nnz_w += prog.nnz_w();
+  //     objv_server += prog.objv();
+  //   }
+  // }
+  // num_ex_processed_ += num_ex;
+  // printf("%10lu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
+  //        num_ex_processed_ , objv_worker/(real)num_ex, objv_server, nnz_w);
 }
 
 } // namespace LM

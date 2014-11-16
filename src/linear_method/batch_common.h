@@ -12,6 +12,7 @@ class BatchCommon {
   std::vector<int> fea_grp_;
   const int k_time_ratio_ = 10;
 };
+
 } // namespace LM
 
 } // namespace PS

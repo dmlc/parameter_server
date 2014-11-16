@@ -1,11 +1,12 @@
 #pragma once
 #include "linear_method/computation_node.h"
+#include "linear_method/batch_common.h"
 #include "data/slot_reader.h"
 #include "parameter/kv_vector.h"
 namespace PS {
 namespace LM {
 
-class BatchSolverWorker : public CompNode, public BatchCommon {
+class BatchWorker : public CompNode, public BatchCommon {
  public:
   virtual void init();
   virtual void loadData(ExampleInfo* info, int *hit_cache);
@@ -31,6 +32,8 @@ class BatchSolverWorker : public CompNode, public BatchCommon {
 
   // the timestamps when the model will be initialized on the servers
   std::unordered_map<int, int> model_ready_;
+
+  std::mutex mu_;
 };
 
 } // namespace LM

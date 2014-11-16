@@ -256,12 +256,17 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 time() const;
   inline void set_time(::google::protobuf::int32 value);
 
-  // optional int32 wait_time = 6 [default = -1];
-  inline bool has_wait_time() const;
+  // repeated int32 wait_time = 6;
+  inline int wait_time_size() const;
   inline void clear_wait_time();
   static const int kWaitTimeFieldNumber = 6;
-  inline ::google::protobuf::int32 wait_time() const;
-  inline void set_wait_time(::google::protobuf::int32 value);
+  inline ::google::protobuf::int32 wait_time(int index) const;
+  inline void set_wait_time(int index, ::google::protobuf::int32 value);
+  inline void add_wait_time(::google::protobuf::int32 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      wait_time() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_wait_time();
 
   // optional .PS.PbRange key_range = 7;
   inline bool has_key_range() const;
@@ -384,8 +389,6 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_customer();
   inline void set_has_time();
   inline void clear_has_time();
-  inline void set_has_wait_time();
-  inline void clear_has_wait_time();
   inline void set_has_key_range();
   inline void clear_has_key_range();
   inline void set_has_key_channel();
@@ -414,11 +417,10 @@ class Task : public ::google::protobuf::Message {
   bool do_not_reply_;
   bool has_key_;
   ::std::string* customer_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > wait_time_;
   ::google::protobuf::int32 time_;
-  ::google::protobuf::int32 wait_time_;
-  ::PS::PbRange* key_range_;
   ::google::protobuf::int32 key_channel_;
-  int key_type_;
+  ::PS::PbRange* key_range_;
   ::google::protobuf::RepeatedField<int> value_type_;
   ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig > filter_;
   ::std::string* msg_;
@@ -427,6 +429,7 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSharedPara* shared_para_;
   ::PS::LM::Call* linear_method_;
   ::PS::CallSketch* sketch_;
+  int key_type_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
@@ -1081,26 +1084,29 @@ inline void Task::set_time(::google::protobuf::int32 value) {
   time_ = value;
 }
 
-// optional int32 wait_time = 6 [default = -1];
-inline bool Task::has_wait_time() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void Task::set_has_wait_time() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void Task::clear_has_wait_time() {
-  _has_bits_[0] &= ~0x00000020u;
+// repeated int32 wait_time = 6;
+inline int Task::wait_time_size() const {
+  return wait_time_.size();
 }
 inline void Task::clear_wait_time() {
-  wait_time_ = -1;
-  clear_has_wait_time();
+  wait_time_.Clear();
 }
-inline ::google::protobuf::int32 Task::wait_time() const {
+inline ::google::protobuf::int32 Task::wait_time(int index) const {
+  return wait_time_.Get(index);
+}
+inline void Task::set_wait_time(int index, ::google::protobuf::int32 value) {
+  wait_time_.Set(index, value);
+}
+inline void Task::add_wait_time(::google::protobuf::int32 value) {
+  wait_time_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+Task::wait_time() const {
   return wait_time_;
 }
-inline void Task::set_wait_time(::google::protobuf::int32 value) {
-  set_has_wait_time();
-  wait_time_ = value;
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+Task::mutable_wait_time() {
+  return &wait_time_;
 }
 
 // optional .PS.PbRange key_range = 7;
