@@ -38,7 +38,8 @@ void DarlinWorker::computeGradient(int time, const MessagePtr& msg) {
     sys.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
 
     // mark the message finished, and reply the sender
-    sovler_->taskpool(msg->sender)->finishIncomingTask(msg->task.time());
+    solver_->taskpool(msg->sender)->finishIncomingTask(msg->task.time());
+
     sys.reply(msg->sender, msg->task);
   };
 

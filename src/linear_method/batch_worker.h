@@ -7,15 +7,15 @@ namespace LM {
 
 class BatchSolverWorker {
  public:
-  void init(const string& name);
-
-  void preprocessData(int time, const Call& cmd);
+  void init(const string& name, const Config& conf, BatchSolver* solver);
   int loadData(ExampleInfo* info);
-
+  void preprocessData(int time, const Call& cmd);
+  void computeGradient(int time, const MessagePtr& msg);
+ protected:
   bool loadCache(const string& name) { return dataCache(name, true); }
   bool saveCache(const string& name) { return dataCache(name, false); }
   bool dataCache(const string& name, bool load);
- protected:
+
   // weight
   KVVector<Key, double> model_;
 
@@ -28,9 +28,9 @@ class BatchSolverWorker {
   // dual_ = X * w
   SArray<double> dual_;
 
-  //
   BatchSolver* solver_;
-  std::mutex mu_;
+  Config conf_;
+  // std::mutex mu_;
 };
 
 } // namespace LM

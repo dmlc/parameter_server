@@ -11,8 +11,6 @@ class BatchSolver : public LinearMethod {
   virtual void run();
 
  protected:
-  static const int kPace = 10;
-
   virtual int loadData(const MessageCPtr& msg, ExampleInfo* info);
   virtual void preprocessData(const MessageCPtr& msg);
   virtual void updateModel(const MessagePtr& msg);

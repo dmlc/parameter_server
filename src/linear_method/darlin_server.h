@@ -7,7 +7,6 @@ namespace LM {
 
 class DarlinServer : BatchServer {
  public:
-
   void updateWeight(const Call& cmd);
  protected:
   double newDelta(double delta_w) {

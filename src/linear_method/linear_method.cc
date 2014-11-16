@@ -24,7 +24,7 @@ AppPtr LinearMethod::create(const Config& conf) {
     //   return AppPtr(new BatchSolver());
     // }
   } else {
-    // online sovler
+    // online solver
     if (conf.has_ftrl()) {
       return AppPtr(new FTRL());
     }
@@ -56,8 +56,7 @@ void LinearMethod::init() {
 void LinearMethod::process(const MessagePtr& msg) {
   switch (get(msg).cmd()) {
     case Call::EVALUATE_PROGRESS: {
-      auto prog = evaluateProgress();
-      // LL << myNodeID() << prog.DebugString();
+      Progress prog; evaluateProgress(&prog);
       sys_.replyProtocalMessage(msg, prog);
       break;
     }

@@ -28,6 +28,7 @@ class Customer {
   virtual void stop() { exec_.stop(); exec_thread_->join(); }
 
   // unique name of this customer
+  void setName(const string& name) { name_ = name; }
   const string& name() const { return name_; }
   string& name() { return name_; }
 

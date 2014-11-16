@@ -10,8 +10,7 @@ void FTRL::init() {
   if (IamServer()) {
     server_ = std::shared_ptr<FTRLServer>(new FTRLServer());
     server_->init(conf_);
-    server_->name() = app_cf_.parameter_name(0);
-    sys_.yp().add(CustomerPtr(std::static_pointer_cast<Customer>(server_)));
+    REGISTER_CUSTOMER(app_cf_.parameter_name(0), server_);
   } else if (IamWorker()) {
     worker_ = std::shared_ptr<FTRLWorker>(new FTRLWorker());
     worker_->init(app_cf_.parameter_name(0), conf_);

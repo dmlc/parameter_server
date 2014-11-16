@@ -10,8 +10,7 @@ void FTRLWorker::init(const string& name, const Config& conf) {
   data_prefetcher_.setCapacity(conf_.solver().max_data_buf_size_in_mb());
 
   model_ = KVVectorPtr<Key, real>(new KVVector<Key, real>());
-  model_->name() = name;
-  Postoffice::instance().yp().add(std::static_pointer_cast<Customer>(model_));
+  REGISTER_CUSTOMER(name, model_);
 }
 
 void FTRLWorker::computeGradient() {
@@ -39,8 +38,7 @@ void FTRLWorker::computeGradient() {
         msg->setKey(uniq_key);
         msg->addValue(key_cnt);
         // msg->addFilter(FilterConfig::KEY_CACHING);
-        auto arg = model_->set(msg);
-        auto tail = arg->mutable_tail_filter();
+        auto tail = model_->set(msg)->mutable_tail_filter();
         tail->set_insert_count(true);
         tail->set_query_key(conf_.solver().tail_feature_freq());
         tail->set_query_value(true);

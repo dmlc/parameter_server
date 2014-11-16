@@ -198,6 +198,142 @@ void Darling::updateModel(const MessagePtr& msg) {
   }
 }
 
+SArrayList<double> Darling::computeGradients(int grp, SizeR col_range) {
+  SArrayList<double> grads(2);
+  for (int i : {0, 1} ) {
+    grads[i].resize(col_range.size());
+    grads[i].setZero();
+  }
+  // TODO partition by rows for small col_range size
+  int num_threads = col_range.size() < 64 ? 1 : FLAGS_num_threads;
+  ThreadPool pool(num_threads);
+  int npart = num_threads * 1;  // could use a larger partition number
+  for (int i = 0; i < npart; ++i) {
+    auto thr_range = col_range.evenDivide(npart, i);
+    if (thr_range.empty()) continue;
+    auto gr = thr_range - col_range.begin();
+    pool.add([this, grp, thr_range, gr, &grads]() {
+        computeGradients(grp, thr_range, grads[0].segment(gr), grads[1].segment(gr));
+      });
+  }
+  pool.startWorkers();
+  return grads;
+}
+
+void Darling::computeGradients(
+    int grp, SizeR col_range, SArray<double> G, SArray<double> U) {
+  CHECK_EQ(G.size(), col_range.size());
+  CHECK_EQ(U.size(), col_range.size());
+  CHECK(X_[grp]->colMajor());
+
+  const auto& active_set = active_set_[grp];
+  const auto& delta = delta_[grp];
+  const double* y = y_->value().data();
+  auto X = std::static_pointer_cast<SparseMatrix<uint32, double>>(
+      X_[grp]->colBlock(col_range));
+  const size_t* offset = X->offset().data();
+  uint32* index = X->index().data() + offset[0];
+  double* value = X->value().data() + offset[0];
+  bool binary = X->binary();
+
+  // j: column id, i: row id
+  for (size_t j = 0; j < X->cols(); ++j) {
+    size_t k = j + col_range.begin();
+    size_t n = offset[j+1] - offset[j];
+    if (!active_set.test(k)) {
+      index += n;
+      if (!binary) value += n;
+      kkt_filter_.mark(&G[j]);
+      kkt_filter_.mark(&U[j]);
+      continue;
+    }
+    double g = 0, u = 0;
+    double d = binary ? exp(delta[k]) : delta[k];
+    // TODO unroll loop
+    for (size_t o = 0; o < n; ++o) {
+      auto i = *(index ++);
+      double tau = 1 / ( 1 + dual_[i] );
+      if (binary) {
+        g -= y[i] * tau;
+        u += std::min(tau*(1-tau)*d, .25);
+        // u += tau * (1-tau);
+      } else {
+        double v = *(value++);
+        g -= y[i] * tau * v;
+        u += std::min(tau*(1-tau)*exp(fabs(v)*d), .25) * v * v;
+        // u += tau * (1-tau) * v * v;
+      }
+    }
+    G[j] = g; U[j] = u;
+  }
+}
+
+void Darling::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
+  SArray<double> delta_w(new_w.size());
+  auto& cur_w = w_->value(grp);
+  auto& active_set = active_set_[grp];
+  auto& delta = delta_[grp];
+
+  for (size_t i = 0; i < new_w.size(); ++i) {
+    size_t j = col_range.begin() + i;
+    double& cw = cur_w[j];
+    double& nw = new_w[i];
+    if (kkt_filter_.marked(nw)) {
+      active_set.clear(j);
+      cw = 0;
+      delta_w[i] = 0;
+      continue;
+    }
+    delta_w[i] = nw - cw;
+    delta[j] = newDelta(delta_w[i]);
+    cw = nw;
+  }
+
+  CHECK(X_[grp]);
+  SizeR row_range(0, X_[grp]->rows());
+  ThreadPool pool(FLAGS_num_threads);
+  int npart = FLAGS_num_threads;
+  for (int i = 0; i < npart; ++i) {
+    auto thr_range = row_range.evenDivide(npart, i);
+    if (thr_range.empty()) continue;
+    pool.add([this, grp, thr_range, col_range, delta_w]() {
+        updateDual(grp, thr_range, col_range, delta_w);
+      });
+  }
+  pool.startWorkers();
+}
+
+void Darling::updateDual(
+    int grp, SizeR row_range, SizeR col_range, SArray<double> w_delta) {
+  CHECK_EQ(w_delta.size(), col_range.size());
+  CHECK(X_[grp]->colMajor());
+
+  const auto& active_set = active_set_[grp];
+  double* y = y_->value().data();
+  auto X = std::static_pointer_cast<
+    SparseMatrix<uint32, double>>(X_[grp]->colBlock(col_range));
+  size_t* offset = X->offset().data();
+  uint32* index = X->index().data() + offset[0];
+  double* value = X->value().data();
+  bool binary = X->binary();
+
+  // j: column id, i: row id
+  for (size_t j = 0; j < X->cols(); ++j) {
+    size_t k  = j + col_range.begin();
+    size_t n = offset[j+1] - offset[j];
+    double wd = w_delta[j];
+    if (wd == 0 || !active_set.test(k)) {
+      index += n;
+      continue;
+    }
+    // TODO unroll the loop
+    for (size_t o = offset[j]; o < offset[j+1]; ++o) {
+      auto i = *(index++);
+      if (!row_range.contains(i)) continue;
+      dual_[i] *= binary ? exp(y[i] * wd) : exp(y[i] * wd * value[o]);
+    }
+  }
+}
 
 void Darling::updateWeight(
     int grp, SizeR range, SArray<double> G, SArray<double> U) {
