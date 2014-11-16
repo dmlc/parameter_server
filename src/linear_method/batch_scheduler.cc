@@ -61,7 +61,7 @@ void BatchScheduler::run() {
     }
   }
 
-  // preprocess the training data
+  // prneprocess the training data
   auto preprocess_time = tic();
   Task preprocess = newTask(Call::PREPROCESS_DATA);
   for (auto grp : fea_grp_) set(&preprocess)->add_fea_grp(grp);

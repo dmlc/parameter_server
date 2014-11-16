@@ -44,6 +44,7 @@ void KVBufferedVector<K,V>::setValue(const MessagePtr& msg) {
     // only keys, merge these keys, and also clear the values
     my_key = my_key.setUnion(recv_key);
     this->value(chl).clear();
+    LL << my_key.size();
     return;
   }
 

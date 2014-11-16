@@ -31,6 +31,10 @@ void BatchServer::preprocessData(const MessagePtr& msg) {
   int time = msg->task.time() * k_time_ratio_;
   auto cmd = get(msg);
   int grp_size = cmd.fea_grp_size();
+  fea_grp_.clear();
+  for (int i = 0; i < grp_size; ++i) {
+    fea_grp_.push_back(cmd.fea_grp(i));
+  }
   bool hit_cache = cmd.hit_cache();
   // filter tail keys
   for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
@@ -40,6 +44,7 @@ void BatchServer::preprocessData(const MessagePtr& msg) {
   }
   for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     // wait untill received all keys from workers
+    LL << time;
     model_->waitInMsg(kWorkerGroup, time);
     // initialize the weight
     int chl = fea_grp_[i];

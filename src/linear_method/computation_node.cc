@@ -11,7 +11,7 @@ void CompNode::process(const MessagePtr& msg) {
     }
     case Call::LOAD_DATA: {
       DataInfo info;
-      int hit_cache;
+      int hit_cache = 0;
       loadData(info.mutable_example_info(), &hit_cache);
       info.set_hit_cache(hit_cache);
       sys_.replyProtocalMessage(msg, info);

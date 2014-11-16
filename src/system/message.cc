@@ -28,7 +28,7 @@ FilterConfig* Message::addFilter(FilterConfig::Type type) {
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   if (task.request()) ss << "REQ"; else ss << "RLY";
-  ss << "T=" << task.time() << " ";
+  ss << " T=" << task.time() << " ";
   for (int i = 0; i < task.wait_time_size(); ++i) {
     if (i == 0) ss << "(wait";
     ss << " " << task.wait_time(i);
