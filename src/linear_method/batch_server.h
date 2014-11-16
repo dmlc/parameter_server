@@ -1,18 +1,27 @@
 #pragma once
-#include "parameter/kv_buffered_vector.h"
-
+#include "linear_method/computation_node.h"
+#include "linear_method/batch_common.h"
 namespace PS {
 namespace LM {
 
-class BatchServer {
+class BatchServer : public CompNode {
  public:
-  void init(const string& name, const Config& conf);
+  virtual void init();
+  virtual void preprocessData(const MessagePtr& msg) { }
+  virtual void iterate(const MessagePtr& msg) { updateWeight(msg); }
   // TODO
-  void updateWeight(const Call& cmd) { }
-  void saveModel(const DataConfig& output);
+  virtual void evaluateProgress(Progress* prog) { }
+
+  virtual void saveModel() {
+    if (conf_.has_model_output()) {
+      saveModel(conf_.model_output());
+    }
+  }
  protected:
-  KVBufferedVectorPtr<Key, double> model_;
-  Config conf_;
+  // TODO
+  void updateWeight(const MessagePtr& msg) { }
+  void saveModel(const DataConfig& output);
+
 };
 
 

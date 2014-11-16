@@ -1,23 +1,24 @@
 #pragma once
-#include "linear_method/linear_method.h"
+#include "linear_method/computation_node.h"
 #include "data/slot_reader.h"
 #include "parameter/kv_vector.h"
 namespace PS {
 namespace LM {
 
-class BatchSolverWorker {
+class BatchSolverWorker : public CompNode, public BatchCommon {
  public:
-  void init(const string& name, const Config& conf, BatchSolver* solver);
-  int loadData(ExampleInfo* info);
-  void preprocessData(int time, const Call& cmd);
-  void computeGradient(int time, const MessagePtr& msg);
+  virtual void init();
+  virtual void loadData(ExampleInfo* info, int *hit_cache);
+  virtual void preprocessData(const MessagePtr& msg);
+  virtual void iterate(const MessagePtr& msg) { computeGradient(msg); }
+  virtual void evaluateProgress(Progress* prog) { }
  protected:
+  // TODO
+  void computeGradient(const MessagePtr& msg) { }
   bool loadCache(const string& name) { return dataCache(name, true); }
   bool saveCache(const string& name) { return dataCache(name, false); }
+  // TODO
   bool dataCache(const string& name, bool load);
-
-  // weight
-  KVVector<Key, double> model_;
 
   // training data reader
   SlotReader slot_reader_;
@@ -28,9 +29,8 @@ class BatchSolverWorker {
   // dual_ = X * w
   SArray<double> dual_;
 
-  BatchSolver* solver_;
-  Config conf_;
-  // std::mutex mu_;
+  // the timestamps when the model will be initialized on the servers
+  std::unordered_map<int, int> model_ready_;
 };
 
 } // namespace LM

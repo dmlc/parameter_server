@@ -2,12 +2,9 @@
 #include "base/matrix_io.h"
 #include "base/sparse_matrix.h"
 namespace PS {
-
-DECLARE_bool(verbose);
-
 namespace LM {
 
-void Darlin::runIteration() {
+void DarlinScheduler::runIteration() {
   CHECK(conf_.has_darling());
   CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
   CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
@@ -24,10 +21,12 @@ void Darlin::runIteration() {
   // iterating
   int max_iter = sol_cf.max_pass_of_data();
   auto pool = taskpool(kActiveGroup);
-  int time = pool->time() + fea_grp_.size() * 2;
-  const int first_update_model_task_id = time + 1;
+  // pick up a large enough time stamp to avoid any possible conflict
+  int time = std::max(10000, pool->time() + fea_grp_.size() * k_time_ratio_);
+  const int first_time = time + 1;
   for (int iter = 0; iter < max_iter; ++iter) {
     // pick up a updating order
+    // TODO avoid some tau ...
     auto order = blk_order_;
     if (random_blk_order) std::random_shuffle(order.begin(), order.end());
     if (iter == 0) order.insert(
@@ -36,33 +35,36 @@ void Darlin::runIteration() {
     // iterating on feature blocks
     for (int i = 0; i < order.size(); ++i) {
       Task update = newTask(Call::UPDATE_MODEL);
-      update.set_time(time+1);
-      if (iter == 0 && i < prior_blk_order_.size()) {
-        // force zero delay for important feature blocks
-        update.set_wait_time(time);
-      } else {
-        update.set_wait_time(time - tau);
-      }
-
-      // make sure leading UPDATE_MODEL tasks could be picked up by workers
-      if (update.time() - tau <= first_update_model_task_id) {
-        update.set_wait_time(-1);
-      }
-
       auto cmd = set(&update);
+      // kkt filter
       if (i == 0) {
         cmd->set_kkt_filter_threshold(kkt_filter_threshold_);
         if (reset_kkt_filter) cmd->set_reset_kkt_filter(true);
       }
+      // block info
       auto blk = fea_blk_[order[i]];
       blk.second.to(cmd->mutable_key());
       cmd->add_fea_grp(blk.first);
+
+      // time stamp
+      update.set_time(time+1);
+      int wait_time = time - tau;
+      // force zero delay for important feature blocks
+      if (iter == 0 && i < prior_blk_order_.size()) {
+        wait_time = time;
+      }
+      // make sure leading UPDATE_MODEL tasks could be picked up by workers
+      if (wait_time < first_time) {
+        wait_time = Message::kInvalidTime;
+      }
+      update.add_wait_time(wait_time);
+
       time = pool->submit(update);
     }
 
     // evaluate the progress
     Task eval = newTask(Call::EVALUATE_PROGRESS);
-    eval.set_wait_time(time - tau);
+    eval.add_wait_time(time - tau);
     time = pool->submitAndWait(
         eval, [this, iter](){ LinearMethod::mergeProgress(iter); });
     showProgress(iter);
@@ -90,28 +92,7 @@ void Darlin::runIteration() {
   }
 }
 
-void Darlin::preprocessData(const MessageCPtr& msg) {
-  auto time = msg->task.time() * kPace;
-  if (IamWorker()) {
-    worker_->preprocessData(time, get(msg));
-  } else if (IamServer()) {
-    server_->preprocessData(time, get(msg));
-  }
-}
-
-void Darlin::updateModel(const MessagePtr& msg) {
-  if (FLAGS_verbose) {
-    LI << "updateModel; msg [" << msg->shortDebugString() << "]";
-  }
-  auto time = msg->task.time() * kPace;
-  if (IamWorker()) {
-    worker_->computeGradient(time, msg);
-  } else if (IamServer()) {
-    server_->updateWeight(time, get(msg));
-  }
-}
-
-void Darlin::showKKTFilter(int iter) {
+void DarlinScheduler::showKKTFilter(int iter) {
   if (iter == -3) {
     fprintf(stderr, "|      KKT filter     ");
   } else if (iter == -2) {
@@ -124,7 +105,7 @@ void Darlin::showKKTFilter(int iter) {
   }
 }
 
-void Darlin::showProgress(int iter) {
+void DarlinScheduler::showProgress(int iter) {
   int s = iter == 0 ? -3 : iter;
   for (int i = s; i <= iter; ++i) {
     showObjective(i);

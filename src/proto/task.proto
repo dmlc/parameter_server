@@ -26,7 +26,7 @@ message Task {
 
   // time
   optional int32 time = 5;
-  optional int32 wait_time = 6 [default = -1];
+  repeated int32 wait_time = 6;
 
   // the key range of this task
   optional PbRange key_range = 7;

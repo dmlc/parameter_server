@@ -2,16 +2,16 @@
 namespace PS {
 namespace LM {
 
-void BatchServer::init(const string& name, const Config& conf) {
-  conf_ = conf;
+void BatchServer::init() {
+  CompNode::init();
   model_ = KVBufferedVectorPtr(new KVBufferedVector<Key, double>());
-  REGISTER_CUSTOMER(name, model_);
+  REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
 }
 
 void BatchServer::saveModel(const DataConfig& output) {
   if (output.format() == DataConfig::TEXT) {
     CHECK(output.file_size());
-    std::string file = output.file(0) + "_" + model_->myNodeID();
+    std::string file = output.file(0) + "_" + myNodeID();
     std::ofstream out(file); CHECK(out.good());
     for (int grp : fea_grp_) {
       auto key = w_->key(grp);
@@ -23,25 +23,29 @@ void BatchServer::saveModel(const DataConfig& output) {
         if (v != 0 && !(v != v)) out << key[i] << "\t" << v << "\n";
       }
     }
-    LI << model_->myNodeID() << " written the model to " << file;
+    LI << myNodeID() << " written the model to " << file;
   }
 }
 
-
-void BatchServer::preprocessData(int time, const Call& cmd) {
-  for (int i = 0; i < grp_size; ++i, time += kPace) {
+void BatchServer::preprocessData(const MessagePtr& msg) {
+  int time = msg->task().time() * k_time_ratio_;
+  // filter tail keys
+  for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     if (hit_cache) continue;
-    w_->waitInMsg(kWorkerGroup, time);
-    w_->finish(kWorkerGroup, time+1);
+    model_->waitInMsg(kWorkerGroup, time);
+    model_->finish(kWorkerGroup, time+1);
   }
-  for (int i = 0; i < grp_size; ++i, time += kPace) {
-    w_->waitInMsg(kWorkerGroup, time);
+  for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
+    // wait untill received all keys from workers
+    model_->waitInMsg(kWorkerGroup, time);
+    // initialize the weight
     int chl = fea_grp_[i];
-    w_->keyFilter(chl).clear();
-    w_->value(chl).resize(w_->key(chl).size());
-    w_->value(chl).setValue(conf_.init_w());
-    w_->finish(kWorkerGroup, time+1);
+    model_->clearTailFilter(chl);
+    model_->value(chl).resize(model_->key(chl).size());
+    model_->value(chl).setValue(conf_.init_w());
+    model_->finish(kWorkerGroup, time+1);
   }
 }
+
 } // namespace LM
 } // namespace PS

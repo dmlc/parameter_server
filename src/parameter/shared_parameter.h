@@ -39,7 +39,7 @@ class SharedParameter : public Customer {
 
   // FreqencyFilter<K,V>& keyFilter(int chl) { return key_filter_[chl]; }
   // void setKeyFilterIgnoreChl(bool flag) { key_filter_ignore_chl_ = flag; }
-  // void clearKeyFilter(int chl) { key_filter_[chl].clear(); }
+  void clearTailFilter(int chl) { key_filter_[chl].clear(); }
 
   // process a received message, will called by the thread of executor
   void process(const MessagePtr& msg);

@@ -4,27 +4,27 @@
 #include "base/sparse_matrix.h"
 #include "data/common.h"
 namespace PS {
+DECLARE_bool(verbose);
 namespace LM {
 
-void BatchWorker::init(
-    const string& name, const Config& conf, BatchSolver* solver) {
+void BatchWorker::init() {
+  CompNode::init();
   model_ = KVBufferedVectorPtr(new KVBufferedVector<Key, double>());
-  REGISTER_CUSTOMER(name, model_);
-  conf_ = conf;
-  solver_ = solver;
+  REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
 }
 
-int BatchWorker::loadData(ExampleInfo* info) {
-  bool hit_cache = loadCache("train");
-  if (!hit_cache) {
+int BatchWorker::loadData(ExampleInfo* info, int *hit_cache) {
+  *hit_cache = loadCache("train");
+  if (!(*hit_cache)) {
     CHECK(conf_.has_local_cache());
     slot_reader_.init(conf_.training_data(), conf_.local_cache());
     slot_reader_.read(info);
   }
-  return hit_cache;
 }
 
-void BatchWorker::preprocessData(int time, const Call& cmd) {
+void BatchWorker::preprocessData(const MessagePtr& msg) {
+  int time = msg->task().time() * k_time_ratio_;
+  auto cmd = get(msg);
   int grp_size = cmd.fea_grp_size();
   fea_grp_.clear();
   for (int i = 0; i < grp_size; ++i) {
@@ -34,10 +34,10 @@ void BatchWorker::preprocessData(int time, const Call& cmd) {
   int max_parallel = std::max(
       1, conf_.solver().max_num_parallel_groups_in_preprocessing());
 
-  auto& hb = Postoffice::instance().hb();
+  auto& hb = sys_.hb();
   // filter keys whose occurance <= conf_.solver().tail_feature_freq()
   std::vector<int> pull_time(grp_size);
-  for (int i = 0; i < grp_size; ++i, time += 3) {
+  for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     if (hit_cache) continue;
     int grp = fea_grp_[i];
 
@@ -116,7 +116,7 @@ void BatchWorker::preprocessData(int time, const Call& cmd) {
   // push the filtered keys to severs to let severs build the key maps. because
   // of the key_caching, these keys are not sent, so the communication cost is
   // little.
-  for (int i = 0; i < grp_size; ++i, time += 3) {
+  for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     // wait if necessary
     if (!hit_cache && i >= grp_size - max_parallel) {
       model_->waitOutMsg(kServerGroup, pull_time[i]);
@@ -129,6 +129,9 @@ void BatchWorker::preprocessData(int time, const Call& cmd) {
     push_key->task.set_key_channel(grp);
     push_key->addFilter(FilterConfig::KEY_CACHING);
     CHECK_EQ(time, model_->push(push_key));
+
+    // store the timestamp the model will be initialized by the servers
+    model_ready_[grp] = time + 1;
   }
   // load the label if necessary
   if (!hit_cache) {
@@ -185,7 +188,7 @@ bool BatchWorker::dataCache(const string& name, bool load) {
 }
 
 
-void BatchWorker::computeGradient(int time, const MessagePtr& msg) {
+// void BatchWorker::computeGradient(const MessagePtr& msg) {
   // FIXME a very old version
   // int time = msg->task.time() * 10;
   // Range<Key> global_range(msg->task.risk().key());
@@ -244,7 +247,7 @@ void BatchWorker::computeGradient(int time, const MessagePtr& msg) {
   //       learner_->update(aggregated_gradient, arg, w_->segment(local_range));
   //     });
   // }
-}
+// }
 
 } // namespace LM
 } // namespace PS

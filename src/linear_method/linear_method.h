@@ -6,7 +6,6 @@
 
 #include "linear_method/loss_inl.h"
 #include "linear_method/penalty_inl.h"
-#include "base/auc.h"
 // #include "linear_method/learner/learner.h"
 // #include "linear_method/learner/aggregate_gradient.h"
 
@@ -20,24 +19,8 @@ class LinearMethod : public App {
   virtual void init();
 
   void process(const MessagePtr& msg);
-  void mergeProgress(int iter);
-  void mergeAUC(AUC* auc);
 
  protected:
-  void startSystem();
-
-  // load the data, and return 1 if hit cache, 0 if normal
-  virtual int loadData(const MessageCPtr& msg, ExampleInfo* info) { return 0; }
-  virtual void preprocessData(const MessageCPtr& msg) { }
-  virtual void saveModel(const MessageCPtr& msg) { }
-  virtual void updateModel(const MessagePtr& msg) { }
-  virtual void evaluateProgress(Progress* prog) { }
-  virtual void computeEvaluationAUC(AUCData *data) { }
-
-  void showTime(int iter);
-  void showObjective(int iter);
-  void showNNZ(int iter);
-
   static Call get(const MessageCPtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
     CHECK(msg->task.has_linear_method());
@@ -52,12 +35,6 @@ class LinearMethod : public App {
     return task;
   }
 
-  // progress of all iterations, only valid for the scheduler. The progress of
-  // all nodes are merged for every iteration. It's for batch algorithms.
-  std::map<int, Progress> g_progress_;
-  // recent progress for every node. It's for online algorithms.
-  std::map<NodeID, Progress> recent_progress_;
-  std::mutex progress_mu_;
 
   Config conf_;
   Timer total_timer_;

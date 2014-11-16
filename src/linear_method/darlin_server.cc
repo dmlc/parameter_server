@@ -2,8 +2,8 @@
 namespace PS {
 namespace LM {
 
-void DarlinWorker::preprocessData(int time, const Call& cmd) {
-  BatchSolver::preprocessData(time, cmd);
+void DarlinServer::preprocessData(const MessagePtr& msg) {
+  BatchSolver::preprocessData(msg);
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
     active_set_[grp].resize(n, true);
@@ -12,7 +12,9 @@ void DarlinWorker::preprocessData(int time, const Call& cmd) {
   }
 }
 
-void DarlinServer::updateWeight(int time, const Call& cmd) {
+void DarlinServer::updateWeight(const MessagePtr& msg) {
+  int time = msg->task.time() * k_time_ratio_;
+  auto cmd = get(msg);
   if (cmd.has_kkt_filter_threshold()) {
     kkt_filter_threshold_ = cmd.kkt_filter_threshold();
     violation_ = 0;

@@ -2,8 +2,8 @@
 namespace PS {
 namespace LM {
 
-void DarlinWorker::preprocessData(int time, const Call& cmd) {
-  BatchSolver::preprocessData(time, cmd);
+void DarlinWorker::preprocessData(const MessagePtr& msg) {
+  BatchSolver::preprocessData(msg);
   dual_.setValue(1);
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
@@ -13,7 +13,8 @@ void DarlinWorker::preprocessData(int time, const Call& cmd) {
   }
 }
 
-void DarlinWorker::computeGradient(int time, const MessagePtr& msg) {
+void DarlinWorker::computeGradient(const MessagePtr& msg) {
+  int time = msg->task.time() * k_time_ratio_;
   auto cmd = LinearMethod::get(msg);
   if (cmd.reset_kkt_filter()) {
     for (int grp : fea_grp_) active_set_[grp].fill(true);
@@ -23,8 +24,13 @@ void DarlinWorker::computeGradient(int time, const MessagePtr& msg) {
   Range<Key> g_key_range(cmd.key());
   auto col_range = model_->find(grp, g_key_range);
 
+  // use wait_time to make sure that the model has been initialized on the
+  // servers
+  int wait_time = model_ready_[grp];
+  model_ready_[grp] = Message::kInvalidTime;
+
   // pull the updated weight from the server
-  MessagePtr pull(new Message(kServerGroup, time));
+  MessagePtr pull(new Message(kServerGroup, time, wait_time));
   pull->setKey(model_->key(grp).segment(col_range));
   g_key_range.to(pull->task.mutable_key_range());
   pull->task.set_key_channel(grp);

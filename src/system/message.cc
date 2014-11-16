@@ -5,7 +5,7 @@ namespace PS {
 Message::Message(const NodeID& dest, int time, int wait_time)
     : recver(dest) {
   task.set_time(time);
-  task.set_wait_time(wait_time);
+  if (wait_time != kInvalidTime) task.add_wait_time(wait_time);
 }
 
 void Message::miniCopyFrom(const Message& msg) {
@@ -28,8 +28,12 @@ FilterConfig* Message::addFilter(FilterConfig::Type type) {
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   if (task.request()) ss << "REQ"; else ss << "RLY";
-  ss << " " << task.time() << " ";
-  if (task.wait_time() >= 0) ss << "(wait " << task.wait_time() << ") ";
+  ss << "T=" << task.time() << " ";
+  for (int i = 0; i < task.wait_time_size(); ++i) {
+    if (i == 0) ss << "(wait";
+    ss << " " << task.wait_time(i);
+    if (i == task.wait_time_size() - 1) ss << ") ";
+  }
   ss << sender << "=>" << recver << " ";
   if (!original_recver.empty()) ss << "(" << original_recver << ") ";
   ss << "key [";

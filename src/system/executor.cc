@@ -90,7 +90,7 @@ string Executor::lastRecvReply() {
 // a simple implementation of the DAG execution engine.
 void Executor::run() {
   while (!done_) {
-    bool do_process = false;
+    bool process = false;
 
     if (FLAGS_verbose) {
       LI << obj_.name() << " before entering task loop; recved_msgs_. size [" <<
@@ -102,7 +102,6 @@ void Executor::run() {
       // pickup a message with dependency satisfied
       for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
         auto& msg = *it;
-        int wait_time = msg->task.wait_time();
         auto sender = rnode(msg->sender);
         if (!sender) {
           LL << my_node_.id() << ": " << msg->sender
@@ -110,10 +109,22 @@ void Executor::run() {
           recved_msgs_.erase(it);
           break;
         }
-        if (!msg->task.request() ||  // ack message
-            wait_time <= Message::kInvalidTime ||  // no dependency constraint
-            sender->tryWaitIncomingTask(wait_time)) {   // dependency constraint satisfied
-          do_process = true;
+        // ack message, no dependency constraint
+        process = !msg->task.request();
+        if (!process) {
+          // check if the dependency constraints are satisfied
+          bool satisfied = true;
+          for (int i = 0; i < task.wait_time_size(); ++i) {
+            int wait_time = msg->task.wait_time(i);
+            if (wait_time > Message::kInvalidTime &&
+                !sender->tryWaitIncomingTask(wait_time)) {
+              satisfied = false;
+            }
+          }
+          process = satisfied;
+        }
+
+        if (process) {
           active_msg_ = msg;
           recved_msgs_.erase(it);
 
@@ -122,11 +133,10 @@ void Executor::run() {
               "remaining size [" << recved_msgs_.size() << "]; msg [" <<
               active_msg_->shortDebugString() << "]";
           }
-
           break;
         }
       }
-      if (!do_process) {
+      if (!process) {
         if (FLAGS_verbose) {
           LI << obj_.name() << " picked nothing from recved_msgs_. size [" <<
             recved_msgs_.size() << "] waiting Executor::accept";
