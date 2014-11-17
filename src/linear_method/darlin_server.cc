@@ -102,7 +102,7 @@ void DarlinServer::evaluateProgress(Progress* prog) {
     }
     nnz_as += active_set_[grp].nnz();
   }
-  prog->set_objv(objv * conf_.penalty().lambda(0));
+  prog->add_objv(objv * conf_.penalty().lambda(0));
   prog->set_nnz_w(nnz_w);
   prog->set_violation(violation_);
   prog->set_nnz_active_set(nnz_as);

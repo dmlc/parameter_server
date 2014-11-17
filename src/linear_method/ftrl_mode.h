@@ -29,7 +29,7 @@ class FTRLModel : public SharedParameter<Key> {
   }
 
   void evaluateProgress(Progress* prog) {
-    prog->set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
+    // prog->set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
     prog->set_nnz_w(nnz_);
   }
 
@@ -57,8 +57,8 @@ class FTRLModel : public SharedParameter<Key> {
   real lambda1_ = 0, lambda2_ = 0;
 
   // status
-  real norm1_ = 0;
-  real norm2_ = 0;
+  // real norm1_ = 0;
+  // real norm2_ = 0;
   size_t nnz_ = 0;
 };
 
@@ -93,8 +93,8 @@ void FTRLModel::setValue(const MessagePtr& msg) {
     e.w = w;
 
     // update status
-    norm1_ += fabs(w) - fabs(w_old);
-    norm2_ += w * w - w_old * w_old;
+    // norm1_ += fabs(w) - fabs(w_old);
+    // norm2_ += w * w - w_old * w_old;
     if (w == 0 && w_old != 0) {
       -- nnz_;
     } else if (w != 0 && w_old == 0) {

@@ -27,22 +27,24 @@ void FTRLScheduler::run() {
 void FTRLScheduler::showProgress() {
   Lock l(progress_mu_);
   uint64 num_ex = 0, nnz_w = 0;
-  real objv_worker = 0, objv_server = 0;
+  SArray<real> objv;
+  SArray<real> auc;
   for (const auto& it : recent_progress_) {
     auto& prog = it.second;
-    if (prog.has_num_ex_trained()) {
-      num_ex += prog.num_ex_trained();
-      objv_worker += prog.objv();
-    } else {
-      nnz_w += prog.nnz_w();
-      objv_server += prog.objv();
+    num_ex += prog.num_ex_trained();
+    nnz_w += prog.nnz_w();
+    for (int i = 0; i < prog.objv_size(); ++i) {
+      objv.pushBack(prog.objv(i));
+    }
+    for (int i = 0; i < prog.auc_size(); ++i) {
+      auc.pushBack(prog.auc(i));
     }
   }
   recent_progress_.clear();
-
   num_ex_processed_ += num_ex;
-  printf("%10lu examples, loss %.5e, penalty %.5e, |w|_0 %8llu\n",
-         num_ex_processed_ , objv_worker/(real)num_ex, objv_server, nnz_w);
+
+  printf("%10lu examples, loss %.3e +- %.3e, auc %.4f +- %.4f, |w|_0 %8llu\n",
+         num_ex_processed_ , objv.mean(), objv.std(), auc.mean(), auc.std(), nnz_w);
 }
 } // namespace LM
 } // namespace PS

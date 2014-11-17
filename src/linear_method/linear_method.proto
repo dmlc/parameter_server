@@ -98,7 +98,7 @@ message LearnerConfig {
 
 ///////////// the followings protobufs are used by the implementation ///////////
 message Progress {
-  optional double objv = 1;
+  repeated double objv = 1;
   optional double relative_objv = 2;
   optional uint64 nnz_w = 5;
   optional double violation = 6;
@@ -106,7 +106,8 @@ message Progress {
   optional double training_auc = 8;
   optional AUCData training_auc_data = 9;
   optional uint64 num_ex_trained = 12;
-  optional double acc = 13;
+  repeated double acc = 13;
+  repeated double auc = 14;
 
   // performance
   optional double total_time = 10;

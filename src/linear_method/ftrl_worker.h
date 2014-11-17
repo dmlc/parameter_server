@@ -19,8 +19,6 @@ class FTRLWorker : public CompNode {
   virtual void evaluateProgress(Progress* prog);
  private:
   void computeGradient();
-  Config conf_;
-  LossPtr<real> loss_;
   KVVectorPtr<Key, real> model_;
 
   struct Minibatch {
@@ -31,14 +29,19 @@ class FTRLWorker : public CompNode {
   };
   ProducerConsumer<Minibatch> data_prefetcher_;
 
-  struct Status {
-    uint64 num_ex = 0;
-    real objv = 0;
-    real acc = 0;
-    void reset() { num_ex = 0; objv = 0; acc = 0; }
-  };
-  Status status_;
-  std::mutex status_mu_;
+  Progress prog_;
+  std::mutex prog_mu_;
+
+
+  // struct Status {
+  //   uint64 num_ex = 0;
+  //   real objv = 0;
+  //   real acc = 0;
+  //   real auc = 0;
+  //   // void reset() { num_ex = 0; objv = 0; acc = 0; }
+  // };
+  // std::vector<Status> status_;
+
   ProgressReporter report;
 };
 

@@ -1034,12 +1034,17 @@ class Progress : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional double objv = 1;
-  inline bool has_objv() const;
+  // repeated double objv = 1;
+  inline int objv_size() const;
   inline void clear_objv();
   static const int kObjvFieldNumber = 1;
-  inline double objv() const;
-  inline void set_objv(double value);
+  inline double objv(int index) const;
+  inline void set_objv(int index, double value);
+  inline void add_objv(double value);
+  inline const ::google::protobuf::RepeatedField< double >&
+      objv() const;
+  inline ::google::protobuf::RepeatedField< double >*
+      mutable_objv();
 
   // optional double relative_objv = 2;
   inline bool has_relative_objv() const;
@@ -1092,12 +1097,29 @@ class Progress : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 num_ex_trained() const;
   inline void set_num_ex_trained(::google::protobuf::uint64 value);
 
-  // optional double acc = 13;
-  inline bool has_acc() const;
+  // repeated double acc = 13;
+  inline int acc_size() const;
   inline void clear_acc();
   static const int kAccFieldNumber = 13;
-  inline double acc() const;
-  inline void set_acc(double value);
+  inline double acc(int index) const;
+  inline void set_acc(int index, double value);
+  inline void add_acc(double value);
+  inline const ::google::protobuf::RepeatedField< double >&
+      acc() const;
+  inline ::google::protobuf::RepeatedField< double >*
+      mutable_acc();
+
+  // repeated double auc = 14;
+  inline int auc_size() const;
+  inline void clear_auc();
+  static const int kAucFieldNumber = 14;
+  inline double auc(int index) const;
+  inline void set_auc(int index, double value);
+  inline void add_auc(double value);
+  inline const ::google::protobuf::RepeatedField< double >&
+      auc() const;
+  inline ::google::protobuf::RepeatedField< double >*
+      mutable_auc();
 
   // optional double total_time = 10;
   inline bool has_total_time() const;
@@ -1120,8 +1142,6 @@ class Progress : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:PS.LM.Progress)
  private:
-  inline void set_has_objv();
-  inline void clear_has_objv();
   inline void set_has_relative_objv();
   inline void clear_has_relative_objv();
   inline void set_has_nnz_w();
@@ -1136,14 +1156,12 @@ class Progress : public ::google::protobuf::Message {
   inline void clear_has_training_auc_data();
   inline void set_has_num_ex_trained();
   inline void clear_has_num_ex_trained();
-  inline void set_has_acc();
-  inline void clear_has_acc();
   inline void set_has_total_time();
   inline void clear_has_total_time();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  double objv_;
+  ::google::protobuf::RepeatedField< double > objv_;
   double relative_objv_;
   ::google::protobuf::uint64 nnz_w_;
   double violation_;
@@ -1151,12 +1169,13 @@ class Progress : public ::google::protobuf::Message {
   double training_auc_;
   ::PS::AUCData* training_auc_data_;
   ::google::protobuf::uint64 num_ex_trained_;
-  double acc_;
+  ::google::protobuf::RepeatedField< double > acc_;
+  ::google::protobuf::RepeatedField< double > auc_;
   double total_time_;
   ::google::protobuf::RepeatedField< double > busy_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2flinear_5fmethod_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2flinear_5fmethod_2eproto();
@@ -2522,26 +2541,29 @@ inline void LearnerConfig::set_type(::PS::LM::LearnerConfig_Type value) {
 
 // Progress
 
-// optional double objv = 1;
-inline bool Progress::has_objv() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Progress::set_has_objv() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Progress::clear_has_objv() {
-  _has_bits_[0] &= ~0x00000001u;
+// repeated double objv = 1;
+inline int Progress::objv_size() const {
+  return objv_.size();
 }
 inline void Progress::clear_objv() {
-  objv_ = 0;
-  clear_has_objv();
+  objv_.Clear();
 }
-inline double Progress::objv() const {
+inline double Progress::objv(int index) const {
+  return objv_.Get(index);
+}
+inline void Progress::set_objv(int index, double value) {
+  objv_.Set(index, value);
+}
+inline void Progress::add_objv(double value) {
+  objv_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Progress::objv() const {
   return objv_;
 }
-inline void Progress::set_objv(double value) {
-  set_has_objv();
-  objv_ = value;
+inline ::google::protobuf::RepeatedField< double >*
+Progress::mutable_objv() {
+  return &objv_;
 }
 
 // optional double relative_objv = 2;
@@ -2714,37 +2736,65 @@ inline void Progress::set_num_ex_trained(::google::protobuf::uint64 value) {
   num_ex_trained_ = value;
 }
 
-// optional double acc = 13;
-inline bool Progress::has_acc() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void Progress::set_has_acc() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void Progress::clear_has_acc() {
-  _has_bits_[0] &= ~0x00000100u;
+// repeated double acc = 13;
+inline int Progress::acc_size() const {
+  return acc_.size();
 }
 inline void Progress::clear_acc() {
-  acc_ = 0;
-  clear_has_acc();
+  acc_.Clear();
 }
-inline double Progress::acc() const {
+inline double Progress::acc(int index) const {
+  return acc_.Get(index);
+}
+inline void Progress::set_acc(int index, double value) {
+  acc_.Set(index, value);
+}
+inline void Progress::add_acc(double value) {
+  acc_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Progress::acc() const {
   return acc_;
 }
-inline void Progress::set_acc(double value) {
-  set_has_acc();
-  acc_ = value;
+inline ::google::protobuf::RepeatedField< double >*
+Progress::mutable_acc() {
+  return &acc_;
+}
+
+// repeated double auc = 14;
+inline int Progress::auc_size() const {
+  return auc_.size();
+}
+inline void Progress::clear_auc() {
+  auc_.Clear();
+}
+inline double Progress::auc(int index) const {
+  return auc_.Get(index);
+}
+inline void Progress::set_auc(int index, double value) {
+  auc_.Set(index, value);
+}
+inline void Progress::add_auc(double value) {
+  auc_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Progress::auc() const {
+  return auc_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Progress::mutable_auc() {
+  return &auc_;
 }
 
 // optional double total_time = 10;
 inline bool Progress::has_total_time() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Progress::set_has_total_time() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Progress::clear_has_total_time() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Progress::clear_total_time() {
   total_time_ = 0;

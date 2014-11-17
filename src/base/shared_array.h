@@ -123,6 +123,13 @@ template<typename V> class SArray {
   // return an Eigen3 array, zero-copy
   typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, 1> > EArrayMap;
   EArrayMap eigenArray() const { return EArrayMap(data(), size()); }
+
+  double mean() const { return empty() ? 0 : eigenArray().sum() / (double)size(); }
+  double std() const {
+    return empty() ? 0 :
+        (eigenArray() - mean()).matrix().norm() / sqrt((double)size());
+  }
+
   // convert to a dense matrix, zero-copy
   shared_ptr<Matrix<V>> matrix(size_t rows = -1, size_t cols = -1);
 

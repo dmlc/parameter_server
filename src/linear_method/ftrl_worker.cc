@@ -1,6 +1,7 @@
 #include "linear_method/ftrl_worker.h"
 #include "data/stream_reader.h"
 #include "base/localizer.h"
+#include "base/evaluation.h"
 namespace PS {
 namespace LM {
 
@@ -66,12 +67,17 @@ void FTRLWorker::computeGradient() {
 
     // compute the gradient
     SArray<real> Xw(Y->rows());
-    Xw.eigenArray() = *X * model_->value(id).eigenArray();
+    auto w = model_->value(id);
+    Xw.eigenArray() = *X * w.eigenArray();
     real objv = loss_->evaluate({Y, Xw.matrix()});
+    real auc = Evaluation<real>::auc(Y->value(), Xw);
+    // not with penalty.
+    // penalty_->evaluate(w.matrix());
     {
-      Lock l(status_mu_);
-      status_.objv += objv;
-      status_.num_ex += Xw.size();
+      Lock l(prog_mu_);
+      prog_.add_objv(objv);
+      prog_.add_auc(auc);
+      prog_.set_num_ex_trained(prog_.num_ex_trained() + Xw.size());
     }
     SArray<real> grad(X->cols());
     loss_->compute({Y, X, Xw.matrix()}, {grad.matrix()});
@@ -88,11 +94,9 @@ void FTRLWorker::computeGradient() {
 
 
 void FTRLWorker::evaluateProgress(Progress* prog) {
-  Lock l(status_mu_);
-  prog->set_objv(status_.objv);
-  prog->set_acc(status_.acc);
-  prog->set_num_ex_trained(status_.num_ex);
-  status_.reset();
+  Lock l(prog_mu_);
+  *prog = prog_;
+  prog_.Clear();
 }
 
 } // namespace LM

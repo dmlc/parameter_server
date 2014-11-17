@@ -10,6 +10,7 @@ void Scheduler::process(const MessagePtr& msg) {
       Progress prog; CHECK(prog.ParseFromString(msg->task.msg()));
       Lock l(progress_mu_);
       recent_progress_[msg->sender] = prog;
+      break;
     }
     default:
       CHECK(false) << "unknown cmd: " << get(msg).cmd();
@@ -76,14 +77,16 @@ void Scheduler::mergeProgress(int iter) {
   Progress recv;
   CHECK(recv.ParseFromString(exec_.lastRecvReply()));
   auto& p = g_progress_[iter];
-
-  p.set_objv(p.objv() + recv.objv());
+  if (p.objv_size() == 0) p.add_objv(0);
+  for (int i = 0; i < recv.objv_size(); ++i) {
+    p.set_objv(0, p.objv(0) + recv.objv(i));
+  }
   p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
   if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
   p.set_total_time(total_timer_.stop());
   total_timer_.start();
-  p.set_relative_objv(iter==0 ? 1 : g_progress_[iter-1].objv()/p.objv() - 1);
+  p.set_relative_objv(iter==0 ? 1 : g_progress_[iter-1].objv(0)/p.objv(0) - 1);
   p.set_violation(std::max(p.violation(), recv.violation()));
   p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
 }
@@ -129,8 +132,9 @@ void Scheduler::showObjective(int iter) {
     fprintf(stderr, " ----+------------------------");
   } else {
     auto prog = g_progress_[iter];
+    double objv = prog.objv_size() ? prog.objv(0) : 0;
     fprintf(stderr, "%4d | %.5e  %.3e ",
-            iter, prog.objv(), prog.relative_objv()); //o, prog.training_auc());
+            iter, objv, prog.relative_objv());
   }
 }
 

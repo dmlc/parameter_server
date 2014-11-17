@@ -29,7 +29,7 @@ class FTRLModel : public SharedParameter<Key> {
   }
 
   void evaluateProgress(Progress* prog) {
-    prog->set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
+    // prog->set_objv(norm1_ * lambda1_ + .5 * lambda2_ * sqrt(norm2_));
     prog->set_nnz_w(nnz_);
   }
 

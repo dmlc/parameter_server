@@ -229,7 +229,7 @@ void DarlinWorker::updateDual(
 }
 
 void DarlinWorker::evaluateProgress(Progress* prog) {
-  prog->set_objv(log(1+1/dual_.eigenArray()).sum());
+  prog->add_objv(log(1+1/dual_.eigenArray()).sum());
   prog->add_busy_time(busy_timer_.stop());
   busy_timer_.restart();
 
