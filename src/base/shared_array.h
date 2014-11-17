@@ -31,7 +31,7 @@ template<typename V> class SArray {
   // Create an array with length n. Values are not initialized. To initialize
   // them, call setValue(v) or setZero()
   explicit SArray(size_t n) { resize(n); }
-  explicit SArray(size_t n, V val) { resize(n); setValue(val); }
+  explicit SArray(size_t n, V val) { resize(n, val); }
 
   // Zero-copy constructor, namely just copy the pointer
   template <typename W> explicit SArray(const SArray<W>& arr);
@@ -77,6 +77,7 @@ template<typename V> class SArray {
   // If n <= capacity_, then only change the size. otherwise, append n -
   // current_size entries (without value initialization)
   void resize(size_t n);
+  void resize(size_t n, V val) { resize(n); setValue(val); }
   // Requests that the capacity be at least enough to contain n elements.
   void reserve(size_t n);
   void clear() { reset(nullptr, 0); }

@@ -6,12 +6,16 @@ namespace LM {
 
 void DarlinWorker::preprocessData(const MessagePtr& msg) {
   BatchWorker::preprocessData(msg);
-  dual_.setValue(1);
+  // dual_ = exp(y.*(X_*w_))
+  if (conf_.init_w().type() == ParameterInitConfig::ZERO) {
+    dual_.setValue(1);  // an optimizatoin
+  } else {
+    dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
+  }
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
     active_set_[grp].resize(n, true);
-    delta_[grp].resize(n);
-    delta_[grp].setValue(conf_.darling().delta_init_value());
+    delta_[grp].resize(n, conf_.darling().delta_init_value());
   }
 }
 
@@ -26,35 +30,42 @@ void DarlinWorker::computeGradient(const MessagePtr& msg) {
   Range<Key> g_key_range(cmd.key());
   auto col_range = model_->find(grp, g_key_range);
 
-  // use wait_time to make sure that the model has been initialized on the
-  // servers
-  int wait_time = model_ready_[grp];
-  model_ready_[grp] = Message::kInvalidTime;
+  // compute and push the gradient
+  computeAndPushGradient(time, g_key_range, grp, col_range);
 
+  // pull the updated model, and update dual
+  pullAndUpdateDual(time+2, g_key_range, grp, col_range, msg);
+
+  // this task is not finished until the updated model is pulled
+  msg->finished = false;
+}
+
+
+void DarlinWorker::pullAndUpdateDual(
+    int time, Range<Key> g_key_range, int grp, SizeR col_range,
+    const MessagePtr& msg) {
   // pull the updated weight from the server
-  MessagePtr pull(new Message(kServerGroup, time, wait_time));
+  MessagePtr pull(new Message(kServerGroup, time, time-1));
   pull->setKey(model_->key(grp).segment(col_range));
   g_key_range.to(pull->task.mutable_key_range());
   pull->task.set_key_channel(grp);
   pull->addFilter(FilterConfig::KEY_CACHING);
 
-  // once data pulled successfully, update dual_ and compute the gradient
-  pull->fin_handle = [this, time, g_key_range, grp, col_range, msg](){
-    auto& sys = Postoffice::instance();
-    sys.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
-    computeAndPushGradient(time, g_key_range, grp, col_range);
-    sys.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+  // once data pulled successfully, update dual_
+  pull->fin_handle = [this, time, grp, col_range, msg](){
+    if (!col_range.empty()) {
+      auto data = model_->received(time);
+      CHECK_EQ(col_range, data.first);
+      CHECK_EQ(data.second.size(), 1);
+      updateDual(grp, col_range, data.second[0]);
+    }
 
     // mark the message finished, and reply the sender
     taskpool(msg->sender)->finishIncomingTask(msg->task.time());
-
     sys_.reply(msg->sender, msg->task);
   };
 
   CHECK_EQ(time, model_->pull(pull));
-
-  // this task is not finished until the gradients are pushed
-  msg->finished = false;
 }
 
 void DarlinWorker::computeAndPushGradient(
@@ -62,14 +73,10 @@ void DarlinWorker::computeAndPushGradient(
   SArray<double> G(col_range.size(), 0);
   SArray<double> U(col_range.size(), 0);
 
+  mu_.lock();  // lock the dual_
+  sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+  // compute the gradient in multi-thread
   if (!col_range.empty()) {
-    // update dual_ using the pulled weight in multi-thread
-    auto data = model_->received(time);
-    CHECK_EQ(col_range, data.first);
-    CHECK_EQ(data.second.size(), 1);
-    updateDual(grp, col_range, data.second[0]);
-
-    // compute the gradient in multi-thread
     CHECK_GT(FLAGS_num_threads, 0);
     // TODO partition by rows for small col_range size
     int num_threads = col_range.size() < 64 ? 1 : FLAGS_num_threads;
@@ -85,15 +92,17 @@ void DarlinWorker::computeAndPushGradient(
     }
     pool.startWorkers();
   }
+  sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+  mu_.unlock();  // lock the dual_
 
   // push the gradient into servers
-  MessagePtr push(new Message(kServerGroup, time+1));
+  MessagePtr push(new Message(kServerGroup, time));
   push->setKey(model_->key(grp).segment(col_range));
   push->addValue({G, U});
   g_key_range.to(push->task.mutable_key_range());
   push->task.set_key_channel(grp);
   push->addFilter(FilterConfig::KEY_CACHING);
-  CHECK_EQ(time+1, model_->push(push));
+  CHECK_EQ(time, model_->push(push));
 }
 
 void DarlinWorker::computeGradient(
@@ -145,12 +154,12 @@ void DarlinWorker::computeGradient(
 }
 
 void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
-  SArray<double> delta_w(new_w.size());
   auto& cur_w = model_->value(grp);
   auto& active_set = active_set_[grp];
   auto& delta = delta_[grp];
 
   double delta_max = conf_.darling().delta_max_value();
+  SArray<double> delta_w(new_w.size());
   for (size_t i = 0; i < new_w.size(); ++i) {
     size_t j = col_range.begin() + i;
     double& cw = cur_w[j];
@@ -167,17 +176,24 @@ void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
   }
 
   CHECK(X_[grp]);
-  SizeR row_range(0, X_[grp]->rows());
-  ThreadPool pool(FLAGS_num_threads);
-  int npart = FLAGS_num_threads;
-  for (int i = 0; i < npart; ++i) {
-    auto thr_range = row_range.evenDivide(npart, i);
-    if (thr_range.empty()) continue;
-    pool.add([this, grp, thr_range, col_range, delta_w]() {
-        updateDual(grp, thr_range, col_range, delta_w);
-      });
+
+  mu_.lock();  // lock the dual_
+  sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+  {
+    SizeR row_range(0, X_[grp]->rows());
+    ThreadPool pool(FLAGS_num_threads);
+    int npart = FLAGS_num_threads;
+    for (int i = 0; i < npart; ++i) {
+      auto thr_range = row_range.evenDivide(npart, i);
+      if (thr_range.empty()) continue;
+      pool.add([this, grp, thr_range, col_range, delta_w]() {
+          updateDual(grp, thr_range, col_range, delta_w);
+        });
+    }
+    pool.startWorkers();
   }
-  pool.startWorkers();
+  sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+  mu_.unlock();  // lock the dual_
 }
 
 void DarlinWorker::updateDual(
@@ -217,6 +233,7 @@ void DarlinWorker::evaluateProgress(Progress* prog) {
   prog->add_busy_time(busy_timer_.stop());
   busy_timer_.restart();
 
+  // LL << nnz_as << " " << nnz_w << " " << objv;
   // // label statistics
   // if (FLAGS_verbose) {
   //   size_t positive_label_count = 0;

@@ -64,7 +64,9 @@ void DarlinScheduler::runIteration() {
 
     // evaluate the progress
     Task eval = newTask(Call::EVALUATE_PROGRESS);
-    eval.add_wait_time(time - tau);
+    if (time - tau >= first_time) {
+      eval.add_wait_time(time - tau);
+    }
     time = pool->submitAndWait(
         eval, [this, iter](){ Scheduler::mergeProgress(iter); });
     showProgress(iter);

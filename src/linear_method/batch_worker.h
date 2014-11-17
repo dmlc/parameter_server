@@ -30,9 +30,6 @@ class BatchWorker : public CompNode, public BatchCommon {
   // dual_ = X * w
   SArray<double> dual_;
 
-  // the timestamps when the model will be initialized on the servers
-  std::unordered_map<int, int> model_ready_;
-
   std::mutex mu_;
 };
 

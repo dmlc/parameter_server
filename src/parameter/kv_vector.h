@@ -55,8 +55,7 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
     auto old_val = my_val;
     my_key = old_key.setUnion(recv_key);
     if (!recv_val.empty()) {
-      my_val.resize(my_key.size());
-      my_val.setZero();
+      my_val.resize(my_key.size(), 0);
     }
     if (!old_val.empty()) {
       size_t n = parallelOrderedMatch(

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "base/matrix_io_inl.h"
 #include "linear_method/loss_inl.h"
-#include "proto/linear_method.pb.h"
+#include "linear_method/linear_method.pb.h"
 
 using namespace PS;
 using namespace LM;

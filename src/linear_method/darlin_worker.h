@@ -13,6 +13,8 @@ class DarlinWorker : public BatchWorker, public DarlinCommon {
   void computeGradient(const MessagePtr& msg);
   void computeAndPushGradient(int time, Range<Key> g_key_range, int grp, SizeR col_range);
   void computeGradient(int grp, SizeR col_range, SArray<double> G, SArray<double> U);
+  void pullAndUpdateDual(
+      int time, Range<Key> g_key_range, int grp, SizeR col_range, const MessagePtr& msg);
   void updateDual(int grp, SizeR col_range, SArray<double> new_weight);
   void updateDual(int grp, SizeR row_range, SizeR col_range, SArray<double> w_delta);
 };

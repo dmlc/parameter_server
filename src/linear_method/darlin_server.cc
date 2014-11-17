@@ -7,8 +7,7 @@ void DarlinServer::preprocessData(const MessagePtr& msg) {
   for (int grp : fea_grp_) {
     size_t n = model_->key(grp).size();
     active_set_[grp].resize(n, true);
-    delta_[grp].resize(n);
-    delta_[grp].setValue(conf_.darling().delta_init_value());
+    delta_[grp].resize(n, conf_.darling().delta_init_value());
   }
 }
 
@@ -31,19 +30,20 @@ void DarlinServer::updateWeight(const MessagePtr& msg) {
   if (model_->myKeyRange().setIntersection(g_key_range).empty()) return;
 
   //  aggregate all workers' local gradients
-  model_->waitInMsg(kWorkerGroup, time+1);
+  model_->waitInMsg(kWorkerGroup, time);
 
   // update the weights
   if (!col_range.empty()) {
-    auto data = model_->received(time+1);
+    auto data = model_->received(time);
     CHECK_EQ(col_range, data.first);
     CHECK_EQ(data.second.size(), 2);
 
-    auto& sys = Postoffice::instance();
-    sys.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+    sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
     updateWeight(grp, col_range, data.second[0], data.second[1]);
-    sys.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+    sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
   }
+
+  model_->finish(kWorkerGroup, time+1);
 }
 
 void DarlinServer::updateWeight(
@@ -106,6 +106,7 @@ void DarlinServer::evaluateProgress(Progress* prog) {
   prog->set_nnz_w(nnz_w);
   prog->set_violation(violation_);
   prog->set_nnz_active_set(nnz_as);
+
 }
 
 } // namespace LM

@@ -44,7 +44,6 @@ void BatchServer::preprocessData(const MessagePtr& msg) {
   }
   for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     // wait untill received all keys from workers
-    LL << time;
     model_->waitInMsg(kWorkerGroup, time);
     // initialize the weight
     int chl = fea_grp_[i];

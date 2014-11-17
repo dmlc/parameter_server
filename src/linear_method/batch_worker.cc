@@ -117,7 +117,7 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
 
   // push the filtered keys to severs to let severs build the key maps. because
   // of the key_caching, these keys are not sent, so the communication cost is
-  // little.
+  // little. then pull the intialial model value back
   for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     // wait if necessary
     if (!hit_cache && i >= grp_size - max_parallel) {
@@ -132,19 +132,45 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
     push_key->addFilter(FilterConfig::KEY_CACHING);
     CHECK_EQ(time, model_->push(push_key));
 
-    // store the timestamp the model will be initialized by the servers
-    model_ready_[grp] = time + 1;
+    // fetch the initial value of the model
+    MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
+    pull_val->setKey(model_->key(grp));
+    pull_val->task.set_key_channel(grp);
+    pull_val->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    pull_val->fin_handle = [this, grp, time]() {
+      size_t n = model_->key(grp).size();
+      if (n == 0) return; // otherwise received(time+2) may return error
+      auto init_w = model_->received(time+2);
+      CHECK_EQ(init_w.second.size(), 1);
+      CHECK_EQ(n, init_w.first.size());
+      model_->value(grp) = init_w.second[0];
+
+      // set the local variable
+      auto X = X_[grp];
+      if (!X) return;
+      if (dual_.empty()) {
+        dual_.resize(X->rows(), 0);
+      } else {
+        CHECK_EQ(dual_.size(), X->rows());
+      }
+      if (conf_.init_w().type() != ParameterInitConfig::ZERO) {
+        dual_.eigenVector() = *X * model_->value(grp).eigenVector();
+      }
+    };
+    CHECK_EQ(time+2, model_->pull(pull_val));
+    pull_time[i] = time + 2;
   }
+
   // load the label if necessary
   if (!hit_cache) {
     y_ = MatrixPtr<double>(new DenseMatrix<double>(
         slot_reader_.info<double>(0), slot_reader_.value<double>(0)));
   }
 
-  // intial the dual varible
-  dual_.resize(y_->rows());
-  dual_.setZero();
-
+  // wait until all weight pull finished
+  for (int i = 0; i < grp_size; ++i) {
+    model_->waitOutMsg(kServerGroup, pull_time[i]);
+  }
   saveCache("train");
 }
 
