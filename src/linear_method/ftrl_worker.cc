@@ -4,13 +4,11 @@
 namespace PS {
 namespace LM {
 
-void FTRLWorker::init(const string& name, const Config& conf) {
-  conf_ = conf;
-  loss_ = Loss<real>::create(conf_.loss());
+void FTRLWorker::init() {
+  CompNode::init();
   data_prefetcher_.setCapacity(conf_.solver().max_data_buf_size_in_mb());
-
   model_ = KVVectorPtr<Key, real>(new KVVector<Key, real>());
-  REGISTER_CUSTOMER(name, model_);
+  REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
 }
 
 void FTRLWorker::computeGradient() {

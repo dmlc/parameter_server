@@ -1,18 +1,24 @@
 #pragma once
-#include "linear_method/ftrl.h"
+#include "linear_method/computation_node.h"
+#include "linear_method/ftrl_common.h"
 #include "parameter/kv_vector.h"
 #include "util/producer_consumer.h"
 #include "base/localizer.h"
 #include "linear_method/loss_inl.h"
+#include "linear_method/progress_reporter.h"
 namespace PS {
 namespace LM {
 
-class FTRLWorker {
+class FTRLWorker : public CompNode {
  public:
-  void init(const string& name, const Config& conf);
-  void computeGradient();
-  void evaluateProgress(Progress* prog);
+  virtual void init();
+  virtual void iterate(const MessagePtr& msg) {
+    report.start(this, conf_.solver().eval_interval());
+    computeGradient();
+  }
+  virtual void evaluateProgress(Progress* prog);
  private:
+  void computeGradient();
   Config conf_;
   LossPtr<real> loss_;
   KVVectorPtr<Key, real> model_;
@@ -33,6 +39,7 @@ class FTRLWorker {
   };
   Status status_;
   std::mutex status_mu_;
+  ProgressReporter report;
 };
 
 } // namespace LM

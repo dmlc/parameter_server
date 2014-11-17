@@ -18,7 +18,6 @@ class LinearMethod : public App {
   static AppPtr create(const Config& conf);
   virtual void init();
 
- protected:
   static Call get(const MessageCPtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
     CHECK(msg->task.has_linear_method());
@@ -32,6 +31,7 @@ class LinearMethod : public App {
     Task task; set(&task)->set_cmd(cmd);
     return task;
   }
+ protected:
 
   Config conf_;
   Timer total_timer_;

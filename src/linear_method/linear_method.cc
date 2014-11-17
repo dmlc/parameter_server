@@ -4,7 +4,6 @@
 #include "base/matrix_io_inl.h"
 #include "proto/instance.pb.h"
 #include "base/io.h"
-#include "linear_method/ftrl.h"
 #include "linear_method/darlin_worker.h"
 #include "linear_method/darlin_server.h"
 #include "linear_method/darlin_scheduler.h"
@@ -12,6 +11,9 @@
 #include "linear_method/batch_server.h"
 #include "linear_method/batch_scheduler.h"
 #include "linear_method/model_evaluation.h"
+#include "linear_method/ftrl_scheduler.h"
+#include "linear_method/ftrl_worker.h"
+#include "linear_method/ftrl_server.h"
 namespace PS {
 namespace LM {
 
@@ -45,7 +47,13 @@ AppPtr LinearMethod::create(const Config& conf) {
   } else {
     // online solver
     if (conf.has_ftrl()) {
-      return AppPtr(new FTRL());
+      if (my_role == Node::SCHEDULER) {
+        return AppPtr(new FTRLScheduler());
+      } else if (my_role == Node::WORKER) {
+        return AppPtr(new FTRLWorker());
+      } else if (my_role == Node::SERVER) {
+        return AppPtr(new FTRLServer());
+      }
     }
   }
   return AppPtr(nullptr);

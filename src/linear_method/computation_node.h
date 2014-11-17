@@ -10,7 +10,6 @@ class CompNode : public LinearMethod {
   virtual void process(const MessagePtr& msg);
   void run() { }
 
- protected:
   virtual void loadData(ExampleInfo* info, int* hit_cache) { }
   virtual void preprocessData(const MessagePtr& msg) { }
   virtual void iterate(const MessagePtr& msg) { }
