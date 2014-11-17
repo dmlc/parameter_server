@@ -118,6 +118,7 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
   // push the filtered keys to severs to let severs build the key maps. because
   // of the key_caching, these keys are not sent, so the communication cost is
   // little. then pull the intialial model value back
+  std::vector<std::promise<void>> wait_dual(grp_size);
   for (int i = 0; i < grp_size; ++i, time += k_time_ratio_) {
     // wait if necessary
     if (!hit_cache && i >= grp_size - max_parallel) {
@@ -137,25 +138,27 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
     pull_val->setKey(model_->key(grp));
     pull_val->task.set_key_channel(grp);
     pull_val->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-    pull_val->fin_handle = [this, grp, time]() {
+    pull_val->fin_handle = [this, grp, time, &wait_dual, i]() {
       size_t n = model_->key(grp).size();
-      if (n == 0) return; // otherwise received(time+2) may return error
-      auto init_w = model_->received(time+2);
-      CHECK_EQ(init_w.second.size(), 1);
-      CHECK_EQ(n, init_w.first.size());
-      model_->value(grp) = init_w.second[0];
+      if (n) { // otherwise received(time+2) may return error
+        // intialize the local cache of the model
+        auto init_w = model_->received(time+2);
+        CHECK_EQ(init_w.second.size(), 1);
+        CHECK_EQ(n, init_w.first.size());
+        model_->value(grp) = init_w.second[0];
 
-      // set the local variable
-      auto X = X_[grp];
-      if (!X) return;
-      if (dual_.empty()) {
-        dual_.resize(X->rows(), 0);
-      } else {
-        CHECK_EQ(dual_.size(), X->rows());
+        // set the local variable
+        auto X = X_[grp]; CHECK(X);
+        if (dual_.empty()) {
+          dual_.resize(X->rows(), 0);
+        } else {
+          CHECK_EQ(dual_.size(), X->rows());
+        }
+        if (conf_.init_w().type() != ParameterInitConfig::ZERO) {
+          dual_.eigenVector() = *X * model_->value(grp).eigenVector();
+        }
       }
-      if (conf_.init_w().type() != ParameterInitConfig::ZERO) {
-        dual_.eigenVector() = *X * model_->value(grp).eigenVector();
-      }
+      wait_dual[i].set_value();
     };
     CHECK_EQ(time+2, model_->pull(pull_val));
     pull_time[i] = time + 2;
@@ -169,7 +172,7 @@ void BatchWorker::preprocessData(const MessagePtr& msg) {
 
   // wait until all weight pull finished
   for (int i = 0; i < grp_size; ++i) {
-    model_->waitOutMsg(kServerGroup, pull_time[i]);
+    wait_dual[i].get_future().wait();
   }
   saveCache("train");
 }
