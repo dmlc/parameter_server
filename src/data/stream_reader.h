@@ -151,8 +151,17 @@ bool StreamReader<V>::readMatricesFromText(uint32 num_ex, MatrixPtrList<V>* mat)
       // read a line
       char* result = data_file_->readLine(line_, kMaxLineLength_);
       if (result != nullptr) {
+        // Chop the last linefeed if present.
+        int len = strlen(result);
+        if (len > 0 && result[len - 1] == '\n') {  // Linefeed.
+          result[--len] = '\0';
+        }
+        if (len > 0 && result[len - 1] == '\r') {  // Carriage return.
+          result[--len] = '\0';
+        }
         Example ex;
         if (!parser_.toProto(result, &ex)) continue;
+        // LL << ex.ShortDebugString();
         parseExample(ex, num_read);
         ++ num_read;
         break;

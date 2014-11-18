@@ -176,12 +176,14 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
   gid_idx_map[0] = 0;
 
   char* saveptr;
-  char* tk = strtok_r(line, " |", &saveptr);
-  for (int i = 0; tk != NULL; tk = strtok_r(NULL, " |", &saveptr), ++i) {
+  char* tk = strtok_r(line, " ", &saveptr);
+  for (int i = 0; tk != NULL; tk = strtok_r(NULL, " ", &saveptr), ++i) {
     if (i == 0) {
       // label
       int32 label;
-      if (!strtoi32(tk, &label)) return false;
+      if (!strtoi32(tk, &label)) {
+        return false;
+      }
       slot->add_val(label > 0 ? 1.0 : -1.0);
     } else if (i == 1) {
       // skip, line_id
@@ -189,9 +191,11 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
       // skip, seperator
     } else {
       uint64 key = -1;
-      if (!strtou64(tk, &key)) return false;
+      if (!strtou64(tk, &key)) {
+        return false;
+      }
 
-      uint64 grp_id = key >> 54;
+      uint64 grp_id = ignore_fea_slot_ ? 1 : key >> 54;
       uint64 fea_id = key & 0x3FFFFFFFFFFFFF;
 
       if (FLAGS_shuffle_fea_id) {
