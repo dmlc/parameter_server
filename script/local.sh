@@ -43,7 +43,7 @@ done
 for ((i=0; i<${num_workers}; ++i)); do
     port=$((8200 + ${i}))
     N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'W${i}'"
-    CPUPROFILE=/tmp/W${i} \
+    # CPUPROFILE=/tmp/W${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
 done
 

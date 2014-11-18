@@ -41,7 +41,7 @@ void ModelEvaluation::run() {
   // TODO read in an another thread
   bool good = false;
   do {
-    good = reader.readMatrices(1000, &mat);
+    good = reader.readMatrices(100000, &mat);
     CHECK_EQ(mat.size(), 2);
     label.append(mat[0]->value());
 

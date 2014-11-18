@@ -130,8 +130,6 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     info_ = mergeExampleInfo(info_, info);
     loaded_file_count_++;
     num_ex_[ith_file] = num_ex;
-    LL << ith_file;
-
     if (FLAGS_verbose) {
       LI << "loaded data file [" << data.file(0) << "]; loaded [" <<
         loaded_file_count_ << "/" << data_.file_size() << "]";

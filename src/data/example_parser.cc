@@ -6,6 +6,7 @@
 
 namespace PS {
 
+// TODO better name,
 DEFINE_bool(shuffle_fea_id, false,
   "shuffle fea id of Terafea (lowest 54bits) with MurmurHash3 "
   "on downloading");
@@ -181,9 +182,7 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
     if (i == 0) {
       // label
       int32 label;
-      if (!strtoi32(tk, &label)) {
-        return false;
-      }
+      if (!strtoi32(tk, &label)) return false;
       slot->add_val(label > 0 ? 1.0 : -1.0);
     } else if (i == 1) {
       // skip, line_id
@@ -191,12 +190,12 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
       // skip, seperator
     } else {
       uint64 key = -1;
-      if (!strtou64(tk, &key)) {
-        return false;
-      }
+      if (!strtou64(tk, &key)) return false;
 
       uint64 grp_id = ignore_fea_slot_ ? 1 : key >> 54;
-      uint64 fea_id = key & 0x3FFFFFFFFFFFFF;
+      // use the whole as the id to reduce the key conflict probability
+      uint64 fea_id = key;
+      // uint64 fea_id = key & 0x3FFFFFFFFFFFFF;
 
       if (FLAGS_shuffle_fea_id) {
         uint64 murmur_out[2];
