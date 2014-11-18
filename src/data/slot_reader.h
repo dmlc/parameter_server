@@ -38,7 +38,7 @@ class SlotReader {
   bool readOneFile(const DataConfig& data);
   string cache_;
   DataConfig data_;
-  bool dump_to_disk_;
+  // bool dump_to_disk_;
   ExampleInfo info_;
   std::unordered_map<int, SlotInfo> slot_info_;
   std::mutex mu_;

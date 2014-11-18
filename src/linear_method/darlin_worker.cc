@@ -75,6 +75,7 @@ void DarlinWorker::computeAndPushGradient(
 
   mu_.lock();  // lock the dual_
   sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+  busy_timer_.start();
   // compute the gradient in multi-thread
   if (!col_range.empty()) {
     CHECK_GT(FLAGS_num_threads, 0);
@@ -92,6 +93,7 @@ void DarlinWorker::computeAndPushGradient(
     }
     pool.startWorkers();
   }
+  busy_timer_.stop();
   sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
   mu_.unlock();  // lock the dual_
 
@@ -179,6 +181,7 @@ void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
 
   mu_.lock();  // lock the dual_
   sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+  busy_timer_.start();
   {
     SizeR row_range(0, X_[grp]->rows());
     ThreadPool pool(FLAGS_num_threads);
@@ -192,6 +195,7 @@ void DarlinWorker::updateDual(int grp, SizeR col_range, SArray<double> new_w) {
     }
     pool.startWorkers();
   }
+  busy_timer_.stop();
   sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
   mu_.unlock();  // lock the dual_
 }
@@ -229,6 +233,7 @@ void DarlinWorker::updateDual(
 }
 
 void DarlinWorker::evaluateProgress(Progress* prog) {
+  busy_timer_.start();
   mu_.lock();  // lock the dual_
   prog->add_objv(log(1+1/dual_.eigenArray()).sum());
   mu_.unlock();

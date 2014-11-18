@@ -37,6 +37,7 @@ class File {
     return (name.size() > 3 && std::string(name.end()-3, name.end()) == ".gz");
   }
 
+
   // Reads "size" bytes to buff from file, buff should be pre-allocated.
   size_t read(void* const buff, size_t size);
   void readOrDie(void* const buff, size_t size) {
@@ -110,6 +111,10 @@ void writeProtoToFileOrDie(const GProto& proto, const std::string& file_name);
 
 // return the hadoop fs command
 std::string hadoopFS(const HDFSConfig& conf);
+
+// operations about directories, may create class Directory
+bool dirExists(const std::string& dir);
+bool createDir(const std::string& dir);
 
 // return the file names in a directory
 std::vector<std::string> readFilenamesInDirectory(const std::string& directory);

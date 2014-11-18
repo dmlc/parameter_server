@@ -8,7 +8,8 @@ DECLARE_bool(verbose);
 
 void SlotReader::init(const DataConfig& data, const DataConfig& cache) {
   CHECK(data.format() == DataConfig::TEXT);
-  if (cache.file_size()) dump_to_disk_ = true;
+  // if (cache.file_size()) dump_to_disk_ = true;
+  CHECK(cache.file_size());
   cache_ = cache.file(0);
   data_ = data;
 }
@@ -107,6 +108,12 @@ bool SlotReader::readOneFile(const DataConfig& data) {
   reader.set_line_callback(handle);
   reader.Reload();
 
+  // create the directory if necessary. but it seems stupid to check it each
+  // time. a nature way is doing it at init(). but i'm afraid to it may be
+  // problemic to have multiple processes doing it at the same time.
+  if (!dirExists(getPath(info_name))) {
+    CHECK(createDir(getPath(info_name)));
+  }
   // save in cache
   info = parser.info();
   writeProtoToASCIIFileOrDie(info, info_name);
