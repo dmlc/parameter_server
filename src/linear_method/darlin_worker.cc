@@ -240,9 +240,14 @@ void DarlinWorker::evaluateProgress(Progress* prog) {
   prog->add_busy_time(busy_timer_.stop());
   busy_timer_.restart();
 
-  LL << (1/(1+dual_.eigenArray())).sum() / dual_.size();
+  // double mean = 0;
+  // double* y = y_->value().data();
+  // for (int i = 0; i < dual_.size(); ++i) {
+  //   double q = 1 / (1 + dual_[i]);
+  //   mean += y[i] == 1 ? q : 1 - q;
+  // }
+  // LL << "average predicted prob: " << 1 - mean / dual_.size();
 
-  // LL << nnz_as << " " << nnz_w << " " << objv;
   // // label statistics
   // if (FLAGS_verbose) {
   //   size_t positive_label_count = 0;

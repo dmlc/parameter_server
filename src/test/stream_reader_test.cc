@@ -25,26 +25,28 @@ using namespace PS;
 // }
 
 
-TEST(StreamReader, convert) {
-  DataConfig dc;
-  dc.set_format(DataConfig::TEXT);
-  dc.set_text(DataConfig::TERAFEA);
-  dc.add_file("../data/toutiao/data.txt");
-  dc.set_ignore_feature_group(true);
+// TEST(StreamReader, convert) {
+//   DataConfig dc;
+//   dc.set_format(DataConfig::TEXT);
+//   dc.set_text(DataConfig::TERAFEA);
+//   dc.add_file("../data/toutiao/data.txt");
+//   dc.set_ignore_feature_group(true);
 
-  DataConfig dc2 = searchFiles(dc);
-  StreamReader<double> reader; reader.init(dc2);
+//   DataConfig dc2 = searchFiles(dc);
+//   StreamReader<double> reader; reader.init(dc2);
 
-  MatrixPtrList<double> X;
-  reader.readMatrices(1000000, &X);
-  CHECK_EQ(X.size(), 2);
+//   MatrixPtrList<double> X;
+//   reader.readMatrices(1000000, &X);
+//   // CHECK_EQ(X.size(), 2);
 
-  X[0]->writeToBinFile("toutiao.Y");
+//   X[0]->writeToBinFile("toutiao.Y");
 
-  Localizer<Key, double> localizer;
-  SArray<Key> key;
-  localizer.countUniqIndex(X[1], &key);
-  auto Z = localizer.remapIndex(key);
-
-  Z->writeToBinFile("toutiao.X");
-}
+//   for (int i = 1; i < X.size(); ++i) {
+//     Localizer<Key, double> localizer;
+//     SArray<Key> key;
+//     localizer.countUniqIndex(X[i], &key);
+//     key.writeToFile("toutiao.key."+std::to_string(X[i]->info().id()));
+//     auto Z = localizer.remapIndex(key);
+//     Z->writeToBinFile("toutiao.X."+std::to_string(X[i]->info().id()));
+//   }
+// }
