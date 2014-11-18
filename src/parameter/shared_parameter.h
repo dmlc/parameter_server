@@ -115,7 +115,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     if (key_filter_ignore_chl_) chl = 0;
     auto cmd = call.tail_filter();
     // push the key count
-    if (cmd.insert_count() && req) {
+    if (cmd.insert_count() && req && !msg->key.empty()) {
       CHECK(!msg->value.empty());
       auto& filter = key_filter_[chl];
       if (filter.empty()) {

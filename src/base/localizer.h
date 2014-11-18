@@ -118,8 +118,6 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
     int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const {
   SArray<V> val;
   auto info = reader->info<V>(grp_id);
-  CHECK_NE(info.type(), MatrixInfo::DENSE)
-      << "dense matrix already have compact indeces\n" << info.DebugString();
   if (info.type() == MatrixInfo::SPARSE) val = reader->value<V>(grp_id);
   return remapIndex(info, reader->offset(grp_id), reader->index(grp_id), val, idx_dict);
 }
@@ -131,6 +129,9 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
     const SArray<I>& idx_dict) const {
   // LL << index << "\n" << idx_dict;
   if (index.empty() || idx_dict.empty()) return MatrixPtr<V>();
+  CHECK_NE(info.type(), MatrixInfo::DENSE)
+      << "dense matrix already have compact indeces\n" << info.DebugString();
+
   CHECK_LT(idx_dict.size(), kuint32max);
   CHECK_EQ(offset.back(), index.size());
   CHECK_EQ(index.size(), pair_.size());

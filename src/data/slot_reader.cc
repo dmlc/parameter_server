@@ -32,6 +32,7 @@ int SlotReader::read(ExampleInfo* info) {
   {
     Lock l(mu_);
     loaded_file_count_ = 0;
+    num_ex_.resize(data_.file_size());
   }
   {
     if (FLAGS_verbose) {
@@ -44,7 +45,7 @@ int SlotReader::read(ExampleInfo* info) {
     ThreadPool pool(FLAGS_num_threads);
     for (int i = 0; i < data_.file_size(); ++i) {
       auto one_file = ithFile(data_, i);
-      pool.add([this, one_file](){ readOneFile(one_file); });
+      pool.add([this, one_file, i](){ readOneFile(one_file, i); });
     }
     pool.startWorkers();
   }
@@ -55,7 +56,7 @@ int SlotReader::read(ExampleInfo* info) {
   return 0;
 }
 
-bool SlotReader::readOneFile(const DataConfig& data) {
+bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
   if (FLAGS_verbose) {
     Lock l(mu_);
     LI << "loading data file [" << data.file(0) << "]; loaded [" <<
@@ -68,6 +69,7 @@ bool SlotReader::readOneFile(const DataConfig& data) {
     // the data is already in cache_dir
     Lock l(mu_);
     info_ = mergeExampleInfo(info_, info);
+    num_ex_[ith_file] = info.num_ex();
     return true;
   }
 
@@ -127,6 +129,8 @@ bool SlotReader::readOneFile(const DataConfig& data) {
     Lock l(mu_);
     info_ = mergeExampleInfo(info_, info);
     loaded_file_count_++;
+    num_ex_[ith_file] = num_ex;
+    LL << ith_file;
 
     if (FLAGS_verbose) {
       LI << "loaded data file [" << data.file(0) << "]; loaded [" <<
@@ -143,7 +147,8 @@ SArray<uint64> SlotReader::index(int slot_id) {
   if (idx.size() == nnz) return idx;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".colidx";
-    SArray<char> comp; CHECK(comp.readFromFile(file));
+    SArray<char> comp;
+    if (!comp.readFromFile(file)) continue;
     SArray<uint64> uncomp; uncomp.uncompressFrom(comp);
     idx.append(uncomp);
   }
@@ -160,8 +165,14 @@ SArray<size_t> SlotReader::offset(int slot_id) {
   if (nnzEle(slot_id) == 0) return os;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".rowsiz";
-    SArray<char> comp; CHECK(comp.readFromFile(file));
-    SArray<uint16> uncomp; uncomp.uncompressFrom(comp);
+    SArray<char> comp;
+    SArray<uint16> uncomp;
+    if (comp.readFromFile(file) && !comp.empty()) {
+      uncomp.uncompressFrom(comp);
+      CHECK_EQ(uncomp.size(), num_ex_[i]) << file;
+    } else {
+      uncomp.resize(num_ex_[i], 0);
+    }
     size_t n = os.size();
     os.resize(n + uncomp.size());
     for (size_t i = 0; i < uncomp.size(); ++i) os[i+n] = os[i+n-1] + uncomp[i];

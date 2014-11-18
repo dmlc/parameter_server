@@ -240,6 +240,8 @@ void DarlinWorker::evaluateProgress(Progress* prog) {
   prog->add_busy_time(busy_timer_.stop());
   busy_timer_.restart();
 
+  LL << (1/(1+dual_.eigenArray())).sum() / dual_.size();
+
   // LL << nnz_as << " " << nnz_w << " " << objv;
   // // label statistics
   // if (FLAGS_verbose) {
