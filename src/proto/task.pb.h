@@ -31,6 +31,7 @@
 #include "proto/filter.pb.h"
 #include "proto/common.pb.h"
 #include "linear_method/linear_method.pb.h"
+#include "graph_partition/graph_partition.pb.h"
 #include "parameter/shared_parameter.pb.h"
 // @@protoc_insertion_point(includes)
 
@@ -377,6 +378,15 @@ class Task : public ::google::protobuf::Message {
   inline ::PS::CallSketch* release_sketch();
   inline void set_allocated_sketch(::PS::CallSketch* sketch);
 
+  // optional .PS.GP.Call graph_partition = 303;
+  inline bool has_graph_partition() const;
+  inline void clear_graph_partition();
+  static const int kGraphPartitionFieldNumber = 303;
+  inline const ::PS::GP::Call& graph_partition() const;
+  inline ::PS::GP::Call* mutable_graph_partition();
+  inline ::PS::GP::Call* release_graph_partition();
+  inline void set_allocated_graph_partition(::PS::GP::Call* graph_partition);
+
   // @@protoc_insertion_point(class_scope:PS.Task)
  private:
   inline void set_has_type();
@@ -409,6 +419,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_linear_method();
   inline void set_has_sketch();
   inline void clear_has_sketch();
+  inline void set_has_graph_partition();
+  inline void clear_has_graph_partition();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -429,10 +441,11 @@ class Task : public ::google::protobuf::Message {
   ::PS::CallSharedPara* shared_para_;
   ::PS::LM::Call* linear_method_;
   ::PS::CallSketch* sketch_;
+  ::PS::GP::Call* graph_partition_;
   int key_type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(19 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2ftask_2eproto();
   friend void protobuf_AssignDesc_proto_2ftask_2eproto();
@@ -1523,6 +1536,44 @@ inline void Task::set_allocated_sketch(::PS::CallSketch* sketch) {
     set_has_sketch();
   } else {
     clear_has_sketch();
+  }
+}
+
+// optional .PS.GP.Call graph_partition = 303;
+inline bool Task::has_graph_partition() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void Task::set_has_graph_partition() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void Task::clear_has_graph_partition() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void Task::clear_graph_partition() {
+  if (graph_partition_ != NULL) graph_partition_->::PS::GP::Call::Clear();
+  clear_has_graph_partition();
+}
+inline const ::PS::GP::Call& Task::graph_partition() const {
+  return graph_partition_ != NULL ? *graph_partition_ : *default_instance_->graph_partition_;
+}
+inline ::PS::GP::Call* Task::mutable_graph_partition() {
+  set_has_graph_partition();
+  if (graph_partition_ == NULL) graph_partition_ = new ::PS::GP::Call;
+  return graph_partition_;
+}
+inline ::PS::GP::Call* Task::release_graph_partition() {
+  clear_has_graph_partition();
+  ::PS::GP::Call* temp = graph_partition_;
+  graph_partition_ = NULL;
+  return temp;
+}
+inline void Task::set_allocated_graph_partition(::PS::GP::Call* graph_partition) {
+  delete graph_partition_;
+  graph_partition_ = graph_partition;
+  if (graph_partition) {
+    set_has_graph_partition();
+  } else {
+    clear_has_graph_partition();
   }
 }
 

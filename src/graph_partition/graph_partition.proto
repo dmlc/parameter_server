@@ -17,3 +17,11 @@ message ParsaConfig {
   optional int32 cost_cache_limit = 7 [default = 100];
   optional int32 data_buff_size_in_MB = 8 [default = 1000];
 }
+
+message Call {
+  enum Command {
+    PARTITION_U = 1;
+    PARTITION_V = 2;
+  }
+  required Command cmd = 1;
+}

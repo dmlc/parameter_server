@@ -8,9 +8,11 @@ void ParsaWorker::init() {
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
   num_partitions_ = conf_.parsa().num_partitions();
   neighbor_set_.resize(num_partitions_);
+  sync_nbset_ = KVVectorPtr<Key, uint64>(new KVVector<Key, uint64>());
+  REGISTER_CUSTOMER(app_cf_.parameter_name(0), sync_nbset_);
 }
 
-void ParsaWorker::partition() {
+void ParsaWorker::partitionU() {
   StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
   ProducerConsumer<BlockData> reader(conf_.parsa().data_buff_size_in_mb());
   int blk_id = 0;
@@ -34,8 +36,8 @@ void ParsaWorker::partition() {
       pull->task.set_key_channel(blk_id);
       pull->setKey(key);
       pull->addFilter(FilterConfig::KEY_CACHING);
-      sync_nbset_.key(blk_id) = key;
-      int time = sync_nbset_.pull(pull);
+      sync_nbset_->key(blk_id) = key;
+      int time = sync_nbset_->pull(pull);
 
       // preprocess data and store the results
       blk->row_major  = std::static_pointer_cast<Graph>(localizer.remapIndex(key));
@@ -116,10 +118,10 @@ void ParsaWorker::partition() {
 }
 
 void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
-  sync_nbset_.waitOutMsg(kServerGroup, blk.pull_time);
+  sync_nbset_->waitOutMsg(kServerGroup, blk.pull_time);
   int id = blk.blk_id;
-  auto key = sync_nbset_.key(id);
-  initNeighborSet(key, sync_nbset_.value(id));
+  auto key = sync_nbset_->key(id);
+  initNeighborSet(key, sync_nbset_->value(id));
 
   int n = blk.row_major->rows();
   map_U->resize(n);
@@ -202,8 +204,8 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   push->setKey(key);
   push->addValue(value);
   push->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-  sync_nbset_.set(push)->set_op(Operator::OR);
-  sync_nbset_.push(push);
+  sync_nbset_->set(push)->set_op(Operator::OR);
+  sync_nbset_->push(push);
 
 }
 

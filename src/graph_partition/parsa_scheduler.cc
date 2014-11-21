@@ -8,7 +8,11 @@ void ParsaScheduler::init() {
 }
 
 void ParsaScheduler::run() {
-  LL << "xxx";
+  Task partitionU = newTask(Call::PARTITION_U);
+  taskpool(kActiveGroup)->submitAndWait(partitionU);
+
+  Task partitionV = newTask(Call::PARTITION_V);
+  taskpool(kActiveGroup)->submitAndWait(partitionV);
 }
 
 } // namespace PS

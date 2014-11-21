@@ -5,6 +5,7 @@ import "proto/app.proto";
 import "proto/filter.proto";
 import "proto/common.proto";
 import "linear_method/linear_method.proto";
+import "graph_partition/graph_partition.proto";
 import "parameter/shared_parameter.proto";
 
 message Task {
@@ -50,6 +51,8 @@ message Task {
   // applications
   optional LM.Call linear_method = 301;
   optional CallSketch sketch = 302;
+
+  optional GP.Call graph_partition = 303;
 }
 
 message ManageNode {

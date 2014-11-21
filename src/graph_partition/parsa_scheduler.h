@@ -7,6 +7,7 @@ class ParsaScheduler : public GraphPartition {
  public:
   virtual void init();
   virtual void run();
+  virtual void process(const MessagePtr& msg) { }
  private:
 };
 

@@ -22,7 +22,11 @@ typedef std::shared_ptr<ExampleList> ExampleListPtr;
 class ParsaWorker : public GraphPartition {
  public:
   virtual void init();
-  void partition();
+  virtual void process(const MessagePtr& msg) {
+    if (get(msg).cmd() == Call::PARTITION_U) {
+      partitionU();
+    }
+  }
  private:
   struct BlockData {
     GraphPtr row_major;
@@ -33,6 +37,7 @@ class ParsaWorker : public GraphPartition {
     int blk_id;
   };
 
+  void partitionU();
   void partitionU(const BlockData& blk, SArray<int>* map_U);
   void initCost(const GraphPtr& row_major_blk, const SArray<Key>& global_key);
   void updateCostAndNeighborSet(
@@ -58,7 +63,7 @@ class ParsaWorker : public GraphPartition {
   std::vector<PARSA::DblinkArray> cost_;
   Bitmap assigned_U_;
 
-  KVVector<Key, uint64> sync_nbset_;
+  KVVectorPtr<Key, uint64> sync_nbset_;
 
   int num_partitions_;
 };

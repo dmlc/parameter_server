@@ -23,6 +23,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
+#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/config.pb.h"
 // @@protoc_insertion_point(includes)
@@ -37,7 +38,27 @@ void protobuf_ShutdownFile_graph_5fpartition_2fgraph_5fpartition_2eproto();
 
 class Config;
 class ParsaConfig;
+class Call;
 
+enum Call_Command {
+  Call_Command_PARTITION_U = 1,
+  Call_Command_PARTITION_V = 2
+};
+bool Call_Command_IsValid(int value);
+const Call_Command Call_Command_Command_MIN = Call_Command_PARTITION_U;
+const Call_Command Call_Command_Command_MAX = Call_Command_PARTITION_V;
+const int Call_Command_Command_ARRAYSIZE = Call_Command_Command_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* Call_Command_descriptor();
+inline const ::std::string& Call_Command_Name(Call_Command value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    Call_Command_descriptor(), value);
+}
+inline bool Call_Command_Parse(
+    const ::std::string& name, Call_Command* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Call_Command>(
+    Call_Command_descriptor(), name, value);
+}
 // ===================================================================
 
 class Config : public ::google::protobuf::Message {
@@ -277,6 +298,112 @@ class ParsaConfig : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static ParsaConfig* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Call : public ::google::protobuf::Message {
+ public:
+  Call();
+  virtual ~Call();
+
+  Call(const Call& from);
+
+  inline Call& operator=(const Call& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Call& default_instance();
+
+  void Swap(Call* other);
+
+  // implements Message ----------------------------------------------
+
+  Call* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Call& from);
+  void MergeFrom(const Call& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef Call_Command Command;
+  static const Command PARTITION_U = Call_Command_PARTITION_U;
+  static const Command PARTITION_V = Call_Command_PARTITION_V;
+  static inline bool Command_IsValid(int value) {
+    return Call_Command_IsValid(value);
+  }
+  static const Command Command_MIN =
+    Call_Command_Command_MIN;
+  static const Command Command_MAX =
+    Call_Command_Command_MAX;
+  static const int Command_ARRAYSIZE =
+    Call_Command_Command_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Command_descriptor() {
+    return Call_Command_descriptor();
+  }
+  static inline const ::std::string& Command_Name(Command value) {
+    return Call_Command_Name(value);
+  }
+  static inline bool Command_Parse(const ::std::string& name,
+      Command* value) {
+    return Call_Command_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // required .PS.GP.Call.Command cmd = 1;
+  inline bool has_cmd() const;
+  inline void clear_cmd();
+  static const int kCmdFieldNumber = 1;
+  inline ::PS::GP::Call_Command cmd() const;
+  inline void set_cmd(::PS::GP::Call_Command value);
+
+  // @@protoc_insertion_point(class_scope:PS.GP.Call)
+ private:
+  inline void set_has_cmd();
+  inline void clear_has_cmd();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  int cmd_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
+  friend void protobuf_AssignDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
+  friend void protobuf_ShutdownFile_graph_5fpartition_2fgraph_5fpartition_2eproto();
+
+  void InitAsDefaultInstance();
+  static Call* default_instance_;
 };
 // ===================================================================
 
@@ -535,6 +662,33 @@ inline void ParsaConfig::set_data_buff_size_in_mb(::google::protobuf::int32 valu
   data_buff_size_in_mb_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// Call
+
+// required .PS.GP.Call.Command cmd = 1;
+inline bool Call::has_cmd() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Call::set_has_cmd() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Call::clear_has_cmd() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Call::clear_cmd() {
+  cmd_ = 1;
+  clear_has_cmd();
+}
+inline ::PS::GP::Call_Command Call::cmd() const {
+  return static_cast< ::PS::GP::Call_Command >(cmd_);
+}
+inline void Call::set_cmd(::PS::GP::Call_Command value) {
+  assert(::PS::GP::Call_Command_IsValid(value));
+  set_has_cmd();
+  cmd_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -545,6 +699,10 @@ inline void ParsaConfig::set_data_buff_size_in_mb(::google::protobuf::int32 valu
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::GP::Call_Command>() {
+  return ::PS::GP::Call_Command_descriptor();
+}
 
 }  // namespace google
 }  // namespace protobuf

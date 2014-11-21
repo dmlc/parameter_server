@@ -12,7 +12,11 @@ class ParsaServer : public GraphPartition {
     REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
   }
 
-
+  virtual void process(const MessagePtr& msg) {
+    if (get(msg).cmd() == Call::PARTITION_V) {
+      model_->partitionV(conf_.parsa().num_partitions());
+    }
+  }
  private:
   std::shared_ptr<ParsaModel> model_;
 };
