@@ -26,7 +26,7 @@
 #include <google/protobuf/unknown_field_set.h>
 #include "proto/neural_network.pb.h"
 #include "linear_method/linear_method.pb.h"
-#include "graph_partition/parsa.pb.h"
+#include "graph_partition/graph_partition.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -140,14 +140,14 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::NN::Config* release_neural_network();
   inline void set_allocated_neural_network(::PS::NN::Config* neural_network);
 
-  // optional .PS.ParsaConf parsa = 5;
-  inline bool has_parsa() const;
-  inline void clear_parsa();
-  static const int kParsaFieldNumber = 5;
-  inline const ::PS::ParsaConf& parsa() const;
-  inline ::PS::ParsaConf* mutable_parsa();
-  inline ::PS::ParsaConf* release_parsa();
-  inline void set_allocated_parsa(::PS::ParsaConf* parsa);
+  // optional .PS.GP.Config graph_partition = 5;
+  inline bool has_graph_partition() const;
+  inline void clear_graph_partition();
+  static const int kGraphPartitionFieldNumber = 5;
+  inline const ::PS::GP::Config& graph_partition() const;
+  inline ::PS::GP::Config* mutable_graph_partition();
+  inline ::PS::GP::Config* release_graph_partition();
+  inline void set_allocated_graph_partition(::PS::GP::Config* graph_partition);
 
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
@@ -157,8 +157,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_linear_method();
   inline void set_has_neural_network();
   inline void clear_has_neural_network();
-  inline void set_has_parsa();
-  inline void clear_has_parsa();
+  inline void set_has_graph_partition();
+  inline void clear_has_graph_partition();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -166,7 +166,7 @@ class AppConfig : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
   ::PS::LM::Config* linear_method_;
   ::PS::NN::Config* neural_network_;
-  ::PS::ParsaConf* parsa_;
+  ::PS::GP::Config* graph_partition_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
@@ -375,41 +375,41 @@ inline void AppConfig::set_allocated_neural_network(::PS::NN::Config* neural_net
   }
 }
 
-// optional .PS.ParsaConf parsa = 5;
-inline bool AppConfig::has_parsa() const {
+// optional .PS.GP.Config graph_partition = 5;
+inline bool AppConfig::has_graph_partition() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void AppConfig::set_has_parsa() {
+inline void AppConfig::set_has_graph_partition() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void AppConfig::clear_has_parsa() {
+inline void AppConfig::clear_has_graph_partition() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void AppConfig::clear_parsa() {
-  if (parsa_ != NULL) parsa_->::PS::ParsaConf::Clear();
-  clear_has_parsa();
+inline void AppConfig::clear_graph_partition() {
+  if (graph_partition_ != NULL) graph_partition_->::PS::GP::Config::Clear();
+  clear_has_graph_partition();
 }
-inline const ::PS::ParsaConf& AppConfig::parsa() const {
-  return parsa_ != NULL ? *parsa_ : *default_instance_->parsa_;
+inline const ::PS::GP::Config& AppConfig::graph_partition() const {
+  return graph_partition_ != NULL ? *graph_partition_ : *default_instance_->graph_partition_;
 }
-inline ::PS::ParsaConf* AppConfig::mutable_parsa() {
-  set_has_parsa();
-  if (parsa_ == NULL) parsa_ = new ::PS::ParsaConf;
-  return parsa_;
+inline ::PS::GP::Config* AppConfig::mutable_graph_partition() {
+  set_has_graph_partition();
+  if (graph_partition_ == NULL) graph_partition_ = new ::PS::GP::Config;
+  return graph_partition_;
 }
-inline ::PS::ParsaConf* AppConfig::release_parsa() {
-  clear_has_parsa();
-  ::PS::ParsaConf* temp = parsa_;
-  parsa_ = NULL;
+inline ::PS::GP::Config* AppConfig::release_graph_partition() {
+  clear_has_graph_partition();
+  ::PS::GP::Config* temp = graph_partition_;
+  graph_partition_ = NULL;
   return temp;
 }
-inline void AppConfig::set_allocated_parsa(::PS::ParsaConf* parsa) {
-  delete parsa_;
-  parsa_ = parsa;
-  if (parsa) {
-    set_has_parsa();
+inline void AppConfig::set_allocated_graph_partition(::PS::GP::Config* graph_partition) {
+  delete graph_partition_;
+  graph_partition_ = graph_partition;
+  if (graph_partition) {
+    set_has_graph_partition();
   } else {
-    clear_has_parsa();
+    clear_has_graph_partition();
   }
 }
 

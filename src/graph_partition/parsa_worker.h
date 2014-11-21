@@ -1,7 +1,7 @@
 #pragma once
 #include "proto/example.pb.h"
 #include "graph_partition/double_linked_array.h"
-#include "graph_partition/parsa.pb.h"
+#include "graph_partition/graph_partition.h"
 #include "util/producer_consumer.h"
 #include "base/sparse_matrix.h"
 #include "base/bitmap.h"
@@ -9,6 +9,8 @@
 #include "util/recordio.h"
 #include "parameter/kv_vector.h"
 namespace PS {
+namespace GP {
+
 #define EXACT_NBSET
 typedef float Empty;
 typedef SparseMatrix<uint32, Empty> Graph;
@@ -17,9 +19,9 @@ typedef std::vector<GraphPtr> GraphPtrList;
 typedef std::vector<Example> ExampleList;
 typedef std::shared_ptr<ExampleList> ExampleListPtr;
 
-class ParsaWorker {
+class ParsaWorker : public GraphPartition {
  public:
-  ParsaWorker(const ParsaConf& conf);
+  virtual void init();
   void partition();
  private:
   struct BlockData {
@@ -59,9 +61,7 @@ class ParsaWorker {
   KVVector<Key, uint64> sync_nbset_;
 
   int num_partitions_;
-  ParsaConf conf_;
-
-
-
 };
+
+} // namespace GP
 } // namespace PS

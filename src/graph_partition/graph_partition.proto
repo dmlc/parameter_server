@@ -1,9 +1,13 @@
-package PS;
+package PS.GP;
 import "proto/config.proto";
 
-message ParsaConf {
+message Config {
   optional DataConfig input_graph = 1;
   optional DataConfig output_graph = 2;
+  optional ParsaConfig parsa = 3;
+}
+
+message ParsaConfig {
 
   optional int32 block_size = 4 [default = 100000];
   optional int32 num_partitions = 5 [default = 8];

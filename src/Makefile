@@ -26,7 +26,7 @@ else
 endif
 
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
--lsnappy -lm -lpthread -lrt  -lstdc++ # -ltcmalloc_and_profiler
+-lsnappy -lm -lpthread  -lstdc++ # -ltcmalloc_and_profiler # -lrt
 GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)

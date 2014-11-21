@@ -2,23 +2,23 @@
 #include "data/stream_reader.h"
 #include "base/localizer.h"
 namespace PS {
+namespace GP {
 
-ParsaWorker::ParsaWorker(const ParsaConf& conf) {
-  conf_ = conf;
+void ParsaWorker::init() {
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
-  num_partitions_ = conf_.num_partitions();
+  num_partitions_ = conf_.parsa().num_partitions();
   neighbor_set_.resize(num_partitions_);
 }
 
 void ParsaWorker::partition() {
   StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
-  ProducerConsumer<BlockData> reader(conf_.data_buff_size_in_mb());
+  ProducerConsumer<BlockData> reader(conf_.parsa().data_buff_size_in_mb());
   int blk_id = 0;
   reader.startProducer([this, &stream, &blk_id](BlockData* blk, size_t* size)->bool {
       // read a block
       MatrixPtrList<Empty> X;
       auto examples = ExampleListPtr(new ExampleList());
-      bool ret = stream.readMatrices(conf_.block_size(), &X, examples.get());
+      bool ret = stream.readMatrices(conf_.parsa().block_size(), &X, examples.get());
       if (X.empty()) return false;
 
       // find the unique keys
@@ -60,7 +60,7 @@ void ParsaWorker::partition() {
     auto file = File::openOrDie(tmp_files.back(), "w");
     proto_writers_1[i] = RecordWriter(file);
   }
-  writer_1.setCapacity(conf_.data_buff_size_in_mb());
+  writer_1.setCapacity(conf_.parsa().data_buff_size_in_mb());
   writer_1.startConsumer([&proto_writers_1](const ResultPair& data) {
       const auto& examples = *data.first;
       const auto& partition = data.second;
@@ -155,8 +155,8 @@ void ParsaWorker::initNeighborSet(
 #ifdef EXACT_NBSET
     neighbor_set_[i].clear();
 #else
-    int k = conf_.bloomfilter_k();
-    int m = n * k * 1.44 * conf_.bloomfilter_m_ratio();
+    int k = conf_.parsa().bloomfilter_k();
+    int m = n * k * 1.44 * conf_.parsa().bloomfilter_m_ratio();
     neighbor_set_[i].resize(m, k);
 #endif
   }
@@ -222,7 +222,7 @@ void ParsaWorker::initCost(const GraphPtr& row_major_blk, const SArray<Key>& glo
         cost[i] += !assigned_V.count(global_key[row_idx[j]]);
       }
     }
-    cost_[k].init(cost, conf_.cost_cache_limit());
+    cost_[k].init(cost, conf_.parsa().cost_cache_limit());
   }
 }
 
@@ -252,4 +252,5 @@ void ParsaWorker::updateCostAndNeighborSet(
   }
 }
 
+} // namespace GP
 } // namespace PS

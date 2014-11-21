@@ -1,7 +1,7 @@
 #include "system/app.h"
 #include "linear_method/linear_method.h"
 #include "neural_network/sgd_solver.h"
-#include "graph_partition/parsa.h"
+#include "graph_partition/graph_partition.h"
 namespace PS {
 
 DEFINE_bool(test_fault_tol, false, "");
@@ -13,8 +13,8 @@ AppPtr App::create(const AppConfig& conf) {
     CHECK(ptr);
   } else if (conf.has_neural_network()) {
     ptr = AppPtr(new NN::SGDSolver());
-  } else if (conf.has_parsa()) {
-    ptr = AppPtr(new Parsa());
+  } else if (conf.has_graph_partition()) {
+    ptr = GP::GraphPartition::create(conf.graph_partition());
   } else {
     CHECK(false) << "unknown app: " << conf.DebugString();
   }
