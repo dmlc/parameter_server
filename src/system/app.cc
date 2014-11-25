@@ -29,13 +29,15 @@ AppPtr App::create(const AppConfig& conf) {
   return ptr;
 }
 
+
 void App::stopAll() {
   // send terminate signal to all others
   Task terminate;
   terminate.set_type(Task::TERMINATE);
   auto pool = taskpool(kLiveGroup);
   if (!pool) {
-    // hack... i need to send the terminal signal to myself
+    // so it's a single machine version. i need to send the terminal signal to
+    // myself
     std::vector<Node> nodes(1, sys_.myNode());
     exec_.init(nodes);
     pool = taskpool(kLiveGroup);

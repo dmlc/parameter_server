@@ -4,15 +4,6 @@ if [ $# -lt 3 ]; then
     exit -1;
 fi
 dir=`dirname "$0"`
-
-killall -q ps
-
-#!/bin/bash
-if [ $# -lt 3 ]; then
-    echo "usage: ./local.sh num_servers num_workers app_conf [args]"
-    exit -1;
-fi
-dir=`dirname "$0"`
 cd ${dir}
 
 killall -q ps

@@ -5,7 +5,7 @@ namespace LM {
 
 void FTRLScheduler::run() {
   // start the system
-  Scheduler::startSystem();
+  startSystem();
 
   // the thread collects progress from workers and servers
   monitor_thr_ = unique_ptr<std::thread>(new std::thread([this]() {

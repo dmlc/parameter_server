@@ -4,10 +4,12 @@
 #include "system/postoffice.h"
 #include "system/executor.h"
 namespace PS {
+class Postmaster;
 
 // An object shared across multiple nodes.
 class Customer {
  public:
+  friend class Postmaster;
   Customer() : sys_(Postoffice::instance()), exec_(*this) {
     exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
   }

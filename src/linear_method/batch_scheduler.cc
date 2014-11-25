@@ -18,7 +18,7 @@ void BatchScheduler::init() {
 
 void BatchScheduler::run() {
   // start the system
-  Scheduler::startSystem();
+  startSystem();
 
   // load data
   auto active_nodes = taskpool(kActiveGroup);

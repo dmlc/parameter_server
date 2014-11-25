@@ -10,6 +10,7 @@ DEFINE_bool(key_cache, true, "enable caching keys during communication");
 DEFINE_bool(message_compression, true, "");
 
 int RNode::submit(const MessagePtr& msg) {
+  CHECK_NOTNULL(this);
   CHECK(msg);
   CHECK(msg->task.has_type());
   auto& task = msg->task;
