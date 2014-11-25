@@ -265,6 +265,20 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 data_buff_size_in_mb() const;
   inline void set_data_buff_size_in_mb(::google::protobuf::int32 value);
 
+  // optional bool randomly_partition_U = 10 [default = false];
+  inline bool has_randomly_partition_u() const;
+  inline void clear_randomly_partition_u();
+  static const int kRandomlyPartitionUFieldNumber = 10;
+  inline bool randomly_partition_u() const;
+  inline void set_randomly_partition_u(bool value);
+
+  // optional bool randomly_partition_V = 11 [default = false];
+  inline bool has_randomly_partition_v() const;
+  inline void clear_randomly_partition_v();
+  static const int kRandomlyPartitionVFieldNumber = 11;
+  inline bool randomly_partition_v() const;
+  inline void set_randomly_partition_v(bool value);
+
   // @@protoc_insertion_point(class_scope:PS.GP.ParsaConfig)
  private:
   inline void set_has_block_size();
@@ -279,6 +293,10 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline void clear_has_cost_cache_limit();
   inline void set_has_data_buff_size_in_mb();
   inline void clear_has_data_buff_size_in_mb();
+  inline void set_has_randomly_partition_u();
+  inline void clear_has_randomly_partition_u();
+  inline void set_has_randomly_partition_v();
+  inline void clear_has_randomly_partition_v();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -288,9 +306,11 @@ class ParsaConfig : public ::google::protobuf::Message {
   float bloomfilter_m_ratio_;
   ::google::protobuf::int32 cost_cache_limit_;
   ::google::protobuf::int32 data_buff_size_in_mb_;
+  bool randomly_partition_u_;
+  bool randomly_partition_v_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
   friend void protobuf_AssignDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
@@ -660,6 +680,50 @@ inline ::google::protobuf::int32 ParsaConfig::data_buff_size_in_mb() const {
 inline void ParsaConfig::set_data_buff_size_in_mb(::google::protobuf::int32 value) {
   set_has_data_buff_size_in_mb();
   data_buff_size_in_mb_ = value;
+}
+
+// optional bool randomly_partition_U = 10 [default = false];
+inline bool ParsaConfig::has_randomly_partition_u() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ParsaConfig::set_has_randomly_partition_u() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ParsaConfig::clear_has_randomly_partition_u() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ParsaConfig::clear_randomly_partition_u() {
+  randomly_partition_u_ = false;
+  clear_has_randomly_partition_u();
+}
+inline bool ParsaConfig::randomly_partition_u() const {
+  return randomly_partition_u_;
+}
+inline void ParsaConfig::set_randomly_partition_u(bool value) {
+  set_has_randomly_partition_u();
+  randomly_partition_u_ = value;
+}
+
+// optional bool randomly_partition_V = 11 [default = false];
+inline bool ParsaConfig::has_randomly_partition_v() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void ParsaConfig::set_has_randomly_partition_v() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void ParsaConfig::clear_has_randomly_partition_v() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void ParsaConfig::clear_randomly_partition_v() {
+  randomly_partition_v_ = false;
+  clear_has_randomly_partition_v();
+}
+inline bool ParsaConfig::randomly_partition_v() const {
+  return randomly_partition_v_;
+}
+inline void ParsaConfig::set_randomly_partition_v(bool value) {
+  set_has_randomly_partition_v();
+  randomly_partition_v_ = value;
 }
 
 // -------------------------------------------------------------------

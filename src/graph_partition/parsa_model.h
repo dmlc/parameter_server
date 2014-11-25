@@ -5,21 +5,32 @@ namespace GP {
 
 class ParsaModel : public KVMap<Key, uint64> {
  public:
-  void partitionV(int num_partitions) {
+  void partitionV(int num_partitions, bool random_partition) {
     std::vector<int> cost(num_partitions);
+    srand(time(NULL));
     for (const auto& e : data_) {
       if (!e.second) continue;
-      int max_cost = 0;
-      int best_k = -1;
-      for (int k = 0; k < num_partitions; ++k) {
-        if (e.second & (1 << k)) {
-          int c = ++ cost[k];
-          if (c > max_cost) { max_cost = c; best_k = k; }
+      if (random_partition) {
+        int best_k = rand() % num_partitions;
+        for (int k = 0; k < num_partitions; ++k) {
+          if ((e.second & (1 << k)) && k != best_k) {
+            ++ cost[k];
+          }
         }
+      } else {
+        // greedy
+        int max_cost = 0;
+        int best_k = -1;
+        for (int k = 0; k < num_partitions; ++k) {
+          if (e.second & (1 << k)) {
+            int c = ++ cost[k];
+            if (c > max_cost) { max_cost = c; best_k = k; }
+          }
+        }
+        CHECK_GE(best_k, 0);
+        // partition_V_[e.first] = best_k;
+        -- cost[best_k];
       }
-      CHECK_GE(best_k, 0);
-      // partition_V_[e.first] = best_k;
-      -- cost[best_k];
     }
 
     int v = 0;

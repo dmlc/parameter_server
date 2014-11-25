@@ -5,9 +5,11 @@ namespace PS {
 namespace GP {
 
 void ParsaWorker::init() {
+  GraphPartition::init();
   conf_.mutable_input_graph()->set_ignore_feature_group(true);
   num_partitions_ = conf_.parsa().num_partitions();
   neighbor_set_.resize(num_partitions_);
+  random_partition_ = conf_.parsa().randomly_partition_u();
   sync_nbset_ = KVVectorPtr<Key, uint64>(new KVVector<Key, uint64>());
   REGISTER_CUSTOMER(app_cf_.parameter_name(0), sync_nbset_);
 }
@@ -75,11 +77,11 @@ void ParsaWorker::partitionU() {
   // partition U
   BlockData blk;
   SArray<int> map_U;
-  int i = 0;
+  // int i = 0;
   while (reader.pop(&blk)) {
     partitionU(blk, &map_U);
     writer_1.push(std::make_pair(blk.examples, map_U));
-    LL << i ++;
+    // LL << i ++;
   }
   writer_1.setFinished();
   writer_1.waitConsumer();
@@ -129,13 +131,19 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   assigned_U_.resize(n);
   initCost(blk.row_major, key);
 
+  std::vector<int> rnd_idx;
+  if (random_partition_) {
+    rnd_idx.resize(n);
+    for (int i = 0; i < n; ++i) rnd_idx[i] = i;
+    srand(time(NULL));
+    random_shuffle(rnd_idx.begin(), rnd_idx.end());
+  }
+
   // partitioning
   for (int i = 0; i < n; ++i) {
-    // TODO sync if necessary
-
     // assing U_i to partition k
     int k = i % num_partitions_;
-    int Ui = cost_[k].minIdx();
+    int Ui = random_partition_ ? rnd_idx[i] : cost_[k].minIdx();
     assigned_U_.set(Ui);
     (*map_U)[Ui] = k;
 
@@ -211,12 +219,13 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
 
 // init the cost of assigning U_i to partition k
 void ParsaWorker::initCost(const GraphPtr& row_major_blk, const SArray<Key>& global_key) {
+  cost_.resize(num_partitions_);
+  if (random_partition_) return;
   int n = row_major_blk->rows();
   size_t* row_os = row_major_blk->offset().begin();
   uint32* row_idx = row_major_blk->index().begin();
-  std::vector<int> cost(n);
-  cost_.resize(num_partitions_);
   for (int k = 0; k < num_partitions_; ++k) {
+    std::vector<int> cost(n);
     const auto& assigned_V = neighbor_set_[k];
     for (int i = 0; i < n; ++ i) {
       for (size_t j = row_os[i]; j < row_os[i+1]; ++j) {
@@ -231,7 +240,9 @@ void ParsaWorker::initCost(const GraphPtr& row_major_blk, const SArray<Key>& glo
 void ParsaWorker::updateCostAndNeighborSet(
     const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
     const SArray<Key>& global_key, int Ui, int partition) {
-  for (int s = 0; s < num_partitions_; ++s) cost_[s].remove(Ui);
+  if (!random_partition_) {
+    for (int s = 0; s < num_partitions_; ++s) cost_[s].remove(Ui);
+  }
 
   size_t* row_os = row_major_blk->offset().begin();
   size_t* col_os = col_major_blk->offset().begin();
@@ -249,7 +260,7 @@ void ParsaWorker::updateCostAndNeighborSet(
     for (size_t s = col_os[Vj]; s < col_os[Vj+1]; ++s) {
       int Uk = col_idx[s];
       if (assigned_U_[Uk]) continue;
-      cost.decrAndSort(Uk);
+      if (!random_partition_) cost.decrAndSort(Uk);
     }
   }
 }

@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O0 -ggdb
-# OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
+OPT = -O3 -ggdb
 
 BIN = ../bin
 LIB = ../lib
@@ -55,7 +55,7 @@ TESTS = \
 	ftrl_test \
 	prepare_test_data \
 	bloom_filter_test \
-	test
+	# test
 	# sparse_matrix_perf \
 	auc_test \
 	io_test \

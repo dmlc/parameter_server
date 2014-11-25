@@ -66,6 +66,7 @@ class ParsaWorker : public GraphPartition {
   KVVectorPtr<Key, uint64> sync_nbset_;
 
   int num_partitions_;
+  bool random_partition_;
 };
 
 } // namespace GP

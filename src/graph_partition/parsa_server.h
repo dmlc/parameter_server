@@ -14,7 +14,8 @@ class ParsaServer : public GraphPartition {
 
   virtual void process(const MessagePtr& msg) {
     if (get(msg).cmd() == Call::PARTITION_V) {
-      model_->partitionV(conf_.parsa().num_partitions());
+      model_->partitionV(conf_.parsa().num_partitions(),
+                         conf_.parsa().randomly_partition_v());
     }
   }
  private:
