@@ -29,9 +29,17 @@ void ParsaScheduler::run() {
   // start the system
   sch.createApp(nodes, apps);
 
-  Task partitionU = newTask(Call::PARTITION_U);
-  taskpool(kActiveGroup)->submitAndWait(partitionU);
-  LL << "U is partitioned";
+  auto parsa = conf_.parsa();
+  if (parsa.has_stage0_blocks()) {
+    Task partitionU = newTask(Call::PARTITION_U_STAGE_0);
+    CHECK(taskpool("W0"));
+    taskpool("W0")->submitAndWait(partitionU);
+  }
+
+  if (parsa.has_stage1_block_size()) {
+    Task partitionU = newTask(Call::PARTITION_U_STAGE_1);
+    taskpool(kActiveGroup)->submitAndWait(partitionU);
+  }
 
   Task partitionV = newTask(Call::PARTITION_V);
   taskpool(kActiveGroup)->submitAndWait(partitionV);

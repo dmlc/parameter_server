@@ -52,6 +52,10 @@ template<typename T> struct OpPlus {
   void operator()(const T* src, T* dst) const { *dst += *src; }
 };
 
+template<typename T> struct OpOr {
+  void operator()(const T* src, T* dst) const { *dst |= *src; }
+};
+
 // assume both src_key and dst_key are ordered, apply
 //  op(src_val[i], dst_val[j]) if src_key[i] = dst_key[j]
 template <typename K, typename V, class Op>
@@ -79,6 +83,24 @@ size_t parallelOrderedMatch(
       dst_val->begin() + range.begin(), op, grainsize, &n);
   return n;
 }
+
+template <typename K, typename V, class Op>
+void parallelUnion(
+    const SArray<K>& key1,
+    const SArray<V>& val1,
+    const SArray<K>& key2,
+    const SArray<V>& val2,
+    Op op, int num_threads,
+    SArray<K>* joined_key,
+    SArray<V>* joined_val) {
+  CHECK_NOTNULL(joined_key);
+  CHECK_NOTNULL(joined_val);
+  *joined_key = key1.setUnion(key2);
+  joined_val->resize(0);
+  parallelOrderedMatch(key1, val1, *joined_key, op, num_threads, joined_val);
+  parallelOrderedMatch(key2, val2, *joined_key, op, num_threads, joined_val);
+}
+
 
 } // namespace PS
 
