@@ -79,7 +79,7 @@ class ParsaWorker : public GraphPartition {
   KVVectorPtr<Key, uint64> sync_nbset_;
   bool no_sync_;
 
-
+  std::vector<int> push_time_;
   int num_partitions_;
   bool random_partition_;
 };

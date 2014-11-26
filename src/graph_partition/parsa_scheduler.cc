@@ -43,7 +43,6 @@ void ParsaScheduler::run() {
 
   Task partitionV = newTask(Call::PARTITION_V);
   taskpool(kActiveGroup)->submitAndWait(partitionV);
-  LL << "V is partitioned";
 }
 
 } // namespace PS

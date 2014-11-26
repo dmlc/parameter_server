@@ -9,8 +9,8 @@ message Config {
 
 message ParsaConfig {
   optional int32 num_partitions = 1 [default = 8];
-  optional int32 bloomfilter_k = 2 [default = 2];
-  optional float bloomfilter_m_ratio = 3 [default = 4];
+  // optional int32 bloomfilter_k = 2 [default = 2];
+  // optional float bloomfilter_m_ratio = 3 [default = 4];
 
   optional int32 stage0_block_size = 4 [default = 100000];
   optional int32 stage0_blocks = 5 [default = 20];
@@ -21,6 +21,8 @@ message ParsaConfig {
 
   optional int32 max_cached_cost_value = 9 [default = 100];
   optional int32 data_buff_size_in_MB = 10 [default = 1000];
+
+  optional int32 clear_nbset_per_num_blocks = 13 [default = 1];
 
   // optional int32 block_size = 4 [default = 100000];
   // optional int32 V_size = 6 [default = 1000000];

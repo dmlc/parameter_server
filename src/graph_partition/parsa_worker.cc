@@ -65,7 +65,7 @@ void ParsaWorker::stage0() {
   delta_nbset_ = false;
 
   // warm up
-  if (parsa.stage0_warm_up_blocks()) {
+  if (parsa.has_stage0_warm_up_blocks() && parsa.stage0_warm_up_blocks()) {
     StreamReader<Empty> stream_0(conf_.input_graph());
     ProducerConsumer<BlockData> reader_0(parsa.data_buff_size_in_mb());
     int start_id_0 = 0;
@@ -84,10 +84,11 @@ void ParsaWorker::stage0() {
   }
 
   // real work
-  if (parsa.stage0_blocks()) {
+  if (parsa.has_stage0_blocks() && parsa.stage0_blocks()) {
     StreamReader<Empty> stream_1(conf_.input_graph());
     ProducerConsumer<BlockData> reader_1(parsa.data_buff_size_in_mb());
     int start_id_1 = parsa.stage0_warm_up_blocks();
+    int start_id_1_const = start_id_1;
     int end_id_1 = start_id_1 + parsa.stage0_blocks();
     readGraph(stream_1, reader_1, start_id_1, end_id_1, parsa.stage0_block_size(), false);
 
@@ -96,11 +97,13 @@ void ParsaWorker::stage0() {
     SArray<uint64> nbset_value;
     while (reader_1.pop(&blk)) {
       auto& value = sync_nbset_->value(blk.blk_id);
-      if (blk.blk_id == parsa.stage0_blocks()) {
+      if (blk.blk_id == start_id_1_const) {
+        // the first block, use the nbset of the last the block
         parallelOrderedMatch(
             added_nbset_key_, added_nbset_value_, sync_nbset_->key(blk.blk_id),
             OpOr<uint64>(), FLAGS_num_threads, &value);
       } else {
+        // do not throw away nbset now
         SArray<Key> tmp_key;
         SArray<uint64> tmp_value;
         parallelUnion(
@@ -126,15 +129,59 @@ void ParsaWorker::stage0() {
     push->wait = true;
     sync_nbset_->set(push)->set_op(Operator::OR);
     sync_nbset_->push(push);
-    LL << "stage 0: partitioned " << start_id_1 - parsa.stage0_warm_up_blocks() << " blocks";
+    LL << "stage 0: partitioned " << start_id_1 - start_id_1_const << " blocks";
   }
 
 }
 
 
 void ParsaWorker::stage1() {
+  auto parsa = conf_.parsa();
+  no_sync_ = false;
+  delta_nbset_ = false;
 
+  int start_id_0_const = parsa.stage0_warm_up_blocks() + parsa.stage0_blocks();
+  // warm up
+  if (parsa.has_stage1_warm_up_blocks() && parsa.stage1_warm_up_blocks()) {
+    StreamReader<Empty> stream_0(conf_.input_graph());
+    ProducerConsumer<BlockData> reader_0(parsa.data_buff_size_in_mb());
+    int start_id_0 = start_id_0_const;
+    int end_id_0 = start_id_0 + parsa.stage1_warm_up_blocks();
+    readGraph(stream_0, reader_0, start_id_0, end_id_0, parsa.stage1_block_size(), false);
+
+    BlockData blk;
+    while (reader_0.pop(&blk)) {
+      partitionU(blk, nullptr);
+    }
+
+    for (int t : push_time_) sync_nbset_->waitOutMsg(kServerGroup, t);
+    push_time_.clear();
+
+    LL << "stage 1: initialized by " << start_id_0 - start_id_0_const << " blocks";
+  }
+
+  // real work
+  StreamReader<Empty> stream_1(conf_.input_graph());
+  ProducerConsumer<BlockData> reader_1(parsa.data_buff_size_in_mb());
+  int start_id_1 = parsa.stage1_warm_up_blocks() + start_id_0_const;
+  int start_id_1_const = start_id_1;
+  int end_id_1 = start_id_1 + 1000000000;
+  readGraph(stream_1, reader_1, start_id_1, end_id_1, parsa.stage1_block_size(), false);
+
+  BlockData blk;
+  SArray<Key> nbset_key;
+  SArray<uint64> nbset_value;
+  while (reader_1.pop(&blk)) {
+    if (blk.blk_id != start_id_1_const) {
+      delta_nbset_ = true;
+    }
+    partitionU(blk, nullptr);
+  }
+  for (int t : push_time_) sync_nbset_->waitOutMsg(kServerGroup, t);
+  push_time_.clear();
+  LL << "stage 1: partitioned " << start_id_1 - start_id_1_const << " blocks";
 }
+
 // void ParsaWorker::partitionU() {
 //   int blk_id = 0;
 
@@ -260,7 +307,7 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   }
   added_nbset_key_.pushBack(nbset.back().first);
   added_nbset_value_.pushBack(s);
-  // LL << added_nbset_key_.size();
+  LL << added_nbset_key_.size();
 
   // send local updates
   if (!no_sync_) {
@@ -270,8 +317,7 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
     push->addValue(added_nbset_value_);
     push->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     sync_nbset_->set(push)->set_op(Operator::OR);
-    sync_nbset_->push(push);
-    // TODO store push time
+    push_time_.push_back(sync_nbset_->push(push));
   }
 }
 

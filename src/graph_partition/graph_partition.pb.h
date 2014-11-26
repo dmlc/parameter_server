@@ -231,20 +231,6 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 num_partitions() const;
   inline void set_num_partitions(::google::protobuf::int32 value);
 
-  // optional int32 bloomfilter_k = 2 [default = 2];
-  inline bool has_bloomfilter_k() const;
-  inline void clear_bloomfilter_k();
-  static const int kBloomfilterKFieldNumber = 2;
-  inline ::google::protobuf::int32 bloomfilter_k() const;
-  inline void set_bloomfilter_k(::google::protobuf::int32 value);
-
-  // optional float bloomfilter_m_ratio = 3 [default = 4];
-  inline bool has_bloomfilter_m_ratio() const;
-  inline void clear_bloomfilter_m_ratio();
-  static const int kBloomfilterMRatioFieldNumber = 3;
-  inline float bloomfilter_m_ratio() const;
-  inline void set_bloomfilter_m_ratio(float value);
-
   // optional int32 stage0_block_size = 4 [default = 100000];
   inline bool has_stage0_block_size() const;
   inline void clear_stage0_block_size();
@@ -294,6 +280,13 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 data_buff_size_in_mb() const;
   inline void set_data_buff_size_in_mb(::google::protobuf::int32 value);
 
+  // optional int32 clear_nbset_per_num_blocks = 13 [default = 1];
+  inline bool has_clear_nbset_per_num_blocks() const;
+  inline void clear_clear_nbset_per_num_blocks();
+  static const int kClearNbsetPerNumBlocksFieldNumber = 13;
+  inline ::google::protobuf::int32 clear_nbset_per_num_blocks() const;
+  inline void set_clear_nbset_per_num_blocks(::google::protobuf::int32 value);
+
   // optional bool randomly_partition_U = 11 [default = false];
   inline bool has_randomly_partition_u() const;
   inline void clear_randomly_partition_u();
@@ -312,10 +305,6 @@ class ParsaConfig : public ::google::protobuf::Message {
  private:
   inline void set_has_num_partitions();
   inline void clear_has_num_partitions();
-  inline void set_has_bloomfilter_k();
-  inline void clear_has_bloomfilter_k();
-  inline void set_has_bloomfilter_m_ratio();
-  inline void clear_has_bloomfilter_m_ratio();
   inline void set_has_stage0_block_size();
   inline void clear_has_stage0_block_size();
   inline void set_has_stage0_blocks();
@@ -330,6 +319,8 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline void clear_has_max_cached_cost_value();
   inline void set_has_data_buff_size_in_mb();
   inline void clear_has_data_buff_size_in_mb();
+  inline void set_has_clear_nbset_per_num_blocks();
+  inline void clear_has_clear_nbset_per_num_blocks();
   inline void set_has_randomly_partition_u();
   inline void clear_has_randomly_partition_u();
   inline void set_has_randomly_partition_v();
@@ -338,8 +329,6 @@ class ParsaConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::int32 num_partitions_;
-  ::google::protobuf::int32 bloomfilter_k_;
-  float bloomfilter_m_ratio_;
   ::google::protobuf::int32 stage0_block_size_;
   ::google::protobuf::int32 stage0_blocks_;
   ::google::protobuf::int32 stage0_warm_up_blocks_;
@@ -347,11 +336,12 @@ class ParsaConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 stage1_warm_up_blocks_;
   ::google::protobuf::int32 max_cached_cost_value_;
   ::google::protobuf::int32 data_buff_size_in_mb_;
+  ::google::protobuf::int32 clear_nbset_per_num_blocks_;
   bool randomly_partition_u_;
   bool randomly_partition_v_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
   friend void protobuf_AssignDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
@@ -614,59 +604,15 @@ inline void ParsaConfig::set_num_partitions(::google::protobuf::int32 value) {
   num_partitions_ = value;
 }
 
-// optional int32 bloomfilter_k = 2 [default = 2];
-inline bool ParsaConfig::has_bloomfilter_k() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ParsaConfig::set_has_bloomfilter_k() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ParsaConfig::clear_has_bloomfilter_k() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ParsaConfig::clear_bloomfilter_k() {
-  bloomfilter_k_ = 2;
-  clear_has_bloomfilter_k();
-}
-inline ::google::protobuf::int32 ParsaConfig::bloomfilter_k() const {
-  return bloomfilter_k_;
-}
-inline void ParsaConfig::set_bloomfilter_k(::google::protobuf::int32 value) {
-  set_has_bloomfilter_k();
-  bloomfilter_k_ = value;
-}
-
-// optional float bloomfilter_m_ratio = 3 [default = 4];
-inline bool ParsaConfig::has_bloomfilter_m_ratio() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ParsaConfig::set_has_bloomfilter_m_ratio() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ParsaConfig::clear_has_bloomfilter_m_ratio() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ParsaConfig::clear_bloomfilter_m_ratio() {
-  bloomfilter_m_ratio_ = 4;
-  clear_has_bloomfilter_m_ratio();
-}
-inline float ParsaConfig::bloomfilter_m_ratio() const {
-  return bloomfilter_m_ratio_;
-}
-inline void ParsaConfig::set_bloomfilter_m_ratio(float value) {
-  set_has_bloomfilter_m_ratio();
-  bloomfilter_m_ratio_ = value;
-}
-
 // optional int32 stage0_block_size = 4 [default = 100000];
 inline bool ParsaConfig::has_stage0_block_size() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void ParsaConfig::set_has_stage0_block_size() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void ParsaConfig::clear_has_stage0_block_size() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void ParsaConfig::clear_stage0_block_size() {
   stage0_block_size_ = 100000;
@@ -682,13 +628,13 @@ inline void ParsaConfig::set_stage0_block_size(::google::protobuf::int32 value) 
 
 // optional int32 stage0_blocks = 5 [default = 20];
 inline bool ParsaConfig::has_stage0_blocks() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void ParsaConfig::set_has_stage0_blocks() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void ParsaConfig::clear_has_stage0_blocks() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void ParsaConfig::clear_stage0_blocks() {
   stage0_blocks_ = 20;
@@ -704,13 +650,13 @@ inline void ParsaConfig::set_stage0_blocks(::google::protobuf::int32 value) {
 
 // optional int32 stage0_warm_up_blocks = 6 [default = 10];
 inline bool ParsaConfig::has_stage0_warm_up_blocks() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void ParsaConfig::set_has_stage0_warm_up_blocks() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void ParsaConfig::clear_has_stage0_warm_up_blocks() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void ParsaConfig::clear_stage0_warm_up_blocks() {
   stage0_warm_up_blocks_ = 10;
@@ -726,13 +672,13 @@ inline void ParsaConfig::set_stage0_warm_up_blocks(::google::protobuf::int32 val
 
 // optional int32 stage1_block_size = 7 [default = 100000];
 inline bool ParsaConfig::has_stage1_block_size() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void ParsaConfig::set_has_stage1_block_size() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void ParsaConfig::clear_has_stage1_block_size() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void ParsaConfig::clear_stage1_block_size() {
   stage1_block_size_ = 100000;
@@ -748,13 +694,13 @@ inline void ParsaConfig::set_stage1_block_size(::google::protobuf::int32 value) 
 
 // optional int32 stage1_warm_up_blocks = 8 [default = 10];
 inline bool ParsaConfig::has_stage1_warm_up_blocks() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void ParsaConfig::set_has_stage1_warm_up_blocks() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void ParsaConfig::clear_has_stage1_warm_up_blocks() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void ParsaConfig::clear_stage1_warm_up_blocks() {
   stage1_warm_up_blocks_ = 10;
@@ -770,13 +716,13 @@ inline void ParsaConfig::set_stage1_warm_up_blocks(::google::protobuf::int32 val
 
 // optional int32 max_cached_cost_value = 9 [default = 100];
 inline bool ParsaConfig::has_max_cached_cost_value() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void ParsaConfig::set_has_max_cached_cost_value() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void ParsaConfig::clear_has_max_cached_cost_value() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void ParsaConfig::clear_max_cached_cost_value() {
   max_cached_cost_value_ = 100;
@@ -792,13 +738,13 @@ inline void ParsaConfig::set_max_cached_cost_value(::google::protobuf::int32 val
 
 // optional int32 data_buff_size_in_MB = 10 [default = 1000];
 inline bool ParsaConfig::has_data_buff_size_in_mb() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void ParsaConfig::set_has_data_buff_size_in_mb() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void ParsaConfig::clear_has_data_buff_size_in_mb() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void ParsaConfig::clear_data_buff_size_in_mb() {
   data_buff_size_in_mb_ = 1000;
@@ -812,15 +758,37 @@ inline void ParsaConfig::set_data_buff_size_in_mb(::google::protobuf::int32 valu
   data_buff_size_in_mb_ = value;
 }
 
+// optional int32 clear_nbset_per_num_blocks = 13 [default = 1];
+inline bool ParsaConfig::has_clear_nbset_per_num_blocks() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void ParsaConfig::set_has_clear_nbset_per_num_blocks() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void ParsaConfig::clear_has_clear_nbset_per_num_blocks() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void ParsaConfig::clear_clear_nbset_per_num_blocks() {
+  clear_nbset_per_num_blocks_ = 1;
+  clear_has_clear_nbset_per_num_blocks();
+}
+inline ::google::protobuf::int32 ParsaConfig::clear_nbset_per_num_blocks() const {
+  return clear_nbset_per_num_blocks_;
+}
+inline void ParsaConfig::set_clear_nbset_per_num_blocks(::google::protobuf::int32 value) {
+  set_has_clear_nbset_per_num_blocks();
+  clear_nbset_per_num_blocks_ = value;
+}
+
 // optional bool randomly_partition_U = 11 [default = false];
 inline bool ParsaConfig::has_randomly_partition_u() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void ParsaConfig::set_has_randomly_partition_u() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void ParsaConfig::clear_has_randomly_partition_u() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void ParsaConfig::clear_randomly_partition_u() {
   randomly_partition_u_ = false;
@@ -836,13 +804,13 @@ inline void ParsaConfig::set_randomly_partition_u(bool value) {
 
 // optional bool randomly_partition_V = 12 [default = false];
 inline bool ParsaConfig::has_randomly_partition_v() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void ParsaConfig::set_has_randomly_partition_v() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void ParsaConfig::clear_has_randomly_partition_v() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void ParsaConfig::clear_randomly_partition_v() {
   randomly_partition_v_ = false;

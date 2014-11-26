@@ -10,6 +10,7 @@ class ParsaServer : public GraphPartition {
     GraphPartition::init();
     model_ = std::shared_ptr<ParsaModel>(new ParsaModel());
     REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
+    model_->init(conf_.parsa());
   }
 
   virtual void process(const MessagePtr& msg) {

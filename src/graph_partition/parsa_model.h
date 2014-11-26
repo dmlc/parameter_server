@@ -5,6 +5,26 @@ namespace GP {
 
 class ParsaModel : public KVMap<Key, uint64> {
  public:
+  void init(const ParsaConfig& conf) { conf_ = conf; }
+
+  virtual void setValue(const MessagePtr& msg) {
+    // clear the neigbhor set in the initialization stage
+    ++ count_;
+    int stage1_real_work = conf_.stage1_warm_up_blocks() +
+                           conf_.stage0_warm_up_blocks() +
+                           conf_.stage0_blocks();
+    int chn = msg->task.key_channel();
+    if (chn == stage1_real_work && !enter_real_stage1_) {
+      enter_real_stage1_ = true;
+      // data_.clear();
+    } else if (chn < stage1_real_work &&
+               count_ % conf_.clear_nbset_per_num_blocks() == 0) {
+      // data_.clear();
+    }
+
+    KVMap<Key, uint64>::setValue(msg);
+  }
+
   void partitionV(int num_partitions, bool random_partition) {
     std::vector<int> cost(num_partitions);
     srand(time(NULL));
@@ -39,7 +59,9 @@ class ParsaModel : public KVMap<Key, uint64> {
   }
 
  private:
-  // std::vector<int16> partition_V_;
+  bool enter_real_stage1_ = false;
+  int count_ = 0;
+  ParsaConfig conf_;
   std::unordered_map<Key, uint8> partition_V_;
 };
 
