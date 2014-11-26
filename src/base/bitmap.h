@@ -17,7 +17,8 @@ class Bitmap {
   ~Bitmap() { clear(); }
 
   void resize(uint32 size, bool value = false) {
-    CHECK_EQ(size_, 0) << "TODO didn't support resize non-empty bitmap...";
+    CHECK_EQ(size_, 0)
+        << "TODO didn't support resize non-empty bitmap... clear() first ";
     size_ = size;
     map_size_ = (size >> kBitmapShift) + 1;
     map_ = new uint16[map_size_];
@@ -87,8 +88,8 @@ class Bitmap {
   uint32 map_size_ = 0;
   uint32 size_ = 0;
 
-  const uint32 kBitmapShift = 4;
-  const uint32 kBitmapMask = 0x0F;
+  static const uint32 kBitmapShift = 4;
+  static const uint32 kBitmapMask = 0x0F;
 
   unsigned char LUT_[65536];
   bool init_nnz_ = false;

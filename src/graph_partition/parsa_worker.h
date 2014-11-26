@@ -49,22 +49,22 @@ class ParsaWorker : public GraphPartition {
 
   void partitionU();
   void partitionU(const BlockData& blk, SArray<int>* map_U);
-  void initCost(const GraphPtr& row_major_blk, const SArray<Key>& global_key);
+  void initCost(const GraphPtr& row_major_blk);
   void updateCostAndNeighborSet(
     const GraphPtr& row_major_blk, const GraphPtr& col_major_blk,
     const SArray<Key>& global_key, int Ui, int partition);
-  void initNeighborSet(
-      const SArray<Key>& global_key, const SArray<uint64>& nbset);
+  void initNeighborSet(const SArray<uint64>& nbset);
   void sendUpdatedNeighborSet(int blk);
 
  private:
   typedef uint8 P;  //
 
-#ifdef EXACT_NBSET
-  std::vector<std::unordered_set<Key>> neighbor_set_;
-#else
-  std::vector<BlockBloomFilter<Key>> neighbor_set_;
-#endif
+// #ifdef EXACT_NBSET
+//   std::vector<std::unordered_set<Key>> neighbor_set_;
+// #else
+//   std::vector<BlockBloomFilter<Key>> neighbor_set_;
+// #endif
+  std::vector<Bitmap> neighbor_set_;
 
   typedef std::pair<Key, P> KP;
   SArray<KP> added_neighbor_set_;

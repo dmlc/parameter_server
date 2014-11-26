@@ -185,14 +185,13 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
     sync_nbset_->waitOutMsg(kServerGroup, blk.pull_time);
   }
   int id = blk.blk_id;
-  auto key = sync_nbset_->key(id);
-  initNeighborSet(key, sync_nbset_->value(id));
+  initNeighborSet(sync_nbset_->value(id));
 
   int n = blk.row_major->rows();
   if (map_U) map_U->resize(n);
   assigned_U_.clear();
   assigned_U_.resize(n);
-  initCost(blk.row_major, key);
+  initCost(blk.row_major);
 
   std::vector<int> rnd_idx;
   if (random_partition_) {
@@ -203,6 +202,7 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   }
 
   // partitioning
+  auto key = sync_nbset_->key(id);
   for (int i = 0; i < n; ++i) {
     // assing U_i to partition k
     int k = i % num_partitions_;
@@ -219,31 +219,21 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   sync_nbset_->clear(id);
 }
 
-void ParsaWorker::initNeighborSet(
-    const SArray<Key>& global_key, const SArray<uint64>& nbset) {
-  CHECK_EQ(global_key.size(), nbset.size());
-  int n = global_key.size();
-
-  added_neighbor_set_.resize(0);
+void ParsaWorker::initNeighborSet(const SArray<uint64>& nbset) {
+  int n = nbset.size();
   for (int i = 0; i < num_partitions_; ++i) {
-#ifdef EXACT_NBSET
     neighbor_set_[i].clear();
-#else
-    int k = conf_.parsa().bloomfilter_k();
-    int m = n * k * 1.44 * conf_.parsa().bloomfilter_m_ratio();
-    neighbor_set_[i].resize(m, k);
-#endif
+    neighbor_set_[i].resize(n, false);
   }
 
   for (int i = 0; i < n; ++i) {
     uint64 s = nbset[i];
     if (s == 0) continue;
     for (int k = 0; k < num_partitions_; ++k) {
-      if (s & (1 << k)) {
-        neighbor_set_[k].insert(global_key[i]);
-      }
+      if (s & (1 << k)) neighbor_set_[k].set(i);
     }
   }
+  added_neighbor_set_.resize(0);
 }
 
 void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
@@ -286,7 +276,7 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
 }
 
 // init the cost of assigning U_i to partition k
-void ParsaWorker::initCost(const GraphPtr& row_major_blk, const SArray<Key>& global_key) {
+void ParsaWorker::initCost(const GraphPtr& row_major_blk) {
   cost_.resize(num_partitions_);
   if (random_partition_) return;
   int n = row_major_blk->rows();
@@ -297,8 +287,7 @@ void ParsaWorker::initCost(const GraphPtr& row_major_blk, const SArray<Key>& glo
     const auto& assigned_V = neighbor_set_[k];
     for (int i = 0; i < n; ++ i) {
       for (size_t j = row_os[i]; j < row_os[i+1]; ++j) {
-       // cost[i] += !assigned_V[global_key[row_idx[j]]];
-        cost[i] += !assigned_V.count(global_key[row_idx[j]]);
+        cost[i] += !assigned_V.test(row_idx[j]);
       }
     }
     cost_[k].init(cost, conf_.parsa().max_cached_cost_value());
@@ -321,12 +310,12 @@ void ParsaWorker::updateCostAndNeighborSet(
   for (size_t i = row_os[Ui]; i < row_os[Ui+1]; ++i) {
     int Vj = row_idx[i];
     auto key = global_key[Vj];
-    bool assigned = assigned_V.count(key);
+    bool assigned = assigned_V.test(Vj);
     if (!(delta_nbset_ && assigned)) {
       added_neighbor_set_.pushBack(std::make_pair(key, (P)partition));
     }
     if (assigned) continue;
-    assigned_V.insert(key);
+    assigned_V.set(Vj);
     for (size_t s = col_os[Vj]; s < col_os[Vj+1]; ++s) {
       int Uk = col_idx[s];
       if (assigned_U_[Uk]) continue;

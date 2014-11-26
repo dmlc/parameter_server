@@ -231,14 +231,14 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 num_partitions() const;
   inline void set_num_partitions(::google::protobuf::int32 value);
 
-  // optional int32 bloomfilter_k = 2 [default = 4];
+  // optional int32 bloomfilter_k = 2 [default = 2];
   inline bool has_bloomfilter_k() const;
   inline void clear_bloomfilter_k();
   static const int kBloomfilterKFieldNumber = 2;
   inline ::google::protobuf::int32 bloomfilter_k() const;
   inline void set_bloomfilter_k(::google::protobuf::int32 value);
 
-  // optional float bloomfilter_m_ratio = 3 [default = 2];
+  // optional float bloomfilter_m_ratio = 3 [default = 4];
   inline bool has_bloomfilter_m_ratio() const;
   inline void clear_bloomfilter_m_ratio();
   static const int kBloomfilterMRatioFieldNumber = 3;
@@ -614,7 +614,7 @@ inline void ParsaConfig::set_num_partitions(::google::protobuf::int32 value) {
   num_partitions_ = value;
 }
 
-// optional int32 bloomfilter_k = 2 [default = 4];
+// optional int32 bloomfilter_k = 2 [default = 2];
 inline bool ParsaConfig::has_bloomfilter_k() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -625,7 +625,7 @@ inline void ParsaConfig::clear_has_bloomfilter_k() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void ParsaConfig::clear_bloomfilter_k() {
-  bloomfilter_k_ = 4;
+  bloomfilter_k_ = 2;
   clear_has_bloomfilter_k();
 }
 inline ::google::protobuf::int32 ParsaConfig::bloomfilter_k() const {
@@ -636,7 +636,7 @@ inline void ParsaConfig::set_bloomfilter_k(::google::protobuf::int32 value) {
   bloomfilter_k_ = value;
 }
 
-// optional float bloomfilter_m_ratio = 3 [default = 2];
+// optional float bloomfilter_m_ratio = 3 [default = 4];
 inline bool ParsaConfig::has_bloomfilter_m_ratio() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -647,7 +647,7 @@ inline void ParsaConfig::clear_has_bloomfilter_m_ratio() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void ParsaConfig::clear_bloomfilter_m_ratio() {
-  bloomfilter_m_ratio_ = 2;
+  bloomfilter_m_ratio_ = 4;
   clear_has_bloomfilter_m_ratio();
 }
 inline float ParsaConfig::bloomfilter_m_ratio() const {
