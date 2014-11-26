@@ -270,6 +270,7 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   }
   added_nbset_key_.pushBack(nbset.back().first);
   added_nbset_value_.pushBack(s);
+  // LL << added_nbset_key_.size();
 
   // send local updates
   if (!no_sync_) {

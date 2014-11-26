@@ -35,8 +35,9 @@ class BlockBloomFilter : public Sketch {
   bool count(K key) const { return query(key); }
   bool operator[] (K key) const { return query(key); }
   bool query(K key) const {
-    uint32 h = hash(key);
-    const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    // auto h = crc32(key);
+    auto h = hash(key);
+    auto delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
     char* data = data_ + (h % num_bin_) * bin_size_;
     for (int j = 0; j < k_; ++j) {
       uint32 bitpos = h % (bin_size_ * 8);
@@ -47,8 +48,9 @@ class BlockBloomFilter : public Sketch {
   }
 
   void insert(K key) {
-    uint32 h = hash(key);
-    const uint32 delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    // auto h = crc32(key);
+    auto h = hash(key);
+    auto delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
     char* data = data_ + (h % num_bin_) * bin_size_;
     for (int j = 0; j < k_; ++j) {
       uint32 bitpos = h % (bin_size_ * 8);

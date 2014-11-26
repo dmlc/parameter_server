@@ -9,8 +9,8 @@ message Config {
 
 message ParsaConfig {
   optional int32 num_partitions = 1 [default = 8];
-  optional int32 bloomfilter_k = 2 [default = 4];
-  optional float bloomfilter_m_ratio = 3 [default = 2];
+  optional int32 bloomfilter_k = 2 [default = 2];
+  optional float bloomfilter_m_ratio = 3 [default = 4];
 
   optional int32 stage0_block_size = 4 [default = 100000];
   optional int32 stage0_blocks = 5 [default = 20];

@@ -12,7 +12,7 @@
 namespace PS {
 namespace GP {
 
-#define EXACT_NBSET
+// #define EXACT_NBSET
 typedef float Empty;
 typedef SparseMatrix<uint32, Empty> Graph;
 typedef std::shared_ptr<Graph> GraphPtr;
