@@ -249,6 +249,7 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   }
 
   // partitioning
+
   auto key = sync_nbset_->key(id);
   for (int i = 0; i < n; ++i) {
     // assing U_i to partition k
@@ -307,7 +308,6 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   }
   added_nbset_key_.pushBack(nbset.back().first);
   added_nbset_value_.pushBack(s);
-  LL << added_nbset_key_.size();
 
   // send local updates
   if (!no_sync_) {
@@ -345,6 +345,7 @@ void ParsaWorker::updateCostAndNeighborSet(
     const SArray<Key>& global_key, int Ui, int partition) {
   if (!random_partition_) {
     for (int s = 0; s < num_partitions_; ++s) cost_[s].remove(Ui);
+    if (cost_[partition][Ui] == 0) return;
   }
 
   size_t* row_os = row_major_blk->offset().begin();
@@ -355,10 +356,9 @@ void ParsaWorker::updateCostAndNeighborSet(
   auto& cost = cost_[partition];
   for (size_t i = row_os[Ui]; i < row_os[Ui+1]; ++i) {
     int Vj = row_idx[i];
-    auto key = global_key[Vj];
     bool assigned = assigned_V.test(Vj);
     if (!(delta_nbset_ && assigned)) {
-      added_neighbor_set_.pushBack(std::make_pair(key, (P)partition));
+      added_neighbor_set_.pushBack(std::make_pair(global_key[Vj], (P)partition));
     }
     if (assigned) continue;
     assigned_V.set(Vj);

@@ -10,7 +10,11 @@ class DblinkArray {
   void init(const std::vector<int>& data, int cache_limit);
   void remove(int i);
   void decrAndSort(int i);
-  int minIdx() { return cached_pos_[0]; }
+  int operator[](int i) { return data_[i].value; }
+  int minIdx() {
+    // LL << data_[cached_pos_[0]].value;
+    return cached_pos_[0];
+  }
   // valid check, for debug purpose
   void check();
  private:
