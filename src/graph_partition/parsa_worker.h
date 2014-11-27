@@ -25,10 +25,13 @@ class ParsaWorker : public GraphPartition {
  public:
   virtual void init();
   virtual void process(const MessagePtr& msg) {
-    if (get(msg).cmd() == Call::PARTITION_U_STAGE_0) {
+    auto cmd = get(msg).cmd();
+    if (cmd == Call::PARTITION_U_STAGE_0) {
       stage0();
-    } else if (get(msg).cmd() == Call::PARTITION_U_STAGE_1) {
+    } else if (cmd == Call::PARTITION_U_STAGE_1) {
       stage1();
+    } else if (cmd == Call::PARTITION_V) {
+      remapKey();
     }
   }
  private:
@@ -47,8 +50,8 @@ class ParsaWorker : public GraphPartition {
 
   void stage0();
   void stage1();
+  void remapKey();
 
-  void partitionU();
   void partitionU(const BlockData& blk, SArray<int>* map_U);
   void initCost(const GraphPtr& row_major_blk);
   void updateCostAndNeighborSet(

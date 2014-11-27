@@ -26,11 +26,6 @@ class KVVector : public SharedParameter<K> {
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
 
-  // TODO
-  void setReplica(const MessagePtr& msg) { }
-  void getReplica(const MessagePtr& msg) { }
-  void recoverFrom(const MessagePtr& msg) { }
-
  protected:
   std::mutex mu_;
   std::unordered_map<int, SArray<K>> key_;
@@ -50,23 +45,24 @@ void KVVector<K,V>::setValue(const MessagePtr& msg) {
   auto& my_key = key(chl);
   auto& my_val = value(chl);
 
-  if (get(msg).has_tail_filter()) {
-    auto old_key = my_key;
-    auto old_val = my_val;
-    my_key = old_key.setUnion(recv_key);
-    if (!recv_val.empty()) {
-      my_val.resize(my_key.size(), 0);
+  if (get(msg).has_tail_filter() || get(msg).gather()) {
+    // join the received data with my current data
+    SArray<K> new_key;
+    SArray<V> new_val;
+    if (recv_val.empty()) {
+      CHECK(my_val.empty());
+      new_key = my_key.setUnion(recv_key);
+    } else {
+      parallelUnion(my_key, my_val, recv_key, recv_val, &new_key, &new_val);
     }
-    if (!old_val.empty()) {
-      size_t n = parallelOrderedMatch<K,V,OpPlus<V>> (
-          old_key, old_val, my_key, &my_val);
-      CHECK_EQ(n, old_key.size());
-    }
+    my_key = new_key;
+    my_val = new_val;
+  } else {
+    // match the received data according to my keys
+    size_t n = parallelOrderedMatch<K,V,OpPlus<V>>(
+        recv_key, recv_val, my_key, &my_val);
+    CHECK_EQ(n, recv_key.size());
   }
-
-  size_t n = parallelOrderedMatch<K,V,OpPlus<V>>(
-      recv_key, recv_val, my_key, &my_val);
-  CHECK_EQ(n, recv_key.size());
 }
 
 template <typename K, typename V>

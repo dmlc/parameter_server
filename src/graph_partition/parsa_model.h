@@ -68,8 +68,10 @@ class ParsaModel : public KVMap<Key, V> {
     LL << data_.size() << " " << v;
 
     // push the results to workers
+    std::sort(partition.begin(), partition.end(),
+              [](const KP& a, const KP& b) { return a.first < b.first; });
     SArray<Key> V_key(n);
-    SArray<P> V_val(n);
+    SArray<V> V_val(n);
     for (int i = 0; i < n; ++i) {
       V_key[i] = partition[i].first;
       V_val[i] = partition[i].second;
@@ -77,10 +79,10 @@ class ParsaModel : public KVMap<Key, V> {
     int chn = conf_.stage0_warm_up_blocks() + conf_.stage0_blocks() +
               conf_.stage1_warm_up_blocks() + conf_.stage1_blocks();
     for (const auto& it : worker_key_) {
-      MessagePtr V_msg(new Message(it.first));
+      MessagePtr V_msg(new Message(it.first, chn*3));
       V_msg->task.set_key_channel(chn);
       V_msg->setKey(it.second);
-      SArray<P> val;
+      SArray<V> val;
       parallelOrderedMatch(V_key, V_val, it.second, &val);
       V_msg->addValue(val);
       this->set(V_msg)->set_gather(true);

@@ -177,8 +177,16 @@ void ParsaWorker::stage1() {
   for (int t : push_time_) sync_nbset_->waitOutMsg(kServerGroup, t);
   push_time_.clear();
   LL << "stage 1: partitioned " << start_id_1 - start_id_1_const << " blocks";
+}
 
+void ParsaWorker::remapKey() {
+  auto parsa = conf_.parsa();
+  int chn = parsa.stage0_warm_up_blocks() + parsa.stage0_blocks() +
+            parsa.stage1_warm_up_blocks() + parsa.stage1_blocks();
+  sync_nbset_->waitInMsg(kServerGroup, chn*3);
 
+  LL << sync_nbset_->key(chn);
+  LL << sync_nbset_->value(chn);
 }
 
 // void ParsaWorker::partitionU() {

@@ -85,7 +85,8 @@ size_t parallelOrderedMatch(
   return n;
 }
 
-template <typename K, typename V, class Op = OpAssign<V>>
+// assume both src_key and dst_key are ordered,
+template <typename K, typename V, class Op = OpPlus<V>>
 void parallelUnion(
     const SArray<K>& key1,
     const SArray<V>& val1,
@@ -98,8 +99,13 @@ void parallelUnion(
   CHECK_NOTNULL(joined_val);
   *joined_key = key1.setUnion(key2);
   joined_val->resize(0);
-  parallelOrderedMatch<K,V,Op>(key1, val1, *joined_key, joined_val, num_threads);
-  parallelOrderedMatch<K,V,Op>(key2, val2, *joined_key, joined_val, num_threads);
+  auto n1 = parallelOrderedMatch<K,V,Op>(
+      key1, val1, *joined_key, joined_val, num_threads);
+  CHECK_EQ(n1, key1.size());
+
+  auto n2 = parallelOrderedMatch<K,V,Op>(
+      key2, val2, *joined_key, joined_val, num_threads);
+  CHECK_EQ(n2, key2.size());
 }
 
 
