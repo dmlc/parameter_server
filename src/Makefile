@@ -26,7 +26,7 @@ else
 endif
 
 LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
--lsnappy -lm -lpthread  -lstdc++ -ltcmalloc_and_profiler # -lrt
+-lsnappy -lm -lpthread  -lstdc++ # -ltcmalloc_and_profiler # -lrt
 GTEST = -lgtest_main -lgtest
 
 OBJS = $(SRCS:.cc=.o)
@@ -41,37 +41,6 @@ SRCS = $(PROTOS_CC) \
 	$(addprefix data/, $(data_srcs)) \
 	$(addprefix linear_method/, $(linear_method_srcs)) \
 	filter/filter.cc
-
-
-TESTS = \
-	stream_reader_test \
-	slot_reader_test \
-	matrix_io_test \
-	localizer_test \
-	countmin_test \
-	snappy_test \
-	shared_array_test \
-	grad_desc_test \
-	ftrl_test \
-	prepare_test_data \
-	bloom_filter_test \
-	# test
-	# sparse_matrix_perf \
-	auc_test \
-	io_test \
-	bitmap_test \
-	eigen3_test \
-	sparse_matrix_test \
-	auc_layer_test \
-	# double_test \
-	# aggregated_gradient_test \
-	# strtonum_test
-	#partition_test
-	# van_test \
-	# customer_test \
-	# vectors_test \
-        sparse_matrix_multi_thread_perf \
-	fault_tolerance_press \
 
 ALL_SRCS = $(SRCS) $(addsuffix .cc, $(addprefix test/, $(TESTS)))
 DEPS = $(ALL_SRCS:.cc=.d)
@@ -88,9 +57,6 @@ test: $(addprefix $(BIN)/, $(TESTS))
 
 %.d: %.cc
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
-
-$(BIN)/%: data/%.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 $(BIN)/%: test/%.cc $(LIB)/libps.a
 	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS) -o $@
@@ -115,14 +81,13 @@ $(BIN):
 -include $(DEPS)
 
 ###  tmp junks
+# # t: ../bin/slot_reader_test
+# # t: ../bin/prepare_test_data
+# t: ../bin/bloom_filter_test/
+# ../bin/bloom_filter_test: test/bloom_filter_test.o
+# 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
 
-# t: ../bin/slot_reader_test
-# t: ../bin/prepare_test_data
-t: ../bin/bloom_filter_test/
-../bin/bloom_filter_test: test/bloom_filter_test.o
-	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
-
-e: ../bin/test
+# e: ../bin/test
 
 # -Wl,-rpath=../lib $(LIB)/libps.so
 # data: $(addprefix $(BIN)/, showins proto2bin)
