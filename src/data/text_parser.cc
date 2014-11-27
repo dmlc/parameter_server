@@ -1,8 +1,7 @@
-#include "data/example_parser.h"
+#include "data/text_parser.h"
 #include <functional>
 #include "util/strtonum.h"
 #include "util/MurmurHash3.h"
-// #include "base/matrix_io_inl.h"
 
 namespace PS {
 
@@ -14,7 +13,6 @@ DEFINE_bool(shuffle_fea_id, false,
 // NOTICE: Do not use strtok, it is not thread-safe, use strtok_r instead
 void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
   ignore_fea_slot_ = ignore_fea_slot;
-  format_ = format;
   using namespace std::placeholders;
   if (format == DataConfig::LIBSVM) {
     parser_ = std::bind(&ExampleParser::parseLibsvm, this, _1, _2);
@@ -27,57 +25,11 @@ void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
   }
 }
 
-void ExampleParser::clear() {
-  for (int i = 0; i < kSlotIDmax; ++i) slot_info_[i].Clear();
-  info_.Clear();
-  num_ex_ = 0;
-}
-
 bool ExampleParser::toProto(char* line, Example* ex) {
-  // convert to protobuf format
-  ex->Clear(); if (!parser_(line, ex)) return false;
-
-  // update info
-  for (int i = 0; i < ex->slot_size(); ++i) {
-    const auto& slot = ex->slot(i);
-    if (slot.id() >= kSlotIDmax) return false;
-    auto& sinfo = slot_info_[slot.id()];
-    for (int j = 0; j < slot.key_size(); ++j) {
-      uint64 key = slot.key(j);
-      sinfo.set_min_key(std::min((uint64)sinfo.min_key(), key));
-      sinfo.set_max_key(std::max((uint64)sinfo.max_key(), key + 1));
-    }
-    sinfo.set_nnz_ex(sinfo.nnz_ex() + 1);
-    sinfo.set_nnz_ele(sinfo.nnz_ele() + std::max(slot.key_size(), slot.val_size()));
-  }
-  ++ num_ex_;
-  return true;
+  ex->Clear();
+  return parser_(line, ex);
 }
 
-ExampleInfo ExampleParser::info() {
-  info_.set_num_ex(num_ex_);
-  info_.clear_slot();
-  for (int i = 0; i < kSlotIDmax; ++i) {
-    auto &sinfo = slot_info_[i];
-    if (!sinfo.nnz_ele()) continue;
-    sinfo.set_id(i);
-    if (i == 0) {  // the label
-      sinfo.set_format(SlotInfo::DENSE);
-      sinfo.set_min_key(0);
-      sinfo.set_max_key(1);
-    } else {
-      if (format_ == DataConfig::LIBSVM) {
-        sinfo.set_format(SlotInfo::SPARSE);
-      } else if (format_ == DataConfig::ADFEA) {
-        sinfo.set_format(SlotInfo::SPARSE_BINARY);
-      } else if (format_ == DataConfig::TERAFEA) {
-        sinfo.set_format(SlotInfo::SPARSE_BINARY);
-      }
-    }
-    *info_.add_slot() = sinfo;
-  }
-  return info_;
-}
 
 // libsvm:
 //

@@ -1,4 +1,4 @@
-#include "data/example_parser.h"
+#include "data/text_parser.h"
 #include "gtest/gtest.h"
 #include "base/shared_array_inl.h"
 using namespace PS;

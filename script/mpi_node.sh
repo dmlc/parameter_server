@@ -49,5 +49,7 @@ ${3}/../bin/ps \
     -my_rank ${my_rank} \
     -app ${3}/${app_conf} \
     -interface ${network_interface} \
-    ${args} \
-    || { echo "rank:${my_rank} launch failed"; exit -1; }
+    ${args}
+
+exit $?
+#  echo "rank:${my_rank} launch failed"; exit -1;

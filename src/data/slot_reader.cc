@@ -1,5 +1,6 @@
 #include "data/slot_reader.h"
-#include "data/example_parser.h"
+#include "data/text_parser.h"
+#include "data/info_parser.h"
 #include "util/threadpool.h"
 #include "util/filelinereader.h"
 namespace PS {
@@ -73,8 +74,9 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     return true;
   }
 
-  ExampleParser parser;
-  parser.init(data.text(), data.ignore_feature_group());
+  ExampleParser text_parser;
+  InfoParser info_parser;
+  text_parser.init(data.text(), data.ignore_feature_group());
   struct VSlot {
     SArray<float> val;
     SArray<uint64> col_idx;
@@ -91,7 +93,8 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
 
   // first parse data into slots
   std::function<void(char*)> handle = [&] (char *line) {
-    if (!parser.toProto(line, &ex)) return;
+    if (!text_parser.toProto(line, &ex)) return;
+    if (!info_parser.add(ex)) return;
     // store them in slots
     for (int i = 0; i < ex.slot_size(); ++i) {
       const auto& slot = ex.slot(i);
@@ -117,7 +120,7 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     CHECK(createDir(getPath(info_name)));
   }
   // save in cache
-  info = parser.info();
+  info = info_parser.info();
   writeProtoToASCIIFileOrDie(info, info_name);
   for (int i = 0; i < kSlotIDmax; ++i) {
     auto& vslot = vslots[i];

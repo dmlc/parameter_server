@@ -3,7 +3,8 @@
 #include "base/shared_array_inl.h"
 #include "proto/example.pb.h"
 #include "proto/matrix.pb.h"
-#include "data/example_parser.h"
+#include "data/text_parser.h"
+#include "data/info_parser.h"
 #include "util/filelinereader.h"
 #include "base/matrix_io_inl.h"
 #include "util/recordio.h"
@@ -42,7 +43,8 @@ class StreamReader {
     void clear() { val.clear(); col_idx.clear(); row_siz.clear(); }
   };
   std::vector<VSlot> vslots_;
-  ExampleParser parser_;
+  ExampleParser text_parser_;
+  InfoParser info_parser_;
   DataConfig data_;
   int next_file_ = 0;
   int max_num_files_ = 0;
@@ -75,8 +77,10 @@ bool StreamReader<V>::openNextFile() {
 template<typename V>
 void StreamReader<V>::init(const DataConfig& data) {
   data_ = data;
-  parser_.init(data_.text(), data_.ignore_feature_group());
-  vslots_.resize(parser_.maxSlotID());
+  if (data_.format() == DataConfig::TEXT) {
+    text_parser_.init(data_.text(), data_.ignore_feature_group());
+  }
+  vslots_.resize(data_.ignore_feature_group() ? 2 : kSlotIDmax);
   max_num_files_ = data_.file_size();
   if (data_.max_num_files_per_worker() >= 0) {
     max_num_files_ = std::min(max_num_files_, data_.max_num_files_per_worker());
@@ -89,6 +93,7 @@ template<typename V>
 void StreamReader<V>::parseExample(const Example& ex, int num_read) {
   if (examples_) examples_->push_back(ex);
   if (!matrices_) return;
+  info_parser_.add(ex);
   // store them in slots
   for (int i = 0; i < ex.slot_size(); ++i) {
     const auto& slot = ex.slot(i);
@@ -105,12 +110,10 @@ void StreamReader<V>::parseExample(const Example& ex, int num_read) {
 
 template<typename V>
 void StreamReader<V>::fillMatrices() {
-  auto info = parser_.info();
-  if (!matrices_) {
-    parser_.clear();
-    return;
-  }
+  if (!matrices_) return;
 
+  auto info = info_parser_.info();
+  info_parser_.clear();
   for (int i = 0; i < vslots_.size(); ++i) {
     if (vslots_[i].empty()) continue;
     MatrixInfo mat_info = readMatrixInfo(info, i, sizeof(uint64), sizeof(V));
@@ -132,7 +135,6 @@ void StreamReader<V>::fillMatrices() {
     }
     vslots_[i].clear();
   }
-  parser_.clear();
 }
 
 template<typename V>
@@ -174,7 +176,7 @@ bool StreamReader<V>::readMatricesFromText() { // uint32 num_ex, MatrixPtrList<V
           result[--len] = '\0';
         }
         Example ex;
-        if (!parser_.toProto(result, &ex)) continue;
+        if (!text_parser_.toProto(result, &ex)) continue;
         // LL << ex.ShortDebugString();
         parseExample(ex, num_read);
         ++ num_read;
