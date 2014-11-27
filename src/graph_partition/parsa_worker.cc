@@ -158,81 +158,95 @@ void ParsaWorker::stage1() {
   }
 
   // real work
+  // reader
   StreamReader<Empty> stream_1(conf_.input_graph());
   ProducerConsumer<BlockData> reader_1(parsa.data_buff_size_in_mb());
   int start_id_1 = parsa.stage1_warm_up_blocks() + start_id_0_const;
   int start_id_1_const = start_id_1;
   int end_id_1 = start_id_1 + parsa.stage1_blocks();
-  readGraph(stream_1, reader_1, start_id_1, end_id_1, parsa.stage1_block_size(), false);
+  readGraph(stream_1, reader_1, start_id_1, end_id_1, parsa.stage1_block_size(), true);
 
-  BlockData blk;
-  SArray<Key> nbset_key;
-  SArray<V> nbset_value;
-  while (reader_1.pop(&blk)) {
-    if (blk.blk_id != start_id_1_const) {
-      delta_nbset_ = true;
-    }
-    partitionU(blk, nullptr);
+  // write the partitioned examples into protobuf format
+  typedef std::pair<ExampleListPtr, SArray<int>> ResultPair;
+  ProducerConsumer<ResultPair> writer_1;
+  std::vector<RecordWriter> proto_writers_1;
+  proto_writers_1.resize(num_partitions_);
+  tmp_files_.set_ignore_feature_group(true);
+  tmp_files_.set_format(DataConfig::PROTO);
+  for (int i = 0; i < num_partitions_; ++i) {
+    char prefix[100]; snprintf(prefix, 100, "_P%03d", i);
+    tmp_files_.add_file(conf_.output_graph().file(0) + string(prefix));
+    auto file = File::openOrDie(ithFile(tmp_files_, i), "w");
+    proto_writers_1[i] = RecordWriter(file);
   }
+  writer_1.setCapacity(parsa.data_buff_size_in_mb());
+  writer_1.startConsumer([&proto_writers_1](const ResultPair& data) {
+      const auto& examples = *data.first;
+      const auto& partition = data.second;
+      CHECK_EQ(examples.size(), partition.size());
+      for (int i = 0; i < examples.size(); ++i) {
+        CHECK(proto_writers_1[partition[i]].WriteProtocolMessage(examples[i]));
+      }
+    });
+
+  // partition U
+  BlockData blk;
+  SArray<int> map_U;
+  while (reader_1.pop(&blk)) {
+    partitionU(blk, &map_U);
+    writer_1.push(std::make_pair(blk.examples, map_U));
+  }
+  writer_1.setFinished();
+  writer_1.waitConsumer();
+
   for (int t : push_time_) sync_nbset_->waitOutMsg(kServerGroup, t);
   push_time_.clear();
   LL << "stage 1: partitioned " << start_id_1 - start_id_1_const << " blocks";
 }
 
 void ParsaWorker::remapKey() {
+  // wait the partition results from servers
   auto parsa = conf_.parsa();
   int chn = parsa.stage0_warm_up_blocks() + parsa.stage0_blocks() +
             parsa.stage1_warm_up_blocks() + parsa.stage1_blocks();
   sync_nbset_->waitInMsg(kServerGroup, chn*3);
+  // LL << sync_nbset_->key(chn);
+  // LL << sync_nbset_->value(chn);
 
-  LL << sync_nbset_->key(chn);
-  LL << sync_nbset_->value(chn);
+  // construct the map
+  auto key = sync_nbset_->key(chn);
+  auto val = sync_nbset_->value(chn);
+  int n =  key.size();
+  SArray<KP> data(n);
+  for (int i = 0; i < n; ++i) {
+    data[i] = make_pair(key[i], val[i]);
+  }
+  key.clear();
+  val.clear();
+  std::unordered_map<Key, P> map;
+  map.insert(data.begin(), data.end());
+
+  // remap the data
+  for (int i = 0; i < tmp_files_.file_size(); ++i) {
+    RecordReader reader(File::open(ithFile(tmp_files_, i), "r"));
+    RecordWriter writer(File::open(ithFile(tmp_files_, i, "_part_000.recordio"), "w"));
+    Example ex;
+    uint64 itv = kMaxKey / num_partitions_;
+    while (reader.ReadProtocolMessage(&ex)) {
+      for (int i = 0; i < ex.slot_size(); ++i) {
+        auto mut = ex.mutable_slot(i);
+        if (mut->id() == 0) continue;
+        for (int j = 0; j < mut->key_size(); ++j) {
+          auto key = mut->key(j);
+          auto p = map[key];
+          mut->set_key(j, key / (key < itv ? 1 : num_partitions_) + p * itv);
+        }
+      }
+      writer.WriteProtocolMessage(ex);
+    }
+  }
 }
 
-// void ParsaWorker::partitionU() {
-//   int blk_id = 0;
-
-
-//   // writer
-//   typedef std::pair<ExampleListPtr, SArray<int>> ResultPair;
-//   ProducerConsumer<ResultPair> writer_1;
-//   std::vector<RecordWriter> proto_writers_1;
-//   std::vector<DataConfig> tmp_files;
-//   proto_writers_1.resize(num_partitions_);
-//   for (int i = 0; i < num_partitions_; ++i) {
-//     tmp_files.push_back(ithFile(conf_.output_graph(), 0, "_part_"+to_string(i)+"_tmp"));
-//     auto file = File::openOrDie(tmp_files.back(), "w");
-//     proto_writers_1[i] = RecordWriter(file);
-//   }
-//   writer_1.setCapacity(conf_.parsa().data_buff_size_in_mb());
-//   writer_1.startConsumer([&proto_writers_1](const ResultPair& data) {
-//       const auto& examples = *data.first;
-//       const auto& partition = data.second;
-//       CHECK_EQ(examples.size(), partition.size());
-//       for (int i = 0; i < examples.size(); ++i) {
-//         CHECK(proto_writers_1[partition[i]].WriteProtocolMessage(examples[i]));
-//       }
-//     });
-
-//   // partition U
-//   BlockData blk;
-//   SArray<int> map_U;
-//   // int i = 0;
-//   while (reader.pop(&blk)) {
-//     partitionU(blk, &map_U);
-//     writer_1.push(std::make_pair(blk.examples, map_U));
-//     // LL << i ++;
-//   }
-//   writer_1.setFinished();
-//   writer_1.waitConsumer();
-
-
-//   // producerConsumer<ResultPair> writer_2;
-//   // typedef std::pair<GraphPtrList, ExampleListPtr> DataPair;
-//   // StreamReader<Empty> stream(searchFiles(conf_.input_graph()));
-//   // ProducerConsumer<DataPair> reader(conf_.data_buff_size_in_mb());
-//   // reader.startProducer([this, &stream](DataPair* data, size_t* size)->bool {
-// }
 
 void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   if (blk.pull_time >= 0) {

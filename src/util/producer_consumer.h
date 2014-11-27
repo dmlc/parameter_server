@@ -9,7 +9,6 @@ class ProducerConsumer {
   ProducerConsumer() { setCapacity(1000); }
   ProducerConsumer(int capacity_in_mb) { setCapacity(capacity_in_mb); }
   void setCapacity(int mb) { queue_.setMaxCapacity(mb*1000000); }
-  // void setFinished() { done_ = true; }
 
   // *func* returns false if finished, true otherwise
   void startProducer(const std::function<bool(V*, size_t*)>& func) {
@@ -41,6 +40,10 @@ class ProducerConsumer {
   }
   void push(const V& entry, size_t size = 1, bool finished = false) {
     queue_.push(entry, size, finished);
+  }
+  void setFinished() {
+    V empty;
+    queue_.push(empty, 0, true);
   }
  private:
   DISALLOW_COPY_AND_ASSIGN(ProducerConsumer);

@@ -7,6 +7,9 @@
 
 namespace PS {
 
+DECLARE_string(input);
+DECLARE_string(output);
+DECLARE_string(format);
 
 // return files matches the regex in *config*
 DataConfig searchFiles(const DataConfig& config);

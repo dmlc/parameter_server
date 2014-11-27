@@ -13,7 +13,7 @@ DEFINE_int32(num_servers, 0, "number of servers");
 DEFINE_int32(num_workers, 0, "number of clients");
 DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
-DEFINE_string(app, "../config/rcv1_l1lr.config", "the configuration file of app");
+DEFINE_string(app, "../config/rcv1/batch_l1lr.conf", "the configuration file of app");
 DECLARE_string(interface);
 
 // TODO move to configure

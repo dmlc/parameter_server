@@ -66,6 +66,7 @@ class ParsaModel : public KVMap<Key, V> {
     int v = 0;
     for (int j = 0; j < num_partitions; ++j) v += cost[j];
     LL << data_.size() << " " << v;
+    data_.clear();
 
     // push the results to workers
     std::sort(partition.begin(), partition.end(),
@@ -76,6 +77,8 @@ class ParsaModel : public KVMap<Key, V> {
       V_key[i] = partition[i].first;
       V_val[i] = partition[i].second;
     }
+    partition.clear();
+
     int chn = conf_.stage0_warm_up_blocks() + conf_.stage0_blocks() +
               conf_.stage1_warm_up_blocks() + conf_.stage1_blocks();
     for (const auto& it : worker_key_) {

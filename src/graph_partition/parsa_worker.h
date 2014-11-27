@@ -84,6 +84,8 @@ class ParsaWorker : public GraphPartition {
   std::vector<int> push_time_;
   int num_partitions_;
   bool random_partition_;
+
+  DataConfig tmp_files_;
 };
 
 } // namespace GP
