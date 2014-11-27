@@ -25,6 +25,7 @@ message CallSharedPara {
   optional TailKeyFilter tail_filter = 3;
 
   optional bool insert_key = 5;
+  optional bool gather = 6;
 
   // it's a replica request
   optional bool replica = 10;

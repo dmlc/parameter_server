@@ -64,14 +64,14 @@ void KVBufferedVector<K,V>::setValue(const MessagePtr& msg) {
       // it is the first node, allocate the memory
       matched.first = idx_range;
       matched.second.push_back(SArray<V>());
-      CHECK_EQ(parallelOrderedMatch(
-          recv_key, recv_data, my_key.segment(idx_range),
-          OpAssign<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
+      auto n = parallelOrderedMatch(
+          recv_key, recv_data, my_key.segment(idx_range), &matched.second[i]);
+      CHECK_EQ(n, recv_key.size());
     } else {
       CHECK_EQ(matched.first, idx_range);
-      CHECK_EQ(parallelOrderedMatch(
-          recv_key, recv_data, my_key.segment(idx_range),
-          OpPlus<V>(), FLAGS_num_threads, &matched.second[i]), recv_key.size());
+      auto n = parallelOrderedMatch<K,V,OpPlus<V>>(
+          recv_key, recv_data, my_key.segment(idx_range), &matched.second[i]);
+      CHECK_EQ(n, recv_key.size());
     }
   }
 }

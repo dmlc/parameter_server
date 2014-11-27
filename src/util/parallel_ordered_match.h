@@ -6,15 +6,16 @@ template <typename K, typename V, class Op>
 void parallelOrderedMatch(
     const K* src_key, const K* src_key_end, const V* src_val,
     const K* dst_key, const K* dst_key_end, V* dst_val,
-    const Op& op, size_t grainsize, size_t* n) {
+    size_t grainsize, size_t* n) {
   size_t src_len = std::distance(src_key, src_key_end);
   size_t dst_len = std::distance(dst_key, dst_key_end);
-  if (dst_len == 0 || src_len == 0);
+  if (dst_len == 0 || src_len == 0) return;
 
   // drop the unmatched tail of src
   src_key = std::lower_bound(src_key, src_key_end, *dst_key);
   src_val += src_key - (src_key_end - src_len);
 
+  Op op;
   if (dst_len <= grainsize) {
     while (dst_key != dst_key_end && src_key != src_key_end) {
       if (*src_key < *dst_key) {
@@ -31,11 +32,11 @@ void parallelOrderedMatch(
   } else {
     std::thread thr(
         parallelOrderedMatch<K,V,Op>, src_key, src_key_end, src_val,
-        dst_key, dst_key + dst_len / 2, dst_val, op, grainsize, n);
+        dst_key, dst_key + dst_len / 2, dst_val, grainsize, n);
     size_t m = 0;
-    parallelOrderedMatch(
+    parallelOrderedMatch<K,V,Op>(
         src_key, src_key_end, src_val,
-        dst_key + dst_len / 2, dst_key_end, dst_val + dst_len / 2, op,
+        dst_key + dst_len / 2, dst_key_end, dst_val + dst_len / 2,
         grainsize, &m);
     thr.join();
     *n += m;
@@ -58,13 +59,13 @@ template<typename T> struct OpOr {
 
 // assume both src_key and dst_key are ordered, apply
 //  op(src_val[i], dst_val[j]) if src_key[i] = dst_key[j]
-template <typename K, typename V, class Op>
+template <typename K, typename V, class Op = OpAssign<V>>
 size_t parallelOrderedMatch(
     const SArray<K>& src_key,
     const SArray<V>& src_val,
     const SArray<K>& dst_key,
-    const Op& op, int num_threads,
-    SArray<V>* dst_val) {
+    SArray<V>* dst_val,
+    int num_threads = FLAGS_num_threads) {
   // do check
   CHECK_GT(num_threads, 0);
   CHECK_EQ(src_key.size(), src_val.size());
@@ -77,28 +78,28 @@ size_t parallelOrderedMatch(
   SizeR range = dst_key.findRange(src_key.range());
   size_t grainsize = std::max(range.size() / num_threads + 5, (size_t)1024*1024);
   size_t n = 0;
-  parallelOrderedMatch(
+  parallelOrderedMatch<K, V, Op>(
       src_key.begin(), src_key.end(), src_val.begin(),
       dst_key.begin() + range.begin(), dst_key.begin() + range.end(),
-      dst_val->begin() + range.begin(), op, grainsize, &n);
+      dst_val->begin() + range.begin(), grainsize, &n);
   return n;
 }
 
-template <typename K, typename V, class Op>
+template <typename K, typename V, class Op = OpAssign<V>>
 void parallelUnion(
     const SArray<K>& key1,
     const SArray<V>& val1,
     const SArray<K>& key2,
     const SArray<V>& val2,
-    Op op, int num_threads,
     SArray<K>* joined_key,
-    SArray<V>* joined_val) {
+    SArray<V>* joined_val,
+    int num_threads = FLAGS_num_threads) {
   CHECK_NOTNULL(joined_key);
   CHECK_NOTNULL(joined_val);
   *joined_key = key1.setUnion(key2);
   joined_val->resize(0);
-  parallelOrderedMatch(key1, val1, *joined_key, op, num_threads, joined_val);
-  parallelOrderedMatch(key2, val2, *joined_key, op, num_threads, joined_val);
+  parallelOrderedMatch<K,V,Op>(key1, val1, *joined_key, joined_val, num_threads);
+  parallelOrderedMatch<K,V,Op>(key2, val2, *joined_key, joined_val, num_threads);
 }
 
 

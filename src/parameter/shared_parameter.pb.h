@@ -387,6 +387,13 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline bool insert_key() const;
   inline void set_insert_key(bool value);
 
+  // optional bool gather = 6;
+  inline bool has_gather() const;
+  inline void clear_gather();
+  static const int kGatherFieldNumber = 6;
+  inline bool gather() const;
+  inline void set_gather(bool value);
+
   // optional bool replica = 10;
   inline bool has_replica() const;
   inline void clear_replica();
@@ -416,6 +423,8 @@ class CallSharedPara : public ::google::protobuf::Message {
   inline void clear_has_tail_filter();
   inline void set_has_insert_key();
   inline void clear_has_insert_key();
+  inline void set_has_gather();
+  inline void clear_has_gather();
   inline void set_has_replica();
   inline void clear_has_replica();
 
@@ -426,10 +435,11 @@ class CallSharedPara : public ::google::protobuf::Message {
   ::PS::TailKeyFilter* tail_filter_;
   ::google::protobuf::RepeatedPtrField< ::PS::Timestamp > backup_;
   bool insert_key_;
+  bool gather_;
   bool replica_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_parameter_2fshared_5fparameter_2eproto();
   friend void protobuf_AssignDesc_parameter_2fshared_5fparameter_2eproto();
@@ -761,15 +771,37 @@ inline void CallSharedPara::set_insert_key(bool value) {
   insert_key_ = value;
 }
 
-// optional bool replica = 10;
-inline bool CallSharedPara::has_replica() const {
+// optional bool gather = 6;
+inline bool CallSharedPara::has_gather() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void CallSharedPara::set_has_replica() {
+inline void CallSharedPara::set_has_gather() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void CallSharedPara::clear_has_replica() {
+inline void CallSharedPara::clear_has_gather() {
   _has_bits_[0] &= ~0x00000010u;
+}
+inline void CallSharedPara::clear_gather() {
+  gather_ = false;
+  clear_has_gather();
+}
+inline bool CallSharedPara::gather() const {
+  return gather_;
+}
+inline void CallSharedPara::set_gather(bool value) {
+  set_has_gather();
+  gather_ = value;
+}
+
+// optional bool replica = 10;
+inline bool CallSharedPara::has_replica() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void CallSharedPara::set_has_replica() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void CallSharedPara::clear_has_replica() {
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void CallSharedPara::clear_replica() {
   replica_ = false;

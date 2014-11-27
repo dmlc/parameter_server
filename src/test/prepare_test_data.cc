@@ -34,10 +34,11 @@ TEST(PREPARE_DATA, KEY) {
 
   auto it2 = std::unique(key2.begin(), key2.end());
   key2.resize(it2 - key2.begin());
+  CHECK(key2.writeToFile("../data/test/key.2"));
 
   SArray<Key> key3(key2.size());
   auto it3 = std::set_difference(
       key2.begin(), key2.end(), key1.begin(), key2.begin(), key3.begin());
   key3.resize(it3 - key3.begin());
-  CHECK(key3.writeToFile("../data/test/key.2"));
+  CHECK(key3.writeToFile("../data/test/key.3"));
 }

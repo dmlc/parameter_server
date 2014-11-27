@@ -9,7 +9,7 @@ void ParsaWorker::init() {
   num_partitions_ = conf_.parsa().num_partitions();
   neighbor_set_.resize(num_partitions_);
   random_partition_ = conf_.parsa().randomly_partition_u();
-  sync_nbset_ = KVVectorPtr<Key, uint64>(new KVVector<Key, uint64>());
+  sync_nbset_ = KVVectorPtr<Key, V>(new KVVector<Key, V>());
   REGISTER_CUSTOMER(app_cf_.parameter_name(0), sync_nbset_);
 }
 
@@ -65,7 +65,7 @@ void ParsaWorker::stage0() {
   delta_nbset_ = false;
 
   // warm up
-  if (parsa.has_stage0_warm_up_blocks() && parsa.stage0_warm_up_blocks()) {
+  if (parsa.stage0_warm_up_blocks()) {
     StreamReader<Empty> stream_0(conf_.input_graph());
     ProducerConsumer<BlockData> reader_0(parsa.data_buff_size_in_mb());
     int start_id_0 = 0;
@@ -76,15 +76,14 @@ void ParsaWorker::stage0() {
     while (reader_0.pop(&blk)) {
       auto& value = sync_nbset_->value(blk.blk_id);
       parallelOrderedMatch(
-          added_nbset_key_, added_nbset_value_, sync_nbset_->key(blk.blk_id),
-          OpAssign<uint64>(), FLAGS_num_threads, &value);
+          added_nbset_key_, added_nbset_value_, sync_nbset_->key(blk.blk_id), &value);
       partitionU(blk, nullptr);
     }
     LL << "stage 0: initialized by " << start_id_0 << " blocks";
   }
 
   // real work
-  if (parsa.has_stage0_blocks() && parsa.stage0_blocks()) {
+  if (parsa.stage0_blocks()) {
     StreamReader<Empty> stream_1(conf_.input_graph());
     ProducerConsumer<BlockData> reader_1(parsa.data_buff_size_in_mb());
     int start_id_1 = parsa.stage0_warm_up_blocks();
@@ -94,27 +93,25 @@ void ParsaWorker::stage0() {
 
     BlockData blk;
     SArray<Key> nbset_key;
-    SArray<uint64> nbset_value;
+    SArray<V> nbset_value;
     while (reader_1.pop(&blk)) {
       auto& value = sync_nbset_->value(blk.blk_id);
       if (blk.blk_id == start_id_1_const) {
         // the first block, use the nbset of the last the block
-        parallelOrderedMatch(
-            added_nbset_key_, added_nbset_value_, sync_nbset_->key(blk.blk_id),
-            OpOr<uint64>(), FLAGS_num_threads, &value);
+        parallelOrderedMatch<Key, V, OpOr<V>>(
+            added_nbset_key_, added_nbset_value_, sync_nbset_->key(blk.blk_id), &value);
       } else {
         // do not throw away nbset now
         SArray<Key> tmp_key;
-        SArray<uint64> tmp_value;
-        parallelUnion(
+        SArray<V> tmp_value;
+        parallelUnion<Key, V, OpOr<V>>(
             nbset_key, nbset_value, added_nbset_key_, added_nbset_value_,
-            OpOr<uint64>(), FLAGS_num_threads, &tmp_key, &tmp_value);
+            &tmp_key, &tmp_value);
         nbset_key = tmp_key;
         nbset_value = tmp_value;
 
-        parallelOrderedMatch(
-            nbset_key, nbset_value, sync_nbset_->key(blk.blk_id),
-            OpOr<uint64>(), FLAGS_num_threads, &value);
+        parallelOrderedMatch<Key, V, OpOr<V>>(
+            nbset_key, nbset_value, sync_nbset_->key(blk.blk_id), &value);
 
         delta_nbset_ = true;
       }
@@ -142,7 +139,7 @@ void ParsaWorker::stage1() {
 
   int start_id_0_const = parsa.stage0_warm_up_blocks() + parsa.stage0_blocks();
   // warm up
-  if (parsa.has_stage1_warm_up_blocks() && parsa.stage1_warm_up_blocks()) {
+  if (parsa.stage1_warm_up_blocks()) {
     StreamReader<Empty> stream_0(conf_.input_graph());
     ProducerConsumer<BlockData> reader_0(parsa.data_buff_size_in_mb());
     int start_id_0 = start_id_0_const;
@@ -165,12 +162,12 @@ void ParsaWorker::stage1() {
   ProducerConsumer<BlockData> reader_1(parsa.data_buff_size_in_mb());
   int start_id_1 = parsa.stage1_warm_up_blocks() + start_id_0_const;
   int start_id_1_const = start_id_1;
-  int end_id_1 = start_id_1 + 1000000000;
+  int end_id_1 = start_id_1 + parsa.stage1_blocks();
   readGraph(stream_1, reader_1, start_id_1, end_id_1, parsa.stage1_block_size(), false);
 
   BlockData blk;
   SArray<Key> nbset_key;
-  SArray<uint64> nbset_value;
+  SArray<V> nbset_value;
   while (reader_1.pop(&blk)) {
     if (blk.blk_id != start_id_1_const) {
       delta_nbset_ = true;
@@ -180,6 +177,8 @@ void ParsaWorker::stage1() {
   for (int t : push_time_) sync_nbset_->waitOutMsg(kServerGroup, t);
   push_time_.clear();
   LL << "stage 1: partitioned " << start_id_1 - start_id_1_const << " blocks";
+
+
 }
 
 // void ParsaWorker::partitionU() {
@@ -267,7 +266,7 @@ void ParsaWorker::partitionU(const BlockData& blk, SArray<int>* map_U) {
   sync_nbset_->clear(id);
 }
 
-void ParsaWorker::initNeighborSet(const SArray<uint64>& nbset) {
+void ParsaWorker::initNeighborSet(const SArray<V>& nbset) {
   int n = nbset.size();
   for (int i = 0; i < num_partitions_; ++i) {
     neighbor_set_[i].clear();
@@ -275,7 +274,7 @@ void ParsaWorker::initNeighborSet(const SArray<uint64>& nbset) {
   }
 
   for (int i = 0; i < n; ++i) {
-    uint64 s = nbset[i];
+    V s = nbset[i];
     if (s == 0) continue;
     for (int k = 0; k < num_partitions_; ++k) {
       if (s & (1 << k)) neighbor_set_[k].set(i);
@@ -295,7 +294,7 @@ void ParsaWorker::sendUpdatedNeighborSet(int blk_id) {
   added_nbset_key_.resize(0);
   added_nbset_value_.resize(0);
   Key pre = nbset[0].first;
-  uint64 s = 0;
+  V s = 0;
   for (int i = 0; i < nbset.size(); ++i) {
     Key cur = nbset[i].first;
     if (cur != pre) {

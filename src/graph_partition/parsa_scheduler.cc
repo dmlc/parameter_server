@@ -1,11 +1,12 @@
 #include "graph_partition/parsa_scheduler.h"
+#include "graph_partition/parsa_common.h"
 #include "system/postmaster.h"
 namespace PS {
 namespace GP {
 
 void ParsaScheduler::init() {
   GraphPartition::init();
-  CHECK_LT(conf_.parsa().num_partitions(), 64) << " TODO, my appologies";
+  CHECK_LT(conf_.parsa().num_partitions(), kMaxNumPartitions) << " TODO, my appologies";
 }
 
 void ParsaScheduler::run() {
@@ -30,13 +31,13 @@ void ParsaScheduler::run() {
   sch.createApp(nodes, apps);
 
   auto parsa = conf_.parsa();
-  if (parsa.has_stage0_blocks()) {
+  if (parsa.stage0_blocks()) {
     Task partitionU = newTask(Call::PARTITION_U_STAGE_0);
     CHECK(taskpool("W0"));
     taskpool("W0")->submitAndWait(partitionU);
   }
 
-  if (parsa.has_stage1_block_size()) {
+  if (parsa.stage1_block_size()) {
     Task partitionU = newTask(Call::PARTITION_U_STAGE_1);
     taskpool(kActiveGroup)->submitAndWait(partitionU);
   }

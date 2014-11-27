@@ -10,7 +10,7 @@ TEST(BloomFilter, Speed) {
 using namespace PS;
   // see src/test/prepare_test_data to get the data
   SArray<Key> key1; key1.readFromFile("../data/test/key.1");
-  SArray<Key> key2; key2.readFromFile("../data/test/key.2");
+  SArray<Key> key2; key2.readFromFile("../data/test/key.3");
   BloomFilter<Key> bloom(FLAGS_m, FLAGS_k);
   auto tv = tic();
   for (auto k : key1)  bloom.insert(k);
