@@ -32,6 +32,8 @@ message ParsaConfig {
   optional bool randomly_partition_U = 11 [default = false];
   optional bool randomly_partition_V = 12 [default = false];
   // optional bool run_baseline = 10 [default = false];
+
+  optional bool validate = 15 [default = false];
 }
 
 message Call {

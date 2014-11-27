@@ -15,7 +15,9 @@ class ProgressReporter {
             auto report = LinearMethod::newTask(Call::REPORT_PROGRESS);
             string str; CHECK(prog.SerializeToString(&str));
             report.set_msg(str);
-            node_->taskpool(node_->schedulerID())->submit(report);
+            auto sch = node_->taskpool(node_->schedulerID());
+            if (!sch) break;
+            sch->submit(report);
           }
         }));
     thr_->detach();

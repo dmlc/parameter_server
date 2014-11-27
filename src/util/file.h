@@ -30,7 +30,7 @@ class File {
   // the size of a file
   static size_t size(const std::string& name);
   // Deletes a file.
-  static bool remove(const char* const name) { return remove(name) == 0; }
+  static bool remove(const std::string& name) { return std::remove(name.c_str()) == 0; }
   // Tests if a file exists.
   static bool exists(const char* const name) { return access(name, F_OK) == 0; }
   static bool gzfile(const std::string& name) {

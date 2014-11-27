@@ -174,7 +174,7 @@ void ParsaWorker::stage1() {
   tmp_files_.set_ignore_feature_group(true);
   tmp_files_.set_format(DataConfig::PROTO);
   for (int i = 0; i < num_partitions_; ++i) {
-    char prefix[100]; snprintf(prefix, 100, "_P%03d", i);
+    char prefix[100]; snprintf(prefix, 100, "_%03d_%s", i, myNodeID().c_str());
     tmp_files_.add_file(conf_.output_graph().file(0) + string(prefix));
     auto file = File::openOrDie(ithFile(tmp_files_, i), "w");
     proto_writers_1[i] = RecordWriter(file);
@@ -227,9 +227,12 @@ void ParsaWorker::remapKey() {
   map.insert(data.begin(), data.end());
 
   // remap the data
+  // bool validate = parsa.validate();
+  // SArray<Key> remote_keys;
+
   for (int i = 0; i < tmp_files_.file_size(); ++i) {
     RecordReader reader(File::open(ithFile(tmp_files_, i), "r"));
-    RecordWriter writer(File::open(ithFile(tmp_files_, i, "_part_000.recordio"), "w"));
+    RecordWriter writer(File::open(ithFile(tmp_files_, i, ".recordio"), "w"));
     Example ex;
     uint64 itv = kMaxKey / num_partitions_;
     while (reader.ReadProtocolMessage(&ex)) {
@@ -239,12 +242,21 @@ void ParsaWorker::remapKey() {
         for (int j = 0; j < mut->key_size(); ++j) {
           auto key = mut->key(j);
           auto p = map[key];
-          mut->set_key(j, key / (key < itv ? 1 : num_partitions_) + p * itv);
+          auto new_key = key / (key < itv ? 1 : num_partitions_) + p * itv;
+          mut->set_key(j, new_key);
+          // if (validate && p != i) remote_keys.pushBack(new_key);
         }
       }
       writer.WriteProtocolMessage(ex);
     }
+    File::remove(tmp_files_.file(i));
   }
+
+  // if (validate) {
+  //   std::sort(remote_keys.begin(), remote_keys.end());
+  //   auto it = std::unique(remote_keys.begin(), remote_keys.end());
+  //   LL << it - remote_keys.begin();
+  // }
 }
 
 

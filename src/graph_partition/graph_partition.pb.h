@@ -308,6 +308,13 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline bool randomly_partition_v() const;
   inline void set_randomly_partition_v(bool value);
 
+  // optional bool validate = 15 [default = false];
+  inline bool has_validate() const;
+  inline void clear_validate();
+  static const int kValidateFieldNumber = 15;
+  inline bool validate() const;
+  inline void set_validate(bool value);
+
   // @@protoc_insertion_point(class_scope:PS.GP.ParsaConfig)
  private:
   inline void set_has_num_partitions();
@@ -334,6 +341,8 @@ class ParsaConfig : public ::google::protobuf::Message {
   inline void clear_has_randomly_partition_u();
   inline void set_has_randomly_partition_v();
   inline void clear_has_randomly_partition_v();
+  inline void set_has_validate();
+  inline void clear_has_validate();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -349,9 +358,10 @@ class ParsaConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 clear_nbset_per_num_blocks_;
   bool randomly_partition_u_;
   bool randomly_partition_v_;
+  bool validate_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
   friend void protobuf_AssignDesc_graph_5fpartition_2fgraph_5fpartition_2eproto();
@@ -854,6 +864,28 @@ inline bool ParsaConfig::randomly_partition_v() const {
 inline void ParsaConfig::set_randomly_partition_v(bool value) {
   set_has_randomly_partition_v();
   randomly_partition_v_ = value;
+}
+
+// optional bool validate = 15 [default = false];
+inline bool ParsaConfig::has_validate() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void ParsaConfig::set_has_validate() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void ParsaConfig::clear_has_validate() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void ParsaConfig::clear_validate() {
+  validate_ = false;
+  clear_has_validate();
+}
+inline bool ParsaConfig::validate() const {
+  return validate_;
+}
+inline void ParsaConfig::set_validate(bool value) {
+  set_has_validate();
+  validate_ = value;
 }
 
 // -------------------------------------------------------------------
