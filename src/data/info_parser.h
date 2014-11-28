@@ -16,10 +16,9 @@ class InfoParser {
   // int maxSlotID() { return conf_.ignore_fea_slot() ? 2 : kSlotIDmax; }
  private:
   // DataConfig conf_;
+  size_t num_ex_ = 0;
   ExampleInfo info_;
   SlotInfo slot_info_[kSlotIDmax];
-  bool ignore_fea_slot_;
-  size_t num_ex_ = 0;
 };
 
 } // namespace PS

@@ -14,6 +14,7 @@ void FTRLWorker::init() {
 
 void FTRLWorker::computeGradient() {
   // start the data prefectcher thread
+  LL << conf_.training_data().DebugString();
   StreamReader<real> reader(conf_.training_data());
   int batch_id = 0;
   data_prefetcher_.startProducer(
@@ -22,6 +23,7 @@ void FTRLWorker::computeGradient() {
         MatrixPtrList<real> ins;
         bool ret = reader.readMatrices(conf_.solver().minibatch_size(), &ins);
         CHECK_EQ(ins.size(), 2);
+        // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
         data->label = ins[0];
 
         // find all unique features,
@@ -29,7 +31,6 @@ void FTRLWorker::computeGradient() {
         SArray<uint8> key_cnt;
         data->localizer = LocalizerPtr<Key, real>(new Localizer<Key, real>());
         data->localizer->countUniqIndex(ins[1], &uniq_key, &key_cnt);
-        // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
 
         // pull the features and weights from servers with tails filtered
         MessagePtr msg(new Message(kServerGroup));
@@ -47,6 +48,7 @@ void FTRLWorker::computeGradient() {
         *size = data->label->memSize() + data->localizer->memSize();
         return ret;
       });
+
 
   int pre_batch = -1;
   Minibatch batch;

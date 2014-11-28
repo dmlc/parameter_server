@@ -40,7 +40,7 @@ class StreamReader {
     SArray<uint64> col_idx;
     SArray<uint16> row_siz;
     bool empty() { return val.empty() && col_idx.empty() && row_siz.empty(); }
-    void clear() { val.clear(); col_idx.clear(); row_siz.clear(); }
+    // void clear() { val.clear(); col_idx.clear(); row_siz.clear(); }
   };
   std::vector<VSlot> vslots_;
   ExampleParser text_parser_;
@@ -80,7 +80,6 @@ void StreamReader<V>::init(const DataConfig& data) {
   if (data_.format() == DataConfig::TEXT) {
     text_parser_.init(data_.text(), data_.ignore_feature_group());
   }
-  vslots_.resize(data_.ignore_feature_group() ? 2 : kSlotIDmax);
   max_num_files_ = data_.file_size();
   if (data_.max_num_files_per_worker() >= 0) {
     max_num_files_ = std::min(max_num_files_, data_.max_num_files_per_worker());
@@ -91,9 +90,10 @@ void StreamReader<V>::init(const DataConfig& data) {
 
 template<typename V>
 void StreamReader<V>::parseExample(const Example& ex, int num_read) {
+  CHECK(!examples_);
   if (examples_) examples_->push_back(ex);
   if (!matrices_) return;
-  info_parser_.add(ex);
+  if (!info_parser_.add(ex)) return;
   // store them in slots
   for (int i = 0; i < ex.slot_size(); ++i) {
     const auto& slot = ex.slot(i);
@@ -102,7 +102,9 @@ void StreamReader<V>::parseExample(const Example& ex, int num_read) {
     int key_size = slot.key_size();
     for (int j = 0; j < key_size; ++j) vslot.col_idx.pushBack(slot.key(j));
     int val_size = slot.val_size();
-    for (int j = 0; j < val_size; ++j) vslot.val.pushBack(slot.val(j));
+    for (int j = 0; j < val_size; ++j) {
+      vslot.val.pushBack(slot.val(j));
+    }
     while (vslot.row_siz.size() < num_read) vslot.row_siz.pushBack(0);
     vslot.row_siz.pushBack(std::max(key_size, val_size));
   }
@@ -119,7 +121,6 @@ void StreamReader<V>::fillMatrices() {
     MatrixInfo mat_info = readMatrixInfo(info, i, sizeof(uint64), sizeof(V));
     if (mat_info.type() == MatrixInfo::DENSE) {
       matrices_->push_back(MatrixPtr<V>(new DenseMatrix<V>(mat_info, vslots_[i].val)));
-      // CHECK_EQ(vslots_[i].val.size(), num_read);
     } else {
       auto& rs = vslots_[i].row_siz;
       size_t n = rs.size();
@@ -127,13 +128,11 @@ void StreamReader<V>::fillMatrices() {
       for (size_t j = 0; j < n; ++j) offset[j+1] = offset[j] + rs[j];
       matrices_->push_back(MatrixPtr<V>(new SparseMatrix<uint64, V>(
           mat_info, offset, vslots_[i].col_idx, vslots_[i].val)));
-      // CHECK_EQ(n, num_read);
       CHECK_EQ(vslots_[i].col_idx.size(), offset.back());
       if (!vslots_[i].val.empty()) {
         CHECK_EQ(vslots_[i].val.size(), offset.back());
       }
     }
-    vslots_[i].clear();
   }
 }
 
@@ -196,19 +195,17 @@ bool StreamReader<V>::readMatrices(
   num_examples_ = num_examples;
   examples_ = examples; if (examples_) examples_->clear();
   matrices_ = matrices; if (matrices_) matrices_->clear();
-
-  switch(data_.format()) {
-    case DataConfig::TEXT:
-      return readMatricesFromText();
-    case DataConfig::PROTO:
-      return readMatricesFromProto();
-      // case DataConfig::BIN:
-      //   return readMatricesFromBin(data, mat);
-    default:
-      LL << "unknonw data format: " << data_.DebugString();
-
+  vslots_.resize(data_.ignore_feature_group() ? 2 : kSlotIDmax);
+  bool ret = false;
+  if (data_.format() == DataConfig::TEXT) {
+    ret = readMatricesFromText();
+  } else if (data_.format() == DataConfig::PROTO) {
+    ret = readMatricesFromProto();
+  } else {
+    LL << "unknonw data format: " << data_.DebugString();
   }
-  return false;
+  vslots_.clear();
+  return ret;
 }
 
 
