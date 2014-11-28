@@ -1,6 +1,7 @@
 #include "data/slot_reader.h"
 #include "data/text_parser.h"
 #include "data/info_parser.h"
+#include "util/recordio.h"
 #include "util/threadpool.h"
 #include "util/filelinereader.h"
 namespace PS {
@@ -8,7 +9,6 @@ namespace PS {
 DECLARE_bool(verbose);
 
 void SlotReader::init(const DataConfig& data, const DataConfig& cache) {
-  CHECK(data.format() == DataConfig::TEXT);
   // if (cache.file_size()) dump_to_disk_ = true;
   CHECK(cache.file_size());
   cache_ = cache.file(0);
@@ -63,7 +63,7 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     LI << "loading data file [" << data.file(0) << "]; loaded [" <<
       loaded_file_count_ << "/" << data_.file_size() << "]";
   }
-
+  // check if hit cache
   string info_name = cache_ + getFilename(data.file(0)) + ".info";
   ExampleInfo info;
   if (readFileToProto(info_name, &info)) {
@@ -74,9 +74,7 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     return true;
   }
 
-  ExampleParser text_parser;
   InfoParser info_parser;
-  text_parser.init(data.text(), data.ignore_feature_group());
   struct VSlot {
     SArray<float> val;
     SArray<uint64> col_idx;
@@ -91,11 +89,9 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
   uint32 num_ex = 0;
   Example ex;
 
-  // first parse data into slots
-  std::function<void(char*)> handle = [&] (char *line) {
-    if (!text_parser.toProto(line, &ex)) return;
+  // store ex in slots and also extract the info
+  auto store = [&]() {
     if (!info_parser.add(ex)) return;
-    // store them in slots
     for (int i = 0; i < ex.slot_size(); ++i) {
       const auto& slot = ex.slot(i);
       CHECK_LT(slot.id(), kSlotIDmax);
@@ -109,9 +105,26 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     }
     ++ num_ex;
   };
-  FileLineReader reader(data);
-  reader.set_line_callback(handle);
-  reader.Reload();
+
+  // read examples one by one
+  if (data_.format() == DataConfig::TEXT) {
+    ExampleParser text_parser;
+    text_parser.init(data.text(), data.ignore_feature_group());
+    std::function<void(char*)> handle = [&] (char *line) {
+      if (!text_parser.toProto(line, &ex)) return;
+      store();
+    };
+    FileLineReader reader(data);
+    reader.set_line_callback(handle);
+    reader.Reload();
+  } else if (data_.format() == DataConfig::PROTO) {
+    RecordReader reader(File::openOrDie(data, "r"));
+    while (reader.ReadProtocolMessage(&ex)) {
+      store();
+    }
+  } else {
+    CHECK(false) << "unsupported format " << data_.DebugString();
+  }
 
   // create the directory if necessary. but it seems stupid to check it each
   // time. a nature way is doing it at init(). but i'm afraid to it may be

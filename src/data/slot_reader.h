@@ -49,7 +49,6 @@ class SlotReader {
 };
 
 template<typename V> SArray<V> SlotReader::value(int slot_id) const {
-  // TODO support cache (but this is a template function...)
   SArray<V> val;
   if (nnzEle(slot_id) == 0) return val;
   for (int i = 0; i < data_.file_size(); ++i) {
