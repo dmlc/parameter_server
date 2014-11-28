@@ -90,7 +90,6 @@ void StreamReader<V>::init(const DataConfig& data) {
 
 template<typename V>
 void StreamReader<V>::parseExample(const Example& ex, int num_read) {
-  CHECK(!examples_);
   if (examples_) examples_->push_back(ex);
   if (!matrices_) return;
   if (!info_parser_.add(ex)) return;

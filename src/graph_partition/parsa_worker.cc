@@ -174,7 +174,7 @@ void ParsaWorker::stage1() {
   tmp_files_.set_ignore_feature_group(true);
   tmp_files_.set_format(DataConfig::PROTO);
   for (int i = 0; i < num_partitions_; ++i) {
-    char prefix[100]; snprintf(prefix, 100, "_%03d_%s", i, myNodeID().c_str());
+    char prefix[100]; snprintf(prefix, 100, "_%s_%03d", myNodeID().c_str(), i);
     tmp_files_.add_file(conf_.output_graph().file(0) + string(prefix));
     auto file = File::openOrDie(ithFile(tmp_files_, i), "w");
     proto_writers_1[i] = RecordWriter(file);
@@ -232,7 +232,7 @@ void ParsaWorker::remapKey() {
 
   for (int i = 0; i < tmp_files_.file_size(); ++i) {
     RecordReader reader(File::open(ithFile(tmp_files_, i), "r"));
-    RecordWriter writer(File::open(ithFile(tmp_files_, i, ".recordio"), "w"));
+    RecordWriter writer(File::open(ithFile(tmp_files_, i, "_recordio"), "w"));
     Example ex;
     uint64 itv = kMaxKey / num_partitions_;
     while (reader.ReadProtocolMessage(&ex)) {

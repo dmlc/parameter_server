@@ -5,6 +5,21 @@
 
 using namespace PS;
 
+// TEST(StreamReader, read_proto) {
+//   DataConfig dc;
+//   // load adfea
+//   dc.set_format(DataConfig::PROTO);
+//   dc.add_file("../output/parsa_.*");
+
+//   DataConfig dc2 = searchFiles(dc);
+//   StreamReader<double> reader; reader.init(dc2);
+
+//   MatrixPtrList<double> X;
+//   while (reader.readMatrices(10000, &X)) {
+//     CHECK_EQ(X.size(), 2);
+//   }
+// }
+
 // TEST(StreamReader, read) {
 //   DataConfig dc;
 //   // load adfea
