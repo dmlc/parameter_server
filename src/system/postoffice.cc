@@ -15,6 +15,7 @@ DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
 DEFINE_string(app, "../config/rcv1/batch_l1lr.conf", "the configuration file of app");
 DECLARE_string(interface);
+DEFINE_bool(traffic_statistics, false, "print traffic statistic at the end");
 
 // TODO move to configure
 DEFINE_int32(report_interval, 0,
@@ -168,7 +169,9 @@ void Postoffice::recv() {
       if (request && tk.has_mng_app()) manageApp(tk);
       if (request && tk.has_mng_node()) manageNode(tk);
     } else if (type == Task::TERMINATE) {
-      // yellow_pages_.van().statistic();
+      if (FLAGS_traffic_statistics) {
+        yellow_pages_.van().statistic();
+      }
       done_ = true;
       break;
     }

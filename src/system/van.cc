@@ -56,7 +56,7 @@ void Van::bind() {
   if (FLAGS_bind_to) {
     addr += std::to_string(FLAGS_bind_to);
   }
-  else {	
+  else {
     CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
     addr += std::to_string(my_node_.port());
     // string addr = "tcp://" + address(my_node_);
@@ -94,6 +94,7 @@ Status Van::connect(const Node& node) {
     return Status:: NetError(
         "connect to " + addr + " failed: " + zmq_strerror(errno));
   senders_[id] = sender;
+  hostnames_[id] = node.hostname();
 
   if (FLAGS_print_van) {
     debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
@@ -118,6 +119,7 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
   int n = has_key + msg->value.size();
 
   // send task
+  size_t data_size = 0;
   string str;
   CHECK(msg->task.SerializeToString(&str))
       << "failed to serialize " << msg->task.ShortDebugString();
@@ -129,8 +131,7 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
     return Status::NetError(
         "failed to send mailer to node " + (id) + zmq_strerror(errno));
   }
-  *send_bytes += str.size();
-  data_sent_ += str.size();
+  data_size += str.size();
 
   // send data
   for (int i = 0; i < n; ++i) {
@@ -142,10 +143,16 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
       return Status::NetError(
           "failed to send mailer to node " + (id) + zmq_strerror(errno));
     }
-    *send_bytes += raw.size();
-    data_sent_ += raw.size();
+    data_size += raw.size();
   }
 
+  // statistics
+  *send_bytes += data_size;
+  if (hostnames_[id] == my_node_.hostname()) {
+    sent_to_local_ += data_size;
+  } else {
+    sent_to_others_ += data_size;
+  }
   if (FLAGS_print_van) {
     debug_out_ << "|>>>   " << msg->shortDebugString()<< std::endl;
   }
@@ -154,6 +161,7 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
 
 // TODO Zero copy
 Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
+  size_t data_size = 0;
   msg->clearData();
   NodeID sender;
   for (int i = 0; ; ++i) {
@@ -168,8 +176,7 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
-    *recv_bytes += size;
-    data_received_ += size;
+    data_size += size;
     if (i == 0) {
       // identify
       sender = id(std::string(buf, size));
@@ -193,6 +200,12 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
+  *recv_bytes += data_size;
+  if (hostnames_[sender] == my_node_.hostname()) {
+    received_from_local_ += data_size;
+  } else {
+    received_from_others_ += data_size;
+  }
   if (FLAGS_print_van) {
     debug_out_ << "|<<<   " << msg->shortDebugString() << std::endl;
   }
@@ -202,8 +215,11 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
 void Van::statistic() {
   if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
   auto gb = [](size_t x) { return  x / 1e9; };
-  LI << my_node_.id() << " sent " << gb(data_sent_)
-     << " Gbyte, received " << gb(data_received_) << " Gbyte";
+  LI << my_node_.id()
+     << " sent " << gb(sent_to_local_ + sent_to_others_)
+     << " (local " << gb(sent_to_local_) << ") Gbyte,"
+     << " received " << gb(received_from_local_ + received_from_others_)
+     << " (local " << gb(received_from_local_) << ") Gbyte";
 }
 
 Node Van::assembleMyNode() {

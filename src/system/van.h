@@ -54,10 +54,14 @@ class Van {
   Node my_node_;
   Node scheduler_;
   std::mutex mu_;
-  std::map<NodeID, void *> senders_;
+  std::unordered_map<NodeID, void *> senders_;
+  std::unordered_map<NodeID, string> hostnames_;
 
-  size_t data_sent_ = 0;
-  size_t data_received_ = 0;
+  size_t sent_to_local_ = 0;
+  size_t sent_to_others_ = 0;
+  size_t received_from_local_ = 0;
+  size_t received_from_others_ = 0;
+
   std::ofstream debug_out_;
 
   Node assembleMyNode();
