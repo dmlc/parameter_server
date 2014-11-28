@@ -20,7 +20,7 @@ void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
     parser_ = std::bind(&ExampleParser::parseAdfea, this, _1, _2);
   } else if (format == DataConfig::TERAFEA) {
     parser_ = std::bind(&ExampleParser::parseTerafea, this, _1, _2);
-  }else {
+  } else {
     CHECK(false) << "unknown text format " << format;
   }
 }
@@ -105,7 +105,6 @@ bool ExampleParser::parseAdfea(char* line, Example* ex) {
       slot->add_key(key);
     }
   }
-  // LL << ex->ShortDebugString();
   return true;
 }
 

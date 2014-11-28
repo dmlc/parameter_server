@@ -14,7 +14,7 @@ void FTRLWorker::init() {
 
 void FTRLWorker::computeGradient() {
   // start the data prefectcher thread
-  LL << conf_.training_data().DebugString();
+  // LL << conf_.training_data().DebugString();
   StreamReader<real> reader(conf_.training_data());
   int batch_id = 0;
   data_prefetcher_.startProducer(

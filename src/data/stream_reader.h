@@ -175,7 +175,6 @@ bool StreamReader<V>::readMatricesFromText() { // uint32 num_ex, MatrixPtrList<V
         }
         Example ex;
         if (!text_parser_.toProto(result, &ex)) continue;
-        // LL << ex.ShortDebugString();
         parseExample(ex, num_read);
         ++ num_read;
         break;

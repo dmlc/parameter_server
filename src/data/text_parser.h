@@ -15,8 +15,8 @@ class ExampleParser {
   bool parseLibsvm(char*,  Example*);
   bool parseAdfea(char*,  Example*);
   bool parseTerafea(char*,  Example*);
-  bool ignore_fea_slot_;
   std::function<bool(char*, Example*)> parser_;
+  bool ignore_fea_slot_;
 };
 
 }
