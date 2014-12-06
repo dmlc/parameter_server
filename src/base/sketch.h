@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include <nmmintrin.h>
+// #include <nmmintrin.h>
 namespace PS {
 
 // the basc class for bloom filters, countmin, etc...
