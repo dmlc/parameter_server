@@ -1,4 +1,5 @@
 #!/bin/bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../third_party/lib
 if [ $# -lt 3 ]; then
     echo "usage: ./local.sh num_servers num_workers app_conf [args]"
     exit -1;
