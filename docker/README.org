@@ -26,7 +26,7 @@ cd ../client
 python submit.py submit 2 2
 #+END_SRC
 
-*Check status*
+*Check parameter server status and result*
 
 #+BEGIN_SRC bash
 ./bin/kubecfg list pods
@@ -46,11 +46,5 @@ cd ../server
 python run.py down host/master_file host/minions_file
 #+END_SRC
 
-*See the result*
-
-#+BEGIN_SRC bash
-cd ../server
-python run.py down host/master_file host/minions_file
-#+END_SRC
 
 
