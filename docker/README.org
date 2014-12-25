@@ -13,12 +13,24 @@ cd server
 python run.py up host/master_file host/minions_file
 #+END_SRC
 
+*Check kubernetes*
+
+#+BEGIN_SRC bash
+cd ../client
+./bin/kubecfg list minions
+#+END_SRC
 
 *Submit parameter server with 2 workers and 2 servers to kubernetes*
 
 #+BEGIN_SRC bash
-cd ../client
 python submit.py submit 2 2
+#+END_SRC
+
+*Check status*
+
+#+BEGIN_SRC bash
+./bin/kubecfg list pods
+#Ssh to minions and use "docker logs <container>" to see results 
 #+END_SRC
 
 *Kill parameter server on kubernetes*
@@ -28,6 +40,13 @@ python submit.py clear
 #+END_SRC
 
 *Show down the kubernetes on cluster*
+
+#+BEGIN_SRC bash
+cd ../server
+python run.py down host/master_file host/minions_file
+#+END_SRC
+
+*See the result*
 
 #+BEGIN_SRC bash
 cd ../server
