@@ -33,6 +33,13 @@ python submit.py submit 2 2
 #Ssh to minions and use "docker logs <container>" to see results 
 #+END_SRC
 
+*Scale workers and servers*
+
+#+BEGIN_SRC bash
+./bin/kubecfg resize worker <num>
+./bin/kubecfg resize server <num>
+#+END_SRC
+
 *Kill parameter server on kubernetes*
 
 #+BEGIN_SRC bash
