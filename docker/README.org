@@ -29,15 +29,15 @@ python submit.py submit 2 2 ../../../config/rcv1/batch_l1lr.conf
 *Check parameter server status and result*
 
 #+BEGIN_SRC bash
-./bin/kubecfg list pods
+../bin/kubecfg list pods
 #Ssh to minions and use "docker logs <container>" to see results 
 #+END_SRC
 
 *Scale workers and servers*
 
 #+BEGIN_SRC bash
-./bin/kubecfg resize worker <num>
-./bin/kubecfg resize server <num>
+../bin/kubecfg resize worker <num>
+../bin/kubecfg resize server <num>
 #+END_SRC
 
 *Kill parameter server on kubernetes*
