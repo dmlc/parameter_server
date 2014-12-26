@@ -26,17 +26,17 @@ if __name__ == "__main__":
     num_minions=len(minionsList)
     if program=="up":
         #launch etcd
-        cmd="mpirun -np 1 -hostfile "+master_file+" ./etcd "+master
+        cmd="mpirun -np 1 -hostfile "+master_file+" ../bin/etcd "+master
         print cmd
         os.system(cmd)
 
         #launch kubelet and proxy
-        cmd="mpirun -np "+str(num_minions)+" -hostfile "+minions_file+" ./kubelet "+master+" "+minions_file
+        cmd="mpirun -np "+str(num_minions)+" -hostfile "+minions_file+" ../bin/kubelet "+master+" "+minions_file
         print cmd
         os.system(cmd)
 
         #launch apiserver, controller manager and scheduler
-        cmd="mpirun -np 1 -hostfile "+master_file+" ./apiserver "+master+" "+minions_file
+        cmd="mpirun -np 1 -hostfile "+master_file+" ../bin/apiserver "+master+" "+minions_file
         print cmd
         os.system(cmd)
 
@@ -46,10 +46,10 @@ if __name__ == "__main__":
         os.system(cmd)
 
     elif program=="down":
-        cmd="cat "+master_file+" "+minions_file+" >host/all_file"
+        cmd="cat "+master_file+" "+minions_file+" >../host/all_file"
 	print cmd
         os.system(cmd)
-        cmd="mpirun -np "+str(num_minions+1)+" -hostfile host/all_file ./clean "
+        cmd="mpirun -np "+str(num_minions+1)+" -hostfile ../host/all_file ../bin/clean "
 	print cmd
 	os.system(cmd)
 	
