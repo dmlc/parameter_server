@@ -23,6 +23,7 @@ cd ../client
 *Submit parameter server with 2 workers and 2 servers and the config file to kubernetes*
 
 #+BEGIN_SRC bash
+cd scripts
 python submit.py submit 2 2 ../../../config/rcv1/batch_l1lr.conf
 #+END_SRC
 
@@ -49,7 +50,7 @@ python submit.py clear
 *Show down the kubernetes on cluster*
 
 #+BEGIN_SRC bash
-cd ../server
+cd ../../server
 python run.py down host/master_file host/minions_file
 #+END_SRC
 
