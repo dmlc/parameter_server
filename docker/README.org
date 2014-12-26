@@ -20,10 +20,10 @@ cd ../client
 ./bin/kubecfg list minions
 #+END_SRC
 
-*Submit parameter server with 2 workers and 2 servers to kubernetes*
+*Submit parameter server with 2 workers and 2 servers and the config file to kubernetes*
 
 #+BEGIN_SRC bash
-python submit.py submit 2 2
+python submit.py submit 2 2 ../../../config/rcv1/batch_l1lr.conf
 #+END_SRC
 
 *Check parameter server status and result*
@@ -52,6 +52,7 @@ python submit.py clear
 cd ../server
 python run.py down host/master_file host/minions_file
 #+END_SRC
+
 
 
 
