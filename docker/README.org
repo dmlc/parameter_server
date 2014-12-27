@@ -9,36 +9,35 @@ The containerized parameter server runs workers and servers on cluster as docker
 *Bring up the containerized kubernetes on cluster*
 
 #+BEGIN_SRC bash
-cd server/script
-python run.py up ../host/master_file ../host/minions_file
+cd server
+python run.py up host/master_file host/minions_file
 #+END_SRC
 
 *Check kubernetes*
 
 #+BEGIN_SRC bash
-cd ../../client
+cd ../client
 ./bin/kubecfg list minions
 #+END_SRC
 
 *Submit parameter server with 2 workers and 2 servers and the config file to kubernetes*
 
 #+BEGIN_SRC bash
-cd script
 python submit.py submit 2 2 ../../../config/rcv1/batch_l1lr.conf
 #+END_SRC
 
 *Check parameter server status and result*
 
 #+BEGIN_SRC bash
-../bin/kubecfg list pods
+./bin/kubecfg list pods
 #Ssh to minions and use "docker logs <container>" to see results 
 #+END_SRC
 
 *Scale workers and servers*
 
 #+BEGIN_SRC bash
-../bin/kubecfg resize worker <num>
-../bin/kubecfg resize server <num>
+./bin/kubecfg resize worker <num>
+./bin/kubecfg resize server <num>
 #+END_SRC
 
 *Kill parameter server on kubernetes*
@@ -50,8 +49,8 @@ python submit.py clear
 *Show down the kubernetes on cluster*
 
 #+BEGIN_SRC bash
-cd ../../server/script
-python run.py down ../host/master_file ../host/minions_file
+cd ../server
+python run.py down host/master_file host/minions_file
 #+END_SRC
 
 

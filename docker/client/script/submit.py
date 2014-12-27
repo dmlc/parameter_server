@@ -3,28 +3,37 @@ import sys
 import json
 import time
 
-def extractDatPath(path):
+def extractDatAndOutputPath(path):
 	'''
 	Get the absolute dir of data
 	'''
 	fread=open(path,'r')
 	fwrite=open("../config/config.conf",'w')
-	flag=0
-	dirname=""
+	flag=""
+	data_dir=""
+	output_dir=""
 	filename=""
 	for line in fread:
 		items=line.strip().split()
 		if len(items)>0:
 			if items[0]=="training_data":
-				flag=1
-			elif items[0]=="file:" and flag==1:
-				flag=2
-				dirname,filename=os.path.split(os.path.abspath(items[1][1:-1]))
-				fwrite.write("file: \"/home/parameter_server/dat/%s\"\n" % filename)
-				continue
+				flag=items[0]
+			elif items[0]=="model_output":
+				flag=items[0]
+			elif items[0]=="file:":
+				if flag=="training_data":
+					flag=""
+					data_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
+					fwrite.write("file: \"/home/parameter_server/dat/%s\"\n" % filename)
+					continue
+				elif flag=="model_output":
+					flag=""
+					output_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
+					fwrite.write("file: \"/home/parameter_server/output/%s\"\n" % filename)
+					continue
 		fwrite.write("%s" % line)
 	fread.close()
-	return dirname
+	return data_dir,output_dir
 
 def killAll():
 	'''
@@ -41,7 +50,7 @@ def killAll():
 		if len(line)>0:
 			os.system('../bin/kubecfg delete pods/'+line[0])
 
-def upScheduler(num_servers,num_workers,data_dir):
+def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	'''
 	Bring up scheduler as a pod -- scheduler
 	'''
@@ -63,7 +72,6 @@ def upScheduler(num_servers,num_workers,data_dir):
 	container['env']=[env]
 	container['workingDir']='/home/parameter_server/script'
 
-	#parse the path
 	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van  -bind_to 8000 '
 	cmd+="-scheduler \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\" "
 	cmd+="-my_node \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\""
@@ -85,6 +93,10 @@ def upScheduler(num_servers,num_workers,data_dir):
 	volumeMount=dict()
 	volumeMount['name']='dat'
 	volumeMount['mountPath']='/home/parameter_server/dat'
+	container['volumeMounts'].append(volumeMount)
+	volumeMount=dict()
+	volumeMount['name']='output'
+	volumeMount['mountPath']='/home/parameter_server/output'
 	container['volumeMounts'].append(volumeMount)
 
 	volume=dict()
@@ -111,6 +123,12 @@ def upScheduler(num_servers,num_workers,data_dir):
 	volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']=data_dir
 	volumes.append(volume)
+	volume=dict()
+	volume['name']='output'
+	volume['source']=dict()
+	volume['source']['hostDir']=dict()
+	volume['source']['hostDir']['path']=output_dir
+	volumes.append(volume)
 
 
 	manifest=dict()
@@ -136,7 +154,7 @@ def upScheduler(num_servers,num_workers,data_dir):
 
 	while True:
 		print "waiting for scheduler to up... "
-		time.sleep(10)
+		time.sleep(3)
 		out=os.popen('../bin/kubecfg list pods').read()
 		for line in out.splitlines():
 			line=line.strip().split()
@@ -147,7 +165,7 @@ def upScheduler(num_servers,num_workers,data_dir):
 	
 
 
-def upWorker(scheduler_host,num_servers,num_workers,data_dir):
+def upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	'''
 	Bring up workers as pods managed by a replication controller -- worker
 	'''
@@ -168,7 +186,7 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir):
 	env['value']='/home/parameter_server/third_party/lib/'
 	container['env']=[env]
 	container['workingDir']='/home/parameter_server/script'
-	#parse the path
+
 	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van -bind_to 8001 '
 	cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
 	cmd+="-my_node \"role:WORKER,hostname:\'`cat /tmp/docker/host/host`\',port:11001,id:\'W_$(hostname)\'\""
@@ -191,6 +209,10 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir):
 	volumeMount=dict()
 	volumeMount['name']='dat'
 	volumeMount['mountPath']='/home/parameter_server/dat'
+	container['volumeMounts'].append(volumeMount)
+	volumeMount=dict()
+	volumeMount['name']='output'
+	volumeMount['mountPath']='/home/parameter_server/output'
 	container['volumeMounts'].append(volumeMount)
 
 	volume=dict()
@@ -216,6 +238,12 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir):
 	volume['source']=dict()
 	volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']=data_dir
+	volumes.append(volume)
+	volume=dict()
+	volume['name']='output'
+	volume['source']=dict()
+	volume['source']['hostDir']=dict()
+	volume['source']['hostDir']['path']=output_dir
 	volumes.append(volume)
 
 	manifest=dict()
@@ -250,7 +278,7 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir):
 	print cmd
 	os.system(cmd)
 
-def upServer(scheduler_host,num_servers,num_workers,data_dir):
+def upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	'''
 	Bring up servers as pods managed by a replication controller -- server
 	'''
@@ -271,7 +299,7 @@ def upServer(scheduler_host,num_servers,num_workers,data_dir):
 	env['value']='/home/parameter_server/third_party/lib/'
 	container['env']=[env]
 	container['workingDir']='/home/parameter_server/script'
-	#parse the path
+
 	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van  -bind_to 8002 '
 	cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
 	cmd+="-my_node \"role:SERVER,hostname:\'`cat /tmp/docker/host/host`\',port:11002,id:\'S_$(hostname)\'\""
@@ -294,6 +322,10 @@ def upServer(scheduler_host,num_servers,num_workers,data_dir):
 	volumeMount=dict()
 	volumeMount['name']='dat'
 	volumeMount['mountPath']='/home/parameter_server/dat'
+	container['volumeMounts'].append(volumeMount)
+	volumeMount=dict()
+	volumeMount['name']='output'
+	volumeMount['mountPath']='/home/parameter_server/output'
 	container['volumeMounts'].append(volumeMount)
 
 	volume=dict()
@@ -319,6 +351,12 @@ def upServer(scheduler_host,num_servers,num_workers,data_dir):
 	volume['source']=dict()
 	volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']=data_dir
+	volumes.append(volume)
+	volume=dict()
+	volume['name']='output'
+	volume['source']=dict()
+	volume['source']['hostDir']=dict()
+	volume['source']['hostDir']['path']=output_dir
 	volumes.append(volume)
 
 	manifest=dict()
@@ -361,13 +399,13 @@ if __name__=='__main__':
 		num_servers=int(sys.argv[2])
 		num_workers=int(sys.argv[3])
 		config_path=os.path.abspath(sys.argv[4])
-		data_dir=extractDatPath(config_path)
-		scheduler_host=upScheduler(num_servers,num_workers,data_dir)
+		data_dir,output_dir=extractDatAndOutputPath(config_path)
+		scheduler_host=upScheduler(num_servers,num_workers,data_dir,output_dir)
 		print "Detect scheduler at "+scheduler_host
 		print "Waiting for seconds, to ensure scheduler successfully binded."
-		time.sleep(20)
-		upServer(scheduler_host,num_servers,num_workers,data_dir)
-		upWorker(scheduler_host,num_servers,num_workers,data_dir)
+		time.sleep(30)
+		upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir)
+		upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir)
  
 
 
