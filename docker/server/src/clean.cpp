@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   MPI_Get_processor_name(processor_name, &name_len);
 
   
-  // Print off a hello world message
   char cmd[1000];
+  //kill all containers
   sprintf(cmd, "docker stop $(docker ps -a -q)");
   system(cmd);
   sprintf(cmd, "docker rm $(docker ps -a -q)");

@@ -4,18 +4,24 @@ import sys
 
 
 def readMaster(path):
-	master=""
-	fhandler=open(path,'r')
-	for line in fhandler:
-		master=line.strip()
-	return master
+    '''
+    Read hostname of master from master file 
+    '''
+    master=""
+    fhandler=open(path,'r')
+    for line in fhandler:
+	master=line.strip()
+    return master
 
 def readMinions(path):
-	minionList=list()
-	fhandler=open(path,'r')
-	for line in fhandler:
-		minionList.append(line.strip())
-	return minionList
+    '''
+    Read hostnames of minions from minions file
+    '''
+    minionList=list()
+    fhandler=open(path,'r')
+    for line in fhandler:
+	minionList.append(line.strip())
+    return minionList
 
 if __name__ == "__main__":
     program=sys.argv[1]
@@ -46,6 +52,7 @@ if __name__ == "__main__":
         os.system(cmd)
 
     elif program=="down":
+        #kill all the kubernetes containers
         cmd="cat "+master_file+" "+minions_file+" >../host/all_file"
 	print cmd
         os.system(cmd)

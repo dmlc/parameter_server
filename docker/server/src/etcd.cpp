@@ -36,11 +36,9 @@ int main(int argc, char** argv) {
   MPI_Get_processor_name(processor_name, &name_len);
 
   
-  // Print off a hello world message
   char cmd[1000];
-
+  //launch etcd
   sprintf(cmd,"docker run -d -p 4001:4001 -p 7001:7001  --name etcd qicongc/etcd ./etcd/etcd -peer-addr %s:7001 -addr %s:4001 -bind-addr 0.0.0.0 -data-dir machines/machine1 -name machine1",ip.c_str(),ip.c_str());
-
   system(cmd);
   // Finalize the MPI environment. No more MPI calls can be made after this
   MPI_Finalize();

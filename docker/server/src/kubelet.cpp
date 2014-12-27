@@ -48,14 +48,14 @@ int main(int argc, char** argv) {
   MPI_Get_processor_name(processor_name, &name_len);
 
   
-  // Print off a hello world message
   char cmd[1000];
-
+  //launch kubelet
   sprintf(cmd,"docker run -d -p 10250:10250  -v /var/run/docker.sock:/var/run/docker.sock --name kubelet qicongc/kubernetes ./kubernetes/kubelet --address=0.0.0.0 --port=10250 --hostname_override=%s --etcd_servers=http://%s:4001 --logtostderr=true",ips[world_rank].c_str(),etcd_ip.c_str());
   system(cmd);
+  //launch proxy
   sprintf(cmd,"docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name proxy qicongc/kubernetes ./kubernetes/proxy --etcd_servers=http://%s:4001 --logtostderr=true",etcd_ip.c_str());
   system(cmd);
-
+  //create directories for hostname storage and van print
   sprintf(cmd,"mkdir -p /tmp/docker/host");
   system(cmd);
   sprintf(cmd,"echo `hostname -i` > /tmp/docker/host/host");

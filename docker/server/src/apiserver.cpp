@@ -47,9 +47,8 @@ int main(int argc, char** argv) {
   MPI_Get_processor_name(processor_name, &name_len);
 
   
-  // Print off a hello world message
   char cmd[1000];
-
+  //launch apiserver
   sprintf(cmd,"docker run  -d -p 8000:8000 --name apiserver qicongc/kubernetes ./kubernetes/apiserver --address=0.0.0.0 --port=8000 --etcd_servers=http://%s:4001 --machines=",etcd_ip.c_str());
   sprintf(cmd,"%s%s",cmd,ips[0].c_str());
   for(int i=1;i<ips.size();i++)
@@ -58,10 +57,10 @@ int main(int argc, char** argv) {
   }
   sprintf(cmd,"%s --logtostderr=true",cmd);
   system(cmd);
-
+  //launch controller-manager
   sprintf(cmd,"docker run -d --name controller-manager  qicongc/kubernetes ./kubernetes/controller-manager --master=http://%s:8000 --logtostderr=true",etcd_ip.c_str());
   system(cmd);
-
+  //launch scheduler
   sprintf(cmd,"docker run -d --name scheduler qicongc/kubernetes ./kubernetes/scheduler -address=0.0.0.0 -port=10251 -master=http://%s:8000 -logtostderr=true",etcd_ip.c_str());
   system(cmd);
 
