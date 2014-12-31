@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 #include "base/matrix_io.h"
-#include "loss/loss_factory.h"
-#include "learner/learner_factory.h"
-#include "penalty/penalty_factory.h"
+// #include "loss/loss_factory.h"
+// #include "learner/learner_factory.h"
+// #include "penalty/penalty_factory.h"
 
 using namespace PS;
 

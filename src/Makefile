@@ -3,91 +3,90 @@ CC = g++
 # OPT = -O0 -ggdb
 OPT = -O3 -ggdb
 
+### third_party path
+THIRD_PARTY=$(shell cd ..;pwd)/third_party
+THIRD_BIN=$(THIRD_PARTY)/bin
+THIRD_INC=$(THIRD_PARTY)/include
+THIRD_LIB=$(THIRD_PARTY)/lib
+
+WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
+INCPATH = -I. -I${THIRD_INC}
+CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
+
+### staticly link third party libaries
+STATIC_THIRD_LIB=1
+ifeq ($(STATIC_THIRD_LIB), 1)
+THIRD_LIBS=$(addprefix $(THIRD_LIB)/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
+else
+THIRD_LIBS=-L$(THIRD_LIB) -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
+endif
+
+### staticly link gcc
+STATIC_GCC=0
+ifeq (${STATIC_GCC}, 1)
+	LDFLAGS += -static-libgcc -static-libstdc++
+endif
+
 BIN = ../bin
 LIB = ../lib
 
-ifndef THIRD
-THIRD=$(shell cd ..;pwd)/third_party
-endif
-THIRD_BIN=$(THIRD)/bin
-THIRD_INC=$(THIRD)/include
-THIRD_LIB=$(THIRD)/lib
-
-#-Wconversion -fPIC
-WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-fno-omit-frame-pointer
-INCPATH = -I. -I${THIRD_INC}
-
-# STATIC=1
-ifeq (${STATIC}, 1)
-# TODO a lot of warning on mac with llvm
-    CFLAGS = -static -static-libgcc -static-libstdc++ -std=c++0x $(WARN) $(OPT) $(INCPATH) -fPIC # -fopenmp
-else
-    CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) #-msse4.2 #-fopenmp #-fPIC #
-endif
-
-LDFLAGS = -L$(THIRD_LIB) -L$(LIB) -lps -lgflags -lzmq -lprotobuf -lglog -lz \
--lsnappy -lm -lpthread  -lstdc++ # -ltcmalloc_and_profiler # -lrt
-GTEST = -lgtest_main -lgtest
-
-OBJS = $(SRCS:.cc=.o)
-PROTOS= $(wildcard */*.proto)
-PROTOS_CC = $(PROTOS:.proto=.pb.cc)
-
--include */BUILD
-SRCS = $(PROTOS_CC) \
-	$(addprefix graph_partition/, $(graph_partition_srcs)) \
-	$(addprefix system/, $(system_srcs)) \
-	$(addprefix util/, $(util_srcs)) \
-	$(addprefix data/, $(data_srcs)) \
-	$(addprefix linear_method/, $(linear_method_srcs)) \
-	filter/filter.cc
-
-ALL_SRCS = $(SRCS) $(addsuffix .cc, $(addprefix test/, $(TESTS)))
-DEPS = $(ALL_SRCS:.cc=.d)
-
-all: dir $(addprefix $(BIN)/, ps)
-
+all: dir $(BIN)/ps
 clean:
 	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
 
-test: $(addprefix $(BIN)/, $(TESTS))
+-include */BUILD
 
+### system
+SYS_SRCS = $(PROTOS_CC) \
+	$(addprefix system/, $(system_srcs)) \
+	$(addprefix util/, $(util_srcs)) \
+	$(addprefix data/, $(data_srcs)) \
+	$(addprefix filter/, $(filter_srcs))
+SYS_OBJS = $(SYS_SRCS:.cc=.o)
+$(LIB)/libps.a: $(SYS_OBJS)
+	ar crv $@ $(SYS_OBJS)
+
+### linear methods
+LM_SRCS = $(addprefix linear_method/, $(linear_method_srcs))
+LM_OBJS = $(LM_SRCS:.cc=.o)
+$(LIB)/liblm.a: $(LM_OBJS)
+	ar crv $@ $(LM_OBJS)
+
+### graph partitioning
+GP_SRCS = $(addprefix graph_partition/, $(graph_partition_srcs))
+GP_OBJS = $(GP_SRCS:.cc=.o)
+$(LIB)/libgp.a: $(GP_OBJS)
+	ar crv $@ $(GP_OBJS)
+
+### dependencies
+ALL_SRCS = $(wildcard */*.cc)
+DEPS = $(ALL_SRCS:.cc=.d)
+-include $(DEPS)
+
+### rules
+LIBS = $(addprefix $(LIB)/, liblm.a libgp.a libps.a)
+LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
+
+test: $(addprefix $(BIN)/, $(TESTS))
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
-
 %.d: %.cc
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@
+$(BIN)/%: test/%.cc $(LIBS)
+	$(CC) $(CFLAGS) $< -lgtest_main -lgtest $(LDFLAGS) -o $@
+$(BIN)/ps: main.cc $(LIBS)
+	$(CC) $(CFLAGS) main.cc $(LDFLAGS) -o $@
 
-$(BIN)/%: test/%.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) $< $(GTEST) $(LDFLAGS) -o $@
-
+### protobuf
+PROTOS= $(wildcard */*.proto)
+PROTOS_CC = $(PROTOS:.proto=.pb.cc)
 %.pb.cc %.pb.h : %.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
 
-# static link, works fine for both mac and linux.
-$(LIB)/libps.a: $(OBJS) #gtest
-	ar crv $@ $(OBJS)
 
-$(BIN)/ps: main.cc $(LIB)/libps.a
-	$(CC) $(CFLAGS) main.cc $(LDFLAGS) -o $@
-
-# make directories
+### make directories
 dir: $(LIB) $(BIN)
 $(LIB):
 	mkdir -p $(LIB)
 $(BIN):
 	mkdir -p $(BIN)
-
--include $(DEPS)
-
-###  tmp junks
-# # t: ../bin/slot_reader_test
-# # t: ../bin/prepare_test_data
-# t: ../bin/bloom_filter_test/
-# ../bin/bloom_filter_test: test/bloom_filter_test.o
-# 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@
-
-# e: ../bin/test
-
-# -Wl,-rpath=../lib $(LIB)/libps.so
-# data: $(addprefix $(BIN)/, showins proto2bin)

@@ -1,34 +1,6 @@
 #include "system/app.h"
-#include "linear_method/linear_method.h"
-#include "neural_network/sgd_solver.h"
-#include "graph_partition/graph_partition.h"
 namespace PS {
-
 DEFINE_bool(test_fault_tol, false, "");
-
-AppPtr App::create(const AppConfig& conf) {
-  AppPtr ptr;
-  if (conf.has_linear_method()) {
-    ptr = LM::LinearMethod::create(conf.linear_method());
-    CHECK(ptr);
-  } else if (conf.has_neural_network()) {
-    ptr = AppPtr(new NN::SGDSolver());
-  } else if (conf.has_graph_partition()) {
-    ptr = GP::GraphPartition::create(conf.graph_partition());
-  } else {
-    CHECK(false) << "unknown app: " << conf.DebugString();
-  }
-
-  CHECK(conf.has_app_name());
-  ptr->name_ = conf.app_name();
-  for (int i = 0; i < conf.parameter_name_size(); ++i) {
-    ptr->child_customers_.push_back(conf.parameter_name(i));
-  }
-  ptr->app_cf_ = conf;
-  ptr->init();
-  return ptr;
-}
-
 
 void App::stopAll() {
   // send terminate signal to all others
