@@ -14,7 +14,7 @@ INCPATH = -I. -I${THIRD_INC}
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 
 ### staticly link third party libaries
-STATIC_THIRD_LIB=1
+STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIBS=$(addprefix $(THIRD_LIB)/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
 else
@@ -27,8 +27,11 @@ ifeq (${STATIC_GCC}, 1)
 	LDFLAGS += -static-libgcc -static-libstdc++
 endif
 
+### all
 BIN = ../bin
 LIB = ../lib
+LIBS = $(addprefix $(LIB)/, liblm.a libgp.a libps.a libprotos.a)
+LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 
 all: dir $(BIN)/ps
 clean:
@@ -36,8 +39,9 @@ clean:
 
 -include */BUILD
 
+#$(PROTOS_CC) \
 ### system
-SYS_SRCS = $(PROTOS_CC) \
+SYS_SRCS = \
 	$(addprefix system/, $(system_srcs)) \
 	$(addprefix util/, $(util_srcs)) \
 	$(addprefix data/, $(data_srcs)) \
@@ -58,15 +62,22 @@ GP_OBJS = $(GP_SRCS:.cc=.o)
 $(LIB)/libgp.a: $(GP_OBJS)
 	ar crv $@ $(GP_OBJS)
 
+
+### protobuf
+PROTOS= $(wildcard */*.proto)
+PROTOS_CC = $(PROTOS:.proto=.pb.cc)
+PROTOS_OBJS = $(PROTOS:.proto=.pb.o)
+%.pb.cc %.pb.h : %.proto
+	${THIRD_BIN}/protoc --cpp_out=. $<
+$(LIB)/libprotos.a: $(PROTOS_OBJS)
+	ar crv $@ $(PROTOS_OBJS)
+
 ### dependencies
 ALL_SRCS = $(wildcard */*.cc)
 DEPS = $(ALL_SRCS:.cc=.d)
 -include $(DEPS)
 
 ### rules
-LIBS = $(addprefix $(LIB)/, liblm.a libgp.a libps.a)
-LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
-
 test: $(addprefix $(BIN)/, $(TESTS))
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -76,12 +87,6 @@ $(BIN)/%: test/%.cc $(LIBS)
 	$(CC) $(CFLAGS) $< -lgtest_main -lgtest $(LDFLAGS) -o $@
 $(BIN)/ps: main.cc $(LIBS)
 	$(CC) $(CFLAGS) main.cc $(LDFLAGS) -o $@
-
-### protobuf
-PROTOS= $(wildcard */*.proto)
-PROTOS_CC = $(PROTOS:.proto=.pb.cc)
-%.pb.cc %.pb.h : %.proto
-	${THIRD_BIN}/protoc --cpp_out=. $<
 
 
 ### make directories
