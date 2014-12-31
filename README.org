@@ -4,29 +4,19 @@ The parameter server is a distributed system scaling to industry size machine
 learning problems. It is a joint project by [[http://sml-lab.com][CMU SML-Lab]],
 [[http://idl.baidu.com/en/][Baidu IDL]], and [[http://research.google.com][Google]]
 
-*Requirements*
-- Compiler: gcc >= 4.7.2 (prefer >=4.9) or llvm >= 3.4
-- OS: Should work on both linux and mac. Tested on Ubuntu 12.10, 13.10, 14.04, RHEL 4U3, Mac OS X 10.9
-- Dependent libraries: zeromq, gflags, glogs, gtest, protobuf, zlib, snappy, and
-  eigen3.
+*Build*
 
-*Build dependent libraries*
-
-#+BEGIN_SRC bash
-git clone https://github.com/mli/third_party
-cd third_party
-./install.sh
-#+END_SRC
-
-*Build the system*
+Requires =git= and a C++11 compiler (=gcc= >= 4.7.2 or =llvm= >= 3.4).
 
 #+BEGIN_SRC bash
 git clone https://github.com/mli/parameter_server
 cd parameter_server
-ln -s /your/third/library third_party
-make -j8
+./script/install_third.sh
+make
 #+END_SRC
 
-*Run the system*
+See more details in [[https://github.com/mli/parameter_server/wiki/setup][wiki]].
+
+*Run*
 
 See examples in [[config/rcv1]]. More information are in the [[https://github.com/mli/parameter_server/wiki][wiki]].
