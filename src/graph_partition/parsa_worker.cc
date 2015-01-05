@@ -54,6 +54,7 @@ void ParsaWorker::readGraph(
         blk->blk_id     = start_id ++;
         *size           = 1;  // a fake number, i'm lazy to get the correct one
 
+        // LL << start_id << "  " << end_id;
         return start_id == end_id ? false : ret;
       });
 }
@@ -190,6 +191,7 @@ void ParsaWorker::stage1() {
     });
 
   // partition U
+  int y = 0;
   BlockData blk;
   SArray<int> map_U;
   while (reader_1.pop(&blk)) {

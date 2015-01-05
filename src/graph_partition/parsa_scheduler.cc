@@ -6,7 +6,7 @@ namespace GP {
 
 void ParsaScheduler::init() {
   GraphPartition::init();
-  CHECK_LT(conf_.parsa().num_partitions(), kMaxNumPartitions) << " TODO, my appologies";
+  CHECK_LE(conf_.parsa().num_partitions(), kMaxNumPartitions) << " TODO, my appologies";
 }
 
 void ParsaScheduler::run() {
