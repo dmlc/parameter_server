@@ -13,6 +13,7 @@ class Customer {
   Customer() : sys_(Postoffice::instance()), exec_(*this) {
     exec_thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, &exec_));
   }
+  virtual ~Customer() { }
   // process a message received from a remote node
   virtual void process(const MessagePtr& msg) = 0;
   // *sep* are ordered key seperators (k_1, k_2, ..., k_n), this functin slices

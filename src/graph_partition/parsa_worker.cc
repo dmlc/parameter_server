@@ -191,7 +191,7 @@ void ParsaWorker::stage1() {
     });
 
   // partition U
-  int y = 0;
+  // int y = 0;
   BlockData blk;
   SArray<int> map_U;
   while (reader_1.pop(&blk)) {

@@ -30,7 +30,7 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, liblm.a libgp.a libps.a libprotos.a)
+LIBS = $(addprefix $(LIB)/, liblm.a libgp.a libfm.a libps.a libprotos.a)
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 
 all: dir $(BIN)/ps
@@ -39,7 +39,6 @@ clean:
 
 -include */BUILD
 
-#$(PROTOS_CC) \
 ### system
 SYS_SRCS = \
 	$(addprefix system/, $(system_srcs)) \
@@ -62,6 +61,11 @@ GP_OBJS = $(GP_SRCS:.cc=.o)
 $(LIB)/libgp.a: $(GP_OBJS)
 	ar crv $@ $(GP_OBJS)
 
+### factorization machine
+FM_SRCS = $(addprefix factorization_machine/, fm.cc)
+FM_OBJS = $(FM_SRCS:.cc=.o)
+$(LIB)/libfm.a: $(FM_OBJS)
+	ar crv $@ $(FM_OBJS)
 
 ### protobuf
 PROTOS= $(wildcard */*.proto)

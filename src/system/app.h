@@ -12,6 +12,8 @@ typedef std::shared_ptr<App> AppPtr;
 
 class App : public Customer {
  public:
+  App() { }
+  virtual ~App() { }
   // factory function
   static AppPtr create(const AppConfig& config);
   // initialization

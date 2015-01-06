@@ -2,8 +2,8 @@
 #include "data/show_example.h"
 #include "data/text2proto.h"
 #include "linear_method/linear_method.h"
-#include "neural_network/sgd_solver.h"
 #include "graph_partition/graph_partition.h"
+#include "factorization_machine/fm.h"
 DEFINE_bool(log_instant, false, "disable buffer of glog");
 
 namespace PS {
@@ -12,10 +12,10 @@ AppPtr App::create(const AppConfig& conf) {
   if (conf.has_linear_method()) {
     ptr = LM::LinearMethod::create(conf.linear_method());
     CHECK(ptr);
-  } else if (conf.has_neural_network()) {
-    ptr = AppPtr(new NN::SGDSolver());
   } else if (conf.has_graph_partition()) {
     ptr = GP::GraphPartition::create(conf.graph_partition());
+  } else if (conf.has_factorization_machine()) {
+    ptr = FM::FactorizationMachine::create(conf.factorization_machine());
   } else {
     CHECK(false) << "unknown app: " << conf.DebugString();
   }

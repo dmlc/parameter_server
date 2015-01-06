@@ -27,6 +27,7 @@
 #include "proto/neural_network.pb.h"
 #include "linear_method/linear_method.pb.h"
 #include "graph_partition/graph_partition.pb.h"
+#include "factorization_machine/fm.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -149,6 +150,15 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::GP::Config* release_graph_partition();
   inline void set_allocated_graph_partition(::PS::GP::Config* graph_partition);
 
+  // optional .PS.FM.Config factorization_machine = 6;
+  inline bool has_factorization_machine() const;
+  inline void clear_factorization_machine();
+  static const int kFactorizationMachineFieldNumber = 6;
+  inline const ::PS::FM::Config& factorization_machine() const;
+  inline ::PS::FM::Config* mutable_factorization_machine();
+  inline ::PS::FM::Config* release_factorization_machine();
+  inline void set_allocated_factorization_machine(::PS::FM::Config* factorization_machine);
+
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
   inline void set_has_app_name();
@@ -159,6 +169,8 @@ class AppConfig : public ::google::protobuf::Message {
   inline void clear_has_neural_network();
   inline void set_has_graph_partition();
   inline void clear_has_graph_partition();
+  inline void set_has_factorization_machine();
+  inline void clear_has_factorization_machine();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -167,9 +179,10 @@ class AppConfig : public ::google::protobuf::Message {
   ::PS::LM::Config* linear_method_;
   ::PS::NN::Config* neural_network_;
   ::PS::GP::Config* graph_partition_;
+  ::PS::FM::Config* factorization_machine_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fapp_2eproto();
   friend void protobuf_AssignDesc_proto_2fapp_2eproto();
@@ -410,6 +423,44 @@ inline void AppConfig::set_allocated_graph_partition(::PS::GP::Config* graph_par
     set_has_graph_partition();
   } else {
     clear_has_graph_partition();
+  }
+}
+
+// optional .PS.FM.Config factorization_machine = 6;
+inline bool AppConfig::has_factorization_machine() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void AppConfig::set_has_factorization_machine() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void AppConfig::clear_has_factorization_machine() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void AppConfig::clear_factorization_machine() {
+  if (factorization_machine_ != NULL) factorization_machine_->::PS::FM::Config::Clear();
+  clear_has_factorization_machine();
+}
+inline const ::PS::FM::Config& AppConfig::factorization_machine() const {
+  return factorization_machine_ != NULL ? *factorization_machine_ : *default_instance_->factorization_machine_;
+}
+inline ::PS::FM::Config* AppConfig::mutable_factorization_machine() {
+  set_has_factorization_machine();
+  if (factorization_machine_ == NULL) factorization_machine_ = new ::PS::FM::Config;
+  return factorization_machine_;
+}
+inline ::PS::FM::Config* AppConfig::release_factorization_machine() {
+  clear_has_factorization_machine();
+  ::PS::FM::Config* temp = factorization_machine_;
+  factorization_machine_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_factorization_machine(::PS::FM::Config* factorization_machine) {
+  delete factorization_machine_;
+  factorization_machine_ = factorization_machine;
+  if (factorization_machine) {
+    set_has_factorization_machine();
+  } else {
+    clear_has_factorization_machine();
   }
 }
 

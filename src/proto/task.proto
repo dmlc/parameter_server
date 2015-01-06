@@ -7,6 +7,7 @@ import "proto/common.proto";
 import "linear_method/linear_method.proto";
 import "graph_partition/graph_partition.proto";
 import "parameter/shared_parameter.proto";
+import "learner/sgd.proto";
 
 message Task {
   enum Type {
@@ -50,9 +51,10 @@ message Task {
 
   // applications
   optional LM.Call linear_method = 301;
-  optional CallSketch sketch = 302;
 
   optional GP.Call graph_partition = 303;
+  // optional FM.Call factorization_machine = 304;
+  optional SGDCall sgd = 305;
 }
 
 message ManageNode {
@@ -78,21 +80,22 @@ message ManageApp {
 }
 
 
-message CallSketch {
-  enum Command {
-    PREPARE_DATA = 1;
-    INSERT_DATA = 2;
-    EVAL_PROGRESS = 3;
-    QUERY_DATA = 4;
-    RECOVER = 5;
-  }
-  required Command cmd = 1;
-  optional PbRange key = 2;
-}
+// optional CallSketch sketch = 302;
+// message CallSketch {
+//   enum Command {
+//     PREPARE_DATA = 1;
+//     INSERT_DATA = 2;
+//     EVAL_PROGRESS = 3;
+//     QUERY_DATA = 4;
+//     RECOVER = 5;
+//   }
+//   required Command cmd = 1;
+//   optional PbRange key = 2;
+// }
 
-message SketchResponse {
-  optional string nodeid = 1;
-  optional double process_time = 2;
-  optional uint32 payload = 3;
-  optional uint32 key = 4;
-}
+// message SketchResponse {
+//   optional string nodeid = 1;
+//   optional double process_time = 2;
+//   optional uint32 payload = 3;
+//   optional uint32 key = 4;
+// }
