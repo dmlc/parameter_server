@@ -83,7 +83,7 @@ DEPS = $(ALL_SRCS:.cc=.d)
 
 ### rules
 test: $(addprefix $(BIN)/, $(TESTS))
-%.o: %.cc
+%.o: %.cc %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 %.d: %.cc
 	$(CC) $(CFLAGS) -MM -MT $*.o $< > $@

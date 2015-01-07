@@ -30,8 +30,9 @@ class SGDWorker : public SGDCompNode {
       }
     }
   }
-  void startDataPrefetcher(const DataConfig& data) {
+  void startDataPrefetcher(const DataConfig& data, size_t buf_size_in_mb = 10000) {
     reader_.init(data);
+    data_prefetcher_.setCapacity(buf_size_in_mb);
     data_prefetcher_.startProducer(
         [this](Minibatch* data, size_t* size)->bool {
           bool ret = readMinibatch(reader_, data);

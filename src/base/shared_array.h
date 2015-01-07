@@ -120,9 +120,23 @@ template<typename V> class SArray {
   // return an Eigen3 vector, zero-copy
   typedef Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1> > EVecMap;
   EVecMap eigenVector() const { return EVecMap(data(), size()); }
+  EVecMap vec() const { return EVecMap(data(), size()); }
+
   // return an Eigen3 array, zero-copy
   typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, 1> > EArrayMap;
   EArrayMap eigenArray() const { return EArrayMap(data(), size()); }
+  EArrayMap arr() const { return EArrayMap(data(), size()); }
+
+  // return an Eigen3 matrix, zero-copy
+  typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, Eigen::Dynamic> > EMatMap;
+  EMatMap eigenMatrix(int k) const {
+    CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
+  }
+  EMatMap mat(int k) const {
+    CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
+  }
+
+
 
   double mean() const { return empty() ? 0 : eigenArray().sum() / (double)size(); }
   double std() const {

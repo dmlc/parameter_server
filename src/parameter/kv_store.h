@@ -1,50 +1,50 @@
 #pragma once
-
-#include "system/message.h"
-
+#include "parameter/shared_parameter.h"
 namespace PS {
 
-template <typename K, typename V>
-class SharedParameter;
-
-// an KV storage interface, defines functions required by SharedParameter, see
-// SharedParameter<K,V>::process(Message* msg)
-// msg is a message received from a remote node
-template <typename K, typename V>
-class KVStore {
+// key value storage. an entry *E* should has two functions get(char const* data)
+// and put(char* data), where data has length *entry_sync_size*
+template <typename K, typename E>
+class KVStore : public SharedParameter<K> {
  public:
-  KVStore() {}
-  ~KVStore() {}
+  // only supports fix size entry_sync_size
+  // TODO if entry_sync_size == -1, then allow variable length
+  KVStore(int entry_sync_size) : k_(entry_sync_size) { }
+  virtual ~KVStore() {}
 
-  // fill the values specified by the key lists in msg
-  virtual void getValue(Message* msg) = 0;
+  // TODO multi-thread by shard
+  virtual void getValue(const MessagePtr& msg) {
+    SArray<K> key(msg->key);
+    size_t n = key.size();
+    SArray<char> val(n * k_);
+    for (size_t i = 0; i < n; ++i) {
+      data_[key[i]].put(val.data() + i * k_);
+    }
+    msg->addValue(val);
+  }
 
-  // set the received KV pairs into my data strcuture
-  virtual void setValue(Message* msg) = 0;
+  virtual void setValue(const MessagePtr& msg) {
+    SArray<K> key(msg->key);
+    CHECK_GT(msg->value.size(), 0);
+    SArray<char> val(msg->value[0]);
+    size_t n = key.size();
+    CHECK_EQ(n * k_, val.size());
+    for (size_t i = 0; i < n; ++i) {
+      data_[key[i]].get(val.data() + i * k_);
+    }
+  }
 
-  // the message contains the backup KV pairs sent by the master node of the key
-  // segment to its replica node. merge these pairs into my replica, say
-  // replica_[msg->sender] = ...
-  virtual void setReplica(Message *msg) = 0; // { CHECK(false); }
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
+    return sliceKeyOrderedMsg<K>(msg, sep);
+  }
 
-  // retrieve the replica. a new server node replacing a dead server will first
-  // ask for the dead's replica node for the data
-  virtual void getReplica(Range<K> range, Message *msg)  = 0; // {CHECK(false);  }
-
-  // a new server node fill its own datastructure via the the replica data from
-  // the dead's replica node
-  virtual void recoverFrom(Message *msg) = 0; // { CHECK(false); }
-
-  virtual std::vector<Message> decompose(
-      const Message& msg, const std::vector<K>& partition) = 0;
-
-  // recover from a replica node
-  // TODO recover from a checkpoint
-  virtual void recover() = 0;
-
+  // TODO fault tolerance
+  void setReplica(const MessagePtr& msg) { }
+  void getReplica(const MessagePtr& msg) { }
+  void recoverFrom(const MessagePtr& msg) { }
  protected:
- // protected:
-  // std::unique_ptr<SharedParameter<K,V> > sp_;
+  int k_ = 1;
+  std::unordered_map<K, E> data_;
 };
 
 } // namespace PS

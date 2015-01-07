@@ -4,6 +4,8 @@
 namespace PS {
 namespace FM {
 
+typedef double Real;
+
 class FactorizationMachine {
  public:
   static AppPtr create(const Config& conf);

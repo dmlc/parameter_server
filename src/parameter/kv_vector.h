@@ -12,7 +12,10 @@ template<typename K, typename V> using KVVectorPtr = std::shared_ptr<KVVector<K,
 template <typename K, typename V>
 class KVVector : public SharedParameter<K> {
  public:
-  USING_SHARED_PARAMETER;
+  KVVector() : val_entry_size_(1) { }
+  KVVector(int k) : val_entry_size_(k) { }
+  virtual ~KVVector() { }
+
   SArray<K>& key(int channel) { Lock l(mu_); return key_[channel]; }
   SArray<V>& value(int channel) { Lock l(mu_); return val_[channel]; }
   void clear(int channel) { Lock l(mu_); key_.erase(channel); val_.erase(channel); }
@@ -22,14 +25,19 @@ class KVVector : public SharedParameter<K> {
     return key(channel).findRange(key_range);
   }
 
+  int valueEntrySize() const { return val_entry_size_; }
+
+  // functions will used by the system
   MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
 
+  USING_SHARED_PARAMETER;
  protected:
   std::mutex mu_;
   std::unordered_map<int, SArray<K>> key_;
   std::unordered_map<int, SArray<V>> val_;
+  int val_entry_size_;
 };
 
 template <typename K, typename V>

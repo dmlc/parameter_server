@@ -7,9 +7,23 @@
 #include "dashboard.h"
 namespace PS {
 
+// called when register a customer in Init()
 #define REGISTER_CUSTOMER(name, customer)                               \
   customer->setName(name);                                              \
-  Postoffice::instance().yp().add(std::static_pointer_cast<Customer>(customer));
+  PS::Postoffice::instance().yp().add(std::static_pointer_cast<PS::Customer>(customer));
+
+// called after Init(), this customer needs to get all node information from its
+// parent
+#define REGISTER_CHILD_CUSTOMER(name, customer_ptr, parent_name)        \
+  {                                                                     \
+    REGISTER_CUSTOMER(name, customer_ptr);                              \
+    auto parent_ptr = PS::Postoffice::instance().yp().customer(parent_name); \
+    CHECK(parent_ptr) << parent_name;                                   \
+    parent_ptr->addChild(name);                                         \
+    auto child_ptr =  PS::Postoffice::instance().yp().customer(name);   \
+    CHECK(child_ptr) << name;                                           \
+    child_ptr->exec().init(parent_ptr->exec().nodes());                 \
+  }
 
 DECLARE_int32(num_servers);
 DECLARE_int32(num_workers);
