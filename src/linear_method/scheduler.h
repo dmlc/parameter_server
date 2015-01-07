@@ -6,6 +6,7 @@ namespace LM {
 // the base class for the scheduler
 class Scheduler : public LinearMethod {
  public:
+  Scheduler(const string& name) : LinearMethod(name) { }
   virtual void init() { LinearMethod::init(); }
   virtual void process(const MessagePtr& msg);
 

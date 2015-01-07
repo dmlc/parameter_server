@@ -8,8 +8,8 @@ namespace LM {
 void FTRLWorker::init() {
   CompNode::init();
   data_prefetcher_.setCapacity(conf_.solver().max_data_buf_size_in_mb());
-  model_ = KVVectorPtr<Key, real>(new KVVector<Key, real>());
-  REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
+  // model_ = KVVectorPtr<Key, real>(new KVVector<Key, real>());
+  // REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
 }
 
 void FTRLWorker::computeGradient() {
@@ -38,11 +38,11 @@ void FTRLWorker::computeGradient() {
         msg->setKey(uniq_key);
         msg->addValue(key_cnt);
         // msg->addFilter(FilterConfig::KEY_CACHING);
-        auto tail = model_->set(msg)->mutable_tail_filter();
+        auto tail = model_.set(msg)->mutable_tail_filter();
         tail->set_insert_count(true);
         tail->set_query_key(conf_.solver().tail_feature_freq());
         tail->set_query_value(true);
-        data->pull_time = model_->pull(msg);
+        data->pull_time = model_.pull(msg);
 
         data->batch_id = batch_id ++;
         *size = data->label->memSize() + data->localizer->memSize();
@@ -56,20 +56,20 @@ void FTRLWorker::computeGradient() {
     // release some memory
     int id = batch.batch_id;
     if (pre_batch >= 0) {
-      model_->clear(pre_batch);
+      model_.clear(pre_batch);
       pre_batch = id;
     }
     // waiting the model working set
-    model_->waitOutMsg(kServerGroup, batch.pull_time);
+    model_.waitOutMsg(kServerGroup, batch.pull_time);
 
     // localize the feature matrix
-    auto X = batch.localizer->remapIndex(model_->key(id));
+    auto X = batch.localizer->remapIndex(model_.key(id));
     auto Y = batch.label;
     CHECK_EQ(X->rows(), Y->rows());
 
     // compute the gradient
     SArray<real> Xw(Y->rows());
-    auto w = model_->value(id);
+    auto w = model_.value(id);
     Xw.eigenArray() = *X * w.eigenArray();
     real objv = loss_->evaluate({Y, Xw.matrix()});
     real auc = Evaluation<real>::auc(Y->value(), Xw);
@@ -86,11 +86,11 @@ void FTRLWorker::computeGradient() {
 
     // push the gradient
     MessagePtr msg(new Message(kServerGroup));
-    msg->setKey(model_->key(i));
+    msg->setKey(model_.key(i));
     msg->addValue(grad);
     msg->task.set_key_channel(id);
     // msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-    model_->push(msg);
+    model_.push(msg);
   }
 }
 

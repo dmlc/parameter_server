@@ -1,30 +1,32 @@
 #include "system/postoffice.h"
 #include "data/show_example.h"
 #include "data/text2proto.h"
+#include "system/app.h"
+
 #include "linear_method/linear_method.h"
-#include "graph_partition/graph_partition.h"
-#include "factorization_machine/fm.h"
+// #include "graph_partition/graph_partition.h"
+// #include "factorization_machine/fm.h"
 DEFINE_bool(log_instant, false, "disable buffer of glog");
 
 namespace PS {
-AppPtr App::create(const AppConfig& conf) {
-  AppPtr ptr;
+App* App::create(const AppConfig& conf) {
+  App* ptr = nullptr;
   if (conf.has_linear_method()) {
-    ptr = LM::LinearMethod::create(conf.linear_method());
-    CHECK(ptr);
-  } else if (conf.has_graph_partition()) {
-    ptr = GP::GraphPartition::create(conf.graph_partition());
-  } else if (conf.has_factorization_machine()) {
-    ptr = FM::FactorizationMachine::create(conf.factorization_machine());
-  } else {
-    CHECK(false) << "unknown app: " << conf.DebugString();
+    ptr = LM::LinearMethod::create(conf.app_name(), conf.linear_method());
   }
+  // } else if (conf.has_graph_partition()) {
+  //   ptr = GP::GraphPartition::create(conf.graph_partition());
+  // } else if (conf.has_factorization_machine()) {
+  //   ptr = FM::FactorizationMachine::create(conf.factorization_machine());
+  // } else {
+  //   CHECK(false) << "unknown app: " << conf.DebugString();
+  // }
 
-  CHECK(conf.has_app_name());
-  ptr->name_ = conf.app_name();
-  for (int i = 0; i < conf.parameter_name_size(); ++i) {
-    ptr->child_customers_.push_back(conf.parameter_name(i));
-  }
+  // CHECK(conf.has_app_name());
+  // ptr->name_ = conf.app_name();
+  // for (int i = 0; i < conf.parameter_name_size(); ++i) {
+  //   ptr->child_customers_.push_back(conf.parameter_name(i));
+  // }
   ptr->app_cf_ = conf;
   ptr->init();
   return ptr;

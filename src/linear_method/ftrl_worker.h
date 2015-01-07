@@ -11,6 +11,7 @@ namespace LM {
 
 class FTRLWorker : public CompNode {
  public:
+  FTRLWorker(const string& name) : CompNode(name), model_(name+"_w", name) { }
   virtual void init();
   virtual void iterate(const MessagePtr& msg) {
     report.start(this, conf_.solver().eval_interval());
@@ -19,7 +20,7 @@ class FTRLWorker : public CompNode {
   virtual void evaluateProgress(Progress* prog);
  private:
   void computeGradient();
-  KVVectorPtr<Key, real> model_;
+  KVVector<Key, real> model_;
 
   struct Minibatch {
     MatrixPtr<real> label;

@@ -15,7 +15,9 @@ namespace LM {
 // linear classification/regerssion
 class LinearMethod : public App {
  public:
-  static AppPtr create(const Config& conf);
+  static App* create(const string& name, const Config& conf);
+  LinearMethod(const string& name) : App(name) { }
+  ~LinearMethod() { }
   virtual void init();
 
   static Call get(const MessageCPtr& msg) {
@@ -39,7 +41,6 @@ class LinearMethod : public App {
 
   LossPtr<double> loss_;
   PenaltyPtr<double> penalty_;
-  // shared_ptr<AggGradLearner<double>> learner_;
 };
 
 } // namespace LM

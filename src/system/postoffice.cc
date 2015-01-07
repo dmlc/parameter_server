@@ -36,7 +36,6 @@ void Postoffice::run() {
   // omp_set_dynamic(0);
   // omp_set_num_threads(FLAGS_num_threads);
   yellow_pages_.init();
-  heartbeat_info_.init(FLAGS_interface, myNode().hostname());
 
   if (FLAGS_log_to_file) {
     google::SetLogDestination(google::INFO, ("./log_" + myNode().id() + "_").c_str());
@@ -46,22 +45,23 @@ void Postoffice::run() {
   recving_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
 
-  // threads on statistic
-  if (FLAGS_report_interval > 0) {
-    if (Node::SCHEDULER == myNode().role()) {
-      monitoring_ = std::unique_ptr<std::thread>(
-        new std::thread(&Postoffice::monitor, this));
-      monitoring_->detach();
-    } else {
-      heartbeating_ = std::unique_ptr<std::thread>(
-        new std::thread(&Postoffice::heartbeat, this));
-      heartbeating_->detach();
-    }
-  }
+  // heartbeat_info_.init(FLAGS_interface, myNode().hostname());
+  // // threads on statistic
+  // if (FLAGS_report_interval > 0) {
+  //   if (Node::SCHEDULER == myNode().role()) {
+  //     monitoring_ = std::unique_ptr<std::thread>(
+  //       new std::thread(&Postoffice::monitor, this));
+  //     monitoring_->detach();
+  //   } else {
+  //     heartbeating_ = std::unique_ptr<std::thread>(
+  //       new std::thread(&Postoffice::heartbeat, this));
+  //     heartbeating_->detach();
+  //   }
+  // }
 
   if (myNode().role() == Node::SCHEDULER) {
     // get all node information
-    yellow_pages_.add(myNode());
+    yellow_pages_.addNode(myNode());
     if (FLAGS_num_workers || FLAGS_num_servers) {
       nodes_are_ready_.get_future().wait();
       LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
@@ -70,8 +70,8 @@ void Postoffice::run() {
 
     // run the application
     AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);
-    AppPtr app = App::create(conf);
-    yellow_pages_.add(app);
+    App* app = App::create(conf);
+    yellow_pages_.depositCustomer(app);
     app->run();
     app->stopAll();
   } else {
@@ -132,7 +132,7 @@ void Postoffice::send() {
     if (!stat.ok()) {
       LL << "sending " << *msg << " failed. error: " << stat.ToString();
     }
-    heartbeat_info_.increaseOutBytes(send_bytes);
+    // heartbeat_info_.increaseOutBytes(send_bytes);
   }
 }
 
@@ -143,7 +143,7 @@ void Postoffice::recv() {
     size_t recv_bytes = 0;
     auto stat = yellow_pages_.van().recv(msg, &recv_bytes);
     CHECK(stat.ok()) << stat.ToString();
-    heartbeat_info_.increaseInBytes(recv_bytes);
+    // heartbeat_info_.increaseInBytes(recv_bytes);
 
     // process it
     auto& tk = msg->task;
@@ -154,17 +154,17 @@ void Postoffice::recv() {
       CHECK(pt) << "customer [" << tk.customer() << "] doesn't exist";
       pt->exec().accept(msg);
 
-      // if I am the scheduler,
-      //   I also record the latest task id for W/S without extra trouble
-      if (FLAGS_report_interval > 0 && Node::SCHEDULER == myNode().role()) {
-        dashboard_.addTask(msg->sender, msg->task.time());
-      }
+      // // if I am the scheduler,
+      // //   I also record the latest task id for W/S without extra trouble
+      // if (FLAGS_report_interval > 0 && Node::SCHEDULER == myNode().role()) {
+      //   dashboard_.addTask(msg->sender, msg->task.time());
+      // }
       continue;
     }
 
     if (type == Task::HEARTBEATING) {
       // newly arrived heartbeat pack
-      dashboard_.addReport(msg->sender, tk.msg());
+      // dashboard_.addReport(msg->sender, tk.msg());
     } else if (type == Task::MANAGE) {
       if (request && tk.has_mng_app()) manageApp(tk);
       if (request && tk.has_mng_node()) manageNode(tk);
@@ -185,7 +185,7 @@ void Postoffice::manageApp(const Task& tk) {
   CHECK(tk.has_mng_app());
   auto& mng = tk.mng_app();
   if (mng.cmd() == ManageApp::ADD) {
-    yellow_pages_.add(std::static_pointer_cast<Customer>(App::create(mng.app_config())));
+    yellow_pages_.depositCustomer(App::create(mng.app_config()));
   }
 }
 
@@ -200,14 +200,14 @@ void Postoffice::manageNode(const Task& tk) {
   auto obj = yellow_pages_.customer(tk.customer());
   switch (mng.cmd()) {
     case ManageNode::ADD:
-      for (auto n : nodes) yellow_pages_.add(n);
+      for (auto n : nodes) yellow_pages_.addNode(n);
       if (yellow_pages_.num_workers() >= FLAGS_num_workers &&
           yellow_pages_.num_servers() >= FLAGS_num_servers) {
         nodes_are_ready_.set_value();
       }
       break;
     case ManageNode::INIT:
-      for (auto n : nodes) yellow_pages_.add(n);
+      for (auto n : nodes) yellow_pages_.addNode(n);
       if (obj != nullptr) {
         obj->exec().init(nodes);
         for (auto c : obj->children()) {
@@ -228,35 +228,35 @@ void Postoffice::manageNode(const Task& tk) {
   }
 }
 
-void Postoffice::heartbeat() {
-  while (!done_) {
-    // heartbeat won't work until I have connected to the scheduler
-    std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
-    if (yellow_pages_.van().connected(scheduler())) {
-      // serialize heartbeat report
-      string report;
-      heartbeat_info_.get().SerializeToString(&report);
+// void Postoffice::heartbeat() {
+//   while (!done_) {
+//     // heartbeat won't work until I have connected to the scheduler
+//     std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
+//     if (yellow_pages_.van().connected(scheduler())) {
+//       // serialize heartbeat report
+//       string report;
+//       heartbeat_info_.get().SerializeToString(&report);
 
-      // pack msg
-      Task task;
-      task.set_type(Task::HEARTBEATING);
-      task.set_request(true);
-      task.set_msg(report);
-      task.set_do_not_reply(true);
-      MessagePtr msg(new Message(task));
-      msg->recver = scheduler().id();
+//       // pack msg
+//       Task task;
+//       task.set_type(Task::HEARTBEATING);
+//       task.set_request(true);
+//       task.set_msg(report);
+//       task.set_do_not_reply(true);
+//       MessagePtr msg(new Message(task));
+//       msg->recver = scheduler().id();
 
-      // push into sending queue
-      queue(msg);
-    }
-  }
-}
+//       // push into sending queue
+//       queue(msg);
+//     }
+//   }
+// }
 
-void Postoffice::monitor() {
-  while (!done_) {
-    std::cerr << dashboard_.report() << "\n\n";
-    std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
-  }
-}
+// void Postoffice::monitor() {
+//   while (!done_) {
+//     std::cerr << dashboard_.report() << "\n\n";
+//     std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
+//   }
+// }
 
 } // namespace PS

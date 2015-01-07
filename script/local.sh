@@ -20,12 +20,12 @@ mkdir -p ../output
 FLAGS_logtostderr=1
 
 # start the scheduler
-Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'"
+Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8001,id:'H'"
 ${bin} -my_node ${Sch} -scheduler ${Sch} ${arg} &
 
 # start servers
 for ((i=0; i<${num_servers}; ++i)); do
-    port=$((8100 + ${i}))
+    port=$((9600 + ${i}))
     N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'S${i}'"
     # CPUPROFILE=/tmp/S${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
@@ -33,7 +33,7 @@ done
 
 # start workers
 for ((i=0; i<${num_workers}; ++i)); do
-    port=$((8200 + ${i}))
+    port=$((9500 + ${i}))
     N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'W${i}'"
     # CPUPROFILE=/tmp/W${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &

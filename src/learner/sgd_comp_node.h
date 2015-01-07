@@ -18,6 +18,7 @@ class SGDCompNode : public SGDNode {
             sch->submit(report);
           }
         }));
+    reporter_thr_.detach();
   }
 
   // no need for a worker/server

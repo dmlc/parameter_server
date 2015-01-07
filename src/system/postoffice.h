@@ -7,23 +7,6 @@
 #include "dashboard.h"
 namespace PS {
 
-// called when register a customer in Init()
-#define REGISTER_CUSTOMER(name, customer)                               \
-  customer->setName(name);                                              \
-  PS::Postoffice::instance().yp().add(std::static_pointer_cast<PS::Customer>(customer));
-
-// called after Init(), this customer needs to get all node information from its
-// parent
-#define REGISTER_CHILD_CUSTOMER(name, customer_ptr, parent_name)        \
-  {                                                                     \
-    REGISTER_CUSTOMER(name, customer_ptr);                              \
-    auto parent_ptr = PS::Postoffice::instance().yp().customer(parent_name); \
-    CHECK(parent_ptr) << parent_name;                                   \
-    parent_ptr->addChild(name);                                         \
-    auto child_ptr =  PS::Postoffice::instance().yp().customer(name);   \
-    CHECK(child_ptr) << name;                                           \
-    child_ptr->exec().init(parent_ptr->exec().nodes());                 \
-  }
 
 DECLARE_int32(num_servers);
 DECLARE_int32(num_workers);
@@ -58,7 +41,7 @@ class Postoffice {
   Node& myNode() { return yellow_pages_.van().myNode(); }
   Node& scheduler() { return yellow_pages_.van().scheduler(); }
 
-  HeartbeatInfo& hb() { return heartbeat_info_; };
+  // HeartbeatInfo& hb() { return heartbeat_info_; };
 
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
@@ -67,10 +50,6 @@ class Postoffice {
   void manageApp(const Task& pt);
   void send();
   void recv();
-  // heartbeat thread function
-  void heartbeat();
-  // monitor thread function only used by scheduler
-  void monitor();
 
   // void addMyNode(const string& name, const Node& recver);
 
@@ -83,16 +62,20 @@ class Postoffice {
   std::promise<void> nodes_are_ready_;
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
-  std::unique_ptr<std::thread> heartbeating_;
-  std::unique_ptr<std::thread> monitoring_;
   threadsafe_queue<MessagePtr> sending_queue_;
 
   // yp_ should stay behind sending_queue_ so it will be destroied earlier
   YellowPages yellow_pages_;
 
-  // heartbeat info for workers/servers
-  HeartbeatInfo heartbeat_info_;
-  Dashboard dashboard_;
+  // std::unique_ptr<std::thread> heartbeating_;
+  // std::unique_ptr<std::thread> monitoring_;
+  // // heartbeat thread function
+  // void heartbeat();
+  // // monitor thread function only used by scheduler
+  // void monitor();
+  // // heartbeat info for workers/servers
+  // HeartbeatInfo heartbeat_info_;
+  // Dashboard dashboard_;
 };
 
 } // namespace PS

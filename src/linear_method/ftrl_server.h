@@ -8,11 +8,14 @@ namespace LM {
 
 class FTRLServer : public CompNode {
  public:
+  FTRLServer(const string& name)
+      : CompNode(name), model_(name+"_w", name) { }
   virtual void init() {
     CompNode::init();
-    model_ = std::shared_ptr<FTRLModel>(new FTRLModel());
-    model_->init(conf_);
-    REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
+    // model_ = std::shared_ptr<FTRLModel>(new FTRLModel());
+    // model_->init(conf_);
+    // REGISTER_CUSTOMER(app_cf_.parameter_name(0), model_);
+    model_.init(conf_);
   }
 
   virtual void iterate(const MessagePtr& msg) {
@@ -20,17 +23,17 @@ class FTRLServer : public CompNode {
   }
 
   virtual void evaluateProgress(Progress* prog) {
-    model_->evaluateProgress(prog);
+    model_.evaluateProgress(prog);
   }
 
   virtual void saveModel() {
     if (conf_.has_model_output()) {
       auto out = ithFile(conf_.model_output(), 0, "_" + myNodeID());
-      model_->writeToFile(out);
+      model_.writeToFile(out);
     }
   }
  protected:
-  std::shared_ptr<FTRLModel> model_;
+  FTRLModel model_;
   ProgressReporter report;
 };
 

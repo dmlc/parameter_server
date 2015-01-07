@@ -13,6 +13,9 @@ struct FTRLEntry {
 
 class FTRLModel : public SharedParameter<Key> {
  public:
+  FTRLModel(const string& my_name, const string& parent_name) :
+      SharedParameter<Key>(my_name, parent_name) { }
+
   void init(const Config& conf) {
     // set learning rate
     alpha_ = conf.learning_rate().alpha();

@@ -15,26 +15,31 @@ class YellowPages {
  public:
   YellowPages() { }
   ~YellowPages();
-
   void init() { van_.init(); }
 
-  void add(CustomerPtr customer);
-  CustomerPtr customer(const string& name);
+  // manage customers
+  void addCustomer(Customer* obj);
+  // ask the system to delete the customer
+  void depositCustomer(Customer* obj);
+  void removeCustomer(const string& name);
+  Customer* customer(const string& name);
 
-  void add(const Node& node);
-
-  Van& van() { return van_; }
-
+  // manage nodes
+  void addNode(const Node& node);
   int num_workers() { return num_workers_; }
   int num_servers() { return num_servers_; }
   const map<NodeID, Node>& nodes() { return nodes_; }
+
+  Van& van() { return van_; }
+
  private:
   DISALLOW_COPY_AND_ASSIGN(YellowPages);
   int num_workers_ = 0;
   int num_servers_ = 0;
 
-  map<NodeID, Node> nodes_;
-  map<string, shared_ptr<Customer>> customers_;
+  std::map<NodeID, Node> nodes_;
+  std::map<string, Customer*> customers_;
+  std::unordered_set<string> deletable_customers_;
 
   Van van_;
 };

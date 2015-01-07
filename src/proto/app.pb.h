@@ -95,7 +95,7 @@ class AppConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional string app_name = 1;
+  // optional string app_name = 1 [default = "app"];
   inline bool has_app_name() const;
   inline void clear_app_name();
   static const int kAppNameFieldNumber = 1;
@@ -106,22 +106,6 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::std::string* mutable_app_name();
   inline ::std::string* release_app_name();
   inline void set_allocated_app_name(::std::string* app_name);
-
-  // repeated string parameter_name = 2;
-  inline int parameter_name_size() const;
-  inline void clear_parameter_name();
-  static const int kParameterNameFieldNumber = 2;
-  inline const ::std::string& parameter_name(int index) const;
-  inline ::std::string* mutable_parameter_name(int index);
-  inline void set_parameter_name(int index, const ::std::string& value);
-  inline void set_parameter_name(int index, const char* value);
-  inline void set_parameter_name(int index, const char* value, size_t size);
-  inline ::std::string* add_parameter_name();
-  inline void add_parameter_name(const ::std::string& value);
-  inline void add_parameter_name(const char* value);
-  inline void add_parameter_name(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parameter_name() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parameter_name();
 
   // optional .PS.LM.Config linear_method = 3;
   inline bool has_linear_method() const;
@@ -175,14 +159,14 @@ class AppConfig : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* app_name_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> parameter_name_;
+  static ::std::string* _default_app_name_;
   ::PS::LM::Config* linear_method_;
   ::PS::NN::Config* neural_network_;
   ::PS::GP::Config* graph_partition_;
   ::PS::FM::Config* factorization_machine_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_proto_2fapp_2eproto();
   friend void protobuf_AssignDesc_proto_2fapp_2eproto();
@@ -198,7 +182,7 @@ class AppConfig : public ::google::protobuf::Message {
 
 // AppConfig
 
-// optional string app_name = 1;
+// optional string app_name = 1 [default = "app"];
 inline bool AppConfig::has_app_name() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -209,8 +193,8 @@ inline void AppConfig::clear_has_app_name() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void AppConfig::clear_app_name() {
-  if (app_name_ != &::google::protobuf::internal::kEmptyString) {
-    app_name_->clear();
+  if (app_name_ != _default_app_name_) {
+    app_name_->assign(*_default_app_name_);
   }
   clear_has_app_name();
 }
@@ -219,44 +203,44 @@ inline const ::std::string& AppConfig::app_name() const {
 }
 inline void AppConfig::set_app_name(const ::std::string& value) {
   set_has_app_name();
-  if (app_name_ == &::google::protobuf::internal::kEmptyString) {
+  if (app_name_ == _default_app_name_) {
     app_name_ = new ::std::string;
   }
   app_name_->assign(value);
 }
 inline void AppConfig::set_app_name(const char* value) {
   set_has_app_name();
-  if (app_name_ == &::google::protobuf::internal::kEmptyString) {
+  if (app_name_ == _default_app_name_) {
     app_name_ = new ::std::string;
   }
   app_name_->assign(value);
 }
 inline void AppConfig::set_app_name(const char* value, size_t size) {
   set_has_app_name();
-  if (app_name_ == &::google::protobuf::internal::kEmptyString) {
+  if (app_name_ == _default_app_name_) {
     app_name_ = new ::std::string;
   }
   app_name_->assign(reinterpret_cast<const char*>(value), size);
 }
 inline ::std::string* AppConfig::mutable_app_name() {
   set_has_app_name();
-  if (app_name_ == &::google::protobuf::internal::kEmptyString) {
-    app_name_ = new ::std::string;
+  if (app_name_ == _default_app_name_) {
+    app_name_ = new ::std::string(*_default_app_name_);
   }
   return app_name_;
 }
 inline ::std::string* AppConfig::release_app_name() {
   clear_has_app_name();
-  if (app_name_ == &::google::protobuf::internal::kEmptyString) {
+  if (app_name_ == _default_app_name_) {
     return NULL;
   } else {
     ::std::string* temp = app_name_;
-    app_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    app_name_ = const_cast< ::std::string*>(_default_app_name_);
     return temp;
   }
 }
 inline void AppConfig::set_allocated_app_name(::std::string* app_name) {
-  if (app_name_ != &::google::protobuf::internal::kEmptyString) {
+  if (app_name_ != _default_app_name_) {
     delete app_name_;
   }
   if (app_name) {
@@ -264,63 +248,19 @@ inline void AppConfig::set_allocated_app_name(::std::string* app_name) {
     app_name_ = app_name;
   } else {
     clear_has_app_name();
-    app_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    app_name_ = const_cast< ::std::string*>(_default_app_name_);
   }
-}
-
-// repeated string parameter_name = 2;
-inline int AppConfig::parameter_name_size() const {
-  return parameter_name_.size();
-}
-inline void AppConfig::clear_parameter_name() {
-  parameter_name_.Clear();
-}
-inline const ::std::string& AppConfig::parameter_name(int index) const {
-  return parameter_name_.Get(index);
-}
-inline ::std::string* AppConfig::mutable_parameter_name(int index) {
-  return parameter_name_.Mutable(index);
-}
-inline void AppConfig::set_parameter_name(int index, const ::std::string& value) {
-  parameter_name_.Mutable(index)->assign(value);
-}
-inline void AppConfig::set_parameter_name(int index, const char* value) {
-  parameter_name_.Mutable(index)->assign(value);
-}
-inline void AppConfig::set_parameter_name(int index, const char* value, size_t size) {
-  parameter_name_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* AppConfig::add_parameter_name() {
-  return parameter_name_.Add();
-}
-inline void AppConfig::add_parameter_name(const ::std::string& value) {
-  parameter_name_.Add()->assign(value);
-}
-inline void AppConfig::add_parameter_name(const char* value) {
-  parameter_name_.Add()->assign(value);
-}
-inline void AppConfig::add_parameter_name(const char* value, size_t size) {
-  parameter_name_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-AppConfig::parameter_name() const {
-  return parameter_name_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-AppConfig::mutable_parameter_name() {
-  return &parameter_name_;
 }
 
 // optional .PS.LM.Config linear_method = 3;
 inline bool AppConfig::has_linear_method() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void AppConfig::set_has_linear_method() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void AppConfig::clear_has_linear_method() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void AppConfig::clear_linear_method() {
   if (linear_method_ != NULL) linear_method_->::PS::LM::Config::Clear();
@@ -352,13 +292,13 @@ inline void AppConfig::set_allocated_linear_method(::PS::LM::Config* linear_meth
 
 // optional .PS.NN.Config neural_network = 4;
 inline bool AppConfig::has_neural_network() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void AppConfig::set_has_neural_network() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void AppConfig::clear_has_neural_network() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void AppConfig::clear_neural_network() {
   if (neural_network_ != NULL) neural_network_->::PS::NN::Config::Clear();
@@ -390,13 +330,13 @@ inline void AppConfig::set_allocated_neural_network(::PS::NN::Config* neural_net
 
 // optional .PS.GP.Config graph_partition = 5;
 inline bool AppConfig::has_graph_partition() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void AppConfig::set_has_graph_partition() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void AppConfig::clear_has_graph_partition() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void AppConfig::clear_graph_partition() {
   if (graph_partition_ != NULL) graph_partition_->::PS::GP::Config::Clear();
@@ -428,13 +368,13 @@ inline void AppConfig::set_allocated_graph_partition(::PS::GP::Config* graph_par
 
 // optional .PS.FM.Config factorization_machine = 6;
 inline bool AppConfig::has_factorization_machine() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void AppConfig::set_has_factorization_machine() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void AppConfig::clear_has_factorization_machine() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void AppConfig::clear_factorization_machine() {
   if (factorization_machine_ != NULL) factorization_machine_->::PS::FM::Config::Clear();

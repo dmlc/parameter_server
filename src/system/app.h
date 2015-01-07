@@ -5,17 +5,12 @@
 
 namespace PS {
 
-DECLARE_bool(test_fault_tol);
-
-class App;
-typedef std::shared_ptr<App> AppPtr;
-
 class App : public Customer {
  public:
-  App() { }
+  App(const string& name) : Customer(name) { }
   virtual ~App() { }
   // factory function
-  static AppPtr create(const AppConfig& config);
+  static App* create(const AppConfig& config);
   // initialization
   virtual void init() = 0;
   // run the applications: load data, iterating...

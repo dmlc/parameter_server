@@ -4,59 +4,45 @@
 #include "base/matrix_io_inl.h"
 #include "proto/instance.pb.h"
 #include "base/io.h"
-#include "linear_method/darlin_worker.h"
-#include "linear_method/darlin_server.h"
-#include "linear_method/darlin_scheduler.h"
-#include "linear_method/batch_worker.h"
-#include "linear_method/batch_server.h"
-#include "linear_method/batch_scheduler.h"
-#include "linear_method/model_evaluation.h"
+// #include "linear_method/darlin_worker.h"
+// #include "linear_method/darlin_server.h"
+// #include "linear_method/darlin_scheduler.h"
+// #include "linear_method/batch_worker.h"
+// #include "linear_method/batch_server.h"
+// #include "linear_method/batch_scheduler.h"
+// #include "linear_method/model_evaluation.h"
 #include "linear_method/ftrl_scheduler.h"
 #include "linear_method/ftrl_worker.h"
 #include "linear_method/ftrl_server.h"
 namespace PS {
 namespace LM {
 
-AppPtr LinearMethod::create(const Config& conf) {
+App* LinearMethod::create(const string& name, const Config& conf) {
   auto my_role = Postoffice::instance().myNode().role();
   if (!conf.has_solver()) {
     if (conf.has_validation_data() && conf.has_model_input()) {
-      return AppPtr(new ModelEvaluation());
+      // return new ModelEvaluation(name);
     }
   } else if (conf.solver().minibatch_size() <= 0) {
-    // batch solver
-    if (conf.has_darling()) {
-      // darlin
-      if (my_role == Node::SCHEDULER) {
-        return AppPtr(new DarlinScheduler());
-      } else if (my_role == Node::WORKER) {
-        return AppPtr(new DarlinWorker());
-      } else if (my_role == Node::SERVER) {
-        return AppPtr(new DarlinServer());
-      }
-    } else {
-      // general batch solver
-      if (my_role == Node::SCHEDULER) {
-        return AppPtr(new BatchScheduler());
-      } else if (my_role == Node::WORKER) {
-        return AppPtr(new BatchWorker());
-      } else if (my_role == Node::SERVER) {
-        return AppPtr(new BatchServer());
-      }
-    }
+    // // batch solver
+    // if (conf.has_darling()) {
+    //   CREATE_APP(Darlin, name);
+    // } else {
+    //   CREATE_APP(Batch, name);
+    // }
   } else {
     // online solver
     if (conf.has_ftrl()) {
       if (my_role == Node::SCHEDULER) {
-        return AppPtr(new FTRLScheduler());
+        return new FTRLScheduler(name);
       } else if (my_role == Node::WORKER) {
-        return AppPtr(new FTRLWorker());
+        return new FTRLWorker(name);
       } else if (my_role == Node::SERVER) {
-        return AppPtr(new FTRLServer());
+        return new FTRLServer(name);
       }
     }
   }
-  return AppPtr(nullptr);
+  return nullptr;
 }
 
 void LinearMethod::init() {

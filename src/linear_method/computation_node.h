@@ -6,6 +6,7 @@ namespace LM {
 // the base class for a worker or a server
 class CompNode : public LinearMethod {
  public:
+  CompNode(const string& name) : LinearMethod(name) { }
   virtual void init() { LinearMethod::init(); }
   virtual void process(const MessagePtr& msg);
   void run() { }

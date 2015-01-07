@@ -11,6 +11,8 @@ template <typename K> using SharedParameterPtr = std::shared_ptr<SharedParameter
 template <typename K>
 class SharedParameter : public Customer {
  public:
+  SharedParameter(const string& my_name, const string& parent_name)
+      : Customer(my_name, parent_name) { }
   // convenient wrappers of functions in remote_node.h
   int sync(MessagePtr msg) {
     CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
@@ -101,7 +103,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     std::swap(reply->sender, reply->recver);
   }
 
-  this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
+  // this->sys_.hb().startTimer(HeartbeatInfo::TimerType::BUSY);
   // process
   if (call.replica()) {
     if (pull && !req && Range<K>(msg->task.key_range()) == myKeyRange()) {
@@ -144,7 +146,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
       getValue(reply);
     }
   }
-  this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
+  // this->sys_.hb().stopTimer(HeartbeatInfo::TimerType::BUSY);
 
   // reply if necessary
   if (pull && req) {

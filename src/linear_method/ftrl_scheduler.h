@@ -5,6 +5,7 @@ namespace LM {
 
 class FTRLScheduler : public Scheduler {
  public:
+  FTRLScheduler(const string& name) : Scheduler(name) { }
   virtual void init() { Scheduler::init(); }
   virtual void run();
 
