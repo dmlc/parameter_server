@@ -66,6 +66,11 @@ class Range {
     return !inLeft(other);
   }
 
+  // project v into this range
+  template <typename V> V project(const V& v) const {
+    return static_cast<V>(std::max(begin_, std::min(end_, static_cast<T>(p))));
+  }
+
   Range setIntersection(const Range& dest) const {
     return Range(std::max(begin_, dest.begin_), std::min(end_, dest.end_));
   }

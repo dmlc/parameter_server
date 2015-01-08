@@ -22,11 +22,13 @@ Customer::~Customer() {
   sys_.yp().removeCustomer(name_);
 }
 
-MessagePtrList Customer::slice(const MessagePtr& msg, const KeyList& sep) {
-  // in default, copy the message n-1 times (without the key and values)
-  int m = sep.size()-1;
-  MessagePtrList ret; ret.reserve(m);
-  for (int i = 0; i < m; ++i) ret.emplace_back(MessagePtr(new Message(*msg)));
+MessagePtrList Customer::slice(const MessagePtr& msg, const KeyRangeList& krs) {
+  // in default, copy the message n times
+  int n = krs.size();
+  MessagePtrList ret; ret.reserve(n);
+  for (int i = 0; i < n; ++i) {
+    ret.emplace_back(MessagePtr(new Message(*msg)));
+  }
   return ret;
 }
 

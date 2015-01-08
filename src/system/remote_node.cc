@@ -71,7 +71,6 @@ int RNode::submit(MessagePtrList& msgs) {
     if (t > Message::kInvalidTime) {
       time_ = std::max(t, time_);
     } else {
-      // choose a timestamp
       if (role() == Node::GROUP) {
         for (auto w : exec_.group(id())) {
           // Lock l(w->time_mu_);

@@ -38,6 +38,13 @@ const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
   return it->second;
 }
 
+void Executor::copyNodesFrom(const Executor& other) {
+  for (const auto& n : other.nodes_) {
+    auto d = n.second->node_;
+    if (d.role() != Node::GROUP) add(d);
+  }
+}
+
 void Executor::add(const Node& node) {
   // insert into nodes_
   auto id = node.id();
@@ -294,31 +301,31 @@ void Executor::replace(const Node& dead, const Node& live) {
 }
 
 
-NodeList Executor::nodes() {
-  NodeList ret;
-  for (const auto& n : nodes_) {
-    auto d = n.second->node_;
-    if (d.role() != Node::GROUP) ret.push_back(d);
-  }
-  return ret;
-}
+// NodeList Executor::nodes() {
+//   NodeList ret;
+//   for (const auto& n : nodes_) {
+//     auto d = n.second->node_;
+//     if (d.role() != Node::GROUP) ret.push_back(d);
+//   }
+//   return ret;
+// }
 
-NodeList Executor::workers() {
-  NodeList ret;
-  for (const auto& n : nodes_) {
-    auto d = n.second->node_;
-    if (d.role() == Node::WORKER) ret.push_back(d);
-  }
-  return ret;
-}
+// NodeList Executor::workers() {
+//   NodeList ret;
+//   for (const auto& n : nodes_) {
+//     auto d = n.second->node_;
+//     if (d.role() == Node::WORKER) ret.push_back(d);
+//   }
+//   return ret;
+// }
 
-NodeList Executor::servers() {
-  NodeList ret;
-  for (const auto& n : nodes_) {
-    auto d = n.second->node_;
-    if (d.role() == Node::SERVER) ret.push_back(d);
-  }
-  return ret;
-}
+// NodeList Executor::servers() {
+//   NodeList ret;
+//   for (const auto& n : nodes_) {
+//     auto d = n.second->node_;
+//     if (d.role() == Node::SERVER) ret.push_back(d);
+//   }
+//   return ret;
+// }
 
 } // namespace PS

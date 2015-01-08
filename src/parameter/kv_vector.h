@@ -30,7 +30,7 @@ class KVVector : public SharedParameter<K> {
   int valueEntrySize() const { return val_entry_size_; }
 
   // functions will used by the system
-  MessagePtrList slice(const MessagePtr& msg, const KeyList& sep);
+  MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& sep);
   void getValue(const MessagePtr& msg);
   void setValue(const MessagePtr& msg);
 
@@ -94,7 +94,7 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
 
 // partition is a sorted key ranges
 template <typename K, typename V>
-MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyList& sep) {
+MessagePtrList KVVector<K,V>::slice(const MessagePtr& msg, const KeyRangeList& sep) {
   if (get(msg).replica()) return Customer::slice(msg, sep);
   return sliceKeyOrderedMsg<K>(msg, sep);
 }

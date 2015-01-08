@@ -112,23 +112,29 @@ template <typename T> void Message::addValue(const SArray<T>& value) {
 }
 
 template <typename K>
-MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyList& sep) {
+MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyRangeList& krs) {
   // find the positions in msg.key
-  size_t n = sep.size();
-  std::vector<size_t> pos; pos.reserve(n-1);
+  size_t n = krs.size();
+  std::vector<size_t> pos(n+1);
   SArray<K> key(msg->key);
-  Range<K> msg_key_range(msg->task.key_range());
-  for (auto p : sep) {
-    K k = std::max(msg_key_range.begin(), std::min(msg_key_range.end(), (K)p));
-    pos.push_back(std::lower_bound(key.begin(), key.end(), k) - key.begin());
+  Range<Key> msg_key_range(msg->task.key_range());
+  for (int i = 0; i < n; ++i) {
+    if (i == 0) {
+      K k = (K)msg_key_range.project(krs[0].begin());
+      pos[0] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
+    } else {
+      CHECK_EQ(krs[i-1].end(), krs[i].begin());
+    }
+    K k = (K)msg_key_range.project(krs[i].end());
+    pos[i+1] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
   }
 
   // split the message according to *pos*
-  MessagePtrList ret(n-1);
-  for (int i = 0; i < n-1; ++i) {
+  MessagePtrList ret(n);
+  for (int i = 0; i < n; ++i) {
     ret[i] = MessagePtr(new Message());
     ret[i]->miniCopyFrom(*msg);
-    if (Range<K>(sep[i], sep[i+1]).setIntersection(msg_key_range).empty()) {
+    if (krs[i].setIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
       // valid, which will not be sent
       ret[i]->valid = false;

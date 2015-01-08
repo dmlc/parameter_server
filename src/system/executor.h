@@ -38,12 +38,13 @@ class Executor {
     rnode(msg->sender)->finishIncomingTask(t);
   }
 
-  // query nodes
+  // accessors
   RNodePtr rnode(const NodeID& k);
   std::vector<RNodePtr>& group(const NodeID& k);
   const std::vector<Range<Key>>& keyRanges(const NodeID& k);
   const Node& myNode() { return my_node_; }
 
+  void copyNodesFrom(const Executor& other);
   void add(const Node& node);
   // (somewhat) thread-safe, will called by postoffice's recving thread
   void replace(const Node& dead, const Node& live);
