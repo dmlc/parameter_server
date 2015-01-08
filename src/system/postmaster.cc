@@ -85,8 +85,7 @@ void Postmaster::stopApp() {
   if (!pool) {
     // so it's a single machine version. i need to send the terminal signal to
     // myself
-    std::vector<Node> nodes(1, obj_->sys_.myNode());
-    obj_->exec_.init(nodes);
+    obj_->exec_.add(obj_->sys_.myNode());
     pool = obj_->taskpool(kLiveGroup);
   }
   pool->submit(terminate);

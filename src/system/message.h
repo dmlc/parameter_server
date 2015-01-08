@@ -16,6 +16,7 @@ typedef std::shared_ptr<Message> MessagePtr;
 typedef std::shared_ptr<const Message> MessageCPtr;
 
 typedef std::vector<MessagePtr> MessagePtrList;
+typedef std::vector<Range<Key>> KeyRangeList;
 
 struct Message {
  public:

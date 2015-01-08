@@ -27,9 +27,8 @@ class RNode {
   typename Node::Role role() { return node_.role(); }
   Range<Key> keyRange() { return Range<Key>(node_.key()); }
   // return number of node in this group or 1 otherwise
-  int size() {
-    return (role() == Node::GROUP ? exec_.group(id()).size() : 1);
-  }
+  int size();
+
 
   // submit a message (task + data) to this remote node from the local
   // node. return the timestamp of this task. This message will be sliced into

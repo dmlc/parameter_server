@@ -8,7 +8,7 @@ DECLARE_bool(verbose);
 Executor::Executor(Customer& obj) : obj_(obj) {
   my_node_ = Postoffice::instance().myNode();
   // insert virtual group nodes
-  for (auto id : {kServerGroup, kWorkerGroup, kActiveGroup,
+  for (auto id : {kServerGroup, kWorkerGroup, kCompGroup,
           kReplicaGroup, kOwnerGroup, kLiveGroup}) {
     Node node;
     node.set_role(Node::GROUP);
@@ -54,27 +54,27 @@ void Executor::add(const Node& node) {
 
   // update key_ranges_:
   auto add_to_key_ranges =
-      [&key_ranges_] (const NodeID& id, const RNodePtr& rnode) {
+      [this] (const NodeID& id, const RNodePtr& rnode) {
     auto& keys = key_ranges_[id];
     keys.push_back(rnode->keyRange());
-    std::sort(list.begin(), list.end(), [](
+    std::sort(keys.begin(), keys.end(), [](
         const Range<Key>& a, const Range<Key>& b) { return a.inLeft(b); });
   };
 
   // update groups_: insert a node, and make the node group be ordered
   auto add_to_group =
-      [&groups_, &add_to_key_ranges](const NodeID& id, const RNodePtr& rnode>) {
+      [this, &add_to_key_ranges](const NodeID& id, const RNodePtr& rnode) {
     auto& list = groups_[id];
     list.push_back(rnode);
     std::sort(list.begin(), list.end(), [](const RNodePtr& a, const RNodePtr& b) {
-        a->KeyRange().inLeft(b->keyRange());
+        return a->keyRange().inLeft(b->keyRange());
       });
     add_to_key_ranges(id, rnode);
   };
 
   auto role = node.role();
   if (role != Node::GROUP) {
-    node_groups_[id] = RNodePtrList({w});
+    groups_[id] = RNodePtrList({w});
     add_to_key_ranges(id, w);
     add_to_group(kLiveGroup, w);
   }

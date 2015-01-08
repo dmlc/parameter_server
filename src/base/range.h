@@ -58,8 +58,8 @@ class Range {
   }
 
   bool inLeft(const Range& other) const {
-    return begin_ <= other.begie_ ||
-        begin_ == other.begin_ && end_ <= other.end_;
+    return (begin_ <= other.begin_) ||
+        (begin_ == other.begin_ && end_ <= other.end_);
   }
 
   bool inRight(const Range& other) const {
@@ -68,7 +68,7 @@ class Range {
 
   // project v into this range
   template <typename V> V project(const V& v) const {
-    return static_cast<V>(std::max(begin_, std::min(end_, static_cast<T>(p))));
+    return static_cast<V>(std::max(begin_, std::min(end_, static_cast<T>(v))));
   }
 
   Range setIntersection(const Range& dest) const {

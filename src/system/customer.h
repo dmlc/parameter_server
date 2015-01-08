@@ -6,7 +6,6 @@
 namespace PS {
 class Postmaster;
 
-typedef std::vector<Range<Key>> KeyRangeList;
 
 // An object shared across multiple nodes.
 class Customer {

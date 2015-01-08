@@ -10,8 +10,7 @@ void App::stopAll() {
   if (!pool) {
     // so it's a single machine version. i need to send the terminal signal to
     // myself
-    std::vector<Node> nodes(1, sys_.myNode());
-    exec_.init(nodes);
+    exec_.add(sys_.myNode());
     pool = taskpool(kLiveGroup);
   }
   pool->submit(terminate);

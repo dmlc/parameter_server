@@ -8,9 +8,14 @@ DECLARE_bool(verbose);
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
 DEFINE_bool(message_compression, true, "");
 
+int RNode::size() {
+  return (role() == Node::GROUP ? exec_.group(id()).size() : 1);
+}
+
 int RNode::submit(const MessagePtr& msg) {
   CHECK_NOTNULL(this); CHECK(msg);
-  return submit(exec_.obj().slice(msg, exec_.keyRanges(id)));
+  auto msgs = exec_.obj().slice(msg, exec_.keyRanges(id()));
+  return submit(msgs);
 }
 
 int RNode::submit(const Task& task,
@@ -108,7 +113,7 @@ int RNode::submit(MessagePtrList& msgs) {
       // pending_msgs_
       // if (task.type() != Task::TERMINATE_CONFIRM)
       w->pending_msgs_[t] = msgs[i];
-      if (msg->recv_handle) w->msg_receive_handle_[t] = msg->recv_handle;
+      if (msgs[i]->recv_handle) w->msg_receive_handle_[t] = msgs[i]->recv_handle;
     }
     w->encodeFilter(msgs[i]);
     sys_.queue(msgs[i]);

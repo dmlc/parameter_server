@@ -9,7 +9,7 @@ Customer::Customer(const string& my_name, const string& parent_name)
   if (parent_ptr) {
     // copy parent's nodes information
     parent_ptr->addChild(my_name);
-    exec_.init(parent_ptr->exec().nodes());
+    exec_.copyNodesFrom(parent_ptr->exec());
   }
   // register myself to system
   sys_.yp().addCustomer(this);
