@@ -30,7 +30,7 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, liblm.a libps.a libprotos.a) # libgp.a libfm.a
+LIBS = $(addprefix $(LIB)/, libps.a libprotos.a) # libgp.a libfm.a liblm.a
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 
 all: dir $(BIN)/ps

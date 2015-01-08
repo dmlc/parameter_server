@@ -5,24 +5,71 @@
 namespace PS {
 
 DECLARE_bool(verbose);
-
 DEFINE_bool(key_cache, true, "enable caching keys during communication");
 DEFINE_bool(message_compression, true, "");
 
 int RNode::submit(const MessagePtr& msg) {
-  CHECK_NOTNULL(this);
-  CHECK(msg);
-  CHECK(msg->task.has_type());
-  auto& task = msg->task;
-  task.set_request(true);
-  task.set_customer(exec_.obj().name());
+  CHECK_NOTNULL(this); CHECK(msg);
+  return submit(exec_.obj().slice(msg, exec_.keyRanges(id)));
+}
 
-  // set the message timestamp, store the finished_callback
-  msg->original_recver = id();
+int RNode::submit(const Task& task,
+                  const Message::Callback& recv_handle) {
+  MessagePtr msg(new Message(task));
+  msg->recv_handle = recv_handle;
+  return submit(msg);
+}
+
+int RNode::submitAndWait(const Task& task,
+                         const Message::Callback& recv_handle) {
+  MessagePtr msg(new Message(task));
+  msg->recv_handle = recv_handle;
+  msg->wait = true;
+  return submit(msg);
+}
+
+int RNode::submit(std::vector<Task>& tasks) {
+  MessagePtrList msgs; msgs.reserve(tasks.size());
+  for (const auto& task : tasks) {
+    msgs.push_back(MessagePtr(new Message(task)));
+    msgs.back()->wait = true;
+  }
+  return submit(msgs);
+}
+
+int RNode::submitAndWait(std::vector<Task>& tasks) {
+  MessagePtrList msgs; msgs.reserve(tasks.size());
+  for (const auto& task : tasks) {
+    msgs.push_back(MessagePtr(new Message(task)));
+  }
+  return submit(msgs);
+}
+
+int RNode::submit(MessagePtrList& msgs) {
+  // check
+  CHECK_NOTNULL(this);
+  CHECK(!msgs.empty());
+
+  // choose a proper timestamp
+  int t = Message::kInvalidTime;
+  for (auto& msg : msgs) {
+    CHECK(msg);
+    auto& task = msg->task;
+    CHECK(task.has_type());
+    // if there is a valid time in task, then all messages should have the same
+    // time (to make my life easy)
+    if (task.has_time() && task.time() > Message::kInvalidTime) {
+      if (t != Message::kInvalidTime) {
+        CHECK_EQ(t, task.time());
+      } else {
+        t = task.time();
+      }
+    }
+  }
   {
     Lock l(mu_);
-    if (task.has_time() && task.time() > Message::kInvalidTime) {
-      time_ = std::max(task.time(), time_);
+    if (t > Message::kInvalidTime) {
+      time_ = std::max(t, time_);
     } else {
       // choose a timestamp
       if (role() == Node::GROUP) {
@@ -31,39 +78,47 @@ int RNode::submit(const MessagePtr& msg) {
           time_ = std::max(w->time_, time_);
         }
       }
-      task.set_time(++time_);
+      t = ++time_;
     }
-    if (msg->fin_handle) msg_finish_handle_[task.time()] = msg->fin_handle;
+    if (msgs[0]->fin_handle) {
+      msg_finish_handle_[t] = msgs[0]->fin_handle;
+    }
   }
 
-  int t = task.time();
+  // set some required fields
+  for (auto& msg : msgs) {
+    auto& task = msg->task;
+    task.set_request(true);
+    task.set_customer(exec_.obj().name());
+    task.set_time(t);
+    msg->original_recver = id();
+    msg->sender = exec_.myNode().id();
+  }
+
+  // send messages one-by-one
   outgoing_task_.start(t);
-
-  // partition the message according the receiver node's key range
-  const auto& key_partition = exec_.partition(id());
-  auto msgs = exec_.obj().slice(msg, key_partition);
-  CHECK_EQ(msgs.size(), key_partition.size()-1);
-
-  // sent partitioned messages one-by-one
-  int i = 0;
-  for (auto w : exec_.group(id())) {
-    msgs[i]->sender = exec_.myNode().id();
+  auto& rnodes = exec_.group(id());
+  CHECK_EQ(rnodes.size(), msgs.size());
+  for (int i = 0; i < msgs.size(); ++i) {
+    auto& w = rnodes[i];
     {
       Lock l(w->mu_);
       msgs[i]->recver = w->id();
       w->time_ = std::max(t, w->time_);
-      // a terminate confirm message will not get replied
+      // a terminate confirm message will not get replied, so do not add it into
+      // pending_msgs_
       // if (task.type() != Task::TERMINATE_CONFIRM)
       w->pending_msgs_[t] = msgs[i];
       if (msg->recv_handle) w->msg_receive_handle_[t] = msg->recv_handle;
     }
     w->encodeFilter(msgs[i]);
     sys_.queue(msgs[i]);
-    ++ i;
   }
-  CHECK_EQ(i, msgs.size());
 
-  if (msg->wait) waitOutgoingTask(t);
+  // wait if necessary
+  for (int i = 0; i < msgs.size(); ++i) {
+    if (msgs[i]->wait) rnodes[i]->outgoing_task_.wait(t);
+  }
   return t;
 }
 

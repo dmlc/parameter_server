@@ -1,17 +1,22 @@
 #pragma once
-#include "learner/sgd_node.h"
+#include "learner/sgd.h"
+#include "system/app.h"
 namespace PS {
 
-class SGDCompNode : public SGDNode {
+class SGDCompNode : public App {
  public:
+  SGDCompNode(const string& name) : App(name) { }
+  virtual ~SGDCompNode() { }
+
   virtual void evaluateProgress(SGDProgress* prog) = 0;
+
   void startReporter(int interval) {
     reporter_thr_ = unique_ptr<std::thread>(new std::thread([this, interval]() {
           while (true) {
             sleep(interval);
             SGDProgress prog; evaluateProgress(&prog);
             string str; CHECK(prog.SerializeToString(&str));
-            Task report = newTask(SGDCall::REPORT_PROGRESS);
+            Task report = newSGDTask(SGDCall::REPORT_PROGRESS);
             report.set_msg(str);
             auto sch = taskpool(schedulerID());
             if (!sch) continue;

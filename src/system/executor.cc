@@ -5,80 +5,109 @@ namespace PS {
 
 DECLARE_bool(verbose);
 
-void Executor::init(const std::vector<Node>& nodes) {
+Executor::Executor(Customer& obj) : obj_(obj) {
+  my_node_ = Postoffice::instance().myNode();
   // insert virtual group nodes
-  for (auto id : {
-      kServerGroup, kWorkerGroup, kActiveGroup, kReplicaGroup, kOwnerGroup, kLiveGroup}) {
+  for (auto id : {kServerGroup, kWorkerGroup, kActiveGroup,
+          kReplicaGroup, kOwnerGroup, kLiveGroup}) {
     Node node;
     node.set_role(Node::GROUP);
     node.set_id(id);
     add(node);
   }
-  // insert real node
-  for (auto& node : nodes) add(node);
-  // sort the node in each group by its key range
-  for (auto& it : node_groups_) {
-    if (nodes_[it.first]->role() != Node::GROUP) continue;
-    std::sort(it.second.begin(), it.second.end(), [](const RNodePtr& a, const RNodePtr& b) {
-        return a->keyRange().begin() < b->keyRange().begin();
-      });
-  }
-  // construct replica group and owner group (just after my_node_)
-  if (my_node_.role() == Node::SERVER) {
-    int my_pos = 0;
-    auto servers = group(kServerGroup);
-    int n = servers.size();
-    for (auto s : servers) {
-      if (s->node_.id() == my_node_.id()) break;
-      ++ my_pos;
-    }
-    CHECK_LT(my_pos, n);
+}
 
-    int nrep = FLAGS_num_replicas; CHECK_LT(nrep, n);
-    for (int i = 1; i <= nrep; ++i) {
-      // the replica group is just before me
-      node_groups_[kReplicaGroup].push_back(
-          servers[my_pos - i < 0 ? n + my_pos - i : my_pos - i]);
-      // the owner group is just after me
-      node_groups_[kOwnerGroup].push_back(
-          servers[my_pos + i < n ? my_pos + i : my_pos + i - n]);
-    }
-    // make an empty group otherwise
-    if (nrep <= 0) {
-      node_groups_[kReplicaGroup].clear();
-      node_groups_[kOwnerGroup].clear();
-    }
-  }
-  // store the key ranges in each group
-  for (auto& it : node_groups_) {
-    auto& partition = node_key_partition_[it.first];
-    partition.reserve(it.second.size() + 1);
-    for (auto w : it.second) {
-      partition.push_back(w->keyRange().begin());
-    }
-    partition.push_back(
-        it.second.size() > 0 ? it.second.back()->keyRange().end() : 0);
-  }
+RNodePtr Executor::rnode(const NodeID& k) {
+  Lock l(node_mu_);
+  auto it = nodes_.find(k);
+  if (it == nodes_.end()) return RNodePtr();
+  return it->second;
+}
+
+std::vector<RNodePtr>& Executor::group(const NodeID& k) {
+  Lock l(node_mu_);
+  auto it = groups_.find(k);
+  CHECK(it != groups_.end()) << "unkonw node group: " << k;
+  return it->second;
+}
+
+const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
+  Lock l(node_mu_);
+  auto it = key_ranges_.find(k);
+  CHECK(it != key_ranges_.end()) << "unkonw node group: " << k;
+  return it->second;
 }
 
 void Executor::add(const Node& node) {
+  // insert into nodes_
   auto id = node.id();
-  CHECK_EQ(nodes_.count(id), 0);
+  CHECK_EQ(nodes_.count(id), 0) << id << " already exists";
   RNodePtr w(new RNode(node, *this));
   nodes_[id] = w;
+
+  // update key_ranges_:
+  auto add_to_key_ranges =
+      [&key_ranges_] (const NodeID& id, const RNodePtr& rnode) {
+    auto& keys = key_ranges_[id];
+    keys.push_back(rnode->keyRange());
+    std::sort(list.begin(), list.end(), [](
+        const Range<Key>& a, const Range<Key>& b) { return a.inLeft(b); });
+  };
+
+  // update groups_: insert a node, and make the node group be ordered
+  auto add_to_group =
+      [&groups_, &add_to_key_ranges](const NodeID& id, const RNodePtr& rnode>) {
+    auto& list = groups_[id];
+    list.push_back(rnode);
+    std::sort(list.begin(), list.end(), [](const RNodePtr& a, const RNodePtr& b) {
+        a->KeyRange().inLeft(b->keyRange());
+      });
+    add_to_key_ranges(id, rnode);
+  };
 
   auto role = node.role();
   if (role != Node::GROUP) {
     node_groups_[id] = RNodePtrList({w});
-    node_groups_[kLiveGroup].push_back(w);
+    add_to_key_ranges(id, w);
+    add_to_group(kLiveGroup, w);
+  }
+  if (role == Node::WORKER || role == Node::SERVER) {
+    add_to_group(kCompGroup, w);
+  }
+  if (role == Node::SERVER) {
+    add_to_group(kServerGroup, w);
   }
   if (role == Node::WORKER) {
-    node_groups_[kWorkerGroup].push_back(w);
-    node_groups_[kActiveGroup].push_back(w);
-  } else if (role == Node::SERVER) {
-    node_groups_[kServerGroup].push_back(w);
-    node_groups_[kActiveGroup].push_back(w);
+    add_to_group(kWorkerGroup, w);
   }
+
+  // update replica group and owner group if i'm a server node
+  // TODO
+  // if (my_node_.role() == Node::SERVER) {
+  //   int my_pos = 0;
+  //   auto servers = group(kServerGroup);
+  //   int n = servers.size();
+  //   for (auto s : servers) {
+  //     if (s->node_.id() == my_node_.id()) break;
+  //     ++ my_pos;
+  //   }
+  //   CHECK_LT(my_pos, n);
+
+  //   int nrep = FLAGS_num_replicas; CHECK_LT(nrep, n);
+  //   for (int i = 1; i <= nrep; ++i) {
+  //     // the replica group is just before me
+  //     node_groups_[kReplicaGroup].push_back(
+  //         servers[my_pos - i < 0 ? n + my_pos - i : my_pos - i]);
+  //     // the owner group is just after me
+  //     node_groups_[kOwnerGroup].push_back(
+  //         servers[my_pos + i < n ? my_pos + i : my_pos + i - n]);
+  //   }
+  //   // make an empty group otherwise
+  //   if (nrep <= 0) {
+  //     node_groups_[kReplicaGroup].clear();
+  //     node_groups_[kOwnerGroup].clear();
+  //   }
+  // }
 }
 
 string Executor::lastRecvReply() {
@@ -91,12 +120,10 @@ string Executor::lastRecvReply() {
 void Executor::run() {
   while (!done_) {
     bool process = false;
-
     if (FLAGS_verbose) {
       LI << obj_.name() << " before entering task loop; recved_msgs_. size [" <<
         recved_msgs_.size() << "]";
     }
-
     {
       std::unique_lock<std::mutex> lk(recved_msg_mu_);
       // pickup a message with dependency satisfied
@@ -123,11 +150,9 @@ void Executor::run() {
           }
           process = satisfied;
         }
-
         if (process) {
           active_msg_ = msg;
           recved_msgs_.erase(it);
-
           if (FLAGS_verbose) {
             LI << obj_.name() << " picked up an active_msg_ from recved_msgs_. " <<
               "remaining size [" << recved_msgs_.size() << "]; msg [" <<
@@ -141,7 +166,6 @@ void Executor::run() {
           LI << obj_.name() << " picked nothing from recved_msgs_. size [" <<
             recved_msgs_.size() << "] waiting Executor::accept";
         }
-
         dag_cond_.wait(lk);
         continue;
       }
@@ -199,7 +223,6 @@ void Executor::run() {
           LI << "Task [" << t << "] completed. msg [" <<
             active_msg_->shortDebugString() << "]";
         }
-
         Message::Callback h;
         {
           Lock lk(o_recver->mu_);
@@ -270,5 +293,32 @@ void Executor::replace(const Node& dead, const Node& live) {
   // }
 }
 
+
+NodeList Executor::nodes() {
+  NodeList ret;
+  for (const auto& n : nodes_) {
+    auto d = n.second->node_;
+    if (d.role() != Node::GROUP) ret.push_back(d);
+  }
+  return ret;
+}
+
+NodeList Executor::workers() {
+  NodeList ret;
+  for (const auto& n : nodes_) {
+    auto d = n.second->node_;
+    if (d.role() == Node::WORKER) ret.push_back(d);
+  }
+  return ret;
+}
+
+NodeList Executor::servers() {
+  NodeList ret;
+  for (const auto& n : nodes_) {
+    auto d = n.second->node_;
+    if (d.role() == Node::SERVER) ret.push_back(d);
+  }
+  return ret;
+}
 
 } // namespace PS

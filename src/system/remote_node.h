@@ -22,38 +22,32 @@ class RNode {
       : sys_(Postoffice::instance()), exec_(exec), node_(node)  { }
   ~RNode() { }
 
-  // query about this remote node info
+  // info of the remote node
   const NodeID& id() { return node_.id(); }
   typename Node::Role role() { return node_.role(); }
-  // the key range this node maintains
   Range<Key> keyRange() { return Range<Key>(node_.key()); }
-
+  // return number of node in this group or 1 otherwise
+  int size() {
+    return (role() == Node::GROUP ? exec_.group(id()).size() : 1);
+  }
 
   // submit a message (task + data) to this remote node from the local
-  // node. return the timestamp of this task
+  // node. return the timestamp of this task. This message will be sliced into
+  // this->size() messages, and each one goes to one remote node
   int submit(const MessagePtr& msg);
-  int submit(const Task& task, const Message::Callback& recv_handle = Message::Callback()) {
-    MessagePtr msg(new Message(task));
-    msg->recv_handle = recv_handle;
-    return submit(msg);
-  }
+  int submit(const Task& task,
+             const Message::Callback& recv_handle = Message::Callback());
+  int submitAndWait(const Task& task,
+                    const Message::Callback& recv_handle = Message::Callback());
 
-  int submitAndWait(const Task& task, const Message::Callback& recv_handle = Message::Callback()) {
-    MessagePtr msg(new Message(task));
-    msg->recv_handle = recv_handle;
-    msg->wait = true;
-    return submit(msg);
-  }
+  // submit msg[i] into node[i]. msg.size() must be equal to this->size()
+  int submit(MessagePtrList& msgs);
+  int submit(std::vector<Task>& tasks);
+  int submitAndWait(std::vector<Task>& tasks);
 
-
+  // user defined filters
   void encodeFilter(const MessagePtr& msg);
   void decodeFilter(const MessagePtr& msg);
-
-  // cache the keys, return the message with keys removed but filled with a
-  // key signature when *FLAGS_key_cache* is true
-  // void cacheKeySender(const MessagePtr& msg);
-  // void cacheKeyRecver(const MessagePtr& msg);
-  // void clearCache() { key_cache_.clear(); }
 
   // wait a submitted task (send to the remote node from the local node) with
   // timestamp _time_ until it finished (received all replied message)
@@ -71,15 +65,13 @@ class RNode {
 
   int time() { Lock l(mu_); return time_; }
 
-  // memory usage in bytes
-  // size_t memSize();
  private:
   DISALLOW_COPY_AND_ASSIGN(RNode);
   FilterPtr findFilter(const FilterConfig& conf);
   Postoffice& sys_;
   Executor& exec_;
-  // the remote node
-  Node node_;
+  Node node_;  // the remote node
+
   std::mutex mu_;
   TaskTracker incoming_task_, outgoing_task_;
   // current time
@@ -91,13 +83,6 @@ class RNode {
   std::unordered_map<int, Message::Callback> msg_receive_handle_;
   std::unordered_map<int, Message::Callback> msg_finish_handle_;
 
-
-  // // (channel, key_range) => (key signature, key list)
-  // std::unordered_map<std::pair<int,Range<Key>>,
-  //                    std::pair<uint32_t, SArray<char>>> key_cache_;
-  // std::mutex key_cache_mu_;
-
-  // const size_t max_sig_len_ = 2048;  // hack, because crc32 is too slow...
   std::unordered_map<int, FilterPtr> filter_;
   std::mutex filter_mu_;
 };

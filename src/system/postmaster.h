@@ -3,7 +3,6 @@
 #include "proto/app.pb.h"
 #include "util/common.h"
 #include "system/customer.h"
-// class Customer;
 namespace PS {
 
 class Postmaster {

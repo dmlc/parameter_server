@@ -57,6 +57,15 @@ class Range {
     return (begin_ <= static_cast<T>(v) && static_cast<T>(v) < end_);
   }
 
+  bool inLeft(const Range& other) const {
+    return begin_ <= other.begie_ ||
+        begin_ == other.begin_ && end_ <= other.end_;
+  }
+
+  bool inRight(const Range& other) const {
+    return !inLeft(other);
+  }
+
   Range setIntersection(const Range& dest) const {
     return Range(std::max(begin_, dest.begin_), std::min(end_, dest.end_));
   }

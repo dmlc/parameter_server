@@ -17,7 +17,7 @@ Postmaster::partitionData(const DataConfig& conf, int num_workers) {
   LI << "Found " << data.file_size() << " files";
   auto ret = divideFiles(data, num_workers);
   int n = 0; for (const auto& p : ret) n += p.file_size();
-  LI << "Assigned " << n << " files to " << num_workers << " workers";
+  LI << "Assign " << n << " files to " << num_workers << " workers";
   return ret;
 }
 
