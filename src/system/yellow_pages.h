@@ -28,7 +28,7 @@ class YellowPages {
   void addNode(const Node& node);
   int num_workers() { return num_workers_; }
   int num_servers() { return num_servers_; }
-  const map<NodeID, Node>& nodes() { return nodes_; }
+  std::vector<Node> nodes();
 
   Van& van() { return van_; }
 

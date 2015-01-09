@@ -13,8 +13,11 @@ class Postmaster {
   void createApp(const std::vector<Node>& nodes, const std::vector<AppConfig>& apps);
   void stopApp();
 
-  std::vector<DataConfig> partitionData(const DataConfig& conf, int num_workers);
-  std::vector<Node> partitionKey(const std::vector<Node>& nodes, Range<Key> range);
+  static std::vector<DataConfig> partitionData(
+      const DataConfig& conf, int num_workers);
+
+  static std::vector<Node> partitionServerKeyRange(
+      const std::vector<Node>& nodes, Range<Key> range);
  private:
   Customer* obj_;
 };

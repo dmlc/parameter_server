@@ -6,7 +6,6 @@
 namespace PS {
 class Postmaster;
 
-
 // An object shared across multiple nodes.
 class Customer {
  public:

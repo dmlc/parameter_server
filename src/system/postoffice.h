@@ -15,26 +15,28 @@ DECLARE_int32(num_replicas);
 DECLARE_string(node_file);
 DECLARE_string(app);
 
+class App;
 class Postoffice {
  public:
   SINGLETON(Postoffice);
   ~Postoffice();
+
   // Run the system
   void run();
+
   // Queue a message into the sending buffer, which will be sent by the sending
   // thread.
   void queue(const MessagePtr& msg);
-  // reply *task* from *recver* with *reply_msg*
-  void reply(const NodeID& recver, const Task& task, const string& reply_msg = string());
-  // reply message *msg* with protocal message *proto*
-  template <class P> void replyProtocalMessage(const MessagePtr& msg, const P& proto) {
-    string str; proto.SerializeToString(&str);
-    reply(msg->sender, msg->task, str);
-    msg->replied = true;
-  }
 
-  // add the nodes in _pt_ into the system
-  void manageNode(const Task& pt);
+  // reply *task* from *recver* by *reply_msg*
+  void reply(const NodeID& recver,
+             const Task& task,
+             const string& reply_msg = string());
+
+  // reply message *msg* with protocal message *proto*
+  template <class P>
+  void replyProtocalMessage(const MessagePtr& msg,
+                            const P& proto);
 
   // accessors and mutators
   YellowPages& yp() { return yellow_pages_; }
@@ -42,19 +44,21 @@ class Postoffice {
   Node& scheduler() { return yellow_pages_.van().scheduler(); }
 
   // HeartbeatInfo& hb() { return heartbeat_info_; };
-
  private:
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
-  Postoffice() { }
+  Postoffice();
 
+  bool IamScheduler() { return myNode().role() == Node::SCHEDULER; }
+  void manageNode(const Task& pt);
   void manageApp(const Task& pt);
   void send();
   void recv();
 
   // void addMyNode(const string& name, const Node& recver);
 
-  string printDashboardTitle();
-  string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);
+  // app info only available for the scheduler, check IamScheduler() before using
+  AppConfig app_conf_;
+  App* app_ = nullptr;
 
   std::mutex mutex_;
   bool done_ = false;
@@ -67,6 +71,8 @@ class Postoffice {
   // yp_ should stay behind sending_queue_ so it will be destroied earlier
   YellowPages yellow_pages_;
 
+  // string printDashboardTitle();
+  // string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);
   // std::unique_ptr<std::thread> heartbeating_;
   // std::unique_ptr<std::thread> monitoring_;
   // // heartbeat thread function

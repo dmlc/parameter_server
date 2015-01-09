@@ -46,9 +46,6 @@ class Executor {
 
   void copyNodesFrom(const Executor& other);
   void add(const Node& node);
-  void add(const std::vector<Node>& nodes) {
-    for (const auto& n : nodes) add(n);
-  }
   // (somewhat) thread-safe, will called by postoffice's recving thread
   void replace(const Node& dead, const Node& live);
 

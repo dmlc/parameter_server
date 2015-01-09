@@ -17,7 +17,7 @@ class App : public Customer {
   virtual void run() = 0;
 
   // call by the scheduler
-  void stopAll();
+  // void stopAll();
   // void startSystem();
 
  protected:

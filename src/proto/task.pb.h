@@ -71,14 +71,15 @@ inline bool Task_Type_Parse(
     Task_Type_descriptor(), name, value);
 }
 enum ManageNode_Command {
-  ManageNode_Command_INIT = 1,
-  ManageNode_Command_ADD = 4,
-  ManageNode_Command_REPLACE = 2,
-  ManageNode_Command_REMOVE = 3
+  ManageNode_Command_CONNECT = 1,
+  ManageNode_Command_ADD = 2,
+  ManageNode_Command_UPDATE = 3,
+  ManageNode_Command_REPLACE = 4,
+  ManageNode_Command_REMOVE = 5
 };
 bool ManageNode_Command_IsValid(int value);
-const ManageNode_Command ManageNode_Command_Command_MIN = ManageNode_Command_INIT;
-const ManageNode_Command ManageNode_Command_Command_MAX = ManageNode_Command_ADD;
+const ManageNode_Command ManageNode_Command_Command_MIN = ManageNode_Command_CONNECT;
+const ManageNode_Command ManageNode_Command_Command_MAX = ManageNode_Command_REMOVE;
 const int ManageNode_Command_Command_ARRAYSIZE = ManageNode_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ManageNode_Command_descriptor();
@@ -486,8 +487,9 @@ class ManageNode : public ::google::protobuf::Message {
   // nested types ----------------------------------------------------
 
   typedef ManageNode_Command Command;
-  static const Command INIT = ManageNode_Command_INIT;
+  static const Command CONNECT = ManageNode_Command_CONNECT;
   static const Command ADD = ManageNode_Command_ADD;
+  static const Command UPDATE = ManageNode_Command_UPDATE;
   static const Command REPLACE = ManageNode_Command_REPLACE;
   static const Command REMOVE = ManageNode_Command_REMOVE;
   static inline bool Command_IsValid(int value) {

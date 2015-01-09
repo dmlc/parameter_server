@@ -2,6 +2,7 @@
 #include "proto/heartbeat.pb.h"
 // #include <omp.h>
 #include "system/customer.h"
+#include "system/postmaster.h"
 #include "system/app.h"
 #include "util/file.h"
 
@@ -17,7 +18,6 @@ DEFINE_string(app, "../config/rcv1/batch_l1lr.conf", "the configuration file of 
 DECLARE_string(interface);
 DEFINE_bool(traffic_statistics, false, "print traffic statistic at the end");
 
-// TODO move to configure
 DEFINE_int32(report_interval, 0,
   "Servers/Workers report running status to scheduler "
   "in every report_interval seconds. "
@@ -25,68 +25,83 @@ DEFINE_int32(report_interval, 0,
 DEFINE_bool(verbose, false, "print extra debug info");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
 
+Postoffice::Postoffice() {
+  // omp_set_dynamic(0);
+  // omp_set_num_threads(FLAGS_num_threads);
+  if (FLAGS_log_to_file) {
+    google::SetLogDestination(
+        google::INFO, ("./log_" + myNode().id() + "_").c_str());
+    FLAGS_logtostderr = 0;
+  }
+}
+
 Postoffice::~Postoffice() {
   recving_->join();
   MessagePtr stop(new Message()); stop->terminate = true; queue(stop);
   sending_->join();
+  delete app_;
 }
 
-// TODO run a console if it is a Node::MANAGER
 void Postoffice::run() {
-  // omp_set_dynamic(0);
-  // omp_set_num_threads(FLAGS_num_threads);
-  yellow_pages_.init();
-
-  if (FLAGS_log_to_file) {
-    google::SetLogDestination(google::INFO, ("./log_" + myNode().id() + "_").c_str());
-    FLAGS_logtostderr = 0;
-  }
-
-  recving_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
-  sending_ = std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
-
-  // heartbeat_info_.init(FLAGS_interface, myNode().hostname());
-  // // threads on statistic
-  // if (FLAGS_report_interval > 0) {
-  //   if (Node::SCHEDULER == myNode().role()) {
-  //     monitoring_ = std::unique_ptr<std::thread>(
-  //       new std::thread(&Postoffice::monitor, this));
-  //     monitoring_->detach();
-  //   } else {
-  //     heartbeating_ = std::unique_ptr<std::thread>(
-  //       new std::thread(&Postoffice::heartbeat, this));
-  //     heartbeating_->detach();
-  //   }
-  // }
-
-  if (myNode().role() == Node::SCHEDULER) {
-    // get all node information
-    yellow_pages_.addNode(myNode());
-    if (FLAGS_num_workers || FLAGS_num_servers) {
-      nodes_are_ready_.get_future().wait();
-      LI << "Scheduler connected " << FLAGS_num_servers << " servers and "
-         << FLAGS_num_workers << " workers";
-    }
-
-    // run the application
-    AppConfig conf; readFileToProtoOrDie(FLAGS_app, &conf);
-    App* app = App::create(conf);
-    yellow_pages_.depositCustomer(app);
-    app->run();
-    app->stopAll();
+  if (IamScheduler()) {
+    // create the app
+    readFileToProtoOrDie(FLAGS_app, &app_conf_);
+    app_ = App::create(app_conf_);
   } else {
-    // sent my node info to the scheduler
+    // connect to the scheduler, which will send back a create_app request
     Task task;
     task.set_type(Task::MANAGE);
     task.set_request(true);
-    task.set_do_not_reply(true);
     auto mng_node = task.mutable_mng_node();
-    mng_node->set_cmd(ManageNode::ADD);
+    mng_node->set_cmd(ManageNode::CONNECT);
     *(mng_node->add_node()) = myNode();
     MessagePtr msg(new Message(task));
     msg->recver = scheduler().id();
     queue(msg);
+  }
 
+  // start the I/O threads
+  yellow_pages_.init();
+  recving_ =
+      std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
+  sending_ =
+      std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
+
+  if (IamScheduler()) {
+    // wait until all nodes are ready
+    yellow_pages_.addNode(myNode());
+    if (FLAGS_num_workers + FLAGS_num_servers) {
+      nodes_are_ready_.get_future().wait();
+      LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
+         << FLAGS_num_workers << " workers";
+    }
+
+    // add all nodes into app
+    auto nodes = yellow_pages_.nodes();
+    nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
+    Task task;
+    task.set_request(true);
+    task.set_customer(app_->name());
+    task.set_type(Task::MANAGE);
+    task.mutable_mng_node()->set_cmd(ManageNode::ADD);
+    for (const auto& n : nodes) {
+      *task.mutable_mng_node()->add_node() = n;
+    }
+    // first add them into scheduler's app so we can use taskpool
+    manageNode(task);
+    // then add them in servers and worekrs
+    app_->taskpool(kCompGroup)->submitAndWait(task);
+
+    // run the application
+    app_->run();
+
+    // stop
+    Task terminate;
+    terminate.set_type(Task::TERMINATE);
+    app_->taskpool(kLiveGroup)->submit(terminate);
+    usleep(800);
+    LI << "System stopped\n";
+  } else {
     // run as a daemon
     while (!done_) usleep(300);
   }
@@ -102,6 +117,13 @@ void Postoffice::reply(
   if (!reply_msg.empty()) tk.set_msg(reply_msg);
   tk.set_time(task.time());
   MessagePtr re(new Message(tk)); re->recver = recver; queue(re);
+}
+
+template <class P>
+void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
+  string str; proto.SerializeToString(&str);
+  reply(msg->sender, msg->task, str);
+  msg->replied = true;
 }
 
 void Postoffice::queue(const MessagePtr& msg) {
@@ -154,8 +176,6 @@ void Postoffice::recv() {
       CHECK(pt) << "customer [" << tk.customer() << "] doesn't exist";
       pt->exec().accept(msg);
 
-      // // if I am the scheduler,
-      // //   I also record the latest task id for W/S without extra trouble
       // if (FLAGS_report_interval > 0 && Node::SCHEDULER == myNode().role()) {
       //   dashboard_.addTask(msg->sender, msg->task.time());
       // }
@@ -163,11 +183,18 @@ void Postoffice::recv() {
     }
 
     if (type == Task::HEARTBEATING) {
-      // newly arrived heartbeat pack
       // dashboard_.addReport(msg->sender, tk.msg());
     } else if (type == Task::MANAGE) {
-      if (request && tk.has_mng_app()) manageApp(tk);
-      if (request && tk.has_mng_node()) manageNode(tk);
+      if (request && tk.has_mng_app()) {
+        manageApp(tk);
+      }
+      if (request && tk.has_mng_node()) {
+        manageNode(tk);
+        if (tk.mng_node().cmd() == ManageNode::CONNECT) {
+          // do not reply, because the sender hasn't create the app yet
+          continue;
+        }
+      }
     } else if (type == Task::TERMINATE) {
       if (FLAGS_traffic_statistics) {
         yellow_pages_.van().statistic();
@@ -190,44 +217,65 @@ void Postoffice::manageApp(const Task& tk) {
 }
 
 void Postoffice::manageNode(const Task& tk) {
-
   CHECK(tk.has_mng_node());
   auto& mng = tk.mng_node();
-  std::vector<Node> nodes;
-  for (int i = 0; i < mng.node_size(); ++i) {
-    nodes.push_back(mng.node(i));
-  }
-  auto obj = yellow_pages_.customer(tk.customer());
-  switch (mng.cmd()) {
-    case ManageNode::ADD:
-      for (auto n : nodes) yellow_pages_.addNode(n);
-      if (yellow_pages_.num_workers() >= FLAGS_num_workers &&
-          yellow_pages_.num_servers() >= FLAGS_num_servers) {
-        nodes_are_ready_.set_value();
+  if (mng.cmd() == ManageNode::CONNECT) {
+    CHECK(IamScheduler());
+    CHECK_EQ(mng.node_size(), 1);
+    // first add this node into app
+    Task add = tk;
+    add.set_customer(app_conf_.app_name());
+    add.mutable_mng_node()->set_cmd(ManageNode::ADD);
+    manageNode(add);
+    // create the app in this node
+    Task task;
+    task.set_request(true);
+    task.set_customer(app_conf_.app_name());
+    task.set_type(Task::MANAGE);
+    task.mutable_mng_app()->set_cmd(ManageApp::ADD);
+    *task.mutable_mng_app()->mutable_app_config() = app_conf_;
+    app_->taskpool(mng.node(0).id())->submitAndWait(task);
+    // check if all nodes are connected
+    if (yellow_pages_.num_workers() >= FLAGS_num_workers &&
+        yellow_pages_.num_servers() >= FLAGS_num_servers) {
+      nodes_are_ready_.set_value();
+    }
+  } else if (mng.cmd() == ManageNode::ADD) {
+    auto obj = yellow_pages_.customer(tk.customer());
+    CHECK(obj) << "customer [" << tk.customer() << "] doesn't exists";
+    for (int i = 0; i < mng.node_size(); ++i) {
+      auto node = mng.node(i);
+      yellow_pages_.addNode(node);
+      obj->exec().add(node);
+      for (auto c : obj->children()) {
+        auto child = yellow_pages_.customer(c);
+        if (child) child->exec().add(node);
       }
-      break;
-    case ManageNode::INIT:
-      for (auto n : nodes) yellow_pages_.addNode(n);
-      if (obj != nullptr) {
-        obj->exec().add(nodes);
-        for (auto c : obj->children()) {
-          auto child = yellow_pages_.customer(c);
-          if (child) child->exec().add(nodes);
-        }
-      }
-      break;
-    case ManageNode::REPLACE:
-      CHECK_EQ(nodes.size(), 2);
-      obj->exec().replace(nodes[0], nodes[1]);
-      for (auto c : obj->children())
-        yellow_pages_.customer(c)->exec().replace(nodes[0], nodes[1]);
-      break;
-
-    default:
-      CHECK(false) << " unknow command " << mng.cmd();
+    }
+  } else if (mng.cmd() == ManageNode::REPLACE) {
+    // CHECK_EQ(nodes.size(), 2);
+    // obj->exec().replace(nodes[0], nodes[1]);
+    // for (auto c : obj->children())
+    //   yellow_pages_.customer(c)->exec().replace(nodes[0], nodes[1]);
+    // break;
+  } else if (mng.cmd() == ManageNode::REMOVE) {
   }
 }
 
+// in run():
+  // heartbeat_info_.init(FLAGS_interface, myNode().hostname());
+  // // threads on statistic
+  // if (FLAGS_report_interval > 0) {
+  //   if (Node::SCHEDULER == myNode().role()) {
+  //     monitoring_ = std::unique_ptr<std::thread>(
+  //       new std::thread(&Postoffice::monitor, this));
+  //     monitoring_->detach();
+  //   } else {
+  //     heartbeating_ = std::unique_ptr<std::thread>(
+  //       new std::thread(&Postoffice::heartbeat, this));
+  //     heartbeating_->detach();
+  //   }
+  // }
 // void Postoffice::heartbeat() {
 //   while (!done_) {
 //     // heartbeat won't work until I have connected to the scheduler

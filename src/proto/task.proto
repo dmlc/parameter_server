@@ -59,10 +59,11 @@ message Task {
 
 message ManageNode {
   enum Command {
-    INIT = 1;
-    ADD = 4;
-    REPLACE = 2;
-    REMOVE = 3;
+    CONNECT = 1;
+    ADD = 2;
+    UPDATE = 3;
+    REPLACE = 4;
+    REMOVE = 5;
   }
   required Command cmd = 1;
   repeated Node node = 2;

@@ -1,7 +1,6 @@
 #include "system/customer.h"
 namespace PS {
 
-
 Customer::Customer(const string& my_name, const string& parent_name)
     : name_(my_name), sys_(Postoffice::instance()), exec_(*this) {
   CHECK(!name_.empty()) << "a customer must have a valid name";

@@ -2,22 +2,22 @@
 namespace PS {
 DEFINE_bool(test_fault_tol, false, "");
 
-void App::stopAll() {
-  // send terminate signal to all others
-  Task terminate;
-  terminate.set_type(Task::TERMINATE);
-  auto pool = taskpool(kLiveGroup);
-  if (!pool) {
-    // so it's a single machine version. i need to send the terminal signal to
-    // myself
-    exec_.add(sys_.myNode());
-    pool = taskpool(kLiveGroup);
-  }
-  pool->submit(terminate);
-  // terminate.set_type(Task::TERMINATE_CONFIRM);
-  usleep(800);
-  LI << "System stopped\n";
-}
+// void App::stopAll() {
+//   // send terminate signal to all others
+//   Task terminate;
+//   terminate.set_type(Task::TERMINATE);
+//   auto pool = taskpool(kLiveGroup);
+//   if (!pool) {
+//     // so it's a single machine version. i need to send the terminal signal to
+//     // myself
+//     exec_.add(sys_.myNode());
+//     pool = taskpool(kLiveGroup);
+//   }
+//   pool->submit(terminate);
+//   // terminate.set_type(Task::TERMINATE_CONFIRM);
+//   usleep(800);
+//   LI << "System stopped\n";
+// }
 
 } // namespace PS
 

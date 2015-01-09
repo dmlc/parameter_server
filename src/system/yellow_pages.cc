@@ -3,6 +3,15 @@
 
 namespace PS {
 
+YellowPages::~YellowPages() {
+  for (auto& it : customers_) {
+    it.second->stop();
+    if (deletable_customers_.find(it.first) != deletable_customers_.end()) {
+      delete it.second;
+    }
+  }
+}
+
 void YellowPages::addCustomer(Customer* customer) {
   CHECK_EQ(customers_.count(customer->name()), 0) << customer->name();
   customers_[customer->name()] = customer;
@@ -39,14 +48,12 @@ void YellowPages::addNode(const Node& node) {
   if (node.role() == Node::SERVER) ++ num_servers_;
 }
 
-
-YellowPages::~YellowPages() {
-  for (auto& it : customers_) {
-    it.second->stop();
-    if (deletable_customers_.find(it.first) != deletable_customers_.end()) {
-      delete it.second;
-    }
+std::vector<Node> YellowPages::nodes() {
+  std::vector<Node> ret;
+  for (const auto& it : nodes_) {
+    ret.push_back(it.second);
   }
+  return ret;
 }
 
 } // namespace PS

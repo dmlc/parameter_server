@@ -4,11 +4,11 @@
 namespace PS {
 
 std::vector<Node> Postmaster::nodes() {
-  std::vector<Node> ret;
-  for (const auto& it : obj_->sys_.yp().nodes()) {
-    ret.push_back(it.second);
-  }
-  return ret;
+  // std::vector<Node> ret;
+  // for (const auto& it : obj_->sys_.yp().nodes()) {
+  //   ret.push_back(it.second);
+  // }
+  // return ret;
 }
 
 std::vector<DataConfig>
@@ -21,8 +21,8 @@ Postmaster::partitionData(const DataConfig& conf, int num_workers) {
   return ret;
 }
 
-std::vector<Node>
-Postmaster::partitionKey(const std::vector<Node>& nodes, Range<Key> range) {
+std::vector<Node> Postmaster::partitionServerKeyRange(
+    const std::vector<Node>& nodes, Range<Key> range) {
   int num_servers = 0;
   auto ret = nodes;
   for (const auto& o : ret) {
@@ -45,7 +45,7 @@ void Postmaster::createApp(
   start.set_request(true);
   start.set_customer(obj_->name());
   start.set_type(Task::MANAGE);
-  start.mutable_mng_node()->set_cmd(ManageNode::INIT);
+  // start.mutable_mng_node()->set_cmd(ManageNode::INIT);
 
   // add all node info
   CHECK_EQ(nodes.size(), apps.size());
@@ -56,7 +56,7 @@ void Postmaster::createApp(
 
   // let the scheduler connect all other nodes
   auto& sys = Postoffice::instance();
-  sys.manageNode(start);
+  // sys.manageNode(start);
 
   // create the app at all other machines
   std::vector<int> time(n);
