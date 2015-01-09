@@ -24,6 +24,13 @@ class YellowPages {
   void removeCustomer(const string& name);
   Customer* customer(const string& name);
 
+  void addRelation(const string& child, const string& parent) {
+    relations_[parent].push_back(child);
+  }
+  const std::vector<string>& childern(const string& parent) {
+    return relations_[parent];
+  }
+
   // manage nodes
   void addNode(const Node& node);
   int num_workers() { return num_workers_; }
@@ -41,6 +48,8 @@ class YellowPages {
   std::map<string, Customer*> customers_;
   std::unordered_set<string> deletable_customers_;
 
+  // parent vs childern
+  std::unordered_map<string, std::vector<string>> relations_;
   Van van_;
 };
 

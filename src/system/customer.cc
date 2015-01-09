@@ -4,17 +4,16 @@ namespace PS {
 Customer::Customer(const string& my_name, const string& parent_name)
     : name_(my_name), sys_(Postoffice::instance()), exec_(*this) {
   CHECK(!name_.empty()) << "a customer must have a valid name";
-  auto parent_ptr = sys_.yp().customer(parent_name);
-  if (parent_ptr) {
-    // copy parent's nodes information
-    parent_ptr->addChild(my_name);
+
+  // init parent info
+  if (parent_name.size()) {
+    sys_.yp().addRelation(my_name, parent_name);
+    auto parent_ptr = CHECK_NOTNULL(sys_.yp().customer(parent_name));
     exec_.copyNodesFrom(parent_ptr->exec());
   }
+
   // register myself to system
   sys_.yp().addCustomer(this);
-
-  exec_thread_ = unique_ptr<std::thread>(
-      new std::thread(&Executor::run, &exec_));
 }
 
 Customer::~Customer() {

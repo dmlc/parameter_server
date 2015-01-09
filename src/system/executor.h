@@ -24,14 +24,10 @@ typedef std::vector<Node> NodeList;
 class Executor {
  public:
   Executor(Customer& obj);
-  ~Executor() { }
+  ~Executor();
 
-  // will be called by the customer's ctor, run the processing thread
-  void run();
   // wake up the processing thread
   void notify() { Lock l(recved_msg_mu_); dag_cond_.notify_one(); }
-  // stop the processing thread
-  void stop() { done_ = true; notify(); }
 
   void finish(const MessagePtr& msg) {
     int t = msg->task.time();
@@ -58,6 +54,8 @@ class Executor {
 
   Customer& obj() { return obj_; }
  private:
+  void run();
+
   Customer& obj_;
   // Temporal buffer for received messages
   std::list<MessagePtr> recved_msgs_;
@@ -71,6 +69,7 @@ class Executor {
   Node my_node_;
   std::mutex node_mu_;
   bool done_ = false;
+  unique_ptr<std::thread> thread_;
 };
 
 

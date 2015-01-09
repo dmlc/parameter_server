@@ -61,7 +61,7 @@ void Postoffice::run() {
   }
 
   // start the I/O threads
-  yellow_pages_.init();
+  yp().init();
   recving_ =
       std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ =
@@ -69,7 +69,7 @@ void Postoffice::run() {
 
   if (IamScheduler()) {
     // wait until all nodes are ready
-    yellow_pages_.addNode(myNode());
+    yp().addNode(myNode());
     if (FLAGS_num_workers + FLAGS_num_servers) {
       nodes_are_ready_.get_future().wait();
       LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
@@ -77,7 +77,7 @@ void Postoffice::run() {
     }
 
     // add all nodes into app
-    auto nodes = yellow_pages_.nodes();
+    auto nodes = yp().nodes();
     nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
     Task task;
     task.set_request(true);
@@ -139,7 +139,7 @@ void Postoffice::queue(const MessagePtr& msg) {
     MessagePtr reply(new Message(tk));
     reply->sender = msg->recver;
     reply->recver = msg->sender;
-    yellow_pages_.customer(tk.customer())->exec().accept(reply);
+    yp().customer(tk.customer())->exec().accept(reply);
   }
 }
 
@@ -150,7 +150,7 @@ void Postoffice::send() {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;
     size_t send_bytes = 0;
-    Status stat = yellow_pages_.van().send(msg, &send_bytes);
+    Status stat = yp().van().send(msg, &send_bytes);
     if (!stat.ok()) {
       LL << "sending " << *msg << " failed. error: " << stat.ToString();
     }
@@ -163,7 +163,7 @@ void Postoffice::recv() {
     // receive a message
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
-    auto stat = yellow_pages_.van().recv(msg, &recv_bytes);
+    auto stat = yp().van().recv(msg, &recv_bytes);
     CHECK(stat.ok()) << stat.ToString();
     // heartbeat_info_.increaseInBytes(recv_bytes);
 
@@ -172,7 +172,7 @@ void Postoffice::recv() {
     bool request = tk.request();
     auto type = tk.type();
     if (type == Task::CALL_CUSTOMER || type == Task::REPLY) {
-      auto pt = yellow_pages_.customer(tk.customer());
+      auto pt = yp().customer(tk.customer());
       CHECK(pt) << "customer [" << tk.customer() << "] doesn't exist";
       pt->exec().accept(msg);
 
@@ -197,12 +197,12 @@ void Postoffice::recv() {
       }
     } else if (type == Task::TERMINATE) {
       if (FLAGS_traffic_statistics) {
-        yellow_pages_.van().statistic();
+        yp().van().statistic();
       }
       done_ = true;
       break;
     }
-    auto ptr = yellow_pages_.customer(tk.customer());
+    auto ptr = yp().customer(tk.customer());
     if (ptr != nullptr) ptr->exec().finish(msg);
     reply(msg->sender, msg->task);
   }
@@ -212,7 +212,7 @@ void Postoffice::manageApp(const Task& tk) {
   CHECK(tk.has_mng_app());
   auto& mng = tk.mng_app();
   if (mng.cmd() == ManageApp::ADD) {
-    yellow_pages_.depositCustomer(App::create(mng.app_config()));
+    yp().depositCustomer(App::create(mng.app_config()));
   }
 }
 
@@ -236,19 +236,19 @@ void Postoffice::manageNode(const Task& tk) {
     *task.mutable_mng_app()->mutable_app_config() = app_conf_;
     app_->taskpool(mng.node(0).id())->submitAndWait(task);
     // check if all nodes are connected
-    if (yellow_pages_.num_workers() >= FLAGS_num_workers &&
-        yellow_pages_.num_servers() >= FLAGS_num_servers) {
+    if (yp().num_workers() >= FLAGS_num_workers &&
+        yp().num_servers() >= FLAGS_num_servers) {
       nodes_are_ready_.set_value();
     }
   } else if (mng.cmd() == ManageNode::ADD) {
-    auto obj = yellow_pages_.customer(tk.customer());
+    auto obj = yp().customer(tk.customer());
     CHECK(obj) << "customer [" << tk.customer() << "] doesn't exists";
     for (int i = 0; i < mng.node_size(); ++i) {
       auto node = mng.node(i);
-      yellow_pages_.addNode(node);
+      yp().addNode(node);
       obj->exec().add(node);
-      for (auto c : obj->children()) {
-        auto child = yellow_pages_.customer(c);
+      for (auto c : yp().childern(obj->name())) {
+        auto child = yp().customer(c);
         if (child) child->exec().add(node);
       }
     }
@@ -256,7 +256,7 @@ void Postoffice::manageNode(const Task& tk) {
     // CHECK_EQ(nodes.size(), 2);
     // obj->exec().replace(nodes[0], nodes[1]);
     // for (auto c : obj->children())
-    //   yellow_pages_.customer(c)->exec().replace(nodes[0], nodes[1]);
+    //   yp().customer(c)->exec().replace(nodes[0], nodes[1]);
     // break;
   } else if (mng.cmd() == ManageNode::REMOVE) {
   }
@@ -280,7 +280,7 @@ void Postoffice::manageNode(const Task& tk) {
 //   while (!done_) {
 //     // heartbeat won't work until I have connected to the scheduler
 //     std::this_thread::sleep_for(std::chrono::seconds(FLAGS_report_interval));
-//     if (yellow_pages_.van().connected(scheduler())) {
+//     if (yp().van().connected(scheduler())) {
 //       // serialize heartbeat report
 //       string report;
 //       heartbeat_info_.get().SerializeToString(&report);

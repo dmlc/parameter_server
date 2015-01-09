@@ -15,6 +15,14 @@ Executor::Executor(Customer& obj) : obj_(obj) {
     node.set_id(id);
     add(node);
   }
+
+  thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, this));
+}
+
+Executor::~Executor() {
+  done_ = true;
+  notify();
+  thread_->join();
 }
 
 RNodePtr Executor::rnode(const NodeID& k) {

@@ -4,11 +4,8 @@
 namespace PS {
 
 YellowPages::~YellowPages() {
-  for (auto& it : customers_) {
-    it.second->stop();
-    if (deletable_customers_.find(it.first) != deletable_customers_.end()) {
-      delete it.second;
-    }
+  while (deletable_customers_.size()) {
+    removeCustomer(*deletable_customers_.begin());
   }
 }
 
@@ -31,7 +28,6 @@ Customer* YellowPages::customer(const string& name) {
 void YellowPages::removeCustomer(const string& name) {
   auto it = customers_.find(name);
   if (it == customers_.end()) return;
-  it->second->stop();
   auto it2 = deletable_customers_.find(name);
   if (it2 != deletable_customers_.end()) {
     delete it->second;

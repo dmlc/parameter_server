@@ -9,8 +9,8 @@ class Postmaster;
 // An object shared across multiple nodes.
 class Customer {
  public:
-  friend class Postmaster;
-  // Customer(const string& my_name) : Customer(my_name, "") { }
+  // a child customer (often a shared parameter) will inherent its parent's node
+  // information (oftern an app).
   Customer(const string& my_name, const string& parent_name = "");
   virtual ~Customer();
 
@@ -22,9 +22,6 @@ class Customer {
   // ordered such that krs[i-1].end == krs[i].begin.
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs);
 
-  // join the execution thread
-  virtual void stop() { exec_.stop(); exec_thread_->join(); }
-
   // query my node
   const string& name() const { return name_; }
   NodeID myNodeID() { return exec_.myNode().id(); }
@@ -34,19 +31,17 @@ class Customer {
 
   // return the executor
   Executor& exec() { return exec_; }
-  // return the remote_note by using its name
+  // return the remote_note by its name
   RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
 
-  // all child customer names
-  const StringList& children() const { return child_customers_; }
-  void addChild(const string& name) { child_customers_.push_back(name); }
+  // // all child customer names
+  // const std::vector<string>& children() const { return child_customers_; }
+  // void addChild(const string& name) { child_customers_.push_back(name); }
 
  protected:
   string name_;
-  StringList child_customers_;
   Postoffice& sys_;
   Executor exec_;
-  unique_ptr<std::thread> exec_thread_;
  private:
   DISALLOW_COPY_AND_ASSIGN(Customer);
 };
