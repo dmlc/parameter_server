@@ -20,7 +20,7 @@ class YellowPages {
   // manage customers
   void addCustomer(Customer* obj);
   // ask the system to delete the customer
-  void depositCustomer(Customer* obj);
+  void depositCustomer(const string& name);
   void removeCustomer(const string& name);
   Customer* customer(const string& name);
 
@@ -45,8 +45,7 @@ class YellowPages {
   int num_servers_ = 0;
 
   std::map<NodeID, Node> nodes_;
-  std::map<string, Customer*> customers_;
-  std::unordered_set<string> deletable_customers_;
+  std::map<string, std::pair<Customer*, bool>> customers_;
 
   // parent vs childern
   std::unordered_map<string, std::vector<string>> relations_;

@@ -257,7 +257,8 @@ void Executor::run() {
 
 void Executor::accept(const MessagePtr& msg) {
   Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender); CHECK(sender) << msg->shortDebugString();
+  auto sender = rnode(msg->sender);
+  if (!sender) return;
   sender->decodeFilter(msg);
   recved_msgs_.push_back(msg);
   dag_cond_.notify_one();

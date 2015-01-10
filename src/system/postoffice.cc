@@ -69,29 +69,34 @@ void Postoffice::run() {
       std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
 
   if (IamScheduler()) {
-    yp().addNode(myNode());
-    bool has_comp_node = (FLAGS_num_workers + FLAGS_num_servers) > 0;
-    if (has_comp_node) {
-      nodes_are_ready_.get_future().wait();
-      LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
-         << FLAGS_num_workers << " workers";
-      // wait until app has been created at all computation nodes
-      app_->taskpool(kCompGroup)->waitOutgoingTask(1);
-    }
-    // add all nodes into app
-    auto nodes = yp().nodes();
-    nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
+    // add my self into app_
     Task task;
     task.set_request(true);
     task.set_customer(app_->name());
     task.set_type(Task::MANAGE);
     task.mutable_mng_node()->set_cmd(ManageNode::ADD);
-    for (const auto& n : nodes) {
-      *task.mutable_mng_node()->add_node() = n;
-    }
-    // first add them into scheduler's app so we can use taskpool
+    *task.mutable_mng_node()->add_node() = myNode();
     manageNode(task);
-    if (has_comp_node) {
+
+    // init other nodes
+    if (FLAGS_num_workers + FLAGS_num_servers) {
+      nodes_are_ready_.get_future().wait();
+      LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
+         << FLAGS_num_workers << " workers";
+      // wait until app has been created at all computation nodes
+      app_->taskpool(kCompGroup)->waitOutgoingTask(1);
+
+      // add all nodes into app
+      auto nodes = yp().nodes();
+      nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
+      Task task;
+      task.set_request(true);
+      task.set_customer(app_->name());
+      task.set_type(Task::MANAGE);
+      task.mutable_mng_node()->set_cmd(ManageNode::ADD);
+      for (const auto& n : nodes) {
+        *task.mutable_mng_node()->add_node() = n;
+      }
       // then add them in servers and worekrs
       app_->taskpool(kCompGroup)->submitAndWait(task);
     }
@@ -212,7 +217,8 @@ void Postoffice::manageApp(const Task& tk) {
   CHECK(tk.has_mng_app());
   auto& mng = tk.mng_app();
   if (mng.cmd() == ManageApp::ADD) {
-    yp().depositCustomer(App::create(mng.app_config()));
+    App* app = CHECK_NOTNULL(App::create(mng.app_config()));
+    yp().depositCustomer(app->name());
   }
 }
 

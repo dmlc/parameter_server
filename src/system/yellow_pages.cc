@@ -4,35 +4,35 @@
 namespace PS {
 
 YellowPages::~YellowPages() {
-  while (deletable_customers_.size()) {
-    removeCustomer(*deletable_customers_.begin());
+  while (customers_.size()) {
+    auto it = customers_.begin();
+    if (it->second.second)  {
+      delete it->second.first;  // which will call removeCustomer()
+    } else {
+      customers_.erase(it);
+    }
   }
 }
 
 void YellowPages::addCustomer(Customer* customer) {
   CHECK_EQ(customers_.count(customer->name()), 0) << customer->name();
-  customers_[customer->name()] = customer;
+  customers_[customer->name()] = std::make_pair(customer, false);
 }
 
-void YellowPages::depositCustomer(Customer* obj) {
-  CHECK_EQ(deletable_customers_.count(obj->name()), 0) << obj->name();
-  deletable_customers_.insert(obj->name());
+void YellowPages::depositCustomer(const string& name) {
+  CHECK_EQ(customers_.count(name), 1) << name;
+  customers_[name].second = true;
 }
 
 Customer* YellowPages::customer(const string& name) {
   auto it = customers_.find(name);
   if (it == customers_.end()) return nullptr;
-  return it->second;
+  return it->second.first;
 }
 
 void YellowPages::removeCustomer(const string& name) {
   auto it = customers_.find(name);
   if (it == customers_.end()) return;
-  auto it2 = deletable_customers_.find(name);
-  if (it2 != deletable_customers_.end()) {
-    delete it->second;
-    deletable_customers_.erase(it2);
-  }
   customers_.erase(it);
 }
 
