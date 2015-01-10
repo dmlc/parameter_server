@@ -99,3 +99,6 @@ $(LIB):
 	mkdir -p $(LIB)
 $(BIN):
 	mkdir -p $(BIN)
+
+# ../bin/app_test: system/app_test.cc
+# 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@

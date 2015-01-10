@@ -51,9 +51,7 @@ int RNode::submitAndWait(std::vector<Task>& tasks) {
 }
 
 int RNode::submit(MessagePtrList& msgs) {
-  // check
   CHECK_NOTNULL(this);
-  CHECK(!msgs.empty());
 
   // choose a proper timestamp
   int t = Message::kInvalidTime;

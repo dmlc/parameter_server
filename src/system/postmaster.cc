@@ -34,7 +34,9 @@ std::vector<Node> Postmaster::partitionServerKeyRange(
                range.evenDivide(num_servers, s++);
     key.to(o.mutable_key());
   }
-  LI << "Paritition key range " << range << " into " << num_servers << " servers";
+  // if (num_servers) {
+  //   LI << "Paritition key range " << range << " into " << num_servers << " servers";
+  // }
   return ret;
 }
 

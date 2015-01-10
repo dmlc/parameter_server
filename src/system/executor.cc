@@ -41,9 +41,10 @@ std::vector<RNodePtr>& Executor::group(const NodeID& k) {
 
 const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
   Lock l(node_mu_);
-  auto it = key_ranges_.find(k);
-  CHECK(it != key_ranges_.end()) << "unkonw node group: " << k;
-  return it->second;
+  return key_ranges_[k];
+  // auto it = key_ranges_.find(k);
+  // CHECK(it != key_ranges_.end()) << "unkonw node group: " << k;
+  // return it->second;
 }
 
 void Executor::copyNodesFrom(const Executor& other) {

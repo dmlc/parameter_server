@@ -1,6 +1,6 @@
-#include "system/app.h"
-namespace PS {
-DEFINE_bool(test_fault_tol, false, "");
+// #include "system/app.h"
+// namespace PS {
+// DEFINE_bool(test_fault_tol, false, "");
 
 // void App::stopAll() {
 //   // send terminate signal to all others
@@ -19,7 +19,7 @@ DEFINE_bool(test_fault_tol, false, "");
 //   LI << "System stopped\n";
 // }
 
-} // namespace PS
+// } // namespace PS
 
 // void App::testFaultTolerance(Task recover) {
 //   CHECK_GT(FLAGS_num_replicas, 0);

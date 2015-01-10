@@ -33,6 +33,7 @@ Postoffice::Postoffice() {
         google::INFO, ("./log_" + myNode().id() + "_").c_str());
     FLAGS_logtostderr = 0;
   }
+  yp().init();
 }
 
 Postoffice::~Postoffice() {
@@ -52,6 +53,7 @@ void Postoffice::run() {
     Task task;
     task.set_type(Task::MANAGE);
     task.set_request(true);
+    task.set_time(0);
     auto mng_node = task.mutable_mng_node();
     mng_node->set_cmd(ManageNode::CONNECT);
     *(mng_node->add_node()) = myNode();
@@ -61,21 +63,21 @@ void Postoffice::run() {
   }
 
   // start the I/O threads
-  yp().init();
   recving_ =
       std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
   sending_ =
       std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
 
   if (IamScheduler()) {
-    // wait until all nodes are ready
     yp().addNode(myNode());
-    if (FLAGS_num_workers + FLAGS_num_servers) {
+    bool has_comp_node = (FLAGS_num_workers + FLAGS_num_servers) > 0;
+    if (has_comp_node) {
       nodes_are_ready_.get_future().wait();
       LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
          << FLAGS_num_workers << " workers";
+      // wait until app has been created at all computation nodes
+      app_->taskpool(kCompGroup)->waitOutgoingTask(1);
     }
-
     // add all nodes into app
     auto nodes = yp().nodes();
     nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
@@ -89,8 +91,10 @@ void Postoffice::run() {
     }
     // first add them into scheduler's app so we can use taskpool
     manageNode(task);
-    // then add them in servers and worekrs
-    app_->taskpool(kCompGroup)->submitAndWait(task);
+    if (has_comp_node) {
+      // then add them in servers and worekrs
+      app_->taskpool(kCompGroup)->submitAndWait(task);
+    }
 
     // run the application
     app_->run();
@@ -190,10 +194,6 @@ void Postoffice::recv() {
       }
       if (request && tk.has_mng_node()) {
         manageNode(tk);
-        if (tk.mng_node().cmd() == ManageNode::CONNECT) {
-          // do not reply, because the sender hasn't create the app yet
-          continue;
-        }
       }
     } else if (type == Task::TERMINATE) {
       if (FLAGS_traffic_statistics) {
@@ -216,7 +216,7 @@ void Postoffice::manageApp(const Task& tk) {
   }
 }
 
-void Postoffice::manageNode(const Task& tk) {
+void Postoffice::manageNode(Task& tk) {
   CHECK(tk.has_mng_node());
   auto& mng = tk.mng_node();
   if (mng.cmd() == ManageNode::CONNECT) {
@@ -232,14 +232,17 @@ void Postoffice::manageNode(const Task& tk) {
     task.set_request(true);
     task.set_customer(app_conf_.app_name());
     task.set_type(Task::MANAGE);
+    task.set_time(1);
     task.mutable_mng_app()->set_cmd(ManageApp::ADD);
     *task.mutable_mng_app()->mutable_app_config() = app_conf_;
-    app_->taskpool(mng.node(0).id())->submitAndWait(task);
+    app_->taskpool(mng.node(0).id())->submit(task);
     // check if all nodes are connected
     if (yp().num_workers() >= FLAGS_num_workers &&
         yp().num_servers() >= FLAGS_num_servers) {
       nodes_are_ready_.set_value();
     }
+    tk.set_customer(app_->name());  // otherwise the remote node doesn't know
+                                    // how to find the according customer
   } else if (mng.cmd() == ManageNode::ADD) {
     auto obj = yp().customer(tk.customer());
     CHECK(obj) << "customer [" << tk.customer() << "] doesn't exists";

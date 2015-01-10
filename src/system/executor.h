@@ -30,8 +30,8 @@ class Executor {
   void notify() { Lock l(recved_msg_mu_); dag_cond_.notify_one(); }
 
   void finish(const MessagePtr& msg) {
-    int t = msg->task.time();
-    rnode(msg->sender)->finishIncomingTask(t);
+    auto r = rnode(msg->sender);
+    if (r) r->finishIncomingTask(msg->task.time());
   }
 
   // accessors

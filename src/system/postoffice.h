@@ -49,7 +49,7 @@ class Postoffice {
   Postoffice();
 
   bool IamScheduler() { return myNode().role() == Node::SCHEDULER; }
-  void manageNode(const Task& pt);
+  void manageNode(Task& pt);
   void manageApp(const Task& pt);
   void send();
   void recv();
