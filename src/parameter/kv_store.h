@@ -7,9 +7,13 @@ namespace PS {
 template <typename K, typename E>
 class KVStore : public SharedParameter<K> {
  public:
+  KVStore(const string& my_name, const string& parent_name) :
+      SharedParameter<K>(my_name, parent_name) { }
   // only supports fix size entry_sync_size
   // TODO if entry_sync_size == -1, then allow variable length
-  KVStore(int entry_sync_size) : k_(entry_sync_size) { }
+  void setEntrySyncSize(int k) { k_ = k; }
+
+  // KVStore(int entry_sync_size) : k_(entry_sync_size) { }
   virtual ~KVStore() {}
 
   // TODO multi-thread by shard
@@ -34,8 +38,8 @@ class KVStore : public SharedParameter<K> {
     }
   }
 
-  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
-    return sliceKeyOrderedMsg<K>(msg, sep);
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs) {
+    return sliceKeyOrderedMsg<K>(msg, krs);
   }
 
   // TODO fault tolerance

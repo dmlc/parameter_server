@@ -7,26 +7,26 @@
 #include "system/app.h"
 namespace PS {
 
-static SGDCall getSGDCall(const MessageCPtr& msg) {
-  CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-  CHECK(msg->task.has_sgd());
-  return msg->task.sgd();
-}
+// static SGDCall getSGDCall(const MessageCPtr& msg) {
+//   CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+//   CHECK(msg->task.has_sgd());
+//   return msg->task.sgd();
+// }
 
-static SGDCall* setSGDCall(Task *task) {
-  task->set_type(Task::CALL_CUSTOMER);
-  return task->mutable_sgd();
-}
+// static SGDCall* setSGDCall(Task *task) {
+//   task->set_type(Task::CALL_CUSTOMER);
+//   return task->mutable_sgd();
+// }
 
-static Task newSGDTask(SGDCall::Command cmd) {
-  Task task; set(&task)->set_cmd(cmd);
-  return task;
-}
+// static Task newSGDTask(SGDCall::Command cmd) {
+//   Task task; setSGDCall(&task)->set_cmd(cmd);
+//   return task;
+// }
 
 template <typename V>
 struct SparseMinibatch {
   size_t size() {
-    return label->memSize() + data->localizer->memSize();
+    return label->memSize() + localizer->memSize();
   }
   MatrixPtr<V> label;
   LocalizerPtr<Key, V> localizer;
@@ -36,35 +36,36 @@ struct SparseMinibatch {
 
 class SGDScheduler : public App {
  public:
-  SGDScheduler(const string& name) : App(name), monitor_(this) {
-    monitor_.setDataMerger(std::bind(&addProgress, this, _1, _2));
+  SGDScheduler(const string& name)
+      : App(name), monitor_(name+"_monitor", name) {
+    using namespace std::placeholders;
+    monitor_.setDataMerger(std::bind(&SGDScheduler::addProgress, this, _1, _2));
   }
   virtual ~SGDScheduler() { }
 
   virtual void run() {
     // divide data
 
-    monitor_.monitor(1, std::bind(&showProgress, this));
+    monitor_.monitor(1, std::bind(&SGDScheduler::showProgress, this));
 
-    Task update = newTask(SGDCall::UPDATE_MODEL);
-    taskpool(kActiveGroup)->submitAndWait(update);
+    Task update; // = newTask(SGDCall::UPDATE_MODEL);
+    taskpool(kCompGroup)->submitAndWait(update);
 
-    Task save_model = newTask(SGDCall::SAVE_MODEL);
-    taskpool(kActiveGroup)->submitAndWait(save_model);
+    Task save_model; // = newTask(SGDCall::SAVE_MODEL);
+    taskpool(kServerGroup)->submitAndWait(save_model);
   }
 
   virtual void process(const MessagePtr& msg) {
 
   }
- protected:
-  void addProgress(const NodeID& sender, const string& proto) {
-    Lock l(progress_mu_);
-    recent_progress_.push_back(std::make_pair(sender, prog));
-  }
 
   virtual void showProgress() {
     // TODO
 
+  }
+  void addProgress(const NodeID& sender, const SGDProgress& prog) {
+    Lock l(progress_mu_);
+    recent_progress_.push_back(std::make_pair(sender, prog));
   }
 
  protected:
@@ -90,14 +91,14 @@ class SGDCompNode : public App {
 template <typename Model>
 class SGDServer : public SGDCompNode<Model> {
  public:
-  SGDServer(const string& name) : SGDCompNode(name) { }
+  SGDServer(const string& name) : SGDCompNode<Model>(name) { }
   virtual ~SGDServer() { }
 
   virtual void process(const MessagePtr& msg) {
-    auto sgd = get(msg);
+    auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
-      reporter_.report(schedulerID(), 1, [this](SGDProgress* prog){
-          this->model_.evaluate(prog);
+      this->reporter_.reporter(this->schedulerID(), 1, [this](SGDProgress* prog){
+          // this->model_.evaluate(prog);
         });
     } else if (sgd.cmd() == SGDCall::SAVE_MODEL) {
       saveModel();
@@ -111,14 +112,14 @@ class SGDServer : public SGDCompNode<Model> {
 template <typename Reader, typename Minibatch, typename Model>
 class SGDWorker : public SGDCompNode<Model> {
  public:
-  SGDWorker(const string& name) : SGDCompNode(name) { }
+  SGDWorker(const string& name) : SGDCompNode<Model>(name) { }
   virtual ~SGDWorker() { }
 
   virtual void process(const MessagePtr& msg) {
-    auto sgd = get(msg);
+    auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
       // start the progress reporter
-      reporter_.reporter(schedulerID(), 1, [this](SGDProgress* prog){
+      this->reporter_.reporter(this->schedulerID(), 1, [this](SGDProgress* prog){
           Lock l(progress_mu_);
           *prog = progress_;
           progress_.Clear();
@@ -128,10 +129,10 @@ class SGDWorker : public SGDCompNode<Model> {
       reader.init(sgd.data());
       data_prefetcher_.setCapacity(10000);
       data_prefetcher_.startProducer(
-        [this](Minibatch* data, size_t* size)->bool {
-          bool ret = readMinibatch(reader, data);
-          *size = data->size();
-          return ret;
+          [this, &reader](Minibatch* data, size_t* size)->bool {
+            bool ret = readMinibatch(reader, data);
+            *size = data->size();
+            return ret;
         });
       // compute gradient
       Minibatch data;
@@ -168,14 +169,14 @@ struct AdaGradEntry {
   }
 };
 
-template<typename V>
-class AdaGradUpdater : public KVStore<Key, AdaGradEntry<V>> {
-public:
+// template<typename V>
+// class AdaGradUpdater : public KVStore<Key, AdaGradEntry<V>> {
+// public:
 
-};
+// };
 
 
-template<typename V>
-using AdaGradUpdaterPtr = std::shared_ptr<AdaGradUpdater<V>>;
+// template<typename V>
+// using AdaGradUpdaterPtr = std::shared_ptr<AdaGradUpdater<V>>;
 
 } // namespace PS
