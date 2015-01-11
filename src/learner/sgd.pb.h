@@ -128,17 +128,17 @@ class SGDProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< double >*
       mutable_objective();
 
-  // optional uint64 num_examples_processed = 12;
+  // optional uint64 num_examples_processed = 2;
   inline bool has_num_examples_processed() const;
   inline void clear_num_examples_processed();
-  static const int kNumExamplesProcessedFieldNumber = 12;
+  static const int kNumExamplesProcessedFieldNumber = 2;
   inline ::google::protobuf::uint64 num_examples_processed() const;
   inline void set_num_examples_processed(::google::protobuf::uint64 value);
 
-  // repeated double accuracy = 13;
+  // repeated double accuracy = 3;
   inline int accuracy_size() const;
   inline void clear_accuracy();
-  static const int kAccuracyFieldNumber = 13;
+  static const int kAccuracyFieldNumber = 3;
   inline double accuracy(int index) const;
   inline void set_accuracy(int index, double value);
   inline void add_accuracy(double value);
@@ -147,10 +147,10 @@ class SGDProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< double >*
       mutable_accuracy();
 
-  // repeated double auc = 14;
+  // repeated double auc = 4;
   inline int auc_size() const;
   inline void clear_auc();
-  static const int kAucFieldNumber = 14;
+  static const int kAucFieldNumber = 4;
   inline double auc(int index) const;
   inline void set_auc(int index, double value);
   inline void add_auc(double value);
@@ -159,10 +159,19 @@ class SGDProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedField< double >*
       mutable_auc();
 
+  // optional uint64 nnz = 5;
+  inline bool has_nnz() const;
+  inline void clear_nnz();
+  static const int kNnzFieldNumber = 5;
+  inline ::google::protobuf::uint64 nnz() const;
+  inline void set_nnz(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:PS.SGDProgress)
  private:
   inline void set_has_num_examples_processed();
   inline void clear_has_num_examples_processed();
+  inline void set_has_nnz();
+  inline void clear_has_nnz();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -170,9 +179,10 @@ class SGDProgress : public ::google::protobuf::Message {
   ::google::protobuf::uint64 num_examples_processed_;
   ::google::protobuf::RepeatedField< double > accuracy_;
   ::google::protobuf::RepeatedField< double > auc_;
+  ::google::protobuf::uint64 nnz_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_learner_2fsgd_2eproto();
   friend void protobuf_AssignDesc_learner_2fsgd_2eproto();
@@ -344,7 +354,7 @@ SGDProgress::mutable_objective() {
   return &objective_;
 }
 
-// optional uint64 num_examples_processed = 12;
+// optional uint64 num_examples_processed = 2;
 inline bool SGDProgress::has_num_examples_processed() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -366,7 +376,7 @@ inline void SGDProgress::set_num_examples_processed(::google::protobuf::uint64 v
   num_examples_processed_ = value;
 }
 
-// repeated double accuracy = 13;
+// repeated double accuracy = 3;
 inline int SGDProgress::accuracy_size() const {
   return accuracy_.size();
 }
@@ -391,7 +401,7 @@ SGDProgress::mutable_accuracy() {
   return &accuracy_;
 }
 
-// repeated double auc = 14;
+// repeated double auc = 4;
 inline int SGDProgress::auc_size() const {
   return auc_.size();
 }
@@ -414,6 +424,28 @@ SGDProgress::auc() const {
 inline ::google::protobuf::RepeatedField< double >*
 SGDProgress::mutable_auc() {
   return &auc_;
+}
+
+// optional uint64 nnz = 5;
+inline bool SGDProgress::has_nnz() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void SGDProgress::set_has_nnz() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void SGDProgress::clear_has_nnz() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void SGDProgress::clear_nnz() {
+  nnz_ = GOOGLE_ULONGLONG(0);
+  clear_has_nnz();
+}
+inline ::google::protobuf::uint64 SGDProgress::nnz() const {
+  return nnz_;
+}
+inline void SGDProgress::set_nnz(::google::protobuf::uint64 value) {
+  set_has_nnz();
+  nnz_ = value;
 }
 
 // -------------------------------------------------------------------

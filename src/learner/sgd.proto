@@ -3,9 +3,10 @@ import "proto/config.proto";
 
 message SGDProgress {
   repeated double objective = 1;
-  optional uint64 num_examples_processed = 12;
-  repeated double accuracy = 13;
-  repeated double auc = 14;
+  optional uint64 num_examples_processed = 2;
+  repeated double accuracy = 3;
+  repeated double auc = 4;
+  optional uint64 nnz = 5;
 }
 
 message SGDCall {

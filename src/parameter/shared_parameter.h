@@ -46,11 +46,11 @@ class SharedParameter : public Customer {
   // process a received message, will called by the thread of executor
   void process(const MessagePtr& msg);
 
-  CallSharedPara* set(MessagePtr msg) {
+  static CallSharedPara* set(MessagePtr msg) {
     msg->task.set_type(Task::CALL_CUSTOMER);
     return msg->task.mutable_shared_para();
   }
-  CallSharedPara get(const MessagePtr& msg) {
+  static CallSharedPara get(const MessagePtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
     CHECK(msg->task.has_shared_para());
     return msg->task.shared_para();

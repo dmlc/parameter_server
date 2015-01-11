@@ -9,7 +9,7 @@ class Postmaster {
  public:
   Postmaster(Customer* obj) : obj_(CHECK_NOTNULL(obj)) { }
 
-  std::vector<Node> nodes();
+  // std::vector<Node> nodes();
   void createApp(const std::vector<Node>& nodes, const std::vector<AppConfig>& apps);
   void stopApp();
 

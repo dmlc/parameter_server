@@ -2,9 +2,14 @@
 #include "parameter/shared_parameter.h"
 namespace PS {
 
-// key value storage. an entry *E* should has two functions get(char const* data)
-// and put(char* data), where data has length *entry_sync_size*
-template <typename K, typename E>
+// key value storage.
+// K: key
+// E: entry
+// S: status
+// an entry *E* should has two functions
+// get(char const* data, S* state)
+// put(char* data, S* state), where data has length *entry_sync_size*
+template <typename K, typename E, typename S>
 class KVStore : public SharedParameter<K> {
  public:
   KVStore(const string& my_name, const string& parent_name) :
@@ -12,6 +17,8 @@ class KVStore : public SharedParameter<K> {
   // only supports fix size entry_sync_size
   // TODO if entry_sync_size == -1, then allow variable length
   void setEntrySyncSize(int k) { k_ = k; }
+  void setState(const S& s) { state_ = s; }
+  const S& state() { return state_; }
 
   // KVStore(int entry_sync_size) : k_(entry_sync_size) { }
   virtual ~KVStore() {}
@@ -22,7 +29,7 @@ class KVStore : public SharedParameter<K> {
     size_t n = key.size();
     SArray<char> val(n * k_);
     for (size_t i = 0; i < n; ++i) {
-      data_[key[i]].put(val.data() + i * k_);
+      data_[key[i]].put(val.data() + i * k_, &state_);
     }
     msg->addValue(val);
   }
@@ -34,7 +41,7 @@ class KVStore : public SharedParameter<K> {
     size_t n = key.size();
     CHECK_EQ(n * k_, val.size());
     for (size_t i = 0; i < n; ++i) {
-      data_[key[i]].get(val.data() + i * k_);
+      data_[key[i]].get(val.data() + i * k_, &state_);
     }
   }
 
@@ -49,6 +56,7 @@ class KVStore : public SharedParameter<K> {
  protected:
   int k_ = 1;
   std::unordered_map<K, E> data_;
+  S state_;
 };
 
 } // namespace PS

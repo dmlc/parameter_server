@@ -3,13 +3,13 @@
 #include "data/common.h"
 namespace PS {
 
-std::vector<Node> Postmaster::nodes() {
-  // std::vector<Node> ret;
-  // for (const auto& it : obj_->sys_.yp().nodes()) {
-  //   ret.push_back(it.second);
-  // }
-  // return ret;
-}
+// std::vector<Node> Postmaster::nodes() {
+//   // std::vector<Node> ret;
+//   // for (const auto& it : obj_->sys_.yp().nodes()) {
+//   //   ret.push_back(it.second);
+//   // }
+//   // return ret;
+// }
 
 std::vector<DataConfig>
 Postmaster::partitionData(const DataConfig& conf, int num_workers) {

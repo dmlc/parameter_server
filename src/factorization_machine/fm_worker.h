@@ -1,6 +1,6 @@
 #pragma once
 #include "factorization_machine/fm.h"
-#include "learner/sgd_worker.h"
+#include "learner/sgd.h"
 #include "parameter/kv_vector.h"
 #include "base/evaluation.h"
 namespace PS {
