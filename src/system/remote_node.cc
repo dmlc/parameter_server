@@ -37,7 +37,6 @@ int RNode::submit(std::vector<Task>& tasks) {
   MessagePtrList msgs; msgs.reserve(tasks.size());
   for (const auto& task : tasks) {
     msgs.push_back(MessagePtr(new Message(task)));
-    msgs.back()->wait = true;
   }
   return submit(msgs);
 }
@@ -46,6 +45,7 @@ int RNode::submitAndWait(std::vector<Task>& tasks) {
   MessagePtrList msgs; msgs.reserve(tasks.size());
   for (const auto& task : tasks) {
     msgs.push_back(MessagePtr(new Message(task)));
+    msgs.back()->wait = true;
   }
   return submit(msgs);
 }
@@ -58,7 +58,7 @@ int RNode::submit(MessagePtrList& msgs) {
   for (auto& msg : msgs) {
     CHECK(msg);
     auto& task = msg->task;
-    CHECK(task.has_type());
+    // CHECK(task.has_type());
     // if there is a valid time in task, then all messages should have the same
     // time (to make my life easy)
     if (task.has_time() && task.time() > Message::kInvalidTime) {

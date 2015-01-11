@@ -4,24 +4,9 @@
 #include "data/stream_reader.h"
 #include "base/localizer.h"
 #include "system/dist_monitor.h"
+#include "system/postmaster.h"
 #include "system/app.h"
 namespace PS {
-
-// static SGDCall getSGDCall(const MessageCPtr& msg) {
-//   CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-//   CHECK(msg->task.has_sgd());
-//   return msg->task.sgd();
-// }
-
-// static SGDCall* setSGDCall(Task *task) {
-//   task->set_type(Task::CALL_CUSTOMER);
-//   return task->mutable_sgd();
-// }
-
-// static Task newSGDTask(SGDCall::Command cmd) {
-//   Task task; setSGDCall(&task)->set_cmd(cmd);
-//   return task;
-// }
 
 template <typename V>
 struct SparseMinibatch {
@@ -40,38 +25,64 @@ class SGDScheduler : public App {
       : App(name), monitor_(name+"_monitor", name) {
     using namespace std::placeholders;
     monitor_.setDataMerger(std::bind(&SGDScheduler::addProgress, this, _1, _2));
+
   }
   virtual ~SGDScheduler() { }
 
-  virtual void run() {
-    // divide data
+  void saveModel() {
+    Task task;
+    task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
+    taskpool(kServerGroup)->submitAndWait(task);
+  }
 
+  void updateModel(const DataConfig& data) {
     monitor_.monitor(1, std::bind(&SGDScheduler::showProgress, this));
-
-    Task update; // = newTask(SGDCall::UPDATE_MODEL);
-    taskpool(kCompGroup)->submitAndWait(update);
-
-    Task save_model; // = newTask(SGDCall::SAVE_MODEL);
-    taskpool(kServerGroup)->submitAndWait(save_model);
+    auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
+    std::vector<Task> tasks(conf.size());
+    for (int i = 0; i < conf.size(); ++i) {
+      tasks[i].mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+    }
+    taskpool(kWorkerGroup)->submitAndWait(tasks);
   }
 
-  virtual void process(const MessagePtr& msg) {
+  // virtual void process(const MessagePtr& msg) {
+  // }
 
-  }
-
+ protected:
   virtual void showProgress() {
-    // TODO
+    Lock l(progress_mu_);
+    uint64 num_ex = 0, nnz_w = 0;
+    SArray<double> objv;
+    SArray<double> auc;
+    for (const auto& it : recent_progress_) {
+      auto& prog = it.second;
+      num_ex += prog.num_examples_processed();
+      nnz_w += prog.nnz();
+      for (int i = 0; i < prog.objective_size(); ++i) {
+        objv.pushBack(prog.objective(i));
+      }
+      for (int i = 0; i < prog.auc_size(); ++i) {
+        auc.pushBack(prog.auc(i));
+      }
+    }
+    recent_progress_.clear();
+    num_ex_processed_ += num_ex;
 
+    printf("%10lu examples, loss %.3e +- %.3e, auc %.4f +- %.4f, |w|_0 %8llu\n",
+           num_ex_processed_ , objv.mean(), objv.std(),
+           auc.mean(), auc.std(), nnz_w);
   }
+
   void addProgress(const NodeID& sender, const SGDProgress& prog) {
     Lock l(progress_mu_);
     recent_progress_.push_back(std::make_pair(sender, prog));
   }
 
- protected:
   DistMonitor<SGDProgress> monitor_;
   std::vector<std::pair<NodeID, SGDProgress>> recent_progress_;
   std::mutex progress_mu_;
+  size_t num_ex_processed_ = 0;
+
 };
 
 template <typename Model>

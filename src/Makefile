@@ -77,7 +77,7 @@ $(LIB)/libprotos.a: $(PROTOS_OBJS)
 	ar crv $@ $(PROTOS_OBJS)
 
 ### dependencies
-ALL_SRCS = $(wildcard */*.cc)
+ALL_SRCS = $(wildcard */*.cc), main.cc
 DEPS = $(ALL_SRCS:.cc=.d)
 -include $(DEPS)
 

@@ -9,9 +9,7 @@ namespace LM {
 template<typename V>
 class LinearMethod {
  public:
-  LinearMethod() { }
-  ~LinearMethod() { }
-  void init(const Config& conf) {
+  LinearMethod(const Config& conf) {
     conf_ = conf;
     if (conf_.has_loss()) {
       loss_ = createLoss<V>(conf_.loss());
@@ -20,6 +18,7 @@ class LinearMethod {
       penalty_ = createPenalty<V>(conf_.penalty());
     }
   }
+  virtual ~LinearMethod() { }
 
   // static Call get(const MessageCPtr& msg) {
   //   CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
@@ -70,11 +69,11 @@ static App* createApp(const string& name, const Config& conf) {
     if (conf.has_ftrl()) {
       typedef double Real;
       if (my_role == Node::SCHEDULER) {
-        app = new FTRLScheduler(name);
+        app = new FTRLScheduler(name, conf);
       } else if (my_role == Node::WORKER) {
-        app = new FTRLWorker<Real>(name);
+        app = new FTRLWorker<Real>(name, conf);
       } else if (my_role == Node::SERVER) {
-        app = new FTRLServer<Real>(name);
+        app = new FTRLServer<Real>(name, conf);
       }
     }
   }

@@ -40,7 +40,12 @@ class SharedParameter : public Customer {
   }
 
   // FreqencyFilter<K,V>& keyFilter(int chl) { return key_filter_[chl]; }
-  // void setKeyFilterIgnoreChl(bool flag) { key_filter_ignore_chl_ = flag; }
+  void setTailFilterIgnoreChl(bool flag) {
+    key_filter_ignore_chl_ = flag;
+  }
+  void setTailFilterSize(int chl, int n, int k) {
+    key_filter_[chl].resize(n, k);
+  }
   void clearTailFilter(int chl) { key_filter_[chl].clear(); }
 
   // process a received message, will called by the thread of executor
@@ -83,7 +88,7 @@ class SharedParameter : public Customer {
 
  protected:
   std::unordered_map<int, FreqencyFilter<K, uint8>> key_filter_;
-  bool key_filter_ignore_chl_ = false;
+  bool key_filter_ignore_chl_ = true;
 
   // add key_range in the future, it is not necessary now
   std::unordered_map<NodeID, std::vector<int> > clock_replica_;

@@ -21,7 +21,7 @@ struct FTRLState {
   // learning rate
   V alpha, beta;
   // penalty
-  V lambda1, lambda2;
+  V lambda1 = 0, lambda2 = 0;
   // progress
   V norm1 = 0, norm2 = 0;
   size_t nnz = 0;
@@ -63,18 +63,31 @@ template <typename V>
 using FTRLModel = KVStore<Key, FTRLEntry<V>, FTRLState<V>>;
 
 template <typename V>
-class FTRLServer : public SGDServer<FTRLModel<V>> {
+class FTRLServer : public SGDServer<FTRLModel<V>>, LinearMethod<V> {
 public:
-  FTRLServer(const string& name) : SGDServer<FTRLModel<V>>(name) { }
+  FTRLServer(const string& name, const Config& conf)
+      : SGDServer<FTRLModel<V>>(name), LinearMethod<V>(conf) { }
   virtual ~FTRLServer() { }
 
-  //
   typedef FTRLEntry<V> E;
   void init() {
     this->model_.setEntrySyncSize(sizeof(V));
 
-    // init static variables
-    // E::alpha = 1;
+    FTRLState<V> state;
+    // set learning rate and panlty
+    auto lr = this->conf_.learning_rate();
+    state.alpha = lr.alpha();
+    state.beta = lr.beta();
+
+    auto rg = this->conf_.penalty();
+    if (rg.lambda_size() > 0) state.lambda1 = rg.lambda(0);
+    if (rg.lambda_size() > 1) state.lambda2 = rg.lambda(1);
+    this->model_.setState(state);
+
+    // tail feature filter
+    auto sv = this->conf_.solver();
+    this->model_.setTailFilterSize(
+        0, sv.countmin_n()/this->sys_.yp().num_servers(), sv.countmin_k());
   }
 
   void evaluate(SGDProgress* prog) {
@@ -95,7 +108,8 @@ using FTRLWorkerBase =
 template <typename V>
 class FTRLWorker : public FTRLWorkerBase<V>, LinearMethod<V> {
  public:
-  FTRLWorker(const string& name) : FTRLWorkerBase<V>(name) { }
+  FTRLWorker(const string& name, const Config& conf)
+      : FTRLWorkerBase<V>(name), LinearMethod<V>(conf) { }
   virtual ~FTRLWorker() { }
   bool readMinibatch(StreamReader<V>& reader, SparseMinibatch<V>* data) {
     // read a minibatch
@@ -174,10 +188,16 @@ private:
 
 };
 
-class FTRLScheduler : public SGDScheduler {
+class FTRLScheduler : public SGDScheduler, LinearMethod<double> {
  public:
-  FTRLScheduler(const string& name) : SGDScheduler(name) { }
+  FTRLScheduler(const string& name, const Config& conf)
+      : SGDScheduler(name), LinearMethod<double>(conf) { }
   virtual ~FTRLScheduler() { }
+
+  virtual void run() {
+    updateModel(conf_.training_data());
+    saveModel();
+  }
 };
 
 } // namespace LM

@@ -19,7 +19,9 @@ class Customer {
 
   // process a message received from a remote node. It will be called by
   // executor's processing thread
-  virtual void process(const MessagePtr& msg) = 0;
+  virtual void process(const MessagePtr& msg) {
+    LL << "error: you should define your own _process_";
+  }
 
   // this function slices the message _msg_ into n messages such that the i-th
   // one contains only keys and values in the key range _krs[i]_. _krs_ are

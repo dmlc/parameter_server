@@ -195,7 +195,7 @@ class Task : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .PS.Task.Type type = 1;
+  // optional .PS.Task.Type type = 1 [default = CALL_CUSTOMER];
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 1;
@@ -679,7 +679,7 @@ class ManageApp : public ::google::protobuf::Message {
 
 // Task
 
-// required .PS.Task.Type type = 1;
+// optional .PS.Task.Type type = 1 [default = CALL_CUSTOMER];
 inline bool Task::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -690,7 +690,7 @@ inline void Task::clear_has_type() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void Task::clear_type() {
-  type_ = 1;
+  type_ = 5;
   clear_has_type();
 }
 inline ::PS::Task_Type Task::type() const {
