@@ -31,7 +31,7 @@ class Customer {
   NodeID myNodeID() { return exec_.myNode().id(); }
   bool IamWorker() { return exec_.myNode().role() == Node::WORKER; }
   bool IamServer() { return exec_.myNode().role() == Node::SERVER; }
-  // NodeID schedulerID() { return sys_.scheduler().id(); }
+  NodeID schedulerID() { return sys_.scheduler().id(); }
 
   // return the executor
   Executor& exec() { return exec_; }

@@ -13,7 +13,7 @@ class App : public Customer {
 
   // initialization. it will be called in _create_. at that time, app_cf_
   // has been set, but this app may not have complete nodes information
-  virtual void init() = 0;
+  virtual void init() { }
 
   // run the applications, which is executed at the scheduler node. other nodes,
   // such as workers and servers, then run the workloads issued by the scheduler

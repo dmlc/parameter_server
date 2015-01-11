@@ -7,28 +7,10 @@
 namespace PS {
 namespace LM {
 
-template<typename T> class Loss;
-template<typename T> using LossPtr = std::shared_ptr<Loss<T>>;
-template<typename T> class LogitLoss;
-template<typename T> class SquareHingeLoss;
-
 template<typename T> class Loss {
  public:
-  static LossPtr<T> create(const LossConfig& config) {
-    switch (config.type()) {
-      case LossConfig::LOGIT:
-        return LossPtr<T>(new LogitLoss<T>());
-      case LossConfig::SQUARE_HINGE:
-        return LossPtr<T>(new SquareHingeLoss<T>());
-      default:
-        CHECK(false) << "unknown type: " << config.DebugString();
-    }
-    return LossPtr<T>(nullptr);
-  }
-
   // evaluate the loss value
   virtual T evaluate(const MatrixPtrList<T>& data) = 0;
-
   // compute the gradients
   virtual void compute(const MatrixPtrList<T>& data, MatrixPtrList<T> gradients) = 0;
 };
@@ -51,9 +33,34 @@ class ScalarLoss : public Loss<T> {
   virtual void compute(const EArray& y, const MatrixPtr<T>& X, const EArray& Xw,
                        EArray gradient, EArray diag_hessian) = 0;
 
-  T evaluate(const MatrixPtrList<T>& data);
+  T evaluate(const MatrixPtrList<T>& data) {
+    CHECK_EQ(data.size(), 2);
+    SArray<T> y(data[0]->value());
+    SArray<T> Xw(data[1]->value());
+    CHECK_EQ(y.size(), Xw.size());
+    return evaluate(y.eigenArray(), Xw.eigenArray());
+  }
 
-  void compute(const MatrixPtrList<T>& data, MatrixPtrList<T> gradients);
+  void compute(const MatrixPtrList<T>& data, MatrixPtrList<T> gradients) {
+    if (gradients.size() == 0) return;
+
+    CHECK_EQ(data.size(), 3);
+    auto y = data[0]->value();
+    auto X = data[1];
+    auto Xw = data[2]->value();
+
+    CHECK_EQ(y.size(), Xw.size());
+    CHECK_EQ(y.size(), X->rows());
+
+    CHECK(gradients[0]);
+    auto gradient = gradients[0]->value();
+    auto  diag_hessian =
+        gradients.size()>1 && gradients[1] ? gradients[1]->value() : SArray<T>();
+    if (gradient.size() != 0) CHECK_EQ(gradient.size(), X->cols());
+    if (diag_hessian.size() != 0) CHECK_EQ(diag_hessian.size(), X->cols());
+
+    compute(y.eigenArray(), X, Xw.eigenArray(), gradient.eigenArray(), diag_hessian.eigenArray());
+  }
 
 };
 
@@ -103,6 +110,22 @@ class SquareHingeLoss : public BinaryClassificationLoss<T> {
     gradient = - 2 *  X->transTimes(y * (y * Xw > 1.0).template cast<T>());
   }
 };
+
+template<typename T>
+using LossPtr = std::shared_ptr<Loss<T>>;
+
+template<typename T>
+static LossPtr<T> createLoss(const LossConfig& config) {
+  switch (config.type()) {
+    case LossConfig::LOGIT:
+      return LossPtr<T>(new LogitLoss<T>());
+    case LossConfig::SQUARE_HINGE:
+      return LossPtr<T>(new SquareHingeLoss<T>());
+    default:
+      CHECK(false) << "unknown type: " << config.DebugString();
+  }
+  return LossPtr<T>(nullptr);
+}
 
 } // namespace LM
 } // namespace PS

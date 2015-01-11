@@ -1,47 +1,51 @@
 #pragma once
-#include "system/app.h"
-#include "parameter/kv_vector.h"
-
 #include "linear_method/linear_method.pb.h"
-
-#include "linear_method/loss_inl.h"
-#include "linear_method/penalty_inl.h"
-// #include "linear_method/learner/learner.h"
-// #include "linear_method/learner/aggregate_gradient.h"
-
+#include "linear_method/loss.h"
+#include "linear_method/penalty.h"
 namespace PS {
 namespace LM {
 
 // linear classification/regerssion
-class LinearMethod : public App {
+template<typename V>
+class LinearMethod {
  public:
-  static App* create(const string& name, const Config& conf);
-  LinearMethod(const string& name) : App(name) { }
+  LinearMethod() { }
   ~LinearMethod() { }
-  virtual void init();
+  void init(const Config& conf) {
+    conf_ = conf;
+    if (conf_.has_loss()) {
+      loss_ = createLoss<V>(conf_.loss());
+    }
+    if (conf_.has_penalty()) {
+      penalty_ = createPenalty<V>(conf_.penalty());
+    }
+  }
 
-  static Call get(const MessageCPtr& msg) {
-    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg->task.has_linear_method());
-    return msg->task.linear_method();
-  }
-  static Call* set(Task *task) {
-    task->set_type(Task::CALL_CUSTOMER);
-    return task->mutable_linear_method();
-  }
-  static Task newTask(Call::Command cmd) {
-    Task task; set(&task)->set_cmd(cmd);
-    return task;
-  }
+  // static Call get(const MessageCPtr& msg) {
+  //   CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+  //   CHECK(msg->task.has_linear_method());
+  //   return msg->task.linear_method();
+  // }
+  // static Call* set(Task *task) {
+  //   task->set_type(Task::CALL_CUSTOMER);
+  //   return task->mutable_linear_method();
+  // }
+  // static Task newTask(Call::Command cmd) {
+  //   Task task; set(&task)->set_cmd(cmd);
+  //   return task;
+  // }
  protected:
-
   Config conf_;
   Timer total_timer_;
   Timer busy_timer_;
 
-  LossPtr<double> loss_;
-  PenaltyPtr<double> penalty_;
+  LossPtr<V> loss_;
+  PenaltyPtr<V> penalty_;
 };
 
 } // namespace LM
 } // namespace PS
+
+
+
+static App* createLinearMethod(const string& name, const Config& conf);

@@ -2,27 +2,11 @@
 #include "util/common.h"
 #include "base/matrix.h"
 #include "linear_method/linear_method.pb.h"
-
 namespace PS {
 namespace LM {
 
-template<typename T> class Penalty;
-template<typename T> using PenaltyPtr = std::shared_ptr<Penalty<T>>;
-template<typename T> class PNormPenalty;
-
 template<typename T> class Penalty {
  public:
-  static PenaltyPtr<T> create(const PenaltyConfig& config) {
-    switch (config.type()) {
-      case PenaltyConfig::L1:
-        return PenaltyPtr<T>(new PNormPenalty<T>(1, config.lambda(0)));
-      case PenaltyConfig::L2:
-        return PenaltyPtr<T>(new PNormPenalty<T>(2, config.lambda(0)));
-      default:
-        CHECK(false) << "unknown type: " << config.DebugString();
-    }
-    return PenaltyPtr<T>(nullptr);
-  }
   virtual T evaluate(const MatrixPtr<T>& model) = 0;
 };
 
@@ -48,6 +32,22 @@ class PNormPenalty : public Penalty<T> {
   T p_;
   T lambda_;
 };
+
+template<typename T>
+using PenaltyPtr = std::shared_ptr<Penalty<T>>;
+
+template<typename T>
+static PenaltyPtr<T> createPenalty(const PenaltyConfig& config) {
+  switch (config.type()) {
+    case PenaltyConfig::L1:
+      return PenaltyPtr<T>(new PNormPenalty<T>(1, config.lambda(0)));
+    case PenaltyConfig::L2:
+      return PenaltyPtr<T>(new PNormPenalty<T>(2, config.lambda(0)));
+    default:
+      CHECK(false) << "unknown type: " << config.DebugString();
+  }
+  return PenaltyPtr<T>(nullptr);
+}
 
 } // namespace LM
 } // namespace PS
