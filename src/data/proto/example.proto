@@ -1,0 +1,33 @@
+package PS;
+message SlotInfo {
+  enum Format {
+    DENSE = 1;
+    SPARSE = 2;
+    SPARSE_BINARY = 3;
+  }
+  optional Format format = 1;
+  optional int32 id = 2;
+  optional uint64 min_key = 3 [default = 0xFFFFFFFFFFFFFFFF];
+  optional uint64 max_key = 4;
+  // total number of non-zero elements
+  optional uint64 nnz_ele = 5;
+  // total number of non-zero instance, (non-empty rows)
+  optional uint64 nnz_ex = 6;
+}
+
+message ExampleInfo {
+  repeated SlotInfo slot = 1;
+  // total number of instances
+  optional uint64 num_ex = 2;
+
+}
+
+message Slot {
+  optional int32 id = 1;
+  repeated uint64 key = 2 [packed=true];
+  repeated float val = 3 [packed=true];
+}
+
+message Example {
+  repeated Slot slot = 1;
+}

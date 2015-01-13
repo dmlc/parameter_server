@@ -1,0 +1,16 @@
+package PS;
+
+message FilterConfig {
+  enum Type {
+    KEY_CACHING = 1;
+    COMPRESSING = 2;
+  }
+  required Type type = 1;
+
+  // if the task is done, then clear the cache (to save memory)
+  optional bool clear_cache_if_done = 20 [default = false];
+
+  // runtime parameters used by the system
+  optional uint32 signature = 2;
+  repeated uint64 uncompressed_size = 3;
+}

@@ -1,0 +1,40 @@
+package PS;
+import "base/proto/range.proto";
+
+message DataConfig {
+  enum DataFormat {
+    BIN = 1;
+    PROTO = 2;
+    TEXT = 3;
+  }
+  required DataFormat format = 1;
+
+  enum TextFormat {
+    PS_SPARSE_BINARY = 3;
+    PS_SPARSE = 2;
+    PS_DENSE = 1;
+    ADFEA = 4;
+    LIBSVM = 5;
+    TERAFEA = 6;
+  }
+  optional TextFormat text = 2;
+
+  // filenames, supports regular expressions
+  repeated string file = 3;
+  // files stored in hdfs
+  optional HDFSConfig hdfs = 5;
+  // only valid for the binary format
+  optional PbRange range = 4;
+  // ignore the feature group information
+  optional bool ignore_feature_group = 6;
+  // the maximal number of files will be assigned to a worker, -1 means no limit
+  optional int32 max_num_files_per_worker = 7 [default = -1];
+  // the maximal number of lines will be read from a file, -1 means no limit
+  optional int32 max_num_lines_per_file = 8 [default = -1];
+}
+
+message HDFSConfig {
+  optional string home = 1;  // HADOOP_HOME
+  optional string ugi = 2;   // hadoop.job.ugi, format: user,passwd
+  optional string namenode = 4;  // fs.default.name
+}
