@@ -30,7 +30,7 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, libps.a libprotos.a) # libgp.a libfm.a liblm.a
+LIBS = $(addprefix $(LIB)/, liblm.a libps.a libprotos.a) #linear_method/linear_method.o # libgp.a libfm.a liblm.a
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 
 all: dir $(BIN)/ps
@@ -40,20 +40,18 @@ clean:
 -include */BUILD
 
 ### system
-SYS_SRCS = \
+sys_srcs = \
 	$(addprefix system/, $(system_srcs)) \
 	$(addprefix util/, $(util_srcs)) \
 	$(addprefix data/, $(data_srcs)) \
 	$(addprefix filter/, $(filter_srcs))
-SYS_OBJS = $(SYS_SRCS:.cc=.o)
-$(LIB)/libps.a: $(SYS_OBJS)
-	ar crv $@ $(SYS_OBJS)
+# SYS_OBJS = $(SYS_SRCS:.cc=.o)
+$(LIB)/libps.a: $(sys_src:.cc=.o)
+	ar crv $@ $?
 
 ### linear methods
-LM_SRCS = $(addprefix linear_method/, $(linear_method_srcs))
-LM_OBJS = $(LM_SRCS:.cc=.o)
-$(LIB)/liblm.a: $(LM_OBJS)
-	ar crv $@ $(LM_OBJS)
+$(LIB)/liblm.a: $(linear_method_srcs:.cc=.o)
+	ar crv $@ $?
 
 ### graph partitioning
 GP_SRCS = $(addprefix graph_partition/, $(graph_partition_srcs))
@@ -77,7 +75,7 @@ $(LIB)/libprotos.a: $(PROTOS_OBJS)
 	ar crv $@ $(PROTOS_OBJS)
 
 ### dependencies
-ALL_SRCS = $(wildcard */*.cc), main.cc
+ALL_SRCS = $(wildcard */*.cc)
 DEPS = $(ALL_SRCS:.cc=.d)
 -include $(DEPS)
 

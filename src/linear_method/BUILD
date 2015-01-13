@@ -1,6 +1,4 @@
-linear_method_srcs = \
-linear_method.cc computation_node.cc scheduler.cc \
-ftrl_scheduler.cc ftrl_worker.cc \
+linear_method_srcs = linear_method/linear_method.cc
 
 
 # batch_scheduler.cc batch_server.cc batch_worker.cc \
