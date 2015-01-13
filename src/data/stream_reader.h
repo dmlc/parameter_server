@@ -6,7 +6,6 @@
 #include "data/text_parser.h"
 #include "data/info_parser.h"
 #include "util/filelinereader.h"
-// #include "base/matrix_io_inl.h"
 #include "util/recordio.h"
 namespace PS {
 

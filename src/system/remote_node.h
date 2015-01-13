@@ -41,8 +41,10 @@ class RNode {
 
   // submit msg[i] into node[i]. msg.size() must be equal to this->size()
   int submit(MessagePtrList& msgs);
-  int submit(std::vector<Task>& tasks);
-  int submitAndWait(std::vector<Task>& tasks);
+  int submit(const std::vector<Task>& tasks,
+             const Message::Callback& recv_handle = Message::Callback());
+  int submitAndWait(const std::vector<Task>& tasks,
+                    const Message::Callback& recv_handle = Message::Callback());
 
   // user defined filters
   void encodeFilter(const MessagePtr& msg);

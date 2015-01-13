@@ -25,10 +25,8 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
-#include "base/proto/range.pb.h"
-#include "data/proto/example.pb.h"
 #include "data/proto/data.pb.h"
-#include "parameter/proto/param.pb.h"
+#include "learner/proto/bcd.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -40,17 +38,10 @@ void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
 void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
 
 class Config;
-class SolverConfig;
-class DarlingConfig;
 class FTRLConfig;
 class LossConfig;
 class PenaltyConfig;
-class LearnerConfig;
 class LearningRateConfig;
-class Progress;
-class DataInfo;
-class Call;
-class AggGradLearnerArg;
 
 enum LossConfig_Type {
   LossConfig_Type_SQUARE = 1,
@@ -92,26 +83,6 @@ inline bool PenaltyConfig_Type_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<PenaltyConfig_Type>(
     PenaltyConfig_Type_descriptor(), name, value);
 }
-enum LearnerConfig_Type {
-  LearnerConfig_Type_GRADIENT_DESCENT = 1,
-  LearnerConfig_Type_PROXIMAL_GRADIENT = 2,
-  LearnerConfig_Type_LBFGS = 3
-};
-bool LearnerConfig_Type_IsValid(int value);
-const LearnerConfig_Type LearnerConfig_Type_Type_MIN = LearnerConfig_Type_GRADIENT_DESCENT;
-const LearnerConfig_Type LearnerConfig_Type_Type_MAX = LearnerConfig_Type_LBFGS;
-const int LearnerConfig_Type_Type_ARRAYSIZE = LearnerConfig_Type_Type_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* LearnerConfig_Type_descriptor();
-inline const ::std::string& LearnerConfig_Type_Name(LearnerConfig_Type value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    LearnerConfig_Type_descriptor(), value);
-}
-inline bool LearnerConfig_Type_Parse(
-    const ::std::string& name, LearnerConfig_Type* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<LearnerConfig_Type>(
-    LearnerConfig_Type_descriptor(), name, value);
-}
 enum LearningRateConfig_Type {
   LearningRateConfig_Type_CONSTANT = 1
 };
@@ -129,31 +100,6 @@ inline bool LearningRateConfig_Type_Parse(
     const ::std::string& name, LearningRateConfig_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<LearningRateConfig_Type>(
     LearningRateConfig_Type_descriptor(), name, value);
-}
-enum Call_Command {
-  Call_Command_LOAD_DATA = 1,
-  Call_Command_PREPROCESS_DATA = 2,
-  Call_Command_UPDATE_MODEL = 3,
-  Call_Command_EVALUATE_PROGRESS = 4,
-  Call_Command_SAVE_MODEL = 5,
-  Call_Command_RECOVER = 6,
-  Call_Command_COMPUTE_VALIDATION_AUC = 7,
-  Call_Command_REPORT_PROGRESS = 8
-};
-bool Call_Command_IsValid(int value);
-const Call_Command Call_Command_Command_MIN = Call_Command_LOAD_DATA;
-const Call_Command Call_Command_Command_MAX = Call_Command_REPORT_PROGRESS;
-const int Call_Command_Command_ARRAYSIZE = Call_Command_Command_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* Call_Command_descriptor();
-inline const ::std::string& Call_Command_Name(Call_Command value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Call_Command_descriptor(), value);
-}
-inline bool Call_Command_Parse(
-    const ::std::string& name, Call_Command* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Call_Command>(
-    Call_Command_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -229,37 +175,19 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_validation_data();
   inline void set_allocated_validation_data(::PS::DataConfig* validation_data);
 
-  // optional .PS.DataConfig local_cache = 3;
-  inline bool has_local_cache() const;
-  inline void clear_local_cache();
-  static const int kLocalCacheFieldNumber = 3;
-  inline const ::PS::DataConfig& local_cache() const;
-  inline ::PS::DataConfig* mutable_local_cache();
-  inline ::PS::DataConfig* release_local_cache();
-  inline void set_allocated_local_cache(::PS::DataConfig* local_cache);
-
-  // optional .PS.ParameterInitConfig init_w = 4;
-  inline bool has_init_w() const;
-  inline void clear_init_w();
-  static const int kInitWFieldNumber = 4;
-  inline const ::PS::ParameterInitConfig& init_w() const;
-  inline ::PS::ParameterInitConfig* mutable_init_w();
-  inline ::PS::ParameterInitConfig* release_init_w();
-  inline void set_allocated_init_w(::PS::ParameterInitConfig* init_w);
-
-  // optional .PS.DataConfig model_output = 5;
+  // optional .PS.DataConfig model_output = 4;
   inline bool has_model_output() const;
   inline void clear_model_output();
-  static const int kModelOutputFieldNumber = 5;
+  static const int kModelOutputFieldNumber = 4;
   inline const ::PS::DataConfig& model_output() const;
   inline ::PS::DataConfig* mutable_model_output();
   inline ::PS::DataConfig* release_model_output();
   inline void set_allocated_model_output(::PS::DataConfig* model_output);
 
-  // optional .PS.DataConfig model_input = 6;
+  // optional .PS.DataConfig model_input = 5;
   inline bool has_model_input() const;
   inline void clear_model_input();
-  static const int kModelInputFieldNumber = 6;
+  static const int kModelInputFieldNumber = 5;
   inline const ::PS::DataConfig& model_input() const;
   inline ::PS::DataConfig* mutable_model_input();
   inline ::PS::DataConfig* release_model_input();
@@ -283,41 +211,14 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::LM::PenaltyConfig* release_penalty();
   inline void set_allocated_penalty(::PS::LM::PenaltyConfig* penalty);
 
-  // optional .PS.LM.LearningRateConfig learning_rate = 12;
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 12;
-  inline const ::PS::LM::LearningRateConfig& learning_rate() const;
-  inline ::PS::LM::LearningRateConfig* mutable_learning_rate();
-  inline ::PS::LM::LearningRateConfig* release_learning_rate();
-  inline void set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate);
-
-  // optional .PS.LM.LearnerConfig learner = 13;
-  inline bool has_learner() const;
-  inline void clear_learner();
-  static const int kLearnerFieldNumber = 13;
-  inline const ::PS::LM::LearnerConfig& learner() const;
-  inline ::PS::LM::LearnerConfig* mutable_learner();
-  inline ::PS::LM::LearnerConfig* release_learner();
-  inline void set_allocated_learner(::PS::LM::LearnerConfig* learner);
-
-  // optional .PS.LM.SolverConfig solver = 14;
-  inline bool has_solver() const;
-  inline void clear_solver();
-  static const int kSolverFieldNumber = 14;
-  inline const ::PS::LM::SolverConfig& solver() const;
-  inline ::PS::LM::SolverConfig* mutable_solver();
-  inline ::PS::LM::SolverConfig* release_solver();
-  inline void set_allocated_solver(::PS::LM::SolverConfig* solver);
-
-  // optional .PS.LM.DarlingConfig darling = 15;
-  inline bool has_darling() const;
-  inline void clear_darling();
-  static const int kDarlingFieldNumber = 15;
-  inline const ::PS::LM::DarlingConfig& darling() const;
-  inline ::PS::LM::DarlingConfig* mutable_darling();
-  inline ::PS::LM::DarlingConfig* release_darling();
-  inline void set_allocated_darling(::PS::LM::DarlingConfig* darling);
+  // optional .PS.BCDConfig darlin = 12;
+  inline bool has_darlin() const;
+  inline void clear_darlin();
+  static const int kDarlinFieldNumber = 12;
+  inline const ::PS::BCDConfig& darlin() const;
+  inline ::PS::BCDConfig* mutable_darlin();
+  inline ::PS::BCDConfig* release_darlin();
+  inline void set_allocated_darlin(::PS::BCDConfig* darlin);
 
   // optional .PS.LM.FTRLConfig ftrl = 16;
   inline bool has_ftrl() const;
@@ -334,10 +235,6 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_training_data();
   inline void set_has_validation_data();
   inline void clear_has_validation_data();
-  inline void set_has_local_cache();
-  inline void clear_has_local_cache();
-  inline void set_has_init_w();
-  inline void clear_has_init_w();
   inline void set_has_model_output();
   inline void clear_has_model_output();
   inline void set_has_model_input();
@@ -346,14 +243,8 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_loss();
   inline void set_has_penalty();
   inline void clear_has_penalty();
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
-  inline void set_has_learner();
-  inline void clear_has_learner();
-  inline void set_has_solver();
-  inline void clear_has_solver();
-  inline void set_has_darling();
-  inline void clear_has_darling();
+  inline void set_has_darlin();
+  inline void clear_has_darlin();
   inline void set_has_ftrl();
   inline void clear_has_ftrl();
 
@@ -361,20 +252,15 @@ class Config : public ::google::protobuf::Message {
 
   ::PS::DataConfig* training_data_;
   ::PS::DataConfig* validation_data_;
-  ::PS::DataConfig* local_cache_;
-  ::PS::ParameterInitConfig* init_w_;
   ::PS::DataConfig* model_output_;
   ::PS::DataConfig* model_input_;
   ::PS::LM::LossConfig* loss_;
   ::PS::LM::PenaltyConfig* penalty_;
-  ::PS::LM::LearningRateConfig* learning_rate_;
-  ::PS::LM::LearnerConfig* learner_;
-  ::PS::LM::SolverConfig* solver_;
-  ::PS::LM::DarlingConfig* darling_;
+  ::PS::BCDConfig* darlin_;
   ::PS::LM::FTRLConfig* ftrl_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
@@ -382,353 +268,6 @@ class Config : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Config* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class SolverConfig : public ::google::protobuf::Message {
- public:
-  SolverConfig();
-  virtual ~SolverConfig();
-
-  SolverConfig(const SolverConfig& from);
-
-  inline SolverConfig& operator=(const SolverConfig& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const SolverConfig& default_instance();
-
-  void Swap(SolverConfig* other);
-
-  // implements Message ----------------------------------------------
-
-  SolverConfig* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const SolverConfig& from);
-  void MergeFrom(const SolverConfig& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional int64 minibatch_size = 1 [default = 0];
-  inline bool has_minibatch_size() const;
-  inline void clear_minibatch_size();
-  static const int kMinibatchSizeFieldNumber = 1;
-  inline ::google::protobuf::int64 minibatch_size() const;
-  inline void set_minibatch_size(::google::protobuf::int64 value);
-
-  // optional float feature_block_ratio = 2 [default = 0];
-  inline bool has_feature_block_ratio() const;
-  inline void clear_feature_block_ratio();
-  static const int kFeatureBlockRatioFieldNumber = 2;
-  inline float feature_block_ratio() const;
-  inline void set_feature_block_ratio(float value);
-
-  // optional bool random_feature_block_order = 3 [default = true];
-  inline bool has_random_feature_block_order() const;
-  inline void clear_random_feature_block_order();
-  static const int kRandomFeatureBlockOrderFieldNumber = 3;
-  inline bool random_feature_block_order() const;
-  inline void set_random_feature_block_order(bool value);
-
-  // repeated int32 prior_fea_group = 14;
-  inline int prior_fea_group_size() const;
-  inline void clear_prior_fea_group();
-  static const int kPriorFeaGroupFieldNumber = 14;
-  inline ::google::protobuf::int32 prior_fea_group(int index) const;
-  inline void set_prior_fea_group(int index, ::google::protobuf::int32 value);
-  inline void add_prior_fea_group(::google::protobuf::int32 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-      prior_fea_group() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-      mutable_prior_fea_group();
-
-  // optional int32 num_iter_for_prior_fea_group = 13 [default = 5];
-  inline bool has_num_iter_for_prior_fea_group() const;
-  inline void clear_num_iter_for_prior_fea_group();
-  static const int kNumIterForPriorFeaGroupFieldNumber = 13;
-  inline ::google::protobuf::int32 num_iter_for_prior_fea_group() const;
-  inline void set_num_iter_for_prior_fea_group(::google::protobuf::int32 value);
-
-  // optional int32 max_block_delay = 10 [default = 0];
-  inline bool has_max_block_delay() const;
-  inline void clear_max_block_delay();
-  static const int kMaxBlockDelayFieldNumber = 10;
-  inline ::google::protobuf::int32 max_block_delay() const;
-  inline void set_max_block_delay(::google::protobuf::int32 value);
-
-  // optional int32 max_pass_of_data = 8 [default = 10];
-  inline bool has_max_pass_of_data() const;
-  inline void clear_max_pass_of_data();
-  static const int kMaxPassOfDataFieldNumber = 8;
-  inline ::google::protobuf::int32 max_pass_of_data() const;
-  inline void set_max_pass_of_data(::google::protobuf::int32 value);
-
-  // optional double epsilon = 11 [default = 0.0001];
-  inline bool has_epsilon() const;
-  inline void clear_epsilon();
-  static const int kEpsilonFieldNumber = 11;
-  inline double epsilon() const;
-  inline void set_epsilon(double value);
-
-  // optional int64 auc_goodness = 12 [default = 100000];
-  inline bool has_auc_goodness() const;
-  inline void clear_auc_goodness();
-  static const int kAucGoodnessFieldNumber = 12;
-  inline ::google::protobuf::int64 auc_goodness() const;
-  inline void set_auc_goodness(::google::protobuf::int64 value);
-
-  // optional int32 tail_feature_freq = 15 [default = 4];
-  inline bool has_tail_feature_freq() const;
-  inline void clear_tail_feature_freq();
-  static const int kTailFeatureFreqFieldNumber = 15;
-  inline ::google::protobuf::int32 tail_feature_freq() const;
-  inline void set_tail_feature_freq(::google::protobuf::int32 value);
-
-  // optional int32 tail_feature_filter_k = 20 [default = 2];
-  inline bool has_tail_feature_filter_k() const;
-  inline void clear_tail_feature_filter_k();
-  static const int kTailFeatureFilterKFieldNumber = 20;
-  inline ::google::protobuf::int32 tail_feature_filter_k() const;
-  inline void set_tail_feature_filter_k(::google::protobuf::int32 value);
-
-  // optional int32 countmin_k = 16 [default = 2];
-  inline bool has_countmin_k() const;
-  inline void clear_countmin_k();
-  static const int kCountminKFieldNumber = 16;
-  inline ::google::protobuf::int32 countmin_k() const;
-  inline void set_countmin_k(::google::protobuf::int32 value);
-
-  // optional double countmin_n_ratio = 17 [default = 2];
-  inline bool has_countmin_n_ratio() const;
-  inline void clear_countmin_n_ratio();
-  static const int kCountminNRatioFieldNumber = 17;
-  inline double countmin_n_ratio() const;
-  inline void set_countmin_n_ratio(double value);
-
-  // optional double countmin_n = 18 [default = 100000000];
-  inline bool has_countmin_n() const;
-  inline void clear_countmin_n();
-  static const int kCountminNFieldNumber = 18;
-  inline double countmin_n() const;
-  inline void set_countmin_n(double value);
-
-  // optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
-  inline bool has_max_num_parallel_groups_in_preprocessing() const;
-  inline void clear_max_num_parallel_groups_in_preprocessing();
-  static const int kMaxNumParallelGroupsInPreprocessingFieldNumber = 19;
-  inline ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing() const;
-  inline void set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value);
-
-  // optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
-  inline bool has_max_data_buf_size_in_mb() const;
-  inline void clear_max_data_buf_size_in_mb();
-  static const int kMaxDataBufSizeInMbFieldNumber = 22;
-  inline ::google::protobuf::int32 max_data_buf_size_in_mb() const;
-  inline void set_max_data_buf_size_in_mb(::google::protobuf::int32 value);
-
-  // optional int32 eval_interval = 21 [default = 5];
-  inline bool has_eval_interval() const;
-  inline void clear_eval_interval();
-  static const int kEvalIntervalFieldNumber = 21;
-  inline ::google::protobuf::int32 eval_interval() const;
-  inline void set_eval_interval(::google::protobuf::int32 value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.SolverConfig)
- private:
-  inline void set_has_minibatch_size();
-  inline void clear_has_minibatch_size();
-  inline void set_has_feature_block_ratio();
-  inline void clear_has_feature_block_ratio();
-  inline void set_has_random_feature_block_order();
-  inline void clear_has_random_feature_block_order();
-  inline void set_has_num_iter_for_prior_fea_group();
-  inline void clear_has_num_iter_for_prior_fea_group();
-  inline void set_has_max_block_delay();
-  inline void clear_has_max_block_delay();
-  inline void set_has_max_pass_of_data();
-  inline void clear_has_max_pass_of_data();
-  inline void set_has_epsilon();
-  inline void clear_has_epsilon();
-  inline void set_has_auc_goodness();
-  inline void clear_has_auc_goodness();
-  inline void set_has_tail_feature_freq();
-  inline void clear_has_tail_feature_freq();
-  inline void set_has_tail_feature_filter_k();
-  inline void clear_has_tail_feature_filter_k();
-  inline void set_has_countmin_k();
-  inline void clear_has_countmin_k();
-  inline void set_has_countmin_n_ratio();
-  inline void clear_has_countmin_n_ratio();
-  inline void set_has_countmin_n();
-  inline void clear_has_countmin_n();
-  inline void set_has_max_num_parallel_groups_in_preprocessing();
-  inline void clear_has_max_num_parallel_groups_in_preprocessing();
-  inline void set_has_max_data_buf_size_in_mb();
-  inline void clear_has_max_data_buf_size_in_mb();
-  inline void set_has_eval_interval();
-  inline void clear_has_eval_interval();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::int64 minibatch_size_;
-  float feature_block_ratio_;
-  bool random_feature_block_order_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > prior_fea_group_;
-  ::google::protobuf::int32 num_iter_for_prior_fea_group_;
-  ::google::protobuf::int32 max_block_delay_;
-  double epsilon_;
-  ::google::protobuf::int32 max_pass_of_data_;
-  ::google::protobuf::int32 tail_feature_freq_;
-  ::google::protobuf::int64 auc_goodness_;
-  ::google::protobuf::int32 tail_feature_filter_k_;
-  ::google::protobuf::int32 countmin_k_;
-  double countmin_n_ratio_;
-  double countmin_n_;
-  ::google::protobuf::int32 max_num_parallel_groups_in_preprocessing_;
-  ::google::protobuf::int32 max_data_buf_size_in_mb_;
-  ::google::protobuf::int32 eval_interval_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static SolverConfig* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DarlingConfig : public ::google::protobuf::Message {
- public:
-  DarlingConfig();
-  virtual ~DarlingConfig();
-
-  DarlingConfig(const DarlingConfig& from);
-
-  inline DarlingConfig& operator=(const DarlingConfig& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DarlingConfig& default_instance();
-
-  void Swap(DarlingConfig* other);
-
-  // implements Message ----------------------------------------------
-
-  DarlingConfig* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DarlingConfig& from);
-  void MergeFrom(const DarlingConfig& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional double delta_init_value = 1 [default = 1];
-  inline bool has_delta_init_value() const;
-  inline void clear_delta_init_value();
-  static const int kDeltaInitValueFieldNumber = 1;
-  inline double delta_init_value() const;
-  inline void set_delta_init_value(double value);
-
-  // optional double delta_max_value = 2 [default = 5];
-  inline bool has_delta_max_value() const;
-  inline void clear_delta_max_value();
-  static const int kDeltaMaxValueFieldNumber = 2;
-  inline double delta_max_value() const;
-  inline void set_delta_max_value(double value);
-
-  // optional double kkt_filter_threshold_ratio = 10 [default = 10];
-  inline bool has_kkt_filter_threshold_ratio() const;
-  inline void clear_kkt_filter_threshold_ratio();
-  static const int kKktFilterThresholdRatioFieldNumber = 10;
-  inline double kkt_filter_threshold_ratio() const;
-  inline void set_kkt_filter_threshold_ratio(double value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.DarlingConfig)
- private:
-  inline void set_has_delta_init_value();
-  inline void clear_has_delta_init_value();
-  inline void set_has_delta_max_value();
-  inline void clear_has_delta_max_value();
-  inline void set_has_kkt_filter_threshold_ratio();
-  inline void clear_has_kkt_filter_threshold_ratio();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  double delta_init_value_;
-  double delta_max_value_;
-  double kkt_filter_threshold_ratio_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static DarlingConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -786,14 +325,66 @@ class FTRLConfig : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
+  // optional int32 minibatch = 1 [default = 1000];
+  inline bool has_minibatch() const;
+  inline void clear_minibatch();
+  static const int kMinibatchFieldNumber = 1;
+  inline ::google::protobuf::int32 minibatch() const;
+  inline void set_minibatch(::google::protobuf::int32 value);
+
+  // optional int32 tail_feature_freq = 2 [default = 4];
+  inline bool has_tail_feature_freq() const;
+  inline void clear_tail_feature_freq();
+  static const int kTailFeatureFreqFieldNumber = 2;
+  inline ::google::protobuf::int32 tail_feature_freq() const;
+  inline void set_tail_feature_freq(::google::protobuf::int32 value);
+
+  // optional .PS.LM.LearningRateConfig learning_rate = 3;
+  inline bool has_learning_rate() const;
+  inline void clear_learning_rate();
+  static const int kLearningRateFieldNumber = 3;
+  inline const ::PS::LM::LearningRateConfig& learning_rate() const;
+  inline ::PS::LM::LearningRateConfig* mutable_learning_rate();
+  inline ::PS::LM::LearningRateConfig* release_learning_rate();
+  inline void set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate);
+
+  // optional int32 countmin_k = 7 [default = 2];
+  inline bool has_countmin_k() const;
+  inline void clear_countmin_k();
+  static const int kCountminKFieldNumber = 7;
+  inline ::google::protobuf::int32 countmin_k() const;
+  inline void set_countmin_k(::google::protobuf::int32 value);
+
+  // optional float countmin_n = 8 [default = 1e+08];
+  inline bool has_countmin_n() const;
+  inline void clear_countmin_n();
+  static const int kCountminNFieldNumber = 8;
+  inline float countmin_n() const;
+  inline void set_countmin_n(float value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.FTRLConfig)
  private:
+  inline void set_has_minibatch();
+  inline void clear_has_minibatch();
+  inline void set_has_tail_feature_freq();
+  inline void clear_has_tail_feature_freq();
+  inline void set_has_learning_rate();
+  inline void clear_has_learning_rate();
+  inline void set_has_countmin_k();
+  inline void clear_has_countmin_k();
+  inline void set_has_countmin_n();
+  inline void clear_has_countmin_n();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::google::protobuf::int32 minibatch_;
+  ::google::protobuf::int32 tail_feature_freq_;
+  ::PS::LM::LearningRateConfig* learning_rate_;
+  ::google::protobuf::int32 countmin_k_;
+  float countmin_n_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
@@ -1031,113 +622,6 @@ class PenaltyConfig : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class LearnerConfig : public ::google::protobuf::Message {
- public:
-  LearnerConfig();
-  virtual ~LearnerConfig();
-
-  LearnerConfig(const LearnerConfig& from);
-
-  inline LearnerConfig& operator=(const LearnerConfig& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const LearnerConfig& default_instance();
-
-  void Swap(LearnerConfig* other);
-
-  // implements Message ----------------------------------------------
-
-  LearnerConfig* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const LearnerConfig& from);
-  void MergeFrom(const LearnerConfig& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef LearnerConfig_Type Type;
-  static const Type GRADIENT_DESCENT = LearnerConfig_Type_GRADIENT_DESCENT;
-  static const Type PROXIMAL_GRADIENT = LearnerConfig_Type_PROXIMAL_GRADIENT;
-  static const Type LBFGS = LearnerConfig_Type_LBFGS;
-  static inline bool Type_IsValid(int value) {
-    return LearnerConfig_Type_IsValid(value);
-  }
-  static const Type Type_MIN =
-    LearnerConfig_Type_Type_MIN;
-  static const Type Type_MAX =
-    LearnerConfig_Type_Type_MAX;
-  static const int Type_ARRAYSIZE =
-    LearnerConfig_Type_Type_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Type_descriptor() {
-    return LearnerConfig_Type_descriptor();
-  }
-  static inline const ::std::string& Type_Name(Type value) {
-    return LearnerConfig_Type_Name(value);
-  }
-  static inline bool Type_Parse(const ::std::string& name,
-      Type* value) {
-    return LearnerConfig_Type_Parse(name, value);
-  }
-
-  // accessors -------------------------------------------------------
-
-  // required .PS.LM.LearnerConfig.Type type = 1;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 1;
-  inline ::PS::LM::LearnerConfig_Type type() const;
-  inline void set_type(::PS::LM::LearnerConfig_Type value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.LearnerConfig)
- private:
-  inline void set_has_type();
-  inline void clear_has_type();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  int type_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static LearnerConfig* default_instance_;
-};
-// -------------------------------------------------------------------
-
 class LearningRateConfig : public ::google::protobuf::Message {
  public:
   LearningRateConfig();
@@ -1271,545 +755,24 @@ class LearningRateConfig : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static LearningRateConfig* default_instance_;
 };
-// -------------------------------------------------------------------
-
-class Progress : public ::google::protobuf::Message {
- public:
-  Progress();
-  virtual ~Progress();
-
-  Progress(const Progress& from);
-
-  inline Progress& operator=(const Progress& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Progress& default_instance();
-
-  void Swap(Progress* other);
-
-  // implements Message ----------------------------------------------
-
-  Progress* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Progress& from);
-  void MergeFrom(const Progress& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated double objv = 1;
-  inline int objv_size() const;
-  inline void clear_objv();
-  static const int kObjvFieldNumber = 1;
-  inline double objv(int index) const;
-  inline void set_objv(int index, double value);
-  inline void add_objv(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      objv() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_objv();
-
-  // optional double relative_objv = 2;
-  inline bool has_relative_objv() const;
-  inline void clear_relative_objv();
-  static const int kRelativeObjvFieldNumber = 2;
-  inline double relative_objv() const;
-  inline void set_relative_objv(double value);
-
-  // optional uint64 nnz_w = 5;
-  inline bool has_nnz_w() const;
-  inline void clear_nnz_w();
-  static const int kNnzWFieldNumber = 5;
-  inline ::google::protobuf::uint64 nnz_w() const;
-  inline void set_nnz_w(::google::protobuf::uint64 value);
-
-  // optional double violation = 6;
-  inline bool has_violation() const;
-  inline void clear_violation();
-  static const int kViolationFieldNumber = 6;
-  inline double violation() const;
-  inline void set_violation(double value);
-
-  // optional uint64 nnz_active_set = 7;
-  inline bool has_nnz_active_set() const;
-  inline void clear_nnz_active_set();
-  static const int kNnzActiveSetFieldNumber = 7;
-  inline ::google::protobuf::uint64 nnz_active_set() const;
-  inline void set_nnz_active_set(::google::protobuf::uint64 value);
-
-  // optional double training_auc = 8;
-  inline bool has_training_auc() const;
-  inline void clear_training_auc();
-  static const int kTrainingAucFieldNumber = 8;
-  inline double training_auc() const;
-  inline void set_training_auc(double value);
-
-  // optional uint64 num_ex_trained = 12;
-  inline bool has_num_ex_trained() const;
-  inline void clear_num_ex_trained();
-  static const int kNumExTrainedFieldNumber = 12;
-  inline ::google::protobuf::uint64 num_ex_trained() const;
-  inline void set_num_ex_trained(::google::protobuf::uint64 value);
-
-  // repeated double acc = 13;
-  inline int acc_size() const;
-  inline void clear_acc();
-  static const int kAccFieldNumber = 13;
-  inline double acc(int index) const;
-  inline void set_acc(int index, double value);
-  inline void add_acc(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      acc() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_acc();
-
-  // repeated double auc = 14;
-  inline int auc_size() const;
-  inline void clear_auc();
-  static const int kAucFieldNumber = 14;
-  inline double auc(int index) const;
-  inline void set_auc(int index, double value);
-  inline void add_auc(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      auc() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_auc();
-
-  // optional double total_time = 10;
-  inline bool has_total_time() const;
-  inline void clear_total_time();
-  static const int kTotalTimeFieldNumber = 10;
-  inline double total_time() const;
-  inline void set_total_time(double value);
-
-  // repeated double busy_time = 11;
-  inline int busy_time_size() const;
-  inline void clear_busy_time();
-  static const int kBusyTimeFieldNumber = 11;
-  inline double busy_time(int index) const;
-  inline void set_busy_time(int index, double value);
-  inline void add_busy_time(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      busy_time() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_busy_time();
-
-  // @@protoc_insertion_point(class_scope:PS.LM.Progress)
- private:
-  inline void set_has_relative_objv();
-  inline void clear_has_relative_objv();
-  inline void set_has_nnz_w();
-  inline void clear_has_nnz_w();
-  inline void set_has_violation();
-  inline void clear_has_violation();
-  inline void set_has_nnz_active_set();
-  inline void clear_has_nnz_active_set();
-  inline void set_has_training_auc();
-  inline void clear_has_training_auc();
-  inline void set_has_num_ex_trained();
-  inline void clear_has_num_ex_trained();
-  inline void set_has_total_time();
-  inline void clear_has_total_time();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::RepeatedField< double > objv_;
-  double relative_objv_;
-  ::google::protobuf::uint64 nnz_w_;
-  double violation_;
-  ::google::protobuf::uint64 nnz_active_set_;
-  double training_auc_;
-  ::google::protobuf::uint64 num_ex_trained_;
-  ::google::protobuf::RepeatedField< double > acc_;
-  ::google::protobuf::RepeatedField< double > auc_;
-  double total_time_;
-  ::google::protobuf::RepeatedField< double > busy_time_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static Progress* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DataInfo : public ::google::protobuf::Message {
- public:
-  DataInfo();
-  virtual ~DataInfo();
-
-  DataInfo(const DataInfo& from);
-
-  inline DataInfo& operator=(const DataInfo& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DataInfo& default_instance();
-
-  void Swap(DataInfo* other);
-
-  // implements Message ----------------------------------------------
-
-  DataInfo* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DataInfo& from);
-  void MergeFrom(const DataInfo& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional .PS.ExampleInfo example_info = 1;
-  inline bool has_example_info() const;
-  inline void clear_example_info();
-  static const int kExampleInfoFieldNumber = 1;
-  inline const ::PS::ExampleInfo& example_info() const;
-  inline ::PS::ExampleInfo* mutable_example_info();
-  inline ::PS::ExampleInfo* release_example_info();
-  inline void set_allocated_example_info(::PS::ExampleInfo* example_info);
-
-  // optional int32 hit_cache = 2;
-  inline bool has_hit_cache() const;
-  inline void clear_hit_cache();
-  static const int kHitCacheFieldNumber = 2;
-  inline ::google::protobuf::int32 hit_cache() const;
-  inline void set_hit_cache(::google::protobuf::int32 value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.DataInfo)
- private:
-  inline void set_has_example_info();
-  inline void clear_has_example_info();
-  inline void set_has_hit_cache();
-  inline void clear_has_hit_cache();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::PS::ExampleInfo* example_info_;
-  ::google::protobuf::int32 hit_cache_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static DataInfo* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Call : public ::google::protobuf::Message {
- public:
-  Call();
-  virtual ~Call();
-
-  Call(const Call& from);
-
-  inline Call& operator=(const Call& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Call& default_instance();
-
-  void Swap(Call* other);
-
-  // implements Message ----------------------------------------------
-
-  Call* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Call& from);
-  void MergeFrom(const Call& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef Call_Command Command;
-  static const Command LOAD_DATA = Call_Command_LOAD_DATA;
-  static const Command PREPROCESS_DATA = Call_Command_PREPROCESS_DATA;
-  static const Command UPDATE_MODEL = Call_Command_UPDATE_MODEL;
-  static const Command EVALUATE_PROGRESS = Call_Command_EVALUATE_PROGRESS;
-  static const Command SAVE_MODEL = Call_Command_SAVE_MODEL;
-  static const Command RECOVER = Call_Command_RECOVER;
-  static const Command COMPUTE_VALIDATION_AUC = Call_Command_COMPUTE_VALIDATION_AUC;
-  static const Command REPORT_PROGRESS = Call_Command_REPORT_PROGRESS;
-  static inline bool Command_IsValid(int value) {
-    return Call_Command_IsValid(value);
-  }
-  static const Command Command_MIN =
-    Call_Command_Command_MIN;
-  static const Command Command_MAX =
-    Call_Command_Command_MAX;
-  static const int Command_ARRAYSIZE =
-    Call_Command_Command_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Command_descriptor() {
-    return Call_Command_descriptor();
-  }
-  static inline const ::std::string& Command_Name(Command value) {
-    return Call_Command_Name(value);
-  }
-  static inline bool Command_Parse(const ::std::string& name,
-      Command* value) {
-    return Call_Command_Parse(name, value);
-  }
-
-  // accessors -------------------------------------------------------
-
-  // required .PS.LM.Call.Command cmd = 1;
-  inline bool has_cmd() const;
-  inline void clear_cmd();
-  static const int kCmdFieldNumber = 1;
-  inline ::PS::LM::Call_Command cmd() const;
-  inline void set_cmd(::PS::LM::Call_Command value);
-
-  // optional .PS.PbRange key = 2;
-  inline bool has_key() const;
-  inline void clear_key();
-  static const int kKeyFieldNumber = 2;
-  inline const ::PS::PbRange& key() const;
-  inline ::PS::PbRange* mutable_key();
-  inline ::PS::PbRange* release_key();
-  inline void set_allocated_key(::PS::PbRange* key);
-
-  // optional double kkt_filter_threshold = 4;
-  inline bool has_kkt_filter_threshold() const;
-  inline void clear_kkt_filter_threshold();
-  static const int kKktFilterThresholdFieldNumber = 4;
-  inline double kkt_filter_threshold() const;
-  inline void set_kkt_filter_threshold(double value);
-
-  // optional bool reset_kkt_filter = 5;
-  inline bool has_reset_kkt_filter() const;
-  inline void clear_reset_kkt_filter();
-  static const int kResetKktFilterFieldNumber = 5;
-  inline bool reset_kkt_filter() const;
-  inline void set_reset_kkt_filter(bool value);
-
-  // repeated int32 fea_grp = 8;
-  inline int fea_grp_size() const;
-  inline void clear_fea_grp();
-  static const int kFeaGrpFieldNumber = 8;
-  inline ::google::protobuf::int32 fea_grp(int index) const;
-  inline void set_fea_grp(int index, ::google::protobuf::int32 value);
-  inline void add_fea_grp(::google::protobuf::int32 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-      fea_grp() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-      mutable_fea_grp();
-
-  // optional bool hit_cache = 9;
-  inline bool has_hit_cache() const;
-  inline void clear_hit_cache();
-  static const int kHitCacheFieldNumber = 9;
-  inline bool hit_cache() const;
-  inline void set_hit_cache(bool value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.Call)
- private:
-  inline void set_has_cmd();
-  inline void clear_has_cmd();
-  inline void set_has_key();
-  inline void clear_has_key();
-  inline void set_has_kkt_filter_threshold();
-  inline void clear_has_kkt_filter_threshold();
-  inline void set_has_reset_kkt_filter();
-  inline void clear_has_reset_kkt_filter();
-  inline void set_has_hit_cache();
-  inline void clear_has_hit_cache();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::PS::PbRange* key_;
-  double kkt_filter_threshold_;
-  int cmd_;
-  bool reset_kkt_filter_;
-  bool hit_cache_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > fea_grp_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static Call* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class AggGradLearnerArg : public ::google::protobuf::Message {
- public:
-  AggGradLearnerArg();
-  virtual ~AggGradLearnerArg();
-
-  AggGradLearnerArg(const AggGradLearnerArg& from);
-
-  inline AggGradLearnerArg& operator=(const AggGradLearnerArg& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const AggGradLearnerArg& default_instance();
-
-  void Swap(AggGradLearnerArg* other);
-
-  // implements Message ----------------------------------------------
-
-  AggGradLearnerArg* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const AggGradLearnerArg& from);
-  void MergeFrom(const AggGradLearnerArg& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional double learning_rate = 1;
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 1;
-  inline double learning_rate() const;
-  inline void set_learning_rate(double value);
-
-  // @@protoc_insertion_point(class_scope:PS.LM.AggGradLearnerArg)
- private:
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  double learning_rate_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
-  friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
-
-  void InitAsDefaultInstance();
-  static AggGradLearnerArg* default_instance_;
-};
 // ===================================================================
 
+static const int kDeltaInitValueFieldNumber = 101;
+extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
+    ::google::protobuf::internal::PrimitiveTypeTraits< double >, 1, false >
+  delta_init_value;
+static const int kDeltaMaxValueFieldNumber = 102;
+extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
+    ::google::protobuf::internal::PrimitiveTypeTraits< double >, 1, false >
+  delta_max_value;
+static const int kKktFilterThresholdRatioFieldNumber = 103;
+extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
+    ::google::protobuf::internal::PrimitiveTypeTraits< double >, 1, false >
+  kkt_filter_threshold_ratio;
+static const int kLearningRateFieldNumber = 104;
+extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
+    ::google::protobuf::internal::MessageTypeTraits< ::PS::LM::LearningRateConfig >, 11, false >
+  learning_rate;
 
 // ===================================================================
 
@@ -1891,91 +854,15 @@ inline void Config::set_allocated_validation_data(::PS::DataConfig* validation_d
   }
 }
 
-// optional .PS.DataConfig local_cache = 3;
-inline bool Config::has_local_cache() const {
+// optional .PS.DataConfig model_output = 4;
+inline bool Config::has_model_output() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void Config::set_has_local_cache() {
+inline void Config::set_has_model_output() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void Config::clear_has_local_cache() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Config::clear_local_cache() {
-  if (local_cache_ != NULL) local_cache_->::PS::DataConfig::Clear();
-  clear_has_local_cache();
-}
-inline const ::PS::DataConfig& Config::local_cache() const {
-  return local_cache_ != NULL ? *local_cache_ : *default_instance_->local_cache_;
-}
-inline ::PS::DataConfig* Config::mutable_local_cache() {
-  set_has_local_cache();
-  if (local_cache_ == NULL) local_cache_ = new ::PS::DataConfig;
-  return local_cache_;
-}
-inline ::PS::DataConfig* Config::release_local_cache() {
-  clear_has_local_cache();
-  ::PS::DataConfig* temp = local_cache_;
-  local_cache_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_local_cache(::PS::DataConfig* local_cache) {
-  delete local_cache_;
-  local_cache_ = local_cache;
-  if (local_cache) {
-    set_has_local_cache();
-  } else {
-    clear_has_local_cache();
-  }
-}
-
-// optional .PS.ParameterInitConfig init_w = 4;
-inline bool Config::has_init_w() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void Config::set_has_init_w() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void Config::clear_has_init_w() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void Config::clear_init_w() {
-  if (init_w_ != NULL) init_w_->::PS::ParameterInitConfig::Clear();
-  clear_has_init_w();
-}
-inline const ::PS::ParameterInitConfig& Config::init_w() const {
-  return init_w_ != NULL ? *init_w_ : *default_instance_->init_w_;
-}
-inline ::PS::ParameterInitConfig* Config::mutable_init_w() {
-  set_has_init_w();
-  if (init_w_ == NULL) init_w_ = new ::PS::ParameterInitConfig;
-  return init_w_;
-}
-inline ::PS::ParameterInitConfig* Config::release_init_w() {
-  clear_has_init_w();
-  ::PS::ParameterInitConfig* temp = init_w_;
-  init_w_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_init_w(::PS::ParameterInitConfig* init_w) {
-  delete init_w_;
-  init_w_ = init_w;
-  if (init_w) {
-    set_has_init_w();
-  } else {
-    clear_has_init_w();
-  }
-}
-
-// optional .PS.DataConfig model_output = 5;
-inline bool Config::has_model_output() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void Config::set_has_model_output() {
-  _has_bits_[0] |= 0x00000010u;
-}
 inline void Config::clear_has_model_output() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void Config::clear_model_output() {
   if (model_output_ != NULL) model_output_->::PS::DataConfig::Clear();
@@ -2005,15 +892,15 @@ inline void Config::set_allocated_model_output(::PS::DataConfig* model_output) {
   }
 }
 
-// optional .PS.DataConfig model_input = 6;
+// optional .PS.DataConfig model_input = 5;
 inline bool Config::has_model_input() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void Config::set_has_model_input() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void Config::clear_has_model_input() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void Config::clear_model_input() {
   if (model_input_ != NULL) model_input_->::PS::DataConfig::Clear();
@@ -2045,13 +932,13 @@ inline void Config::set_allocated_model_input(::PS::DataConfig* model_input) {
 
 // optional .PS.LM.LossConfig loss = 10;
 inline bool Config::has_loss() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Config::set_has_loss() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Config::clear_has_loss() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Config::clear_loss() {
   if (loss_ != NULL) loss_->::PS::LM::LossConfig::Clear();
@@ -2083,13 +970,13 @@ inline void Config::set_allocated_loss(::PS::LM::LossConfig* loss) {
 
 // optional .PS.LM.PenaltyConfig penalty = 11;
 inline bool Config::has_penalty() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void Config::set_has_penalty() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void Config::clear_has_penalty() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void Config::clear_penalty() {
   if (penalty_ != NULL) penalty_->::PS::LM::PenaltyConfig::Clear();
@@ -2119,167 +1006,53 @@ inline void Config::set_allocated_penalty(::PS::LM::PenaltyConfig* penalty) {
   }
 }
 
-// optional .PS.LM.LearningRateConfig learning_rate = 12;
-inline bool Config::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+// optional .PS.BCDConfig darlin = 12;
+inline bool Config::has_darlin() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void Config::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000100u;
+inline void Config::set_has_darlin() {
+  _has_bits_[0] |= 0x00000040u;
 }
-inline void Config::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000100u;
+inline void Config::clear_has_darlin() {
+  _has_bits_[0] &= ~0x00000040u;
 }
-inline void Config::clear_learning_rate() {
-  if (learning_rate_ != NULL) learning_rate_->::PS::LM::LearningRateConfig::Clear();
-  clear_has_learning_rate();
+inline void Config::clear_darlin() {
+  if (darlin_ != NULL) darlin_->::PS::BCDConfig::Clear();
+  clear_has_darlin();
 }
-inline const ::PS::LM::LearningRateConfig& Config::learning_rate() const {
-  return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
+inline const ::PS::BCDConfig& Config::darlin() const {
+  return darlin_ != NULL ? *darlin_ : *default_instance_->darlin_;
 }
-inline ::PS::LM::LearningRateConfig* Config::mutable_learning_rate() {
-  set_has_learning_rate();
-  if (learning_rate_ == NULL) learning_rate_ = new ::PS::LM::LearningRateConfig;
-  return learning_rate_;
+inline ::PS::BCDConfig* Config::mutable_darlin() {
+  set_has_darlin();
+  if (darlin_ == NULL) darlin_ = new ::PS::BCDConfig;
+  return darlin_;
 }
-inline ::PS::LM::LearningRateConfig* Config::release_learning_rate() {
-  clear_has_learning_rate();
-  ::PS::LM::LearningRateConfig* temp = learning_rate_;
-  learning_rate_ = NULL;
+inline ::PS::BCDConfig* Config::release_darlin() {
+  clear_has_darlin();
+  ::PS::BCDConfig* temp = darlin_;
+  darlin_ = NULL;
   return temp;
 }
-inline void Config::set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate) {
-  delete learning_rate_;
-  learning_rate_ = learning_rate;
-  if (learning_rate) {
-    set_has_learning_rate();
+inline void Config::set_allocated_darlin(::PS::BCDConfig* darlin) {
+  delete darlin_;
+  darlin_ = darlin;
+  if (darlin) {
+    set_has_darlin();
   } else {
-    clear_has_learning_rate();
-  }
-}
-
-// optional .PS.LM.LearnerConfig learner = 13;
-inline bool Config::has_learner() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void Config::set_has_learner() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void Config::clear_has_learner() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void Config::clear_learner() {
-  if (learner_ != NULL) learner_->::PS::LM::LearnerConfig::Clear();
-  clear_has_learner();
-}
-inline const ::PS::LM::LearnerConfig& Config::learner() const {
-  return learner_ != NULL ? *learner_ : *default_instance_->learner_;
-}
-inline ::PS::LM::LearnerConfig* Config::mutable_learner() {
-  set_has_learner();
-  if (learner_ == NULL) learner_ = new ::PS::LM::LearnerConfig;
-  return learner_;
-}
-inline ::PS::LM::LearnerConfig* Config::release_learner() {
-  clear_has_learner();
-  ::PS::LM::LearnerConfig* temp = learner_;
-  learner_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_learner(::PS::LM::LearnerConfig* learner) {
-  delete learner_;
-  learner_ = learner;
-  if (learner) {
-    set_has_learner();
-  } else {
-    clear_has_learner();
-  }
-}
-
-// optional .PS.LM.SolverConfig solver = 14;
-inline bool Config::has_solver() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void Config::set_has_solver() {
-  _has_bits_[0] |= 0x00000400u;
-}
-inline void Config::clear_has_solver() {
-  _has_bits_[0] &= ~0x00000400u;
-}
-inline void Config::clear_solver() {
-  if (solver_ != NULL) solver_->::PS::LM::SolverConfig::Clear();
-  clear_has_solver();
-}
-inline const ::PS::LM::SolverConfig& Config::solver() const {
-  return solver_ != NULL ? *solver_ : *default_instance_->solver_;
-}
-inline ::PS::LM::SolverConfig* Config::mutable_solver() {
-  set_has_solver();
-  if (solver_ == NULL) solver_ = new ::PS::LM::SolverConfig;
-  return solver_;
-}
-inline ::PS::LM::SolverConfig* Config::release_solver() {
-  clear_has_solver();
-  ::PS::LM::SolverConfig* temp = solver_;
-  solver_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_solver(::PS::LM::SolverConfig* solver) {
-  delete solver_;
-  solver_ = solver;
-  if (solver) {
-    set_has_solver();
-  } else {
-    clear_has_solver();
-  }
-}
-
-// optional .PS.LM.DarlingConfig darling = 15;
-inline bool Config::has_darling() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
-}
-inline void Config::set_has_darling() {
-  _has_bits_[0] |= 0x00000800u;
-}
-inline void Config::clear_has_darling() {
-  _has_bits_[0] &= ~0x00000800u;
-}
-inline void Config::clear_darling() {
-  if (darling_ != NULL) darling_->::PS::LM::DarlingConfig::Clear();
-  clear_has_darling();
-}
-inline const ::PS::LM::DarlingConfig& Config::darling() const {
-  return darling_ != NULL ? *darling_ : *default_instance_->darling_;
-}
-inline ::PS::LM::DarlingConfig* Config::mutable_darling() {
-  set_has_darling();
-  if (darling_ == NULL) darling_ = new ::PS::LM::DarlingConfig;
-  return darling_;
-}
-inline ::PS::LM::DarlingConfig* Config::release_darling() {
-  clear_has_darling();
-  ::PS::LM::DarlingConfig* temp = darling_;
-  darling_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_darling(::PS::LM::DarlingConfig* darling) {
-  delete darling_;
-  darling_ = darling;
-  if (darling) {
-    set_has_darling();
-  } else {
-    clear_has_darling();
+    clear_has_darlin();
   }
 }
 
 // optional .PS.LM.FTRLConfig ftrl = 16;
 inline bool Config::has_ftrl() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void Config::set_has_ftrl() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void Config::clear_has_ftrl() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Config::clear_ftrl() {
   if (ftrl_ != NULL) ftrl_->::PS::LM::FTRLConfig::Clear();
@@ -2311,458 +1084,133 @@ inline void Config::set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl) {
 
 // -------------------------------------------------------------------
 
-// SolverConfig
+// FTRLConfig
 
-// optional int64 minibatch_size = 1 [default = 0];
-inline bool SolverConfig::has_minibatch_size() const {
+// optional int32 minibatch = 1 [default = 1000];
+inline bool FTRLConfig::has_minibatch() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void SolverConfig::set_has_minibatch_size() {
+inline void FTRLConfig::set_has_minibatch() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void SolverConfig::clear_has_minibatch_size() {
+inline void FTRLConfig::clear_has_minibatch() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void SolverConfig::clear_minibatch_size() {
-  minibatch_size_ = GOOGLE_LONGLONG(0);
-  clear_has_minibatch_size();
+inline void FTRLConfig::clear_minibatch() {
+  minibatch_ = 1000;
+  clear_has_minibatch();
 }
-inline ::google::protobuf::int64 SolverConfig::minibatch_size() const {
-  return minibatch_size_;
+inline ::google::protobuf::int32 FTRLConfig::minibatch() const {
+  return minibatch_;
 }
-inline void SolverConfig::set_minibatch_size(::google::protobuf::int64 value) {
-  set_has_minibatch_size();
-  minibatch_size_ = value;
+inline void FTRLConfig::set_minibatch(::google::protobuf::int32 value) {
+  set_has_minibatch();
+  minibatch_ = value;
 }
 
-// optional float feature_block_ratio = 2 [default = 0];
-inline bool SolverConfig::has_feature_block_ratio() const {
+// optional int32 tail_feature_freq = 2 [default = 4];
+inline bool FTRLConfig::has_tail_feature_freq() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void SolverConfig::set_has_feature_block_ratio() {
+inline void FTRLConfig::set_has_tail_feature_freq() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void SolverConfig::clear_has_feature_block_ratio() {
+inline void FTRLConfig::clear_has_tail_feature_freq() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void SolverConfig::clear_feature_block_ratio() {
-  feature_block_ratio_ = 0;
-  clear_has_feature_block_ratio();
-}
-inline float SolverConfig::feature_block_ratio() const {
-  return feature_block_ratio_;
-}
-inline void SolverConfig::set_feature_block_ratio(float value) {
-  set_has_feature_block_ratio();
-  feature_block_ratio_ = value;
-}
-
-// optional bool random_feature_block_order = 3 [default = true];
-inline bool SolverConfig::has_random_feature_block_order() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void SolverConfig::set_has_random_feature_block_order() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void SolverConfig::clear_has_random_feature_block_order() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void SolverConfig::clear_random_feature_block_order() {
-  random_feature_block_order_ = true;
-  clear_has_random_feature_block_order();
-}
-inline bool SolverConfig::random_feature_block_order() const {
-  return random_feature_block_order_;
-}
-inline void SolverConfig::set_random_feature_block_order(bool value) {
-  set_has_random_feature_block_order();
-  random_feature_block_order_ = value;
-}
-
-// repeated int32 prior_fea_group = 14;
-inline int SolverConfig::prior_fea_group_size() const {
-  return prior_fea_group_.size();
-}
-inline void SolverConfig::clear_prior_fea_group() {
-  prior_fea_group_.Clear();
-}
-inline ::google::protobuf::int32 SolverConfig::prior_fea_group(int index) const {
-  return prior_fea_group_.Get(index);
-}
-inline void SolverConfig::set_prior_fea_group(int index, ::google::protobuf::int32 value) {
-  prior_fea_group_.Set(index, value);
-}
-inline void SolverConfig::add_prior_fea_group(::google::protobuf::int32 value) {
-  prior_fea_group_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-SolverConfig::prior_fea_group() const {
-  return prior_fea_group_;
-}
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-SolverConfig::mutable_prior_fea_group() {
-  return &prior_fea_group_;
-}
-
-// optional int32 num_iter_for_prior_fea_group = 13 [default = 5];
-inline bool SolverConfig::has_num_iter_for_prior_fea_group() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void SolverConfig::set_has_num_iter_for_prior_fea_group() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void SolverConfig::clear_has_num_iter_for_prior_fea_group() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void SolverConfig::clear_num_iter_for_prior_fea_group() {
-  num_iter_for_prior_fea_group_ = 5;
-  clear_has_num_iter_for_prior_fea_group();
-}
-inline ::google::protobuf::int32 SolverConfig::num_iter_for_prior_fea_group() const {
-  return num_iter_for_prior_fea_group_;
-}
-inline void SolverConfig::set_num_iter_for_prior_fea_group(::google::protobuf::int32 value) {
-  set_has_num_iter_for_prior_fea_group();
-  num_iter_for_prior_fea_group_ = value;
-}
-
-// optional int32 max_block_delay = 10 [default = 0];
-inline bool SolverConfig::has_max_block_delay() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void SolverConfig::set_has_max_block_delay() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void SolverConfig::clear_has_max_block_delay() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void SolverConfig::clear_max_block_delay() {
-  max_block_delay_ = 0;
-  clear_has_max_block_delay();
-}
-inline ::google::protobuf::int32 SolverConfig::max_block_delay() const {
-  return max_block_delay_;
-}
-inline void SolverConfig::set_max_block_delay(::google::protobuf::int32 value) {
-  set_has_max_block_delay();
-  max_block_delay_ = value;
-}
-
-// optional int32 max_pass_of_data = 8 [default = 10];
-inline bool SolverConfig::has_max_pass_of_data() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void SolverConfig::set_has_max_pass_of_data() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void SolverConfig::clear_has_max_pass_of_data() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void SolverConfig::clear_max_pass_of_data() {
-  max_pass_of_data_ = 10;
-  clear_has_max_pass_of_data();
-}
-inline ::google::protobuf::int32 SolverConfig::max_pass_of_data() const {
-  return max_pass_of_data_;
-}
-inline void SolverConfig::set_max_pass_of_data(::google::protobuf::int32 value) {
-  set_has_max_pass_of_data();
-  max_pass_of_data_ = value;
-}
-
-// optional double epsilon = 11 [default = 0.0001];
-inline bool SolverConfig::has_epsilon() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void SolverConfig::set_has_epsilon() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void SolverConfig::clear_has_epsilon() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void SolverConfig::clear_epsilon() {
-  epsilon_ = 0.0001;
-  clear_has_epsilon();
-}
-inline double SolverConfig::epsilon() const {
-  return epsilon_;
-}
-inline void SolverConfig::set_epsilon(double value) {
-  set_has_epsilon();
-  epsilon_ = value;
-}
-
-// optional int64 auc_goodness = 12 [default = 100000];
-inline bool SolverConfig::has_auc_goodness() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void SolverConfig::set_has_auc_goodness() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void SolverConfig::clear_has_auc_goodness() {
-  _has_bits_[0] &= ~0x00000100u;
-}
-inline void SolverConfig::clear_auc_goodness() {
-  auc_goodness_ = GOOGLE_LONGLONG(100000);
-  clear_has_auc_goodness();
-}
-inline ::google::protobuf::int64 SolverConfig::auc_goodness() const {
-  return auc_goodness_;
-}
-inline void SolverConfig::set_auc_goodness(::google::protobuf::int64 value) {
-  set_has_auc_goodness();
-  auc_goodness_ = value;
-}
-
-// optional int32 tail_feature_freq = 15 [default = 4];
-inline bool SolverConfig::has_tail_feature_freq() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void SolverConfig::set_has_tail_feature_freq() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void SolverConfig::clear_has_tail_feature_freq() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void SolverConfig::clear_tail_feature_freq() {
+inline void FTRLConfig::clear_tail_feature_freq() {
   tail_feature_freq_ = 4;
   clear_has_tail_feature_freq();
 }
-inline ::google::protobuf::int32 SolverConfig::tail_feature_freq() const {
+inline ::google::protobuf::int32 FTRLConfig::tail_feature_freq() const {
   return tail_feature_freq_;
 }
-inline void SolverConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
+inline void FTRLConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
   set_has_tail_feature_freq();
   tail_feature_freq_ = value;
 }
 
-// optional int32 tail_feature_filter_k = 20 [default = 2];
-inline bool SolverConfig::has_tail_feature_filter_k() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+// optional .PS.LM.LearningRateConfig learning_rate = 3;
+inline bool FTRLConfig::has_learning_rate() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void SolverConfig::set_has_tail_feature_filter_k() {
-  _has_bits_[0] |= 0x00000400u;
+inline void FTRLConfig::set_has_learning_rate() {
+  _has_bits_[0] |= 0x00000004u;
 }
-inline void SolverConfig::clear_has_tail_feature_filter_k() {
-  _has_bits_[0] &= ~0x00000400u;
+inline void FTRLConfig::clear_has_learning_rate() {
+  _has_bits_[0] &= ~0x00000004u;
 }
-inline void SolverConfig::clear_tail_feature_filter_k() {
-  tail_feature_filter_k_ = 2;
-  clear_has_tail_feature_filter_k();
+inline void FTRLConfig::clear_learning_rate() {
+  if (learning_rate_ != NULL) learning_rate_->::PS::LM::LearningRateConfig::Clear();
+  clear_has_learning_rate();
 }
-inline ::google::protobuf::int32 SolverConfig::tail_feature_filter_k() const {
-  return tail_feature_filter_k_;
+inline const ::PS::LM::LearningRateConfig& FTRLConfig::learning_rate() const {
+  return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
 }
-inline void SolverConfig::set_tail_feature_filter_k(::google::protobuf::int32 value) {
-  set_has_tail_feature_filter_k();
-  tail_feature_filter_k_ = value;
+inline ::PS::LM::LearningRateConfig* FTRLConfig::mutable_learning_rate() {
+  set_has_learning_rate();
+  if (learning_rate_ == NULL) learning_rate_ = new ::PS::LM::LearningRateConfig;
+  return learning_rate_;
+}
+inline ::PS::LM::LearningRateConfig* FTRLConfig::release_learning_rate() {
+  clear_has_learning_rate();
+  ::PS::LM::LearningRateConfig* temp = learning_rate_;
+  learning_rate_ = NULL;
+  return temp;
+}
+inline void FTRLConfig::set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate) {
+  delete learning_rate_;
+  learning_rate_ = learning_rate;
+  if (learning_rate) {
+    set_has_learning_rate();
+  } else {
+    clear_has_learning_rate();
+  }
 }
 
-// optional int32 countmin_k = 16 [default = 2];
-inline bool SolverConfig::has_countmin_k() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+// optional int32 countmin_k = 7 [default = 2];
+inline bool FTRLConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void SolverConfig::set_has_countmin_k() {
-  _has_bits_[0] |= 0x00000800u;
+inline void FTRLConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000008u;
 }
-inline void SolverConfig::clear_has_countmin_k() {
-  _has_bits_[0] &= ~0x00000800u;
+inline void FTRLConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000008u;
 }
-inline void SolverConfig::clear_countmin_k() {
+inline void FTRLConfig::clear_countmin_k() {
   countmin_k_ = 2;
   clear_has_countmin_k();
 }
-inline ::google::protobuf::int32 SolverConfig::countmin_k() const {
+inline ::google::protobuf::int32 FTRLConfig::countmin_k() const {
   return countmin_k_;
 }
-inline void SolverConfig::set_countmin_k(::google::protobuf::int32 value) {
+inline void FTRLConfig::set_countmin_k(::google::protobuf::int32 value) {
   set_has_countmin_k();
   countmin_k_ = value;
 }
 
-// optional double countmin_n_ratio = 17 [default = 2];
-inline bool SolverConfig::has_countmin_n_ratio() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+// optional float countmin_n = 8 [default = 1e+08];
+inline bool FTRLConfig::has_countmin_n() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void SolverConfig::set_has_countmin_n_ratio() {
-  _has_bits_[0] |= 0x00001000u;
+inline void FTRLConfig::set_has_countmin_n() {
+  _has_bits_[0] |= 0x00000010u;
 }
-inline void SolverConfig::clear_has_countmin_n_ratio() {
-  _has_bits_[0] &= ~0x00001000u;
+inline void FTRLConfig::clear_has_countmin_n() {
+  _has_bits_[0] &= ~0x00000010u;
 }
-inline void SolverConfig::clear_countmin_n_ratio() {
-  countmin_n_ratio_ = 2;
-  clear_has_countmin_n_ratio();
-}
-inline double SolverConfig::countmin_n_ratio() const {
-  return countmin_n_ratio_;
-}
-inline void SolverConfig::set_countmin_n_ratio(double value) {
-  set_has_countmin_n_ratio();
-  countmin_n_ratio_ = value;
-}
-
-// optional double countmin_n = 18 [default = 100000000];
-inline bool SolverConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
-}
-inline void SolverConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00002000u;
-}
-inline void SolverConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00002000u;
-}
-inline void SolverConfig::clear_countmin_n() {
-  countmin_n_ = 100000000;
+inline void FTRLConfig::clear_countmin_n() {
+  countmin_n_ = 1e+08f;
   clear_has_countmin_n();
 }
-inline double SolverConfig::countmin_n() const {
+inline float FTRLConfig::countmin_n() const {
   return countmin_n_;
 }
-inline void SolverConfig::set_countmin_n(double value) {
+inline void FTRLConfig::set_countmin_n(float value) {
   set_has_countmin_n();
   countmin_n_ = value;
 }
-
-// optional int32 max_num_parallel_groups_in_preprocessing = 19 [default = 1000];
-inline bool SolverConfig::has_max_num_parallel_groups_in_preprocessing() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
-}
-inline void SolverConfig::set_has_max_num_parallel_groups_in_preprocessing() {
-  _has_bits_[0] |= 0x00004000u;
-}
-inline void SolverConfig::clear_has_max_num_parallel_groups_in_preprocessing() {
-  _has_bits_[0] &= ~0x00004000u;
-}
-inline void SolverConfig::clear_max_num_parallel_groups_in_preprocessing() {
-  max_num_parallel_groups_in_preprocessing_ = 1000;
-  clear_has_max_num_parallel_groups_in_preprocessing();
-}
-inline ::google::protobuf::int32 SolverConfig::max_num_parallel_groups_in_preprocessing() const {
-  return max_num_parallel_groups_in_preprocessing_;
-}
-inline void SolverConfig::set_max_num_parallel_groups_in_preprocessing(::google::protobuf::int32 value) {
-  set_has_max_num_parallel_groups_in_preprocessing();
-  max_num_parallel_groups_in_preprocessing_ = value;
-}
-
-// optional int32 max_data_buf_size_in_mb = 22 [default = 1000];
-inline bool SolverConfig::has_max_data_buf_size_in_mb() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
-}
-inline void SolverConfig::set_has_max_data_buf_size_in_mb() {
-  _has_bits_[0] |= 0x00008000u;
-}
-inline void SolverConfig::clear_has_max_data_buf_size_in_mb() {
-  _has_bits_[0] &= ~0x00008000u;
-}
-inline void SolverConfig::clear_max_data_buf_size_in_mb() {
-  max_data_buf_size_in_mb_ = 1000;
-  clear_has_max_data_buf_size_in_mb();
-}
-inline ::google::protobuf::int32 SolverConfig::max_data_buf_size_in_mb() const {
-  return max_data_buf_size_in_mb_;
-}
-inline void SolverConfig::set_max_data_buf_size_in_mb(::google::protobuf::int32 value) {
-  set_has_max_data_buf_size_in_mb();
-  max_data_buf_size_in_mb_ = value;
-}
-
-// optional int32 eval_interval = 21 [default = 5];
-inline bool SolverConfig::has_eval_interval() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
-}
-inline void SolverConfig::set_has_eval_interval() {
-  _has_bits_[0] |= 0x00010000u;
-}
-inline void SolverConfig::clear_has_eval_interval() {
-  _has_bits_[0] &= ~0x00010000u;
-}
-inline void SolverConfig::clear_eval_interval() {
-  eval_interval_ = 5;
-  clear_has_eval_interval();
-}
-inline ::google::protobuf::int32 SolverConfig::eval_interval() const {
-  return eval_interval_;
-}
-inline void SolverConfig::set_eval_interval(::google::protobuf::int32 value) {
-  set_has_eval_interval();
-  eval_interval_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// DarlingConfig
-
-// optional double delta_init_value = 1 [default = 1];
-inline bool DarlingConfig::has_delta_init_value() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void DarlingConfig::set_has_delta_init_value() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void DarlingConfig::clear_has_delta_init_value() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void DarlingConfig::clear_delta_init_value() {
-  delta_init_value_ = 1;
-  clear_has_delta_init_value();
-}
-inline double DarlingConfig::delta_init_value() const {
-  return delta_init_value_;
-}
-inline void DarlingConfig::set_delta_init_value(double value) {
-  set_has_delta_init_value();
-  delta_init_value_ = value;
-}
-
-// optional double delta_max_value = 2 [default = 5];
-inline bool DarlingConfig::has_delta_max_value() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void DarlingConfig::set_has_delta_max_value() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void DarlingConfig::clear_has_delta_max_value() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void DarlingConfig::clear_delta_max_value() {
-  delta_max_value_ = 5;
-  clear_has_delta_max_value();
-}
-inline double DarlingConfig::delta_max_value() const {
-  return delta_max_value_;
-}
-inline void DarlingConfig::set_delta_max_value(double value) {
-  set_has_delta_max_value();
-  delta_max_value_ = value;
-}
-
-// optional double kkt_filter_threshold_ratio = 10 [default = 10];
-inline bool DarlingConfig::has_kkt_filter_threshold_ratio() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void DarlingConfig::set_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void DarlingConfig::clear_has_kkt_filter_threshold_ratio() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void DarlingConfig::clear_kkt_filter_threshold_ratio() {
-  kkt_filter_threshold_ratio_ = 10;
-  clear_has_kkt_filter_threshold_ratio();
-}
-inline double DarlingConfig::kkt_filter_threshold_ratio() const {
-  return kkt_filter_threshold_ratio_;
-}
-inline void DarlingConfig::set_kkt_filter_threshold_ratio(double value) {
-  set_has_kkt_filter_threshold_ratio();
-  kkt_filter_threshold_ratio_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// FTRLConfig
 
 // -------------------------------------------------------------------
 
@@ -2841,33 +1289,6 @@ PenaltyConfig::lambda() const {
 inline ::google::protobuf::RepeatedField< double >*
 PenaltyConfig::mutable_lambda() {
   return &lambda_;
-}
-
-// -------------------------------------------------------------------
-
-// LearnerConfig
-
-// required .PS.LM.LearnerConfig.Type type = 1;
-inline bool LearnerConfig::has_type() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void LearnerConfig::set_has_type() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void LearnerConfig::clear_has_type() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void LearnerConfig::clear_type() {
-  type_ = 1;
-  clear_has_type();
-}
-inline ::PS::LM::LearnerConfig_Type LearnerConfig::type() const {
-  return static_cast< ::PS::LM::LearnerConfig_Type >(type_);
-}
-inline void LearnerConfig::set_type(::PS::LM::LearnerConfig_Type value) {
-  assert(::PS::LM::LearnerConfig_Type_IsValid(value));
-  set_has_type();
-  type_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2963,510 +1384,6 @@ inline void LearningRateConfig::set_beta(double value) {
   beta_ = value;
 }
 
-// -------------------------------------------------------------------
-
-// Progress
-
-// repeated double objv = 1;
-inline int Progress::objv_size() const {
-  return objv_.size();
-}
-inline void Progress::clear_objv() {
-  objv_.Clear();
-}
-inline double Progress::objv(int index) const {
-  return objv_.Get(index);
-}
-inline void Progress::set_objv(int index, double value) {
-  objv_.Set(index, value);
-}
-inline void Progress::add_objv(double value) {
-  objv_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::objv() const {
-  return objv_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_objv() {
-  return &objv_;
-}
-
-// optional double relative_objv = 2;
-inline bool Progress::has_relative_objv() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Progress::set_has_relative_objv() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Progress::clear_has_relative_objv() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Progress::clear_relative_objv() {
-  relative_objv_ = 0;
-  clear_has_relative_objv();
-}
-inline double Progress::relative_objv() const {
-  return relative_objv_;
-}
-inline void Progress::set_relative_objv(double value) {
-  set_has_relative_objv();
-  relative_objv_ = value;
-}
-
-// optional uint64 nnz_w = 5;
-inline bool Progress::has_nnz_w() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Progress::set_has_nnz_w() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Progress::clear_has_nnz_w() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Progress::clear_nnz_w() {
-  nnz_w_ = GOOGLE_ULONGLONG(0);
-  clear_has_nnz_w();
-}
-inline ::google::protobuf::uint64 Progress::nnz_w() const {
-  return nnz_w_;
-}
-inline void Progress::set_nnz_w(::google::protobuf::uint64 value) {
-  set_has_nnz_w();
-  nnz_w_ = value;
-}
-
-// optional double violation = 6;
-inline bool Progress::has_violation() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void Progress::set_has_violation() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void Progress::clear_has_violation() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void Progress::clear_violation() {
-  violation_ = 0;
-  clear_has_violation();
-}
-inline double Progress::violation() const {
-  return violation_;
-}
-inline void Progress::set_violation(double value) {
-  set_has_violation();
-  violation_ = value;
-}
-
-// optional uint64 nnz_active_set = 7;
-inline bool Progress::has_nnz_active_set() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void Progress::set_has_nnz_active_set() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void Progress::clear_has_nnz_active_set() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void Progress::clear_nnz_active_set() {
-  nnz_active_set_ = GOOGLE_ULONGLONG(0);
-  clear_has_nnz_active_set();
-}
-inline ::google::protobuf::uint64 Progress::nnz_active_set() const {
-  return nnz_active_set_;
-}
-inline void Progress::set_nnz_active_set(::google::protobuf::uint64 value) {
-  set_has_nnz_active_set();
-  nnz_active_set_ = value;
-}
-
-// optional double training_auc = 8;
-inline bool Progress::has_training_auc() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void Progress::set_has_training_auc() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void Progress::clear_has_training_auc() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void Progress::clear_training_auc() {
-  training_auc_ = 0;
-  clear_has_training_auc();
-}
-inline double Progress::training_auc() const {
-  return training_auc_;
-}
-inline void Progress::set_training_auc(double value) {
-  set_has_training_auc();
-  training_auc_ = value;
-}
-
-// optional uint64 num_ex_trained = 12;
-inline bool Progress::has_num_ex_trained() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void Progress::set_has_num_ex_trained() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void Progress::clear_has_num_ex_trained() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void Progress::clear_num_ex_trained() {
-  num_ex_trained_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_ex_trained();
-}
-inline ::google::protobuf::uint64 Progress::num_ex_trained() const {
-  return num_ex_trained_;
-}
-inline void Progress::set_num_ex_trained(::google::protobuf::uint64 value) {
-  set_has_num_ex_trained();
-  num_ex_trained_ = value;
-}
-
-// repeated double acc = 13;
-inline int Progress::acc_size() const {
-  return acc_.size();
-}
-inline void Progress::clear_acc() {
-  acc_.Clear();
-}
-inline double Progress::acc(int index) const {
-  return acc_.Get(index);
-}
-inline void Progress::set_acc(int index, double value) {
-  acc_.Set(index, value);
-}
-inline void Progress::add_acc(double value) {
-  acc_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::acc() const {
-  return acc_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_acc() {
-  return &acc_;
-}
-
-// repeated double auc = 14;
-inline int Progress::auc_size() const {
-  return auc_.size();
-}
-inline void Progress::clear_auc() {
-  auc_.Clear();
-}
-inline double Progress::auc(int index) const {
-  return auc_.Get(index);
-}
-inline void Progress::set_auc(int index, double value) {
-  auc_.Set(index, value);
-}
-inline void Progress::add_auc(double value) {
-  auc_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::auc() const {
-  return auc_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_auc() {
-  return &auc_;
-}
-
-// optional double total_time = 10;
-inline bool Progress::has_total_time() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void Progress::set_has_total_time() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void Progress::clear_has_total_time() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void Progress::clear_total_time() {
-  total_time_ = 0;
-  clear_has_total_time();
-}
-inline double Progress::total_time() const {
-  return total_time_;
-}
-inline void Progress::set_total_time(double value) {
-  set_has_total_time();
-  total_time_ = value;
-}
-
-// repeated double busy_time = 11;
-inline int Progress::busy_time_size() const {
-  return busy_time_.size();
-}
-inline void Progress::clear_busy_time() {
-  busy_time_.Clear();
-}
-inline double Progress::busy_time(int index) const {
-  return busy_time_.Get(index);
-}
-inline void Progress::set_busy_time(int index, double value) {
-  busy_time_.Set(index, value);
-}
-inline void Progress::add_busy_time(double value) {
-  busy_time_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::busy_time() const {
-  return busy_time_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_busy_time() {
-  return &busy_time_;
-}
-
-// -------------------------------------------------------------------
-
-// DataInfo
-
-// optional .PS.ExampleInfo example_info = 1;
-inline bool DataInfo::has_example_info() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void DataInfo::set_has_example_info() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void DataInfo::clear_has_example_info() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void DataInfo::clear_example_info() {
-  if (example_info_ != NULL) example_info_->::PS::ExampleInfo::Clear();
-  clear_has_example_info();
-}
-inline const ::PS::ExampleInfo& DataInfo::example_info() const {
-  return example_info_ != NULL ? *example_info_ : *default_instance_->example_info_;
-}
-inline ::PS::ExampleInfo* DataInfo::mutable_example_info() {
-  set_has_example_info();
-  if (example_info_ == NULL) example_info_ = new ::PS::ExampleInfo;
-  return example_info_;
-}
-inline ::PS::ExampleInfo* DataInfo::release_example_info() {
-  clear_has_example_info();
-  ::PS::ExampleInfo* temp = example_info_;
-  example_info_ = NULL;
-  return temp;
-}
-inline void DataInfo::set_allocated_example_info(::PS::ExampleInfo* example_info) {
-  delete example_info_;
-  example_info_ = example_info;
-  if (example_info) {
-    set_has_example_info();
-  } else {
-    clear_has_example_info();
-  }
-}
-
-// optional int32 hit_cache = 2;
-inline bool DataInfo::has_hit_cache() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void DataInfo::set_has_hit_cache() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void DataInfo::clear_has_hit_cache() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void DataInfo::clear_hit_cache() {
-  hit_cache_ = 0;
-  clear_has_hit_cache();
-}
-inline ::google::protobuf::int32 DataInfo::hit_cache() const {
-  return hit_cache_;
-}
-inline void DataInfo::set_hit_cache(::google::protobuf::int32 value) {
-  set_has_hit_cache();
-  hit_cache_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// Call
-
-// required .PS.LM.Call.Command cmd = 1;
-inline bool Call::has_cmd() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Call::set_has_cmd() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Call::clear_has_cmd() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Call::clear_cmd() {
-  cmd_ = 1;
-  clear_has_cmd();
-}
-inline ::PS::LM::Call_Command Call::cmd() const {
-  return static_cast< ::PS::LM::Call_Command >(cmd_);
-}
-inline void Call::set_cmd(::PS::LM::Call_Command value) {
-  assert(::PS::LM::Call_Command_IsValid(value));
-  set_has_cmd();
-  cmd_ = value;
-}
-
-// optional .PS.PbRange key = 2;
-inline bool Call::has_key() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Call::set_has_key() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Call::clear_has_key() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Call::clear_key() {
-  if (key_ != NULL) key_->::PS::PbRange::Clear();
-  clear_has_key();
-}
-inline const ::PS::PbRange& Call::key() const {
-  return key_ != NULL ? *key_ : *default_instance_->key_;
-}
-inline ::PS::PbRange* Call::mutable_key() {
-  set_has_key();
-  if (key_ == NULL) key_ = new ::PS::PbRange;
-  return key_;
-}
-inline ::PS::PbRange* Call::release_key() {
-  clear_has_key();
-  ::PS::PbRange* temp = key_;
-  key_ = NULL;
-  return temp;
-}
-inline void Call::set_allocated_key(::PS::PbRange* key) {
-  delete key_;
-  key_ = key;
-  if (key) {
-    set_has_key();
-  } else {
-    clear_has_key();
-  }
-}
-
-// optional double kkt_filter_threshold = 4;
-inline bool Call::has_kkt_filter_threshold() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Call::set_has_kkt_filter_threshold() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Call::clear_has_kkt_filter_threshold() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Call::clear_kkt_filter_threshold() {
-  kkt_filter_threshold_ = 0;
-  clear_has_kkt_filter_threshold();
-}
-inline double Call::kkt_filter_threshold() const {
-  return kkt_filter_threshold_;
-}
-inline void Call::set_kkt_filter_threshold(double value) {
-  set_has_kkt_filter_threshold();
-  kkt_filter_threshold_ = value;
-}
-
-// optional bool reset_kkt_filter = 5;
-inline bool Call::has_reset_kkt_filter() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void Call::set_has_reset_kkt_filter() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void Call::clear_has_reset_kkt_filter() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void Call::clear_reset_kkt_filter() {
-  reset_kkt_filter_ = false;
-  clear_has_reset_kkt_filter();
-}
-inline bool Call::reset_kkt_filter() const {
-  return reset_kkt_filter_;
-}
-inline void Call::set_reset_kkt_filter(bool value) {
-  set_has_reset_kkt_filter();
-  reset_kkt_filter_ = value;
-}
-
-// repeated int32 fea_grp = 8;
-inline int Call::fea_grp_size() const {
-  return fea_grp_.size();
-}
-inline void Call::clear_fea_grp() {
-  fea_grp_.Clear();
-}
-inline ::google::protobuf::int32 Call::fea_grp(int index) const {
-  return fea_grp_.Get(index);
-}
-inline void Call::set_fea_grp(int index, ::google::protobuf::int32 value) {
-  fea_grp_.Set(index, value);
-}
-inline void Call::add_fea_grp(::google::protobuf::int32 value) {
-  fea_grp_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-Call::fea_grp() const {
-  return fea_grp_;
-}
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-Call::mutable_fea_grp() {
-  return &fea_grp_;
-}
-
-// optional bool hit_cache = 9;
-inline bool Call::has_hit_cache() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void Call::set_has_hit_cache() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void Call::clear_has_hit_cache() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void Call::clear_hit_cache() {
-  hit_cache_ = false;
-  clear_has_hit_cache();
-}
-inline bool Call::hit_cache() const {
-  return hit_cache_;
-}
-inline void Call::set_hit_cache(bool value) {
-  set_has_hit_cache();
-  hit_cache_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// AggGradLearnerArg
-
-// optional double learning_rate = 1;
-inline bool AggGradLearnerArg::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void AggGradLearnerArg::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void AggGradLearnerArg::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void AggGradLearnerArg::clear_learning_rate() {
-  learning_rate_ = 0;
-  clear_has_learning_rate();
-}
-inline double AggGradLearnerArg::learning_rate() const {
-  return learning_rate_;
-}
-inline void AggGradLearnerArg::set_learning_rate(double value) {
-  set_has_learning_rate();
-  learning_rate_ = value;
-}
-
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -3486,16 +1403,8 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::PenaltyConfig_Type>() 
   return ::PS::LM::PenaltyConfig_Type_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::LearnerConfig_Type>() {
-  return ::PS::LM::LearnerConfig_Type_descriptor();
-}
-template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::LearningRateConfig_Type>() {
   return ::PS::LM::LearningRateConfig_Type_descriptor();
-}
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::Call_Command>() {
-  return ::PS::LM::Call_Command_descriptor();
 }
 
 }  // namespace google

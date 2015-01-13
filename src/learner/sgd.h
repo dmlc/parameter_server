@@ -7,16 +7,7 @@
 #include "system/app.h"
 namespace PS {
 
-template <typename V>
-struct SparseMinibatch {
-  size_t size() {
-    return label->memSize() + localizer->memSize();
-  }
-  MatrixPtr<V> label;
-  LocalizerPtr<Key, V> localizer;
-  int batch_id;
-  int pull_time;
-};
+// stochastic gradient descent solver
 
 class SGDScheduler : public App {
  public:
@@ -88,24 +79,20 @@ class SGDScheduler : public App {
 
 };
 
-template <typename Model>
 class SGDCompNode : public App {
  public:
   SGDCompNode(const string& name)
       : App(name),
-        reporter_(name+"_monitor", name),
-        model_(name+"_model", name) { }
+        reporter_(name+"_monitor", name) { }
   virtual ~SGDCompNode() { }
 
  protected:
   DistMonitor<SGDProgress> reporter_;
-  Model model_;
 };
 
-template <typename Model>
-class SGDServer : public SGDCompNode<Model> {
+class SGDServer : public SGDCompNode {
  public:
-  SGDServer(const string& name) : SGDCompNode<Model>(name) { }
+  SGDServer(const string& name) : SGDCompNode(name) { }
   virtual ~SGDServer() { }
 
   virtual void process(const MessagePtr& msg) {
@@ -124,10 +111,10 @@ class SGDServer : public SGDCompNode<Model> {
   virtual void saveModel() = 0;
 };
 
-template <typename Reader, typename Minibatch, typename Model>
-class SGDWorker : public SGDCompNode<Model> {
+template <typename Reader, typename Minibatch>
+class SGDWorker : public SGDCompNode {
  public:
-  SGDWorker(const string& name) : SGDCompNode<Model>(name) { }
+  SGDWorker(const string& name) : SGDCompNode(name) { }
   virtual ~SGDWorker() { }
 
   virtual void process(const MessagePtr& msg) {
@@ -164,6 +151,17 @@ class SGDWorker : public SGDCompNode<Model> {
   ProducerConsumer<Minibatch> data_prefetcher_;
   SGDProgress progress_;
   std::mutex progress_mu_;
+};
+
+template <typename V>
+struct SparseMinibatch {
+  size_t size() {
+    return label->memSize() + localizer->memSize();
+  }
+  MatrixPtr<V> label;
+  LocalizerPtr<Key, V> localizer;
+  int batch_id;
+  int pull_time;
 };
 
 // template<typename V>

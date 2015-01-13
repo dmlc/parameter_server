@@ -33,6 +33,7 @@
 #include "filter/proto/filter.pb.h"
 #include "linear_method/proto/lm.pb.h"
 #include "learner/proto/sgd.pb.h"
+#include "learner/proto/bcd.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -365,23 +366,23 @@ class Task : public ::google::protobuf::Message {
   inline ::PS::CallSharedPara* release_shared_para();
   inline void set_allocated_shared_para(::PS::CallSharedPara* shared_para);
 
-  // optional .PS.LM.Call linear_method = 301;
-  inline bool has_linear_method() const;
-  inline void clear_linear_method();
-  static const int kLinearMethodFieldNumber = 301;
-  inline const ::PS::LM::Call& linear_method() const;
-  inline ::PS::LM::Call* mutable_linear_method();
-  inline ::PS::LM::Call* release_linear_method();
-  inline void set_allocated_linear_method(::PS::LM::Call* linear_method);
-
-  // optional .PS.SGDCall sgd = 305;
+  // optional .PS.SGDCall sgd = 20;
   inline bool has_sgd() const;
   inline void clear_sgd();
-  static const int kSgdFieldNumber = 305;
+  static const int kSgdFieldNumber = 20;
   inline const ::PS::SGDCall& sgd() const;
   inline ::PS::SGDCall* mutable_sgd();
   inline ::PS::SGDCall* release_sgd();
   inline void set_allocated_sgd(::PS::SGDCall* sgd);
+
+  // optional .PS.BCDCall bcd = 21;
+  inline bool has_bcd() const;
+  inline void clear_bcd();
+  static const int kBcdFieldNumber = 21;
+  inline const ::PS::BCDCall& bcd() const;
+  inline ::PS::BCDCall* mutable_bcd();
+  inline ::PS::BCDCall* release_bcd();
+  inline void set_allocated_bcd(::PS::BCDCall* bcd);
 
   // @@protoc_insertion_point(class_scope:PS.Task)
  private:
@@ -411,10 +412,10 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_mng_app();
   inline void set_has_shared_para();
   inline void clear_has_shared_para();
-  inline void set_has_linear_method();
-  inline void clear_has_linear_method();
   inline void set_has_sgd();
   inline void clear_has_sgd();
+  inline void set_has_bcd();
+  inline void clear_has_bcd();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -433,8 +434,8 @@ class Task : public ::google::protobuf::Message {
   ::PS::ManageNode* mng_node_;
   ::PS::ManageApp* mng_app_;
   ::PS::CallSharedPara* shared_para_;
-  ::PS::LM::Call* linear_method_;
   ::PS::SGDCall* sgd_;
+  ::PS::BCDCall* bcd_;
   int key_type_;
 
   mutable int _cached_size_;
@@ -1219,53 +1220,15 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
   }
 }
 
-// optional .PS.LM.Call linear_method = 301;
-inline bool Task::has_linear_method() const {
+// optional .PS.SGDCall sgd = 20;
+inline bool Task::has_sgd() const {
   return (_has_bits_[0] & 0x00010000u) != 0;
 }
-inline void Task::set_has_linear_method() {
+inline void Task::set_has_sgd() {
   _has_bits_[0] |= 0x00010000u;
 }
-inline void Task::clear_has_linear_method() {
-  _has_bits_[0] &= ~0x00010000u;
-}
-inline void Task::clear_linear_method() {
-  if (linear_method_ != NULL) linear_method_->::PS::LM::Call::Clear();
-  clear_has_linear_method();
-}
-inline const ::PS::LM::Call& Task::linear_method() const {
-  return linear_method_ != NULL ? *linear_method_ : *default_instance_->linear_method_;
-}
-inline ::PS::LM::Call* Task::mutable_linear_method() {
-  set_has_linear_method();
-  if (linear_method_ == NULL) linear_method_ = new ::PS::LM::Call;
-  return linear_method_;
-}
-inline ::PS::LM::Call* Task::release_linear_method() {
-  clear_has_linear_method();
-  ::PS::LM::Call* temp = linear_method_;
-  linear_method_ = NULL;
-  return temp;
-}
-inline void Task::set_allocated_linear_method(::PS::LM::Call* linear_method) {
-  delete linear_method_;
-  linear_method_ = linear_method;
-  if (linear_method) {
-    set_has_linear_method();
-  } else {
-    clear_has_linear_method();
-  }
-}
-
-// optional .PS.SGDCall sgd = 305;
-inline bool Task::has_sgd() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
-}
-inline void Task::set_has_sgd() {
-  _has_bits_[0] |= 0x00020000u;
-}
 inline void Task::clear_has_sgd() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Task::clear_sgd() {
   if (sgd_ != NULL) sgd_->::PS::SGDCall::Clear();
@@ -1292,6 +1255,44 @@ inline void Task::set_allocated_sgd(::PS::SGDCall* sgd) {
     set_has_sgd();
   } else {
     clear_has_sgd();
+  }
+}
+
+// optional .PS.BCDCall bcd = 21;
+inline bool Task::has_bcd() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void Task::set_has_bcd() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void Task::clear_has_bcd() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void Task::clear_bcd() {
+  if (bcd_ != NULL) bcd_->::PS::BCDCall::Clear();
+  clear_has_bcd();
+}
+inline const ::PS::BCDCall& Task::bcd() const {
+  return bcd_ != NULL ? *bcd_ : *default_instance_->bcd_;
+}
+inline ::PS::BCDCall* Task::mutable_bcd() {
+  set_has_bcd();
+  if (bcd_ == NULL) bcd_ = new ::PS::BCDCall;
+  return bcd_;
+}
+inline ::PS::BCDCall* Task::release_bcd() {
+  clear_has_bcd();
+  ::PS::BCDCall* temp = bcd_;
+  bcd_ = NULL;
+  return temp;
+}
+inline void Task::set_allocated_bcd(::PS::BCDCall* bcd) {
+  delete bcd_;
+  bcd_ = bcd;
+  if (bcd) {
+    set_has_bcd();
+  } else {
+    clear_has_bcd();
   }
 }
 

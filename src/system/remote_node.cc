@@ -21,31 +21,35 @@ int RNode::submit(const MessagePtr& msg) {
 int RNode::submit(const Task& task,
                   const Message::Callback& recv_handle) {
   MessagePtr msg(new Message(task));
-  msg->recv_handle = recv_handle;
+  if (recv_handle) msg->recv_handle = recv_handle;
   return submit(msg);
 }
 
 int RNode::submitAndWait(const Task& task,
                          const Message::Callback& recv_handle) {
   MessagePtr msg(new Message(task));
-  msg->recv_handle = recv_handle;
+  if (recv_handle) msg->recv_handle = recv_handle;
   msg->wait = true;
   return submit(msg);
 }
 
-int RNode::submit(std::vector<Task>& tasks) {
+int RNode::submit(const std::vector<Task>& tasks,
+                  const Message::Callback& recv_handle) {
   MessagePtrList msgs; msgs.reserve(tasks.size());
   for (const auto& task : tasks) {
     msgs.push_back(MessagePtr(new Message(task)));
+    if (recv_handle) msgs.back()->recv_handle = recv_handle;
   }
   return submit(msgs);
 }
 
-int RNode::submitAndWait(std::vector<Task>& tasks) {
+int RNode::submitAndWait(const std::vector<Task>& tasks,
+                         const Message::Callback& recv_handle) {
   MessagePtrList msgs; msgs.reserve(tasks.size());
   for (const auto& task : tasks) {
     msgs.push_back(MessagePtr(new Message(task)));
     msgs.back()->wait = true;
+    if (recv_handle) msgs.back()->recv_handle = recv_handle;
   }
   return submit(msgs);
 }
