@@ -1,7 +1,7 @@
 CC = g++
 
-# OPT = -O0 -ggdb
-OPT = -O3 -ggdb
+OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
 
 ### third_party path
 THIRD_PARTY=$(shell cd ..;pwd)/third_party
@@ -35,7 +35,7 @@ LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 
 all: dir $(BIN)/ps
 clean:
-	rm -rf */*.o */*.d */*/*.o */*/*.d proto/*.cc $(BIN) $(LIB)
+	rm -rf */*.o */*.d */*/*.o */*/*.d */*.pb.cc */*/*.pb.cc $(BIN) $(LIB)
 
 -include */BUILD
 
@@ -46,7 +46,7 @@ sys_srcs = \
 	$(addprefix data/, $(data_srcs)) \
 	$(addprefix filter/, $(filter_srcs))
 # SYS_OBJS = $(SYS_SRCS:.cc=.o)
-$(LIB)/libps.a: $(sys_src:.cc=.o)
+$(LIB)/libps.a: $(sys_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### linear methods
@@ -66,16 +66,17 @@ $(LIB)/libfm.a: $(FM_OBJS)
 	ar crv $@ $(FM_OBJS)
 
 ### protobuf
-PROTOS= $(wildcard */*.proto)
-PROTOS_CC = $(PROTOS:.proto=.pb.cc)
-PROTOS_OBJS = $(PROTOS:.proto=.pb.o)
+PROTOS= $(wildcard */*/*.proto) $(wildcard */*.proto)
 %.pb.cc %.pb.h : %.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
-$(LIB)/libprotos.a: $(PROTOS_OBJS)
-	ar crv $@ $(PROTOS_OBJS)
+$(LIB)/libprotos.a: $(PROTOS:.proto=.pb.o)
+	ar crv $@ $?
+
+# PROTOS_CC = $(PROTOS:.proto=.pb.cc)
+# PROTOS_OBJS = $(PROTOS:.proto=.pb.o)
 
 ### dependencies
-ALL_SRCS = $(wildcard */*.cc)
+ALL_SRCS = $(wildcard */*.cc) $(wildcard */*/*.cc)
 DEPS = $(ALL_SRCS:.cc=.d)
 -include $(DEPS)
 

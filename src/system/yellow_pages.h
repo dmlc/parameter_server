@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util/common.h"
-#include "proto/node.pb.h"
+#include "system/proto/node.pb.h"
 #include "system/van.h"
 
 namespace PS {

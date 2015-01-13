@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
-#include "proto/example.pb.h"
-#include "proto/config.pb.h"
+#include "data/proto/example.pb.h"
+#include "data/proto/data.pb.h"
 namespace PS {
 
 // the maximal allowed slot id

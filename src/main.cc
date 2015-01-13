@@ -2,7 +2,7 @@
 #include "data/show_example.h"
 #include "data/text2proto.h"
 #include "system/app.h"
-#include "system/app_test.h"
+#include "test/app_test.h"
 #include "linear_method/linear_method.h"
 // #include "graph_partition/graph_partition.h"
 // #include "factorization_machine/fm.h"
@@ -13,9 +13,9 @@ App* App::create(const AppConfig& conf) {
   App* ptr = nullptr;
   if (conf.has_linear_method()) {
     ptr = LM::createApp(conf.app_name(), conf.linear_method());
-  } else if (conf.has_graph_partition()) {
+  // } else if (conf.has_graph_partition()) {
   //   ptr = GP::GraphPartition::create(conf.graph_partition());
-  } else if (conf.has_factorization_machine()) {
+  // } else if (conf.has_factorization_machine()) {
   //   ptr = FM::FactorizationMachine::create(conf.factorization_machine());
   } else {
     ptr = new AppTest(conf.app_name());

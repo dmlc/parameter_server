@@ -1,6 +1,6 @@
 #include "util/common.h"
 #include "util/recordio.h"
-#include "proto/instance.pb.h"
+// #include "proto/instance.pb.h"
 
 DEFINE_int32(n, 3, "show the first *n* instances in text format");
 DEFINE_string(input, "stdin", "stdin or input filename");

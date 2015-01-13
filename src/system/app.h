@@ -1,6 +1,6 @@
 #pragma once
 #include "system/customer.h"
-#include "proto/app.pb.h"
+#include "system/proto/app.pb.h"
 namespace PS {
 
 class App : public Customer {

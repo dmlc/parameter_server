@@ -1,5 +1,5 @@
 #pragma once
-#include "proto/task.pb.h"
+#include "system/proto/task.pb.h"
 #include "util/common.h"
 #include "system/task_tracker.h"
 #include "system/van.h"

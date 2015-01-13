@@ -7,7 +7,7 @@
 #include "util/integral_types.h"
 #include "util/common.h"
 #include "glog/logging.h"
-#include "proto/config.pb.h"
+#include "data/proto/data.pb.h"
 
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"

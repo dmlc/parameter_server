@@ -1,5 +1,5 @@
 #pragma once
-#include "linear_method/linear_method.pb.h"
+#include "linear_method/proto/lm.pb.h"
 #include "linear_method/loss.h"
 #include "linear_method/penalty.h"
 #include "system/app.h"

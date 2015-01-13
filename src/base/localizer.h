@@ -180,7 +180,6 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
   auto new_info = info;
   new_info.set_sizeof_index(sizeof(uint32));
   new_info.set_nnz(new_index.size());
-  new_info.clear_ins_info();
   SizeR local(0, idx_dict.size());
   if (new_info.row_major())  {
     local.to(new_info.mutable_col());

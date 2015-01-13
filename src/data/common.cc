@@ -72,30 +72,30 @@ ExampleInfo mergeExampleInfo(const ExampleInfo& A, const ExampleInfo& B) {
   return C;
 }
 
-InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
-  auto as = A.fea_grp_size();
-  auto bs = B.fea_grp_size();
-  if (!as) return B;
-  if (!bs) return A;
-  CHECK_EQ(as, bs);
+// InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B) {
+//   auto as = A.fea_grp_size();
+//   auto bs = B.fea_grp_size();
+//   if (!as) return B;
+//   if (!bs) return A;
+//   CHECK_EQ(as, bs);
 
-  CHECK_EQ(A.label_type(), B.label_type());
-  CHECK_EQ(A.fea_type(), B.fea_type());
+//   CHECK_EQ(A.label_type(), B.label_type());
+//   CHECK_EQ(A.fea_type(), B.fea_type());
 
-  InstanceInfo C = A;
-  C.set_num_ins(A.num_ins() + B.num_ins());
-  C.set_nnz_ele(A.nnz_ele() + B.nnz_ele());
-  C.clear_fea_grp();
-  for (int i = 0; i < as; ++i) {
-    auto G = A.fea_grp(i);
-    G.set_nnz_ins(G.nnz_ins() + B.fea_grp(i).nnz_ins());
-    G.set_nnz_ele(G.nnz_ele() + B.fea_grp(i).nnz_ele());
-    G.set_fea_begin(std::min(G.fea_begin(), B.fea_grp(i).fea_begin()));
-    G.set_fea_end(std::max(G.fea_end(), B.fea_grp(i).fea_end()));
-    *C.add_fea_grp() = G;
-  }
-  return C;
-}
+//   InstanceInfo C = A;
+//   C.set_num_ins(A.num_ins() + B.num_ins());
+//   C.set_nnz_ele(A.nnz_ele() + B.nnz_ele());
+//   C.clear_fea_grp();
+//   for (int i = 0; i < as; ++i) {
+//     auto G = A.fea_grp(i);
+//     G.set_nnz_ins(G.nnz_ins() + B.fea_grp(i).nnz_ins());
+//     G.set_nnz_ele(G.nnz_ele() + B.fea_grp(i).nnz_ele());
+//     G.set_fea_begin(std::min(G.fea_begin(), B.fea_grp(i).fea_begin()));
+//     G.set_fea_end(std::max(G.fea_end(), B.fea_grp(i).fea_end()));
+//     *C.add_fea_grp() = G;
+//   }
+//   return C;
+// }
 
 DataConfig searchFiles(const DataConfig& config) {
   int n = config.file_size();

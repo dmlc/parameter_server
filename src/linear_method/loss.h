@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
 #include "base/matrix.h"
-#include "linear_method/linear_method.pb.h"
+#include "linear_method/proto/lm.pb.h"
 #include <Eigen/Dense>
 
 namespace PS {

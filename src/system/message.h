@@ -3,9 +3,8 @@
 #include "util/common.h"
 #include "util/threadpool.h"
 #include "base/shared_array.h"
-#include "proto/task.pb.h"
-#include "proto/filter.pb.h"
-#include "proto/common.pb.h"
+#include "system/proto/task.pb.h"
+#include "filter/proto/filter.pb.h"
 
 namespace PS {
 

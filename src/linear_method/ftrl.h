@@ -93,7 +93,7 @@ public:
   void evaluate(SGDProgress* prog) {
     auto s = this->model_.state();
     prog->set_nnz(s.nnz);
-    prog->set_objective(s.norm1 * s.lambda1 + .5 * s.lambda2 * sqrt(s.norm2));
+    // prog->add_objective(s.norm1 * s.lambda1 + .5 * s.lambda2 * sqrt(s.norm2));
   }
 
   void saveModel() {
@@ -114,9 +114,9 @@ class FTRLWorker : public FTRLWorkerBase<V>, LinearMethod<V> {
   bool readMinibatch(StreamReader<V>& reader, SparseMinibatch<V>* data) {
     // read a minibatch
     MatrixPtrList<V> ins;
-    bool ret = reader.readMatrices(1000, &ins);
+    if (!reader.readMatrices(1000, &ins)) return false;  // TODO set by config
     CHECK_EQ(ins.size(), 2);
-    // // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
+    // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
     data->label = ins[0];
     data->batch_id = batch_id_ ++;
 
@@ -137,8 +137,7 @@ class FTRLWorker : public FTRLWorkerBase<V>, LinearMethod<V> {
     tail->set_query_key(this->conf_.solver().tail_feature_freq());
     tail->set_query_value(true);
     data->pull_time = this->model_.pull(msg);
-
-    return ret;
+    return true;
   }
   void computeGradient(SparseMinibatch<V>& data) {
     // release some memory

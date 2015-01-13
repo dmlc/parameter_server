@@ -1,9 +1,8 @@
 #pragma once
 #include "util/common.h"
-#include "proto/config.pb.h"
-#include "proto/instance.pb.h"
-#include "proto/example.pb.h"
-#include "proto/matrix.pb.h"
+#include "data/proto/example.pb.h"
+#include "data/proto/data.pb.h"
+#include "base/proto/matrix.pb.h"
 
 namespace PS {
 
@@ -20,7 +19,7 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
 // locate the i-th file in *conf*, append it with suffix, and keep the rest metadata
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix = "");
 
-InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B);
+// InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B);
 
 ExampleInfo mergeExampleInfo(const ExampleInfo& A, const ExampleInfo& B);
 

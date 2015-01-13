@@ -1,6 +1,6 @@
 #pragma once
 #include "system/app.h"
-#include "factorization_machine/fm.pb.h"
+#include "factorization_machine/proto/fm.pb.h"
 namespace PS {
 namespace FM {
 

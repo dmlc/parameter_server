@@ -1,7 +1,6 @@
 #pragma once
 #include "util/producer_consumer.h"
-#include "learner/sgd.pb.h"
-#include "data/stream_reader.h"
+#include "learner/proto/sgd.pb.h"
 #include "base/localizer.h"
 #include "system/dist_monitor.h"
 #include "system/postmaster.h"
@@ -37,16 +36,20 @@ class SGDScheduler : public App {
 
   void updateModel(const DataConfig& data) {
     monitor_.monitor(1, std::bind(&SGDScheduler::showProgress, this));
+    // ask the servers to report the progress
+    Task task;
+    task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+    taskpool(kServerGroup)->submitAndWait(task);
+    // ask the workers to commpute the gradients
     auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
     std::vector<Task> tasks(conf.size());
     for (int i = 0; i < conf.size(); ++i) {
-      tasks[i].mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+      auto sgd = tasks[i].mutable_sgd();
+      sgd->set_cmd(SGDCall::UPDATE_MODEL);
+      *sgd->mutable_data() = conf[i];
     }
     taskpool(kWorkerGroup)->submitAndWait(tasks);
   }
-
-  // virtual void process(const MessagePtr& msg) {
-  // }
 
  protected:
   virtual void showProgress() {
@@ -109,7 +112,7 @@ class SGDServer : public SGDCompNode<Model> {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
       this->reporter_.reporter(this->schedulerID(), 1, [this](SGDProgress* prog){
-          // this->model_.evaluate(prog);
+          evaluate(prog);
         });
     } else if (sgd.cmd() == SGDCall::SAVE_MODEL) {
       saveModel();
@@ -117,6 +120,7 @@ class SGDServer : public SGDCompNode<Model> {
   }
 
   // virtual void updateModel() = 0;
+  virtual void evaluate(SGDProgress* prog) =  0;
   virtual void saveModel() = 0;
 };
 
@@ -138,12 +142,12 @@ class SGDWorker : public SGDCompNode<Model> {
       // start data prefecter thread
       Reader reader;
       reader.init(sgd.data());
-      data_prefetcher_.setCapacity(10000);
+      data_prefetcher_.setCapacity(10000);  // TODO set by config
       data_prefetcher_.startProducer(
           [this, &reader](Minibatch* data, size_t* size)->bool {
-            bool ret = readMinibatch(reader, data);
+            if (!readMinibatch(reader, data)) return false;
             *size = data->size();
-            return ret;
+            return true;
         });
       // compute gradient
       Minibatch data;
@@ -162,23 +166,23 @@ class SGDWorker : public SGDCompNode<Model> {
   std::mutex progress_mu_;
 };
 
-template<typename V>
-struct AdaGradEntry {
-  AdaGradEntry() { weight = 0; sum_sqr_grad = 1e-20; }
-  V weight;
-  V sum_sqr_grad;
-  static V eta = .1;
-  static V lambda = 1;
-  void get(char const* data) {
-    V grad = *((V*)data);
-    sum_sqr_grad += grad * grad;
-    V delta = eta * (grad / sqrt(sum_sqr_grad) + lambda * weight);
-    weight -= delta > 1.0 ? 1.0 : ( delta < -1.0 ? -1.0 : delta );
-  }
-  void set(char* data) {
-    *((V*)data) = weight;
-  }
-};
+// template<typename V>
+// struct AdaGradEntry {
+//   AdaGradEntry() { weight = 0; sum_sqr_grad = 1e-20; }
+//   V weight;
+//   V sum_sqr_grad;
+//   static V eta = .1;
+//   static V lambda = 1;
+//   void get(char const* data) {
+//     V grad = *((V*)data);
+//     sum_sqr_grad += grad * grad;
+//     V delta = eta * (grad / sqrt(sum_sqr_grad) + lambda * weight);
+//     weight -= delta > 1.0 ? 1.0 : ( delta < -1.0 ? -1.0 : delta );
+//   }
+//   void set(char* data) {
+//     *((V*)data) = weight;
+//   }
+// };
 
 // template<typename V>
 // class AdaGradUpdater : public KVStore<Key, AdaGradEntry<V>> {

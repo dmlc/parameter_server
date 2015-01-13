@@ -1,12 +1,12 @@
 #pragma once
 #include "data/common.h"
 #include "base/shared_array_inl.h"
-#include "proto/example.pb.h"
-#include "proto/matrix.pb.h"
+#include "data/proto/example.pb.h"
+#include "base/proto/matrix.pb.h"
 #include "data/text_parser.h"
 #include "data/info_parser.h"
 #include "util/filelinereader.h"
-#include "base/matrix_io_inl.h"
+// #include "base/matrix_io_inl.h"
 #include "util/recordio.h"
 namespace PS {
 
@@ -183,6 +183,7 @@ bool StreamReader<V>::readMatricesFromText() { // uint32 num_ex, MatrixPtrList<V
       }
     }
   }
+  // LL << num_read << " " << reach_data_end_;
   fillMatrices();
   return !reach_data_end_;
 }

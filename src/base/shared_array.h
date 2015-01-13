@@ -4,7 +4,8 @@
 #include "util/file.h"
 #include "base/range.h"
 #include "Eigen/Core"
-#include "proto/config.pb.h"
+#include "data/proto/data.pb.h"
+#include "parameter/proto/param.pb.h"
 
 namespace PS {
 

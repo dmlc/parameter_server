@@ -1,7 +1,7 @@
 #pragma once
 #include "system/customer.h"
+#include "parameter/proto/param.pb.h"
 #include "parameter/frequency_filter.h"
-#include "proto/common.pb.h"
 namespace PS {
 
 template <typename K> class SharedParameter;
