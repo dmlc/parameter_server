@@ -128,13 +128,6 @@ void Postoffice::reply(
   MessagePtr re(new Message(tk)); re->recver = recver; queue(re);
 }
 
-template <class P>
-void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
-  string str; proto.SerializeToString(&str);
-  reply(msg->sender, msg->task, str);
-  msg->replied = true;
-}
-
 void Postoffice::queue(const MessagePtr& msg) {
   if (msg->valid) {
     sending_queue_.push(msg);

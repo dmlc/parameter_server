@@ -290,10 +290,10 @@ class SGDCall : public ::google::protobuf::Message {
   inline ::PS::DataConfig* release_data();
   inline void set_allocated_data(::PS::DataConfig* data);
 
-  // optional int32 report_interval = 4;
+  // optional int32 report_interval = 3 [default = 1];
   inline bool has_report_interval() const;
   inline void clear_report_interval();
-  static const int kReportIntervalFieldNumber = 4;
+  static const int kReportIntervalFieldNumber = 3;
   inline ::google::protobuf::int32 report_interval() const;
   inline void set_report_interval(::google::protobuf::int32 value);
 
@@ -513,7 +513,7 @@ inline void SGDCall::set_allocated_data(::PS::DataConfig* data) {
   }
 }
 
-// optional int32 report_interval = 4;
+// optional int32 report_interval = 3 [default = 1];
 inline bool SGDCall::has_report_interval() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -524,7 +524,7 @@ inline void SGDCall::clear_has_report_interval() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void SGDCall::clear_report_interval() {
-  report_interval_ = 0;
+  report_interval_ = 1;
   clear_has_report_interval();
 }
 inline ::google::protobuf::int32 SGDCall::report_interval() const {

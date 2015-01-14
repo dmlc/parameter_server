@@ -98,8 +98,9 @@ class SGDServer : public SGDCompNode {
   virtual void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
-      this->reporter_.reporter(this->schedulerID(), 1, [this](SGDProgress* prog){
-          evaluate(prog);
+      this->reporter_.reporter(
+          this->schedulerID(), sgd.report_interval(), [this](SGDProgress* prog) {
+            evaluate(prog);
         });
     } else if (sgd.cmd() == SGDCall::SAVE_MODEL) {
       saveModel();
@@ -121,10 +122,11 @@ class SGDWorker : public SGDCompNode {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
       // start the progress reporter
-      this->reporter_.reporter(this->schedulerID(), 1, [this](SGDProgress* prog){
-          Lock l(progress_mu_);
-          *prog = progress_;
-          progress_.Clear();
+      this->reporter_.reporter(
+          this->schedulerID(), sgd.report_interval(), [this](SGDProgress* prog){
+            Lock l(progress_mu_);
+            *prog = progress_;
+            progress_.Clear();
         });
       // start data prefecter thread
       Reader reader;

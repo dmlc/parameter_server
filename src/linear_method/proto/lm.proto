@@ -3,6 +3,21 @@ package PS.LM;
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
 
+extend BCDConfig {
+  // Used by the trust region method. All changes of parameters will be bounded
+  // by *delta*. *delta* is updated according to the convergence,  whose intial
+  // value is *delta_init_value* and maximal value is *delta_max_value*
+  optional double delta_init_value = 101 [default = 1];
+  optional double delta_max_value = 102 [default = 5];
+  // kkt_filter_threshold = max_gradient_violation / num_examples *
+  // kkt_filter_threshold_ratio. increasing this number reduces the effect of
+  // kkt filter.
+  optional double kkt_filter_threshold_ratio = 103 [default = 10];
+
+  // only support constant learning rate
+  optional LearningRateConfig learning_rate = 104;
+}
+
 message Config {
   optional DataConfig training_data = 1;
   optional DataConfig validation_data = 2;
@@ -22,20 +37,6 @@ message Config {
   optional FTRLConfig ftrl = 16;
 }
 
-extend BCDConfig {
-  // Used by the trust region method. All changes of parameters will be bounded
-  // by *delta*. *delta* is updated according to the convergence,  whose intial
-  // value is *delta_init_value* and maximal value is *delta_max_value*
-  optional double delta_init_value = 101 [default = 1];
-  optional double delta_max_value = 102 [default = 5];
-  // kkt_filter_threshold = max_gradient_violation / num_examples *
-  // kkt_filter_threshold_ratio. increasing this number reduces the effect of
-  // kkt filter.
-  optional double kkt_filter_threshold_ratio = 103 [default = 10];
-
-  // only support constant learning rate
-  optional LearningRateConfig learning_rate = 104;
-}
 
 message FTRLConfig {
   optional int32 minibatch = 1 [default = 1000];

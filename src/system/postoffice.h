@@ -84,4 +84,11 @@ class Postoffice {
   // Dashboard dashboard_;
 };
 
+template <class P>
+void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
+  string str; proto.SerializeToString(&str);
+  reply(msg->sender, msg->task, str);
+  msg->replied = true;
+}
+
 } // namespace PS

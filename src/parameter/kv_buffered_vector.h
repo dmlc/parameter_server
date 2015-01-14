@@ -11,6 +11,9 @@ using KVBufferedVectorPtr = std::shared_ptr<KVBufferedVector<K,V>>;
 template <typename K, typename V>
 class KVBufferedVector : public KVVector<K, V> {
  public:
+  KVBufferedVector(const string& my_name, const string& parent_name) :
+      KVVector<K, V>(my_name, parent_name) { }
+
   // return the mareged data received at time t, then *delete* it. If no
   // message, or empty messages are received at time t, then call received(t)
   // will get an error
