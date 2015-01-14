@@ -1,7 +1,7 @@
 #pragma once
 namespace PS {
 
-static void textToProto() {
+void textToProto() {
   // TODO
   // string format = FLAGS_format;
   // std::transform(format.begin(), format.end(), format.begin(), ::tolower);
@@ -37,4 +37,5 @@ static void textToProto() {
   //   std::cerr << ignored << " bad instances are skipped" << std::endl;
   // }
 }
+
 } // namespace PS

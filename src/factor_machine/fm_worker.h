@@ -6,7 +6,7 @@
 namespace PS {
 namespace FM {
 
-class FMWorker : public SGDWorker<Real> {
+class FMWorker {
  public:
   virtual void init() {
     REGISTER_CHILD_CUSTOMER(name() + "_w", w_, name());

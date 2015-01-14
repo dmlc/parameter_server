@@ -12,9 +12,8 @@ message Config {
   optional LossConfig loss = 10;
   optional PenaltyConfig penalty = 11;
 
-
-  optional BCDConfig darlin = 12;
-  optional FTRLConfig ftrl = 16;
+  optional SGDConfig sgd = 17;
+  optional BCDConfig darlin = 15;
 }
 
 extend BCDConfig {
@@ -32,11 +31,19 @@ extend BCDConfig {
   optional LearningRateConfig learning_rate = 104;
 }
 
-message FTRLConfig {
-  optional int32 minibatch = 1 [default = 1000];
-  optional int32 tail_feature_freq = 2 [default = 4];
+message SGDConfig {
+  enum Algo {
+    ASYNC_SGD = 1;
+    FTRL = 2;
+  }
+  required Algo algo = 1;
 
-  optional LearningRateConfig learning_rate = 3;
+  optional int32 minibatch = 2 [default = 1000];
+  optional LearningRateConfig learning_rate = 4;
+
+  optional bool ada_grad = 5 [default = true];
+
+  optional int32 tail_feature_freq = 6 [default = 4];
   optional int32 countmin_k = 7 [default = 2];
   optional float countmin_n = 8 [default = 1e8];
 }

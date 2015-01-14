@@ -2,6 +2,23 @@
 #include "parameter/shared_parameter.h"
 namespace PS {
 
+template <typename K, typename S>
+class KVState : public SharedParameter<K> {
+ public:
+  KVState(const string& my_name, const string& parent_name) :
+      SharedParameter<K>(my_name, parent_name) { }
+  virtual ~KVState() {}
+
+  // only supports fix size entry_sync_size
+  // TODO if entry_sync_size == -1, then allow variable length
+  void setEntrySyncSize(int k) { k_ = k; }
+  void setState(const S& s) { state_ = s; }
+  const S& state() { return state_; }
+ protected:
+  int k_ = 1;
+  S state_;
+};
+
 // key value storage.
 // K: key
 // E: entry
@@ -10,18 +27,14 @@ namespace PS {
 // get(char const* data, S* state)
 // put(char* data, S* state), where data has length *entry_sync_size*
 template <typename K, typename E, typename S>
-class KVStore : public SharedParameter<K> {
+class KVStore : public KVState<K, S> {
  public:
   KVStore(const string& my_name, const string& parent_name) :
-      SharedParameter<K>(my_name, parent_name) { }
-  // only supports fix size entry_sync_size
-  // TODO if entry_sync_size == -1, then allow variable length
-  void setEntrySyncSize(int k) { k_ = k; }
-  void setState(const S& s) { state_ = s; }
-  const S& state() { return state_; }
-
-  // KVStore(int entry_sync_size) : k_(entry_sync_size) { }
+      KVState<K, S>(my_name, parent_name) { }
   virtual ~KVStore() {}
+
+  using KVState<K, S>::k_;
+  using KVState<K, S>::state_;
 
   // TODO multi-thread by shard
   virtual void getValue(const MessagePtr& msg) {
@@ -54,9 +67,7 @@ class KVStore : public SharedParameter<K> {
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
  protected:
-  int k_ = 1;
   std::unordered_map<K, E> data_;
-  S state_;
 };
 
 } // namespace PS

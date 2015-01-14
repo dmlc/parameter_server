@@ -38,11 +38,30 @@ void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
 void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
 
 class Config;
-class FTRLConfig;
+class SGDConfig;
 class LossConfig;
 class PenaltyConfig;
 class LearningRateConfig;
 
+enum SGDConfig_Algo {
+  SGDConfig_Algo_ASYNC_SGD = 1,
+  SGDConfig_Algo_FTRL = 2
+};
+bool SGDConfig_Algo_IsValid(int value);
+const SGDConfig_Algo SGDConfig_Algo_Algo_MIN = SGDConfig_Algo_ASYNC_SGD;
+const SGDConfig_Algo SGDConfig_Algo_Algo_MAX = SGDConfig_Algo_FTRL;
+const int SGDConfig_Algo_Algo_ARRAYSIZE = SGDConfig_Algo_Algo_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* SGDConfig_Algo_descriptor();
+inline const ::std::string& SGDConfig_Algo_Name(SGDConfig_Algo value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    SGDConfig_Algo_descriptor(), value);
+}
+inline bool SGDConfig_Algo_Parse(
+    const ::std::string& name, SGDConfig_Algo* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<SGDConfig_Algo>(
+    SGDConfig_Algo_descriptor(), name, value);
+}
 enum LossConfig_Type {
   LossConfig_Type_SQUARE = 1,
   LossConfig_Type_LOGIT = 2,
@@ -211,23 +230,23 @@ class Config : public ::google::protobuf::Message {
   inline ::PS::LM::PenaltyConfig* release_penalty();
   inline void set_allocated_penalty(::PS::LM::PenaltyConfig* penalty);
 
-  // optional .PS.BCDConfig darlin = 12;
+  // optional .PS.LM.SGDConfig sgd = 17;
+  inline bool has_sgd() const;
+  inline void clear_sgd();
+  static const int kSgdFieldNumber = 17;
+  inline const ::PS::LM::SGDConfig& sgd() const;
+  inline ::PS::LM::SGDConfig* mutable_sgd();
+  inline ::PS::LM::SGDConfig* release_sgd();
+  inline void set_allocated_sgd(::PS::LM::SGDConfig* sgd);
+
+  // optional .PS.BCDConfig darlin = 15;
   inline bool has_darlin() const;
   inline void clear_darlin();
-  static const int kDarlinFieldNumber = 12;
+  static const int kDarlinFieldNumber = 15;
   inline const ::PS::BCDConfig& darlin() const;
   inline ::PS::BCDConfig* mutable_darlin();
   inline ::PS::BCDConfig* release_darlin();
   inline void set_allocated_darlin(::PS::BCDConfig* darlin);
-
-  // optional .PS.LM.FTRLConfig ftrl = 16;
-  inline bool has_ftrl() const;
-  inline void clear_ftrl();
-  static const int kFtrlFieldNumber = 16;
-  inline const ::PS::LM::FTRLConfig& ftrl() const;
-  inline ::PS::LM::FTRLConfig* mutable_ftrl();
-  inline ::PS::LM::FTRLConfig* release_ftrl();
-  inline void set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl);
 
   // @@protoc_insertion_point(class_scope:PS.LM.Config)
  private:
@@ -243,10 +262,10 @@ class Config : public ::google::protobuf::Message {
   inline void clear_has_loss();
   inline void set_has_penalty();
   inline void clear_has_penalty();
+  inline void set_has_sgd();
+  inline void clear_has_sgd();
   inline void set_has_darlin();
   inline void clear_has_darlin();
-  inline void set_has_ftrl();
-  inline void clear_has_ftrl();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -256,8 +275,8 @@ class Config : public ::google::protobuf::Message {
   ::PS::DataConfig* model_input_;
   ::PS::LM::LossConfig* loss_;
   ::PS::LM::PenaltyConfig* penalty_;
+  ::PS::LM::SGDConfig* sgd_;
   ::PS::BCDConfig* darlin_;
-  ::PS::LM::FTRLConfig* ftrl_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
@@ -271,14 +290,14 @@ class Config : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class FTRLConfig : public ::google::protobuf::Message {
+class SGDConfig : public ::google::protobuf::Message {
  public:
-  FTRLConfig();
-  virtual ~FTRLConfig();
+  SGDConfig();
+  virtual ~SGDConfig();
 
-  FTRLConfig(const FTRLConfig& from);
+  SGDConfig(const SGDConfig& from);
 
-  inline FTRLConfig& operator=(const FTRLConfig& from) {
+  inline SGDConfig& operator=(const SGDConfig& from) {
     CopyFrom(from);
     return *this;
   }
@@ -292,17 +311,17 @@ class FTRLConfig : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const FTRLConfig& default_instance();
+  static const SGDConfig& default_instance();
 
-  void Swap(FTRLConfig* other);
+  void Swap(SGDConfig* other);
 
   // implements Message ----------------------------------------------
 
-  FTRLConfig* New() const;
+  SGDConfig* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const FTRLConfig& from);
-  void MergeFrom(const FTRLConfig& from);
+  void CopyFrom(const SGDConfig& from);
+  void MergeFrom(const SGDConfig& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -323,30 +342,68 @@ class FTRLConfig : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
+  typedef SGDConfig_Algo Algo;
+  static const Algo ASYNC_SGD = SGDConfig_Algo_ASYNC_SGD;
+  static const Algo FTRL = SGDConfig_Algo_FTRL;
+  static inline bool Algo_IsValid(int value) {
+    return SGDConfig_Algo_IsValid(value);
+  }
+  static const Algo Algo_MIN =
+    SGDConfig_Algo_Algo_MIN;
+  static const Algo Algo_MAX =
+    SGDConfig_Algo_Algo_MAX;
+  static const int Algo_ARRAYSIZE =
+    SGDConfig_Algo_Algo_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Algo_descriptor() {
+    return SGDConfig_Algo_descriptor();
+  }
+  static inline const ::std::string& Algo_Name(Algo value) {
+    return SGDConfig_Algo_Name(value);
+  }
+  static inline bool Algo_Parse(const ::std::string& name,
+      Algo* value) {
+    return SGDConfig_Algo_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
-  // optional int32 minibatch = 1 [default = 1000];
+  // required .PS.LM.SGDConfig.Algo algo = 1;
+  inline bool has_algo() const;
+  inline void clear_algo();
+  static const int kAlgoFieldNumber = 1;
+  inline ::PS::LM::SGDConfig_Algo algo() const;
+  inline void set_algo(::PS::LM::SGDConfig_Algo value);
+
+  // optional int32 minibatch = 2 [default = 1000];
   inline bool has_minibatch() const;
   inline void clear_minibatch();
-  static const int kMinibatchFieldNumber = 1;
+  static const int kMinibatchFieldNumber = 2;
   inline ::google::protobuf::int32 minibatch() const;
   inline void set_minibatch(::google::protobuf::int32 value);
 
-  // optional int32 tail_feature_freq = 2 [default = 4];
-  inline bool has_tail_feature_freq() const;
-  inline void clear_tail_feature_freq();
-  static const int kTailFeatureFreqFieldNumber = 2;
-  inline ::google::protobuf::int32 tail_feature_freq() const;
-  inline void set_tail_feature_freq(::google::protobuf::int32 value);
-
-  // optional .PS.LM.LearningRateConfig learning_rate = 3;
+  // optional .PS.LM.LearningRateConfig learning_rate = 4;
   inline bool has_learning_rate() const;
   inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 3;
+  static const int kLearningRateFieldNumber = 4;
   inline const ::PS::LM::LearningRateConfig& learning_rate() const;
   inline ::PS::LM::LearningRateConfig* mutable_learning_rate();
   inline ::PS::LM::LearningRateConfig* release_learning_rate();
   inline void set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate);
+
+  // optional bool ada_grad = 5 [default = true];
+  inline bool has_ada_grad() const;
+  inline void clear_ada_grad();
+  static const int kAdaGradFieldNumber = 5;
+  inline bool ada_grad() const;
+  inline void set_ada_grad(bool value);
+
+  // optional int32 tail_feature_freq = 6 [default = 4];
+  inline bool has_tail_feature_freq() const;
+  inline void clear_tail_feature_freq();
+  static const int kTailFeatureFreqFieldNumber = 6;
+  inline ::google::protobuf::int32 tail_feature_freq() const;
+  inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
   // optional int32 countmin_k = 7 [default = 2];
   inline bool has_countmin_k() const;
@@ -362,14 +419,18 @@ class FTRLConfig : public ::google::protobuf::Message {
   inline float countmin_n() const;
   inline void set_countmin_n(float value);
 
-  // @@protoc_insertion_point(class_scope:PS.LM.FTRLConfig)
+  // @@protoc_insertion_point(class_scope:PS.LM.SGDConfig)
  private:
+  inline void set_has_algo();
+  inline void clear_has_algo();
   inline void set_has_minibatch();
   inline void clear_has_minibatch();
-  inline void set_has_tail_feature_freq();
-  inline void clear_has_tail_feature_freq();
   inline void set_has_learning_rate();
   inline void clear_has_learning_rate();
+  inline void set_has_ada_grad();
+  inline void clear_has_ada_grad();
+  inline void set_has_tail_feature_freq();
+  inline void clear_has_tail_feature_freq();
   inline void set_has_countmin_k();
   inline void clear_has_countmin_k();
   inline void set_has_countmin_n();
@@ -377,21 +438,23 @@ class FTRLConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  int algo_;
   ::google::protobuf::int32 minibatch_;
-  ::google::protobuf::int32 tail_feature_freq_;
   ::PS::LM::LearningRateConfig* learning_rate_;
+  bool ada_grad_;
+  ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_ShutdownFile_linear_5fmethod_2fproto_2flm_2eproto();
 
   void InitAsDefaultInstance();
-  static FTRLConfig* default_instance_;
+  static SGDConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1006,15 +1069,53 @@ inline void Config::set_allocated_penalty(::PS::LM::PenaltyConfig* penalty) {
   }
 }
 
-// optional .PS.BCDConfig darlin = 12;
-inline bool Config::has_darlin() const {
+// optional .PS.LM.SGDConfig sgd = 17;
+inline bool Config::has_sgd() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void Config::set_has_darlin() {
+inline void Config::set_has_sgd() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void Config::clear_has_darlin() {
+inline void Config::clear_has_sgd() {
   _has_bits_[0] &= ~0x00000040u;
+}
+inline void Config::clear_sgd() {
+  if (sgd_ != NULL) sgd_->::PS::LM::SGDConfig::Clear();
+  clear_has_sgd();
+}
+inline const ::PS::LM::SGDConfig& Config::sgd() const {
+  return sgd_ != NULL ? *sgd_ : *default_instance_->sgd_;
+}
+inline ::PS::LM::SGDConfig* Config::mutable_sgd() {
+  set_has_sgd();
+  if (sgd_ == NULL) sgd_ = new ::PS::LM::SGDConfig;
+  return sgd_;
+}
+inline ::PS::LM::SGDConfig* Config::release_sgd() {
+  clear_has_sgd();
+  ::PS::LM::SGDConfig* temp = sgd_;
+  sgd_ = NULL;
+  return temp;
+}
+inline void Config::set_allocated_sgd(::PS::LM::SGDConfig* sgd) {
+  delete sgd_;
+  sgd_ = sgd;
+  if (sgd) {
+    set_has_sgd();
+  } else {
+    clear_has_sgd();
+  }
+}
+
+// optional .PS.BCDConfig darlin = 15;
+inline bool Config::has_darlin() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void Config::set_has_darlin() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void Config::clear_has_darlin() {
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Config::clear_darlin() {
   if (darlin_ != NULL) darlin_->::PS::BCDConfig::Clear();
@@ -1044,121 +1145,84 @@ inline void Config::set_allocated_darlin(::PS::BCDConfig* darlin) {
   }
 }
 
-// optional .PS.LM.FTRLConfig ftrl = 16;
-inline bool Config::has_ftrl() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void Config::set_has_ftrl() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void Config::clear_has_ftrl() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void Config::clear_ftrl() {
-  if (ftrl_ != NULL) ftrl_->::PS::LM::FTRLConfig::Clear();
-  clear_has_ftrl();
-}
-inline const ::PS::LM::FTRLConfig& Config::ftrl() const {
-  return ftrl_ != NULL ? *ftrl_ : *default_instance_->ftrl_;
-}
-inline ::PS::LM::FTRLConfig* Config::mutable_ftrl() {
-  set_has_ftrl();
-  if (ftrl_ == NULL) ftrl_ = new ::PS::LM::FTRLConfig;
-  return ftrl_;
-}
-inline ::PS::LM::FTRLConfig* Config::release_ftrl() {
-  clear_has_ftrl();
-  ::PS::LM::FTRLConfig* temp = ftrl_;
-  ftrl_ = NULL;
-  return temp;
-}
-inline void Config::set_allocated_ftrl(::PS::LM::FTRLConfig* ftrl) {
-  delete ftrl_;
-  ftrl_ = ftrl;
-  if (ftrl) {
-    set_has_ftrl();
-  } else {
-    clear_has_ftrl();
-  }
-}
-
 // -------------------------------------------------------------------
 
-// FTRLConfig
+// SGDConfig
 
-// optional int32 minibatch = 1 [default = 1000];
-inline bool FTRLConfig::has_minibatch() const {
+// required .PS.LM.SGDConfig.Algo algo = 1;
+inline bool SGDConfig::has_algo() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void FTRLConfig::set_has_minibatch() {
+inline void SGDConfig::set_has_algo() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void FTRLConfig::clear_has_minibatch() {
+inline void SGDConfig::clear_has_algo() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void FTRLConfig::clear_minibatch() {
+inline void SGDConfig::clear_algo() {
+  algo_ = 1;
+  clear_has_algo();
+}
+inline ::PS::LM::SGDConfig_Algo SGDConfig::algo() const {
+  return static_cast< ::PS::LM::SGDConfig_Algo >(algo_);
+}
+inline void SGDConfig::set_algo(::PS::LM::SGDConfig_Algo value) {
+  assert(::PS::LM::SGDConfig_Algo_IsValid(value));
+  set_has_algo();
+  algo_ = value;
+}
+
+// optional int32 minibatch = 2 [default = 1000];
+inline bool SGDConfig::has_minibatch() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SGDConfig::set_has_minibatch() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SGDConfig::clear_has_minibatch() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SGDConfig::clear_minibatch() {
   minibatch_ = 1000;
   clear_has_minibatch();
 }
-inline ::google::protobuf::int32 FTRLConfig::minibatch() const {
+inline ::google::protobuf::int32 SGDConfig::minibatch() const {
   return minibatch_;
 }
-inline void FTRLConfig::set_minibatch(::google::protobuf::int32 value) {
+inline void SGDConfig::set_minibatch(::google::protobuf::int32 value) {
   set_has_minibatch();
   minibatch_ = value;
 }
 
-// optional int32 tail_feature_freq = 2 [default = 4];
-inline bool FTRLConfig::has_tail_feature_freq() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void FTRLConfig::set_has_tail_feature_freq() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void FTRLConfig::clear_has_tail_feature_freq() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void FTRLConfig::clear_tail_feature_freq() {
-  tail_feature_freq_ = 4;
-  clear_has_tail_feature_freq();
-}
-inline ::google::protobuf::int32 FTRLConfig::tail_feature_freq() const {
-  return tail_feature_freq_;
-}
-inline void FTRLConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
-  set_has_tail_feature_freq();
-  tail_feature_freq_ = value;
-}
-
-// optional .PS.LM.LearningRateConfig learning_rate = 3;
-inline bool FTRLConfig::has_learning_rate() const {
+// optional .PS.LM.LearningRateConfig learning_rate = 4;
+inline bool SGDConfig::has_learning_rate() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void FTRLConfig::set_has_learning_rate() {
+inline void SGDConfig::set_has_learning_rate() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void FTRLConfig::clear_has_learning_rate() {
+inline void SGDConfig::clear_has_learning_rate() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void FTRLConfig::clear_learning_rate() {
+inline void SGDConfig::clear_learning_rate() {
   if (learning_rate_ != NULL) learning_rate_->::PS::LM::LearningRateConfig::Clear();
   clear_has_learning_rate();
 }
-inline const ::PS::LM::LearningRateConfig& FTRLConfig::learning_rate() const {
+inline const ::PS::LM::LearningRateConfig& SGDConfig::learning_rate() const {
   return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
 }
-inline ::PS::LM::LearningRateConfig* FTRLConfig::mutable_learning_rate() {
+inline ::PS::LM::LearningRateConfig* SGDConfig::mutable_learning_rate() {
   set_has_learning_rate();
   if (learning_rate_ == NULL) learning_rate_ = new ::PS::LM::LearningRateConfig;
   return learning_rate_;
 }
-inline ::PS::LM::LearningRateConfig* FTRLConfig::release_learning_rate() {
+inline ::PS::LM::LearningRateConfig* SGDConfig::release_learning_rate() {
   clear_has_learning_rate();
   ::PS::LM::LearningRateConfig* temp = learning_rate_;
   learning_rate_ = NULL;
   return temp;
 }
-inline void FTRLConfig::set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate) {
+inline void SGDConfig::set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate) {
   delete learning_rate_;
   learning_rate_ = learning_rate;
   if (learning_rate) {
@@ -1168,46 +1232,90 @@ inline void FTRLConfig::set_allocated_learning_rate(::PS::LM::LearningRateConfig
   }
 }
 
-// optional int32 countmin_k = 7 [default = 2];
-inline bool FTRLConfig::has_countmin_k() const {
+// optional bool ada_grad = 5 [default = true];
+inline bool SGDConfig::has_ada_grad() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void FTRLConfig::set_has_countmin_k() {
+inline void SGDConfig::set_has_ada_grad() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void FTRLConfig::clear_has_countmin_k() {
+inline void SGDConfig::clear_has_ada_grad() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void FTRLConfig::clear_countmin_k() {
+inline void SGDConfig::clear_ada_grad() {
+  ada_grad_ = true;
+  clear_has_ada_grad();
+}
+inline bool SGDConfig::ada_grad() const {
+  return ada_grad_;
+}
+inline void SGDConfig::set_ada_grad(bool value) {
+  set_has_ada_grad();
+  ada_grad_ = value;
+}
+
+// optional int32 tail_feature_freq = 6 [default = 4];
+inline bool SGDConfig::has_tail_feature_freq() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void SGDConfig::set_has_tail_feature_freq() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void SGDConfig::clear_has_tail_feature_freq() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void SGDConfig::clear_tail_feature_freq() {
+  tail_feature_freq_ = 4;
+  clear_has_tail_feature_freq();
+}
+inline ::google::protobuf::int32 SGDConfig::tail_feature_freq() const {
+  return tail_feature_freq_;
+}
+inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
+  set_has_tail_feature_freq();
+  tail_feature_freq_ = value;
+}
+
+// optional int32 countmin_k = 7 [default = 2];
+inline bool SGDConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void SGDConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void SGDConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void SGDConfig::clear_countmin_k() {
   countmin_k_ = 2;
   clear_has_countmin_k();
 }
-inline ::google::protobuf::int32 FTRLConfig::countmin_k() const {
+inline ::google::protobuf::int32 SGDConfig::countmin_k() const {
   return countmin_k_;
 }
-inline void FTRLConfig::set_countmin_k(::google::protobuf::int32 value) {
+inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
   set_has_countmin_k();
   countmin_k_ = value;
 }
 
 // optional float countmin_n = 8 [default = 1e+08];
-inline bool FTRLConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+inline bool SGDConfig::has_countmin_n() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void FTRLConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000010u;
+inline void SGDConfig::set_has_countmin_n() {
+  _has_bits_[0] |= 0x00000040u;
 }
-inline void FTRLConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000010u;
+inline void SGDConfig::clear_has_countmin_n() {
+  _has_bits_[0] &= ~0x00000040u;
 }
-inline void FTRLConfig::clear_countmin_n() {
+inline void SGDConfig::clear_countmin_n() {
   countmin_n_ = 1e+08f;
   clear_has_countmin_n();
 }
-inline float FTRLConfig::countmin_n() const {
+inline float SGDConfig::countmin_n() const {
   return countmin_n_;
 }
-inline void FTRLConfig::set_countmin_n(float value) {
+inline void SGDConfig::set_countmin_n(float value) {
   set_has_countmin_n();
   countmin_n_ = value;
 }
@@ -1394,6 +1502,10 @@ inline void LearningRateConfig::set_beta(double value) {
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::SGDConfig_Algo>() {
+  return ::PS::LM::SGDConfig_Algo_descriptor();
+}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::LM::LossConfig_Type>() {
   return ::PS::LM::LossConfig_Type_descriptor();

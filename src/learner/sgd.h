@@ -7,17 +7,16 @@
 #include "system/app.h"
 namespace PS {
 
-// stochastic gradient descent solver
-
-class SGDScheduler : public App {
+// interface for stochastic gradient descent solver
+class ISGDScheduler : public App {
  public:
-  SGDScheduler(const string& name)
+  ISGDScheduler(const string& name)
       : App(name), monitor_(name+"_monitor", name) {
     using namespace std::placeholders;
-    monitor_.setDataMerger(std::bind(&SGDScheduler::addProgress, this, _1, _2));
+    monitor_.setDataMerger(std::bind(&ISGDScheduler::addProgress, this, _1, _2));
 
   }
-  virtual ~SGDScheduler() { }
+  virtual ~ISGDScheduler() { }
 
   void saveModel() {
     Task task;
@@ -26,7 +25,7 @@ class SGDScheduler : public App {
   }
 
   void updateModel(const DataConfig& data) {
-    monitor_.monitor(1, std::bind(&SGDScheduler::showProgress, this));
+    monitor_.monitor(1, std::bind(&ISGDScheduler::showProgress, this));
     // ask the servers to report the progress
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
@@ -90,10 +89,10 @@ class SGDCompNode : public App {
   DistMonitor<SGDProgress> reporter_;
 };
 
-class SGDServer : public SGDCompNode {
+class ISGDServer : public SGDCompNode {
  public:
-  SGDServer(const string& name) : SGDCompNode(name) { }
-  virtual ~SGDServer() { }
+  ISGDServer(const string& name) : SGDCompNode(name) { }
+  virtual ~ISGDServer() { }
 
   virtual void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
@@ -113,10 +112,10 @@ class SGDServer : public SGDCompNode {
 };
 
 template <typename Reader, typename Minibatch>
-class SGDWorker : public SGDCompNode {
+class ISGDWorker : public SGDCompNode {
  public:
-  SGDWorker(const string& name) : SGDCompNode(name) { }
-  virtual ~SGDWorker() { }
+  ISGDWorker(const string& name) : SGDCompNode(name) { }
+  virtual ~ISGDWorker() { }
 
   virtual void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
