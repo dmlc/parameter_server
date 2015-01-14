@@ -40,7 +40,7 @@ class BCDScheduler : public App, public BCDCommon {
       *bcd->mutable_data() = confs[i];
     }
     int hit_cache = 0;
-    taskpool(kWorkerGroup)->submitAndWait(loads, [this, &hit_cache](){
+    port(kWorkerGroup)->submitAndWait(loads, [this, &hit_cache](){
         LoadDataReturn info; CHECK(info.ParseFromString(exec_.lastRecvReply()));
         // LL << info.DebugString();
         g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
@@ -67,7 +67,7 @@ class BCDScheduler : public App, public BCDCommon {
     prep_bcd->set_cmd(BCDCall::PREPROCESS_DATA);
     for (auto grp : fea_grp_) prep_bcd->add_fea_grp(grp);
     prep_bcd->set_hit_cache(hit_cache > 0);
-    taskpool(kCompGroup)->submitAndWait(preprocess);
+    port(kCompGroup)->submitAndWait(preprocess);
     LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
     if (bcd_conf_.tail_feature_freq()) {
       LI << "Features with frequency <= " << bcd_conf_.tail_feature_freq()

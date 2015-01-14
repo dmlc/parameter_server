@@ -22,7 +22,7 @@ class SGDScheduler : public App {
   void saveModel() {
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
-    taskpool(kServerGroup)->submitAndWait(task);
+    port(kServerGroup)->submitAndWait(task);
   }
 
   void updateModel(const DataConfig& data) {
@@ -30,7 +30,7 @@ class SGDScheduler : public App {
     // ask the servers to report the progress
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
-    taskpool(kServerGroup)->submitAndWait(task);
+    port(kServerGroup)->submitAndWait(task);
     // ask the workers to commpute the gradients
     auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
     std::vector<Task> tasks(conf.size());
@@ -39,7 +39,7 @@ class SGDScheduler : public App {
       sgd->set_cmd(SGDCall::UPDATE_MODEL);
       *sgd->mutable_data() = conf[i];
     }
-    taskpool(kWorkerGroup)->submitAndWait(tasks);
+    port(kWorkerGroup)->submitAndWait(tasks);
   }
 
  protected:

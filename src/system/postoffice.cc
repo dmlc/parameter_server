@@ -84,7 +84,7 @@ void Postoffice::run() {
       LI << "Scheduler has connected " << FLAGS_num_servers << " servers and "
          << FLAGS_num_workers << " workers";
       // wait until app has been created at all computation nodes
-      app_->taskpool(kCompGroup)->waitOutgoingTask(1);
+      app_->port(kCompGroup)->waitOutgoingTask(1);
 
       // add all nodes into app
       auto nodes = yp().nodes();
@@ -98,7 +98,7 @@ void Postoffice::run() {
         *task.mutable_mng_node()->add_node() = n;
       }
       // then add them in servers and worekrs
-      app_->taskpool(kCompGroup)->submitAndWait(task);
+      app_->port(kCompGroup)->submitAndWait(task);
     }
 
     // run the application
@@ -107,7 +107,7 @@ void Postoffice::run() {
     // stop
     Task terminate;
     terminate.set_type(Task::TERMINATE);
-    app_->taskpool(kLiveGroup)->submit(terminate);
+    app_->port(kLiveGroup)->submit(terminate);
     usleep(800);
     LI << "System stopped\n";
   } else {
@@ -234,7 +234,7 @@ void Postoffice::manageNode(Task& tk) {
     task.set_time(1);
     task.mutable_mng_app()->set_cmd(ManageApp::ADD);
     *task.mutable_mng_app()->mutable_app_config() = app_conf_;
-    app_->taskpool(mng.node(0).id())->submit(task);
+    app_->port(mng.node(0).id())->submit(task);
     // check if all nodes are connected
     if (yp().num_workers() >= FLAGS_num_workers &&
         yp().num_servers() >= FLAGS_num_servers) {

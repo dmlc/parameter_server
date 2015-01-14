@@ -17,10 +17,10 @@ void FMScheduler::run() {
   monitor_thr_->detach();
 
   Task update = newTask(Call::UPDATE_MODEL);
-  taskpool(kActiveGroup)->submitAndWait(update);
+  port(kActiveGroup)->submitAndWait(update);
 
   Task save_model = newTask(Call::SAVE_MODEL);
-  taskpool(kActiveGroup)->submitAndWait(save_model);
+  port(kActiveGroup)->submitAndWait(save_model);
 }
 } // namespace FM
 } // namespace PS

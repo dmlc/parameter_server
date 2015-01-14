@@ -52,7 +52,7 @@ class DistMonitor : Customer {
               Task report;
               report.set_type(Task::CALL_CUSTOMER);
               report.set_msg(str);
-              auto mon = taskpool(monitor);
+              auto mon = port(monitor);
               if (mon) mon->submit(report);
           }
         }));

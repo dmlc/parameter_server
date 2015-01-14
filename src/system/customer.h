@@ -38,7 +38,7 @@ class Customer {
   // return the executor
   Executor& exec() { return exec_; }
   // return the remote_note by its name. TODO rename it to _port_
-  RNodePtr taskpool(const NodeID& k) { return exec_.rnode(k); }
+  RNodePtr port(const NodeID& k) { return exec_.rnode(k); }
 
  protected:
   string name_;

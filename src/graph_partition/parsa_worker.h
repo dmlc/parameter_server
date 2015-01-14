@@ -1,5 +1,5 @@
 #pragma once
-#include "proto/example.pb.h"
+#include "data/proto/example.pb.h"
 #include "graph_partition/double_linked_array.h"
 #include "graph_partition/parsa_common.h"
 #include "graph_partition/graph_partition.h"

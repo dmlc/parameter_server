@@ -17,7 +17,7 @@ class SharedParameter : public Customer {
   int sync(MessagePtr msg) {
     CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
     if (!msg->task.has_key_range()) Range<K>::all().to(msg->task.mutable_key_range());
-    return taskpool(msg->recver)->submit(msg);
+    return port(msg->recver)->submit(msg);
   }
   int push(MessagePtr msg) {
     set(msg)->set_cmd(CallSharedPara::PUSH);
@@ -28,15 +28,15 @@ class SharedParameter : public Customer {
     return sync(msg);
   }
   void waitInMsg(const NodeID& node, int time) {
-    taskpool(node)->waitIncomingTask(time);
+    port(node)->waitIncomingTask(time);
   }
 
   void waitOutMsg(const NodeID& node, int time) {
-    taskpool(node)->waitOutgoingTask(time);
+    port(node)->waitOutgoingTask(time);
   }
 
   void finish(const NodeID& node, int time) {
-    taskpool(node)->finishIncomingTask(time);
+    port(node)->finishIncomingTask(time);
   }
 
   // FreqencyFilter<K,V>& keyFilter(int chl) { return key_filter_[chl]; }
@@ -155,14 +155,14 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
 
   // reply if necessary
   if (pull && req) {
-    taskpool(reply->recver)->encodeFilter(reply);
+    port(reply->recver)->encodeFilter(reply);
     sys_.queue(reply);
     msg->replied = true;
   }
 }
 
 #define USING_SHARED_PARAMETER                  \
-  using Customer::taskpool;                     \
+  using Customer::port;                         \
   using Customer::myNodeID;                     \
   using SharedParameter<K>::get;                \
   using SharedParameter<K>::set;                \

@@ -3,6 +3,7 @@ import "base/proto/range.proto";
 import "data/proto/data.proto";
 import "data/proto/example.proto";
 import "parameter/proto/param.proto";
+
 message BCDConfig {
   // Divide a feature group into feature_block_ratio x nnz_feature_per_example
   // blocks
@@ -50,7 +51,7 @@ message BCDProgress {
   optional double total_time = 10;
   repeated double busy_time = 11;
 
-  extensions 50 to 99;
+  extensions 100 to 199;
 }
 
 

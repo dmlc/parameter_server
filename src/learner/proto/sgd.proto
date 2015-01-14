@@ -1,14 +1,6 @@
 package PS;
 import "data/proto/data.proto";
 
-// message SGDConfig {
-//   optional int32 minibatch_size = 1 [default = 1000];
-//   optional int32 tail_feature_freq = 2 [default = 4];
-
-//   optional int32 countmin_k = 7 [default = 2];
-//   optional float countmin_n = 8 [default = 1e8];
-// }
-
 message SGDProgress {
   repeated double objective = 1;
   optional uint64 num_examples_processed = 2;

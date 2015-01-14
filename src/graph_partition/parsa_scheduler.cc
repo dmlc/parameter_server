@@ -33,17 +33,17 @@ void ParsaScheduler::run() {
   auto parsa = conf_.parsa();
   if (parsa.stage0_blocks()) {
     Task partitionU = newTask(Call::PARTITION_U_STAGE_0);
-    CHECK(taskpool("W0"));
-    taskpool("W0")->submitAndWait(partitionU);
+    CHECK(port("W0"));
+    port("W0")->submitAndWait(partitionU);
   }
 
   if (parsa.stage1_block_size()) {
     Task partitionU = newTask(Call::PARTITION_U_STAGE_1);
-    taskpool(kActiveGroup)->submitAndWait(partitionU);
+    port(kActiveGroup)->submitAndWait(partitionU);
   }
 
   Task partitionV = newTask(Call::PARTITION_V);
-  taskpool(kActiveGroup)->submitAndWait(partitionV);
+  port(kActiveGroup)->submitAndWait(partitionV);
 }
 
 } // namespace PS

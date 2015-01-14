@@ -1,7 +1,21 @@
 package PS.LM;
-// import "base/proto/range.proto";
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
+
+message Config {
+  optional DataConfig training_data = 1;
+  optional DataConfig validation_data = 2;
+
+  optional DataConfig model_output = 4;
+  optional DataConfig model_input = 5;
+
+  optional LossConfig loss = 10;
+  optional PenaltyConfig penalty = 11;
+
+
+  optional BCDConfig darlin = 12;
+  optional FTRLConfig ftrl = 16;
+}
 
 extend BCDConfig {
   // Used by the trust region method. All changes of parameters will be bounded
@@ -17,26 +31,6 @@ extend BCDConfig {
   // only support constant learning rate
   optional LearningRateConfig learning_rate = 104;
 }
-
-message Config {
-  optional DataConfig training_data = 1;
-  optional DataConfig validation_data = 2;
-
-  optional DataConfig model_output = 4;
-  optional DataConfig model_input = 5;
-
-  optional LossConfig loss = 10;
-  optional PenaltyConfig penalty = 11;
-
-
-  optional BCDConfig darlin = 12;
-  // optional ParameterInitConfig init_w = 4;
-  // optional LearnerConfig learner = 13;
-  // optional SolverConfig solver = 14;
-  // optional DarlingConfig darling = 15;
-  optional FTRLConfig ftrl = 16;
-}
-
 
 message FTRLConfig {
   optional int32 minibatch = 1 [default = 1000];
@@ -76,54 +70,3 @@ message LearningRateConfig {
   optional double alpha = 3 [default = 1];
   optional double beta = 4 [default = 1];
 }
-
-// ///////////// the followings protobufs are used by the implementation ///////////
-// message Progress {
-//   repeated double objv = 1;
-//   optional double relative_objv = 2;
-//   optional uint64 nnz_w = 5;
-//   optional double violation = 6;
-//   optional uint64 nnz_active_set = 7;
-//   optional double training_auc = 8;
-//   // optional AUCData training_auc_data = 9;
-//   optional uint64 num_ex_trained = 12;
-//   repeated double acc = 13;
-//   repeated double auc = 14;
-
-//   // performance
-//   optional double total_time = 10;
-//   repeated double busy_time = 11;
-// }
-
-// message DataInfo {
-//   optional ExampleInfo example_info = 1;
-//   optional int32 hit_cache = 2;
-// }
-
-// message Call {
-//   enum Command {
-//     LOAD_DATA = 1;
-//     PREPROCESS_DATA = 2;
-//     UPDATE_MODEL = 3;
-//     EVALUATE_PROGRESS = 4;
-//     SAVE_MODEL = 5;  // save w
-//     RECOVER = 6;
-//     COMPUTE_VALIDATION_AUC = 7;
-//     REPORT_PROGRESS = 8;
-//     // SAVE_AS_DENSE = 7;     // save X * w in a given key range
-//   }
-//   required Command cmd = 1;
-//   optional PbRange key = 2;
-//   // optional int32 feature_group_id = 3;
-
-//   optional double kkt_filter_threshold = 4;
-//   optional bool reset_kkt_filter = 5;
-
-//   repeated int32 fea_grp = 8;
-//   optional bool hit_cache = 9;
-// }
-
-// // deprecated
-// message AggGradLearnerArg {
-//   optional double learning_rate = 1;
-// }

@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "data/stream_reader.h"
-#include "base/matrix_io_inl.h"
 #include "base/localizer.h"
 
 using namespace PS;

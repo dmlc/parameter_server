@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "data/slot_reader.h"
-#include "base/matrix_io_inl.h"
 
 using namespace PS;
 

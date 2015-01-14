@@ -51,7 +51,7 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
 
     // iterating
     int max_iter = darlin.max_pass_of_data();
-    auto pool = taskpool(kCompGroup);
+    auto pool = port(kCompGroup);
     // pick up a large enough time stamp to avoid any possible conflict
     int time = std::max(10000, pool->time() + (int)fea_grp_.size() * time_ratio_);
     const int first_time = time + 1;
@@ -329,7 +329,7 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
       }
 
       // mark the message finished, and reply the sender
-      taskpool(msg->sender)->finishIncomingTask(msg->task.time());
+      port(msg->sender)->finishIncomingTask(msg->task.time());
       sys_.reply(msg->sender, msg->task);
     };
 
