@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "base/auc.h"
-#include "base/shared_array_inl.h"
+#include "util/auc.h"
+#include "util/shared_array_inl.h"
 
 using namespace PS;
 

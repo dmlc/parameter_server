@@ -1,6 +1,6 @@
 #include "data/text_parser.h"
 #include "gtest/gtest.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 using namespace PS;
 
 SArray<Key> readKeyFromFile(string filename) {

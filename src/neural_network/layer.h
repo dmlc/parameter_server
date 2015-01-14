@@ -2,7 +2,7 @@
 
 #include "util/common.h"
 // #include "proto/neural_network.pb.h"
-#include "base/matrix.h"
+#include "util/matrix.h"
 #include "neural_network/parameter.h"
 #include "neural_network/activation_function_inl.h"
 

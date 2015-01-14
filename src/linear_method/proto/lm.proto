@@ -12,7 +12,9 @@ message Config {
   optional LossConfig loss = 10;
   optional PenaltyConfig penalty = 11;
 
-  optional SGDConfig sgd = 17;
+  optional LearningRateConfig learning_rate = 12;
+
+  optional SGDConfig async_sgd = 17;
   optional BCDConfig darlin = 15;
 }
 
@@ -33,7 +35,7 @@ extend BCDConfig {
 
 message SGDConfig {
   enum Algo {
-    ASYNC_SGD = 1;
+    STANDARD = 1;
     FTRL = 2;
   }
   required Algo algo = 1;
@@ -60,20 +62,19 @@ message LossConfig {
 
 message PenaltyConfig {
   enum Type {
-    L1 = 1;  // lambda(0) * ||w||_1 + lambda(1) * ||w||_F^2
-    L2 = 2;  // lambda(0) * ||w||_F^2
+    L1 = 1;  // coef(0) * ||w||_1 + coef(1) * ||w||_F^2
+    L2 = 2;  // coef(0) * ||w||_F^2
   }
   required Type type = 1;
-  repeated double lambda = 2;
+  repeated double coef = 2;
 }
 
 
 message LearningRateConfig {
   enum Type {
-    CONSTANT = 1;
+    CONSTANT = 1;  // = coef(0)
+    DECAY = 2;  // = coef(0) / (coef(1) + x), where x is defineable, such as sqrt(iter)
   }
   optional Type type = 1;
-  optional double eta = 2 [default = 1];
-  optional double alpha = 3 [default = 1];
-  optional double beta = 4 [default = 1];
+  repeated double coef = 2;
 }

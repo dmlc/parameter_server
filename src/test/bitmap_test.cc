@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "base/bitmap.h"
+#include "util/bitmap.h"
 using namespace PS;
 
 TEST(Bitmap, SetClear) {

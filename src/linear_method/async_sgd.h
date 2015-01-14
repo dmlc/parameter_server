@@ -4,6 +4,7 @@
 #include "util/evaluation.h"
 #include "parameter/kv_vector.h"
 #include "parameter/kv_store.h"
+#include "linear_method/learning_rate.h"
 namespace PS {
 namespace LM {
 
@@ -13,8 +14,7 @@ V project(V value, V bound) {
   return (value > bound ? bound : (value < - bound ? - bound : value));
 }
 
-// async sgd. support various loss functions and l_2
-// regularizer. check ftrl.h for l_1 regularizer
+// async sgd. support various loss functions and regularizers
 class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
  public:
   AsyncSGDScheduler(const string& name, const Config& conf)
@@ -29,55 +29,85 @@ class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
 
 template <typename V>
 struct SGDState {
+  SGDState() { }
+  SGDState(const PenaltyConfig& h_conf, const LearningRateConfig& lr_conf) {
+    lr = shared_ptr<LearningRate<V>>(new LearningRate<V>(lr_conf));
+    h = shared_ptr<Penalty<V>>(createPenalty<V>(h_conf));
+  }
+  virtual ~SGDState() { }
+
+  void update(V new_weight, V old_weight) {
+    if (new_weight == 0 && old_weight != 0) {
+      -- nnz;
+    } else if (new_weight != 0 && old_weight == 0) {
+      ++ nnz;
+    }
+  }
+
+  shared_ptr<LearningRate<V>> lr;
+  shared_ptr<Penalty<V>> h;
+
   int iter = 0;
-  LearningRateConfig lr;
-  V lambda = 0;
-  V penalty = 0;
+  size_t nnz = 0;
   V max_delta = 1.0;  // maximal change of weight
 };
 
 template <typename V>
 struct AdaGradEntry {
-  V weight = 0;
-  V sum_sqr_grad = 0;
-
   void get(char const* data, SGDState<V>* state) {
     // update model
     V grad = *((V*)data);
-    sum_sqr_grad += grad * grad;
-
-    V delta = state->lr.eta() * (grad / sqrt(sum_sqr_grad) + state->lambda * weight);
-    delta = project(delta, state->max_delta);
-    weight -= delta;
-
-    // update status
-    state->penalty -= 2.0 * weight * delta + delta * delta;
+    sum_sq_grad += grad * grad;
+    // state->update(weight, grad, sqrt(sum_sq_grad));
+    // TODO
   }
 
   void put(char* data, SGDState<V>* state) {
     *((V*)data) = weight;
   }
+  V weight = 0;
+  V sum_sq_grad = 0;
 };
 
 template <typename V>
 struct SGDEntry {
-  V weight = 0;
-
   void get(char const* data, SGDState<V>* state) {
-    // update model
     V grad = *((V*)data);
-    V delta = state->lr.eta() * (grad + state->lambda * weight);
-    delta = project(delta, state->max_delta);
-    weight -= delta;
-
-    // update status
-    state->penalty -= 2.0 * weight * delta + delta * delta;
+    // state->update(weight, grad);
+    // TODO
   }
-
   void put(char* data, SGDState<V>* state) {
     *((V*)data) = weight;
   }
+  V weight = 0;
 };
+
+template <typename V>
+struct FTRLEntry {
+  V w = 0;  // not necessary to store w, because it can be computed from z
+  V z = 0;
+  V sqrt_n = 0;
+
+  void get(char const* data, SGDState<V>* state) {
+    // update model
+    V w_old = w;
+    V grad = *((V*)data);
+    V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
+    V sigma = (sqrt_n_new - sqrt_n) / state->lr->alpha();
+
+    z += grad  - sigma * w;
+    sqrt_n = sqrt_n_new;
+
+    V eta = state->lr->eval(sqrt_n);
+    w = state->h->proximal(-z*eta, eta);
+    state->update(w, w_old);
+  }
+
+  void put(char* data, SGDState<V>* state) {
+    *((V*)data) = w;
+  }
+};
+
 
 
 template <typename V>
@@ -85,12 +115,17 @@ class AsyncSGDServer : public ISGDServer, public LinearMethod {
 public:
   AsyncSGDServer(const string& name, const Config& conf)
       : ISGDServer(name), LinearMethod(conf) {
-    if (conf_.sgd().ada_grad()) {
+    if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
       model_ = CHECK_NOTNULL((
-          new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name)));
+          new KVStore<Key, FTRLEntry<V>, SGDState<V>>(name+"_model", name)));
     } else {
-      model_ = CHECK_NOTNULL((
-          new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name)));
+      if (conf_.async_sgd().ada_grad()) {
+        model_ = CHECK_NOTNULL((
+            new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name)));
+      } else {
+        model_ = CHECK_NOTNULL((
+            new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name)));
+      }
     }
   }
 
@@ -101,22 +136,17 @@ public:
   void init() {
     model_->setEntrySyncSize(sizeof(V));
 
-    SGDState<V> state;
-    auto sgd = conf_.sgd();
-    // set learning rate and panlty
-    state.lr = sgd.learning_rate();
-    auto rg = conf_.penalty();
-    if (rg.lambda_size() > 0) state.lambda = rg.lambda(0);
+    SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     model_->setState(state);
 
     // tail feature filter
     model_->setTailFilterSize(
-        0, sgd.countmin_n()/sys_.yp().num_servers(), sgd.countmin_k());
+        0, conf_.async_sgd().countmin_n()/sys_.yp().num_servers(),
+        conf_.async_sgd().countmin_k());
   }
 
   void evaluate(SGDProgress* prog) {
-    // auto s = model_.state();
-    // prog->add_objective(s.norm1 * s.lambda1 + .5 * s.lambda2 * sqrt(s.norm2));
+    prog->set_nnz(model_->state().nnz);
   }
 
   void saveModel() {
@@ -141,7 +171,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
   virtual bool readMinibatch(StreamReader<V>& reader, SparseMinibatch<V>* data) {
     // read a minibatch
     MatrixPtrList<V> ins;
-    const auto& sgd = conf_.sgd();
+    const auto& sgd = conf_.async_sgd();
     if (!reader.readMatrices(sgd.minibatch(), &ins)) return false;
     CHECK_EQ(ins.size(), 2);
     // LL << ins[0]->debugString() << "\n" << ins[1]->debugString();
@@ -188,9 +218,9 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     auto w = model_.value(id);
     Xw.eigenArray() = *X * w.eigenArray();
     V objv = loss_->evaluate({Y, Xw.matrix()});
-    V auc = Evaluation<V>::auc(Y->value(), Xw);
     // not with penalty.
-    // penalty_->evaluate(w.matrix());
+    // + penalty_->evaluate(w.matrix());
+    V auc = Evaluation<V>::auc(Y->value(), Xw);
     {
       Lock l(this->progress_mu_);
       auto& p = this->progress_;

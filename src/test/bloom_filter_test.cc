@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "base/bloom_filter.h"
-#include "base/block_bloom_filter.h"
-#include "base/shared_array_inl.h"
+#include "util/bloom_filter.h"
+#include "util/block_bloom_filter.h"
+#include "util/shared_array_inl.h"
 
 DEFINE_int32(m, 100, "");
 DEFINE_int32(k, 2, "");

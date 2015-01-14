@@ -5,9 +5,9 @@
 #include "graph_partition/graph_partition.h"
 #include "util/producer_consumer.h"
 #include "data/stream_reader.h"
-#include "base/sparse_matrix.h"
-#include "base/bitmap.h"
-#include "base/block_bloom_filter.h"
+#include "util/sparse_matrix.h"
+#include "util/bitmap.h"
+#include "util/block_bloom_filter.h"
 #include "util/recordio.h"
 #include "parameter/kv_vector.h"
 namespace PS {
