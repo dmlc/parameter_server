@@ -1,7 +1,7 @@
 #pragma once
-#include "base/countmin.h"
+#include "util/countmin.h"
 #include "system/postoffice.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 
 namespace PS {
 

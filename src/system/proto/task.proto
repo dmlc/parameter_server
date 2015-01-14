@@ -1,5 +1,5 @@
 package PS;
-import "base/proto/range.proto";
+import "util/proto/range.proto";
 import "data/proto/data.proto";
 import "system/proto/node.proto";
 import "system/proto/app.proto";

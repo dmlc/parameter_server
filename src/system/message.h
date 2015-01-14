@@ -2,7 +2,7 @@
 
 #include "util/common.h"
 #include "util/threadpool.h"
-#include "base/shared_array.h"
+#include "util/shared_array.h"
 #include "system/proto/task.pb.h"
 #include "filter/proto/filter.pb.h"
 

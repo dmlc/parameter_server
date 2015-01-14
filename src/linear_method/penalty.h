@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include "base/matrix.h"
+#include "util/matrix.h"
 #include "linear_method/proto/lm.pb.h"
 namespace PS {
 namespace LM {

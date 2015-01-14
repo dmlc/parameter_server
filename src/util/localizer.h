@@ -1,6 +1,6 @@
 #pragma once
-#include "base/shared_array_inl.h"
-#include "base/sparse_matrix.h"
+#include "util/shared_array_inl.h"
+#include "util/sparse_matrix.h"
 #include "util/parallel_sort.h"
 #include "data/slot_reader.h"
 #include "util/crc32c.h"

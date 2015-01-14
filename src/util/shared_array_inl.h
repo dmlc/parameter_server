@@ -1,6 +1,6 @@
 #pragma once
-#include "base/shared_array.h"
-#include "base/dense_matrix.h"
+#include "util/shared_array.h"
+#include "util/dense_matrix.h"
 #include <random>
 #include "snappy.h"
 

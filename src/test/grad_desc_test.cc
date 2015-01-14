@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "linear_method/loss.h"
-#include "linear_method/linear_method.pb.h"
+// #include "linear_method/linear_method.pb.h"
 
 using namespace PS;
 using namespace LM;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "proto/neural_network.pb.h"
+// #include "proto/neural_network.pb.h"
 #include "neural_network/parameter.h"
 
 namespace PS {

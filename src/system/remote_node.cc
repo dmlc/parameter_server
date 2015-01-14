@@ -1,7 +1,7 @@
 #include "system/remote_node.h"
 #include "system/customer.h"
 #include "util/crc32c.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 namespace PS {
 
 DECLARE_bool(verbose);

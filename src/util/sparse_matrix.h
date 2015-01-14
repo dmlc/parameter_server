@@ -10,9 +10,9 @@
 #include "util/common.h"
 #include "util/threadpool.h"
 #include "util/parallel_sort.h"
-#include "base/matrix.h"
-#include "base/shared_array.h"
-#include "base/range.h"
+#include "util/matrix.h"
+#include "util/shared_array.h"
+#include "util/range.h"
 
 namespace PS {
 template<typename I, typename V> class SparseMatrix;

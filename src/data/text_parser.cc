@@ -1,7 +1,7 @@
 #include "data/text_parser.h"
 #include <functional>
 #include "util/strtonum.h"
-#include "util/MurmurHash3.h"
+#include "util/murmurhash3.h"
 
 namespace PS {
 

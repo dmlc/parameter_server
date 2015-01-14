@@ -1,8 +1,8 @@
 #pragma once
 #include "data/common.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 #include "data/proto/example.pb.h"
-#include "base/proto/matrix.pb.h"
+#include "util/proto/matrix.pb.h"
 #include "data/text_parser.h"
 #include "data/info_parser.h"
 #include "util/filelinereader.h"

@@ -1,7 +1,7 @@
 #include "system/van.h"
 #include <string.h>
 #include <zmq.h>
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 #include "util/local_machine.h"
 
 namespace PS {

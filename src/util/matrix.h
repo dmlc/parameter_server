@@ -3,8 +3,8 @@
 #include "Eigen/Dense"
 #include "proto/matrix.pb.h"
 #include "util/file.h"
-#include "base/range.h"
-#include "base/shared_array.h"
+#include "util/range.h"
+#include "util/shared_array.h"
 
 namespace PS {
 

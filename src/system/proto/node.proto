@@ -1,5 +1,5 @@
 package PS;
-import "base/proto/range.proto";
+import "util/proto/range.proto";
 
 message Node {
   enum Role {

@@ -1,7 +1,7 @@
 #pragma once
 #include "system/message.h"
 #include "filter/proto/filter.pb.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 
 namespace PS {
 

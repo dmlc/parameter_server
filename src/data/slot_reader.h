@@ -1,5 +1,5 @@
 #pragma once
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 #include "proto/example.pb.h"
 #include "data/common.h"
 

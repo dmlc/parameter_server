@@ -1,7 +1,7 @@
 #pragma once
 #include "linear_method/async_sgd.h"
 #include "data/stream_reader.h"
-#include "base/evaluation.h"
+#include "util/evaluation.h"
 #include "parameter/kv_vector.h"
 #include "parameter/kv_store.h"
 namespace PS {

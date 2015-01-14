@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "data/proto/example.pb.h"
 #include "data/proto/data.pb.h"
-#include "base/proto/matrix.pb.h"
+#include "util/proto/matrix.pb.h"
 
 namespace PS {
 

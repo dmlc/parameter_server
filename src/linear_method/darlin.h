@@ -1,7 +1,7 @@
 #pragma once
 #include "util/split.h"
 #include "learner/bcd.h"
-#include "base/bitmap.h"
+#include "util/bitmap.h"
 #include "filter/sparse_filter.h"
 #include "linear_method/linear_method.h"
 
