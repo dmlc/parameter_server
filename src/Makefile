@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O0 -ggdb
-# OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
+OPT = -O3 -ggdb
 
 ### third_party path
 THIRD_PARTY=$(shell cd ..;pwd)/third_party
