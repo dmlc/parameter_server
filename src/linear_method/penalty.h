@@ -66,15 +66,15 @@ class ElasticNet : public Penalty<T> {
 
 template<typename T>
 Penalty<T>* createPenalty(const PenaltyConfig& conf) {
-  CHECK_GE(conf.coef_size(), 1);
+  CHECK_GE(conf.lambda_size(), 1);
   switch (conf.type()) {
     case PenaltyConfig::L1: {
-      T l1 = conf.coef(0);
-      T l2 = conf.coef_size() > 1 ? conf.coef(1) : 0;
+      T l1 = conf.lambda(0);
+      T l2 = conf.lambda_size() > 1 ? conf.lambda(1) : 0;
       return new ElasticNet<T>(l1, l2);
     }
     case PenaltyConfig::L2:
-      return new ElasticNet<T>(0, conf.coef(0));
+      return new ElasticNet<T>(0, conf.lambda(0));
     default:
       CHECK(false) << "unknown type: " << conf.DebugString();
   }

@@ -202,8 +202,8 @@ class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
     CHECK_EQ(G.size(), range.size());
     CHECK_EQ(U.size(), range.size());
 
-    Real eta = bcd_conf_.GetExtension(learning_rate).coef(0);
-    Real lambda = conf_.penalty().coef(0);
+    Real eta = conf_.learning_rate().alpha();
+    Real lambda = conf_.penalty().lambda(0);
     Real delta_max = bcd_conf_.GetExtension(delta_max_value);
     auto& value = model_.value(grp);
     auto& active_set = active_set_[grp];
@@ -253,7 +253,7 @@ class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
       }
       nnz_as += active_set_[grp].nnz();
     }
-    prog->set_objective(objv * conf_.penalty().coef(0));
+    prog->set_objective(objv * conf_.penalty().lambda(0));
     prog->set_nnz_w(nnz_w);
     prog->set_violation(violation_);
     prog->set_nnz_active_set(nnz_as);

@@ -28,9 +28,6 @@ extend BCDConfig {
   // kkt_filter_threshold_ratio. increasing this number reduces the effect of
   // kkt filter.
   optional double kkt_filter_threshold_ratio = 103 [default = 10];
-
-  // only support constant learning rate
-  optional LearningRateConfig learning_rate = 104;
 }
 
 message SGDConfig {
@@ -41,7 +38,6 @@ message SGDConfig {
   required Algo algo = 1;
 
   optional int32 minibatch = 2 [default = 1000];
-  optional LearningRateConfig learning_rate = 4;
 
   optional bool ada_grad = 5 [default = true];
 
@@ -62,19 +58,20 @@ message LossConfig {
 
 message PenaltyConfig {
   enum Type {
-    L1 = 1;  // coef(0) * ||w||_1 + coef(1) * ||w||_F^2
-    L2 = 2;  // coef(0) * ||w||_F^2
+    L1 = 1;  // lambda(0) * ||w||_1 + lambda(1) * ||w||_F^2
+    L2 = 2;  // lambda(0) * ||w||_F^2
   }
   required Type type = 1;
-  repeated double coef = 2;
+  repeated double lambda = 2;
 }
 
 
 message LearningRateConfig {
   enum Type {
-    CONSTANT = 1;  // = coef(0)
-    DECAY = 2;  // = coef(0) / (coef(1) + x), where x is defineable, such as sqrt(iter)
+    CONSTANT = 1;  // = alpha
+    DECAY = 2;  // = alpha / (beta + x), where x is defineable, such as sqrt(iter)
   }
   optional Type type = 1;
-  repeated double coef = 2;
+  optional double alpha = 2;
+  optional double beta = 3;
 }

@@ -7,26 +7,22 @@ template <typename V>
 class LearningRate {
  public:
   LearningRate(const LearningRateConfig& conf) : conf_(conf) {
-    CHECK_GE(conf.coef_size(), 1);
-    for (int i = 0; i < conf.coef_size(); ++i) {
-      CHECK_GT(conf.coef(i), 0);
-    }
+    CHECK_GT(alpha(), 0);
+    CHECK_GE(beta(), 0);
   }
   ~LearningRate() { }
 
   V eval(V x = 0) const {
-    if (conf_.coef_size() == 1) {
+    if (conf_.type() == LearningRateConfig::CONSTANT) {
+    // if (x == 0 && beta() == 0) {
       return alpha();
-    } else if (conf_.coef_size() == 2) {
-      CHECK_GE(x, 0);
-      return alpha() / ( x + beta() );
     } else {
-      CHECK(false);
+      return alpha() / ( x + beta() );
     }
   }
 
-  V alpha() const { return conf_.coef(0); }
-  V beta() const { return conf_.coef(1); }
+  V alpha() const { return conf_.alpha(); }
+  V beta() const { return conf_.beta(); }
  private:
   // const LearningRateConfig& conf() { return conf_; }
   LearningRateConfig conf_;

@@ -395,15 +395,6 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 minibatch() const;
   inline void set_minibatch(::google::protobuf::int32 value);
 
-  // optional .PS.LM.LearningRateConfig learning_rate = 4;
-  inline bool has_learning_rate() const;
-  inline void clear_learning_rate();
-  static const int kLearningRateFieldNumber = 4;
-  inline const ::PS::LM::LearningRateConfig& learning_rate() const;
-  inline ::PS::LM::LearningRateConfig* mutable_learning_rate();
-  inline ::PS::LM::LearningRateConfig* release_learning_rate();
-  inline void set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate);
-
   // optional bool ada_grad = 5 [default = true];
   inline bool has_ada_grad() const;
   inline void clear_ada_grad();
@@ -438,8 +429,6 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_algo();
   inline void set_has_minibatch();
   inline void clear_has_minibatch();
-  inline void set_has_learning_rate();
-  inline void clear_has_learning_rate();
   inline void set_has_ada_grad();
   inline void clear_has_ada_grad();
   inline void set_has_tail_feature_freq();
@@ -453,14 +442,13 @@ class SGDConfig : public ::google::protobuf::Message {
 
   int algo_;
   ::google::protobuf::int32 minibatch_;
-  ::PS::LM::LearningRateConfig* learning_rate_;
   bool ada_grad_;
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
@@ -664,17 +652,17 @@ class PenaltyConfig : public ::google::protobuf::Message {
   inline ::PS::LM::PenaltyConfig_Type type() const;
   inline void set_type(::PS::LM::PenaltyConfig_Type value);
 
-  // repeated double coef = 2;
-  inline int coef_size() const;
-  inline void clear_coef();
-  static const int kCoefFieldNumber = 2;
-  inline double coef(int index) const;
-  inline void set_coef(int index, double value);
-  inline void add_coef(double value);
+  // repeated double lambda = 2;
+  inline int lambda_size() const;
+  inline void clear_lambda();
+  static const int kLambdaFieldNumber = 2;
+  inline double lambda(int index) const;
+  inline void set_lambda(int index, double value);
+  inline void add_lambda(double value);
   inline const ::google::protobuf::RepeatedField< double >&
-      coef() const;
+      lambda() const;
   inline ::google::protobuf::RepeatedField< double >*
-      mutable_coef();
+      mutable_lambda();
 
   // @@protoc_insertion_point(class_scope:PS.LM.PenaltyConfig)
  private:
@@ -683,7 +671,7 @@ class PenaltyConfig : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedField< double > coef_;
+  ::google::protobuf::RepeatedField< double > lambda_;
   int type_;
 
   mutable int _cached_size_;
@@ -783,30 +771,37 @@ class LearningRateConfig : public ::google::protobuf::Message {
   inline ::PS::LM::LearningRateConfig_Type type() const;
   inline void set_type(::PS::LM::LearningRateConfig_Type value);
 
-  // repeated double coef = 2;
-  inline int coef_size() const;
-  inline void clear_coef();
-  static const int kCoefFieldNumber = 2;
-  inline double coef(int index) const;
-  inline void set_coef(int index, double value);
-  inline void add_coef(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      coef() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_coef();
+  // optional double alpha = 2;
+  inline bool has_alpha() const;
+  inline void clear_alpha();
+  static const int kAlphaFieldNumber = 2;
+  inline double alpha() const;
+  inline void set_alpha(double value);
+
+  // optional double beta = 3;
+  inline bool has_beta() const;
+  inline void clear_beta();
+  static const int kBetaFieldNumber = 3;
+  inline double beta() const;
+  inline void set_beta(double value);
 
   // @@protoc_insertion_point(class_scope:PS.LM.LearningRateConfig)
  private:
   inline void set_has_type();
   inline void clear_has_type();
+  inline void set_has_alpha();
+  inline void clear_has_alpha();
+  inline void set_has_beta();
+  inline void clear_has_beta();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedField< double > coef_;
+  double alpha_;
+  double beta_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
 
   friend void  protobuf_AddDesc_linear_5fmethod_2fproto_2flm_2eproto();
   friend void protobuf_AssignDesc_linear_5fmethod_2fproto_2flm_2eproto();
@@ -829,10 +824,6 @@ static const int kKktFilterThresholdRatioFieldNumber = 103;
 extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
     ::google::protobuf::internal::PrimitiveTypeTraits< double >, 1, false >
   kkt_filter_threshold_ratio;
-static const int kLearningRateFieldNumber = 104;
-extern ::google::protobuf::internal::ExtensionIdentifier< ::PS::BCDConfig,
-    ::google::protobuf::internal::MessageTypeTraits< ::PS::LM::LearningRateConfig >, 11, false >
-  learning_rate;
 
 // ===================================================================
 
@@ -1229,53 +1220,15 @@ inline void SGDConfig::set_minibatch(::google::protobuf::int32 value) {
   minibatch_ = value;
 }
 
-// optional .PS.LM.LearningRateConfig learning_rate = 4;
-inline bool SGDConfig::has_learning_rate() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void SGDConfig::set_has_learning_rate() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void SGDConfig::clear_has_learning_rate() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void SGDConfig::clear_learning_rate() {
-  if (learning_rate_ != NULL) learning_rate_->::PS::LM::LearningRateConfig::Clear();
-  clear_has_learning_rate();
-}
-inline const ::PS::LM::LearningRateConfig& SGDConfig::learning_rate() const {
-  return learning_rate_ != NULL ? *learning_rate_ : *default_instance_->learning_rate_;
-}
-inline ::PS::LM::LearningRateConfig* SGDConfig::mutable_learning_rate() {
-  set_has_learning_rate();
-  if (learning_rate_ == NULL) learning_rate_ = new ::PS::LM::LearningRateConfig;
-  return learning_rate_;
-}
-inline ::PS::LM::LearningRateConfig* SGDConfig::release_learning_rate() {
-  clear_has_learning_rate();
-  ::PS::LM::LearningRateConfig* temp = learning_rate_;
-  learning_rate_ = NULL;
-  return temp;
-}
-inline void SGDConfig::set_allocated_learning_rate(::PS::LM::LearningRateConfig* learning_rate) {
-  delete learning_rate_;
-  learning_rate_ = learning_rate;
-  if (learning_rate) {
-    set_has_learning_rate();
-  } else {
-    clear_has_learning_rate();
-  }
-}
-
 // optional bool ada_grad = 5 [default = true];
 inline bool SGDConfig::has_ada_grad() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void SGDConfig::set_has_ada_grad() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void SGDConfig::clear_has_ada_grad() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void SGDConfig::clear_ada_grad() {
   ada_grad_ = true;
@@ -1291,13 +1244,13 @@ inline void SGDConfig::set_ada_grad(bool value) {
 
 // optional int32 tail_feature_freq = 6 [default = 4];
 inline bool SGDConfig::has_tail_feature_freq() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void SGDConfig::set_has_tail_feature_freq() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void SGDConfig::clear_has_tail_feature_freq() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void SGDConfig::clear_tail_feature_freq() {
   tail_feature_freq_ = 4;
@@ -1313,13 +1266,13 @@ inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
 
 // optional int32 countmin_k = 7 [default = 2];
 inline bool SGDConfig::has_countmin_k() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void SGDConfig::set_has_countmin_k() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void SGDConfig::clear_has_countmin_k() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void SGDConfig::clear_countmin_k() {
   countmin_k_ = 2;
@@ -1335,13 +1288,13 @@ inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
 
 // optional float countmin_n = 8 [default = 1e+08];
 inline bool SGDConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void SGDConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void SGDConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void SGDConfig::clear_countmin_n() {
   countmin_n_ = 1e+08f;
@@ -1409,29 +1362,29 @@ inline void PenaltyConfig::set_type(::PS::LM::PenaltyConfig_Type value) {
   type_ = value;
 }
 
-// repeated double coef = 2;
-inline int PenaltyConfig::coef_size() const {
-  return coef_.size();
+// repeated double lambda = 2;
+inline int PenaltyConfig::lambda_size() const {
+  return lambda_.size();
 }
-inline void PenaltyConfig::clear_coef() {
-  coef_.Clear();
+inline void PenaltyConfig::clear_lambda() {
+  lambda_.Clear();
 }
-inline double PenaltyConfig::coef(int index) const {
-  return coef_.Get(index);
+inline double PenaltyConfig::lambda(int index) const {
+  return lambda_.Get(index);
 }
-inline void PenaltyConfig::set_coef(int index, double value) {
-  coef_.Set(index, value);
+inline void PenaltyConfig::set_lambda(int index, double value) {
+  lambda_.Set(index, value);
 }
-inline void PenaltyConfig::add_coef(double value) {
-  coef_.Add(value);
+inline void PenaltyConfig::add_lambda(double value) {
+  lambda_.Add(value);
 }
 inline const ::google::protobuf::RepeatedField< double >&
-PenaltyConfig::coef() const {
-  return coef_;
+PenaltyConfig::lambda() const {
+  return lambda_;
 }
 inline ::google::protobuf::RepeatedField< double >*
-PenaltyConfig::mutable_coef() {
-  return &coef_;
+PenaltyConfig::mutable_lambda() {
+  return &lambda_;
 }
 
 // -------------------------------------------------------------------
@@ -1461,29 +1414,48 @@ inline void LearningRateConfig::set_type(::PS::LM::LearningRateConfig_Type value
   type_ = value;
 }
 
-// repeated double coef = 2;
-inline int LearningRateConfig::coef_size() const {
-  return coef_.size();
+// optional double alpha = 2;
+inline bool LearningRateConfig::has_alpha() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void LearningRateConfig::clear_coef() {
-  coef_.Clear();
+inline void LearningRateConfig::set_has_alpha() {
+  _has_bits_[0] |= 0x00000002u;
 }
-inline double LearningRateConfig::coef(int index) const {
-  return coef_.Get(index);
+inline void LearningRateConfig::clear_has_alpha() {
+  _has_bits_[0] &= ~0x00000002u;
 }
-inline void LearningRateConfig::set_coef(int index, double value) {
-  coef_.Set(index, value);
+inline void LearningRateConfig::clear_alpha() {
+  alpha_ = 0;
+  clear_has_alpha();
 }
-inline void LearningRateConfig::add_coef(double value) {
-  coef_.Add(value);
+inline double LearningRateConfig::alpha() const {
+  return alpha_;
 }
-inline const ::google::protobuf::RepeatedField< double >&
-LearningRateConfig::coef() const {
-  return coef_;
+inline void LearningRateConfig::set_alpha(double value) {
+  set_has_alpha();
+  alpha_ = value;
 }
-inline ::google::protobuf::RepeatedField< double >*
-LearningRateConfig::mutable_coef() {
-  return &coef_;
+
+// optional double beta = 3;
+inline bool LearningRateConfig::has_beta() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LearningRateConfig::set_has_beta() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LearningRateConfig::clear_has_beta() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LearningRateConfig::clear_beta() {
+  beta_ = 0;
+  clear_has_beta();
+}
+inline double LearningRateConfig::beta() const {
+  return beta_;
+}
+inline void LearningRateConfig::set_beta(double value) {
+  set_has_beta();
+  beta_ = value;
 }
 
 
