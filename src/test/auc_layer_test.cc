@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "neural_network/auc_layer.h"
-#include "base/shared_array_inl.h"
+#include "util/shared_array_inl.h"
 
 using namespace PS;
 using namespace NN;

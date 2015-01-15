@@ -1,5 +1,5 @@
 #include "graph_partition/parsa_worker.h"
-#include "base/localizer.h"
+#include "util/localizer.h"
 namespace PS {
 namespace GP {
 

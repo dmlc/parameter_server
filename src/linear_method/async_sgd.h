@@ -201,10 +201,8 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
   virtual void computeGradient(SparseMinibatch<V>& data) {
     // release some memory
     int id = data.batch_id;
-    if (pre_batch_ >= 0) {
-      model_.clear(pre_batch_);
-      pre_batch_ = id;
-    }
+    if (pre_batch_ >= 0) model_.clear(pre_batch_);
+    pre_batch_ = id;
     // waiting the model working set
     model_.waitOutMsg(kServerGroup, data.pull_time);
 
