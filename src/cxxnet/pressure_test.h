@@ -1,5 +1,5 @@
 #include "cxxnet/cxxnet_node.h"
-#include "cxxnet/ps-inl.h"
+#include "mshadow-ps/ps.h"
 namespace PS {
 namespace CXXNET {
 using namespace mshadow;
@@ -49,14 +49,14 @@ class PressureServer : public CXXNetServer {
   virtual ~PressureServer() { }
  protected:
   virtual void init() {
-    ps_ = new ps::ParamServer<cpu, float>();
+    ps_ = ps::Create<cpu, float>("dist");
     ps_->SetParam("name", (name_+"_model").c_str());
     ps_->SetParam("parent_name", name_.c_str());
     ps_->Init(std::vector<int>({0}));
     LL << "init " << myNodeID();
   }
 
-  ps::ParamServer<cpu, float>* ps_;
+  ps::IParamServer<cpu, float>* ps_;
 };
 
 
@@ -67,7 +67,7 @@ class PressureWorker : public CXXNetWorker {
   virtual ~PressureWorker() { }
 
   virtual void init() {
-    ps_ = new ps::ParamServer<cpu, float>();
+    ps_ = ps::Create<cpu, float>("dist");
     ps_->SetParam("name", (name_+"_model").c_str());
     ps_->SetParam("parent_name", name_.c_str());
     ps_->Init(std::vector<int>({0}));
@@ -75,29 +75,44 @@ class PressureWorker : public CXXNetWorker {
   }
 
   virtual void updateModel() {
-    LL << "update";
-    TensorContainer<cpu, 2, float> ts(false);
-    ts.Resize(Shape2(5,2));
-    ts = 1.0f;
+    LL << conf_.DebugString();
 
-    TensorContainer<cpu, 2, float> res(false);
-    res.Resize(Shape2(5,2));
-
-    for (int i = 0; i < 10; ++i) {
-      ps_->Push(ts, 3, 0);
-      ps_->PullReq(res, 3, 0, 0, [&](Stream<cpu> *stream) {
-          ts += 1.0f;
-        });
+    auto test = conf_.pressure_test();
+    int n = test.param_size();
+    std::vector<TensorContainer<cpu, 3, float>> grad(n);
+    std::vector<TensorContainer<cpu, 3, float>> weight(n);
+    std::vector<int> key(n);
+    for (int i = 0; i < n; i++) {
+      key[i] = test.param(i).key();
+      auto sp = Shape3(test.ndevice(), test.param(i).height(), test.param(i).width());
+      grad[i].Resize(sp);
+      grad[i] = 1.0f;
+      weight[i].Resize(sp);
     }
 
-    ps_->PullWait(3, 0);
-    Print2DTensor(res);
+    // TODO device
+    for (int rp = 0; rp < test.repeat(); ++rp) {
+      for (int i = 0; i < n; ++i) {
+        int d = 0;
+        if (rp > 0) ps_->PullWait(key[i], d);
+        ps_->Push(grad[i], key[i], d);
+        ps_->PullReq(weight[i], key[i], d, 0, [&grad, i](Stream<cpu> *stream) {
+            grad[i] += 1.0f;
+          });
+      }
+    }
 
+    // for (int i = 0; i < n; ++i) {
+    //   int d = 0;
+    //   ps_->PullWait(key[i], d);
+    //   LL << "key " << key[i];
+    //   Print2DTensor(weight[i][0]);
+    // }
     LL << "done";
   }
  protected:
 
-  ps::ParamServer<cpu, float>* ps_;
+  ps::IParamServer<cpu, float>* ps_;
 };
 
 } // namespace CXXNET

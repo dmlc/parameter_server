@@ -36,6 +36,7 @@ void protobuf_AssignDesc_cxxnet_2fproto_2fcxxnet_2eproto();
 void protobuf_ShutdownFile_cxxnet_2fproto_2fcxxnet_2eproto();
 
 class Config;
+class PressureTestEntry;
 class PressureTest;
 
 // ===================================================================
@@ -134,6 +135,108 @@ class Config : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class PressureTestEntry : public ::google::protobuf::Message {
+ public:
+  PressureTestEntry();
+  virtual ~PressureTestEntry();
+
+  PressureTestEntry(const PressureTestEntry& from);
+
+  inline PressureTestEntry& operator=(const PressureTestEntry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const PressureTestEntry& default_instance();
+
+  void Swap(PressureTestEntry* other);
+
+  // implements Message ----------------------------------------------
+
+  PressureTestEntry* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const PressureTestEntry& from);
+  void MergeFrom(const PressureTestEntry& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required int32 key = 1;
+  inline bool has_key() const;
+  inline void clear_key();
+  static const int kKeyFieldNumber = 1;
+  inline ::google::protobuf::int32 key() const;
+  inline void set_key(::google::protobuf::int32 value);
+
+  // required int32 height = 2;
+  inline bool has_height() const;
+  inline void clear_height();
+  static const int kHeightFieldNumber = 2;
+  inline ::google::protobuf::int32 height() const;
+  inline void set_height(::google::protobuf::int32 value);
+
+  // required int32 width = 3;
+  inline bool has_width() const;
+  inline void clear_width();
+  static const int kWidthFieldNumber = 3;
+  inline ::google::protobuf::int32 width() const;
+  inline void set_width(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:PS.CXXNET.PressureTestEntry)
+ private:
+  inline void set_has_key();
+  inline void clear_has_key();
+  inline void set_has_height();
+  inline void clear_has_height();
+  inline void set_has_width();
+  inline void clear_has_width();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int32 key_;
+  ::google::protobuf::int32 height_;
+  ::google::protobuf::int32 width_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_cxxnet_2fproto_2fcxxnet_2eproto();
+  friend void protobuf_AssignDesc_cxxnet_2fproto_2fcxxnet_2eproto();
+  friend void protobuf_ShutdownFile_cxxnet_2fproto_2fcxxnet_2eproto();
+
+  void InitAsDefaultInstance();
+  static PressureTestEntry* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class PressureTest : public ::google::protobuf::Message {
  public:
   PressureTest();
@@ -188,47 +291,44 @@ class PressureTest : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // repeated int32 key = 1;
-  inline int key_size() const;
-  inline void clear_key();
-  static const int kKeyFieldNumber = 1;
-  inline ::google::protobuf::int32 key(int index) const;
-  inline void set_key(int index, ::google::protobuf::int32 value);
-  inline void add_key(::google::protobuf::int32 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-      key() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-      mutable_key();
+  // required int32 ndevice = 1;
+  inline bool has_ndevice() const;
+  inline void clear_ndevice();
+  static const int kNdeviceFieldNumber = 1;
+  inline ::google::protobuf::int32 ndevice() const;
+  inline void set_ndevice(::google::protobuf::int32 value);
 
-  // repeated int32 size = 2;
-  inline int size_size() const;
-  inline void clear_size();
-  static const int kSizeFieldNumber = 2;
-  inline ::google::protobuf::int32 size(int index) const;
-  inline void set_size(int index, ::google::protobuf::int32 value);
-  inline void add_size(::google::protobuf::int32 value);
-  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-      size() const;
-  inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-      mutable_size();
+  // repeated .PS.CXXNET.PressureTestEntry param = 2;
+  inline int param_size() const;
+  inline void clear_param();
+  static const int kParamFieldNumber = 2;
+  inline const ::PS::CXXNET::PressureTestEntry& param(int index) const;
+  inline ::PS::CXXNET::PressureTestEntry* mutable_param(int index);
+  inline ::PS::CXXNET::PressureTestEntry* add_param();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::CXXNET::PressureTestEntry >&
+      param() const;
+  inline ::google::protobuf::RepeatedPtrField< ::PS::CXXNET::PressureTestEntry >*
+      mutable_param();
 
-  // optional int32 max_delay = 3 [default = 0];
-  inline bool has_max_delay() const;
-  inline void clear_max_delay();
-  static const int kMaxDelayFieldNumber = 3;
-  inline ::google::protobuf::int32 max_delay() const;
-  inline void set_max_delay(::google::protobuf::int32 value);
+  // optional int32 repeat = 3 [default = 10];
+  inline bool has_repeat() const;
+  inline void clear_repeat();
+  static const int kRepeatFieldNumber = 3;
+  inline ::google::protobuf::int32 repeat() const;
+  inline void set_repeat(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:PS.CXXNET.PressureTest)
  private:
-  inline void set_has_max_delay();
-  inline void clear_has_max_delay();
+  inline void set_has_ndevice();
+  inline void clear_has_ndevice();
+  inline void set_has_repeat();
+  inline void clear_has_repeat();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > key_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > size_;
-  ::google::protobuf::int32 max_delay_;
+  ::google::protobuf::RepeatedPtrField< ::PS::CXXNET::PressureTestEntry > param_;
+  ::google::protobuf::int32 ndevice_;
+  ::google::protobuf::int32 repeat_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
@@ -309,78 +409,145 @@ inline void Config::set_allocated_pressure_test(::PS::CXXNET::PressureTest* pres
 
 // -------------------------------------------------------------------
 
-// PressureTest
+// PressureTestEntry
 
-// repeated int32 key = 1;
-inline int PressureTest::key_size() const {
-  return key_.size();
+// required int32 key = 1;
+inline bool PressureTestEntry::has_key() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void PressureTest::clear_key() {
-  key_.Clear();
+inline void PressureTestEntry::set_has_key() {
+  _has_bits_[0] |= 0x00000001u;
 }
-inline ::google::protobuf::int32 PressureTest::key(int index) const {
-  return key_.Get(index);
+inline void PressureTestEntry::clear_has_key() {
+  _has_bits_[0] &= ~0x00000001u;
 }
-inline void PressureTest::set_key(int index, ::google::protobuf::int32 value) {
-  key_.Set(index, value);
+inline void PressureTestEntry::clear_key() {
+  key_ = 0;
+  clear_has_key();
 }
-inline void PressureTest::add_key(::google::protobuf::int32 value) {
-  key_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-PressureTest::key() const {
+inline ::google::protobuf::int32 PressureTestEntry::key() const {
   return key_;
 }
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-PressureTest::mutable_key() {
-  return &key_;
+inline void PressureTestEntry::set_key(::google::protobuf::int32 value) {
+  set_has_key();
+  key_ = value;
 }
 
-// repeated int32 size = 2;
-inline int PressureTest::size_size() const {
-  return size_.size();
+// required int32 height = 2;
+inline bool PressureTestEntry::has_height() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void PressureTest::clear_size() {
-  size_.Clear();
+inline void PressureTestEntry::set_has_height() {
+  _has_bits_[0] |= 0x00000002u;
 }
-inline ::google::protobuf::int32 PressureTest::size(int index) const {
-  return size_.Get(index);
+inline void PressureTestEntry::clear_has_height() {
+  _has_bits_[0] &= ~0x00000002u;
 }
-inline void PressureTest::set_size(int index, ::google::protobuf::int32 value) {
-  size_.Set(index, value);
+inline void PressureTestEntry::clear_height() {
+  height_ = 0;
+  clear_has_height();
 }
-inline void PressureTest::add_size(::google::protobuf::int32 value) {
-  size_.Add(value);
+inline ::google::protobuf::int32 PressureTestEntry::height() const {
+  return height_;
 }
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
-PressureTest::size() const {
-  return size_;
-}
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
-PressureTest::mutable_size() {
-  return &size_;
+inline void PressureTestEntry::set_height(::google::protobuf::int32 value) {
+  set_has_height();
+  height_ = value;
 }
 
-// optional int32 max_delay = 3 [default = 0];
-inline bool PressureTest::has_max_delay() const {
+// required int32 width = 3;
+inline bool PressureTestEntry::has_width() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void PressureTest::set_has_max_delay() {
+inline void PressureTestEntry::set_has_width() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void PressureTest::clear_has_max_delay() {
+inline void PressureTestEntry::clear_has_width() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void PressureTest::clear_max_delay() {
-  max_delay_ = 0;
-  clear_has_max_delay();
+inline void PressureTestEntry::clear_width() {
+  width_ = 0;
+  clear_has_width();
 }
-inline ::google::protobuf::int32 PressureTest::max_delay() const {
-  return max_delay_;
+inline ::google::protobuf::int32 PressureTestEntry::width() const {
+  return width_;
 }
-inline void PressureTest::set_max_delay(::google::protobuf::int32 value) {
-  set_has_max_delay();
-  max_delay_ = value;
+inline void PressureTestEntry::set_width(::google::protobuf::int32 value) {
+  set_has_width();
+  width_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// PressureTest
+
+// required int32 ndevice = 1;
+inline bool PressureTest::has_ndevice() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void PressureTest::set_has_ndevice() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void PressureTest::clear_has_ndevice() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void PressureTest::clear_ndevice() {
+  ndevice_ = 0;
+  clear_has_ndevice();
+}
+inline ::google::protobuf::int32 PressureTest::ndevice() const {
+  return ndevice_;
+}
+inline void PressureTest::set_ndevice(::google::protobuf::int32 value) {
+  set_has_ndevice();
+  ndevice_ = value;
+}
+
+// repeated .PS.CXXNET.PressureTestEntry param = 2;
+inline int PressureTest::param_size() const {
+  return param_.size();
+}
+inline void PressureTest::clear_param() {
+  param_.Clear();
+}
+inline const ::PS::CXXNET::PressureTestEntry& PressureTest::param(int index) const {
+  return param_.Get(index);
+}
+inline ::PS::CXXNET::PressureTestEntry* PressureTest::mutable_param(int index) {
+  return param_.Mutable(index);
+}
+inline ::PS::CXXNET::PressureTestEntry* PressureTest::add_param() {
+  return param_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::PS::CXXNET::PressureTestEntry >&
+PressureTest::param() const {
+  return param_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::PS::CXXNET::PressureTestEntry >*
+PressureTest::mutable_param() {
+  return &param_;
+}
+
+// optional int32 repeat = 3 [default = 10];
+inline bool PressureTest::has_repeat() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void PressureTest::set_has_repeat() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void PressureTest::clear_has_repeat() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void PressureTest::clear_repeat() {
+  repeat_ = 10;
+  clear_has_repeat();
+}
+inline ::google::protobuf::int32 PressureTest::repeat() const {
+  return repeat_;
+}
+inline void PressureTest::set_repeat(::google::protobuf::int32 value) {
+  set_has_repeat();
+  repeat_ = value;
 }
 
 

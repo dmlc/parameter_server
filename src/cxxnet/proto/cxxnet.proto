@@ -32,9 +32,14 @@ message Config {
 //   optional DataConfig data = 2;
 // }
 
+message PressureTestEntry {
+  required int32 key = 1;
+  required int32 height = 2;
+  required int32 width = 3;
+}
 
 message PressureTest {
-  repeated int32 key = 1;
-  repeated int32 size = 2;
-  optional int32 max_delay = 3 [default = 0];
+  required int32 ndevice = 1;
+  repeated PressureTestEntry param = 2;
+  optional int32 repeat = 3 [default = 10];
 }

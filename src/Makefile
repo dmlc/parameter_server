@@ -1,7 +1,7 @@
 CC = g++
 
-# OPT = -O0 -ggdb
-OPT = -O3 -ggdb
+OPT = -O0 -ggdb
+# OPT = -O3 -ggdb
 
 ### third_party path
 THIRD_PARTY=$(shell cd ..;pwd)/third_party
@@ -32,7 +32,7 @@ BIN = ../bin
 LIB = ../lib
 LIBS = $(addprefix $(LIB)/, liblm.a cxxnet.a libps.a libprotos.a)
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
-LDFLAGS += -ltcmalloc_and_profiler
+# LDFLAGS += -ltcmalloc_and_profiler
 
 all: dir $(BIN)/ps
 clean:
