@@ -30,7 +30,7 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, liblm.a libps.a libprotos.a)
+LIBS = $(addprefix $(LIB)/, liblm.a cxxnet.a libps.a libprotos.a)
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 LDFLAGS += -ltcmalloc_and_profiler
 
@@ -46,12 +46,16 @@ sys_srcs = \
 	$(addprefix util/, $(util_srcs)) \
 	$(addprefix data/, $(data_srcs)) \
 	$(addprefix filter/, $(filter_srcs))
-# SYS_OBJS = $(SYS_SRCS:.cc=.o)
 $(LIB)/libps.a: $(sys_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### linear methods
 $(LIB)/liblm.a: $(linear_method_srcs:.cc=.o)
+	ar crv $@ $?
+
+### cxxnet
+LDFLAGS += -L../plugin/mshadow
+$(LIB)/cxxnet.a: $(cxxnet_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### graph partitioning

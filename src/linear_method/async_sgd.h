@@ -72,7 +72,7 @@ struct AdaGradEntry {
 template <typename V>
 struct SGDEntry {
   void get(char const* data, SGDState<V>* state) {
-    V grad = *((V*)data);
+    // V grad = *((V*)data);
     // state->update(weight, grad);
     // TODO
   }

@@ -25,6 +25,9 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "linear_method/proto/lm.pb.h"
+#include "graph_partition/proto/gp.pb.h"
+#include "factor_machine/proto/fm.pb.h"
+#include "cxxnet/proto/cxxnet.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace PS {
@@ -113,21 +116,57 @@ class AppConfig : public ::google::protobuf::Message {
   inline ::PS::LM::Config* release_linear_method();
   inline void set_allocated_linear_method(::PS::LM::Config* linear_method);
 
+  // optional .PS.GP.Config graph_partition = 5;
+  inline bool has_graph_partition() const;
+  inline void clear_graph_partition();
+  static const int kGraphPartitionFieldNumber = 5;
+  inline const ::PS::GP::Config& graph_partition() const;
+  inline ::PS::GP::Config* mutable_graph_partition();
+  inline ::PS::GP::Config* release_graph_partition();
+  inline void set_allocated_graph_partition(::PS::GP::Config* graph_partition);
+
+  // optional .PS.FM.Config factor_machine = 6;
+  inline bool has_factor_machine() const;
+  inline void clear_factor_machine();
+  static const int kFactorMachineFieldNumber = 6;
+  inline const ::PS::FM::Config& factor_machine() const;
+  inline ::PS::FM::Config* mutable_factor_machine();
+  inline ::PS::FM::Config* release_factor_machine();
+  inline void set_allocated_factor_machine(::PS::FM::Config* factor_machine);
+
+  // optional .PS.CXXNET.Config cxxnet = 7;
+  inline bool has_cxxnet() const;
+  inline void clear_cxxnet();
+  static const int kCxxnetFieldNumber = 7;
+  inline const ::PS::CXXNET::Config& cxxnet() const;
+  inline ::PS::CXXNET::Config* mutable_cxxnet();
+  inline ::PS::CXXNET::Config* release_cxxnet();
+  inline void set_allocated_cxxnet(::PS::CXXNET::Config* cxxnet);
+
   // @@protoc_insertion_point(class_scope:PS.AppConfig)
  private:
   inline void set_has_app_name();
   inline void clear_has_app_name();
   inline void set_has_linear_method();
   inline void clear_has_linear_method();
+  inline void set_has_graph_partition();
+  inline void clear_has_graph_partition();
+  inline void set_has_factor_machine();
+  inline void clear_has_factor_machine();
+  inline void set_has_cxxnet();
+  inline void clear_has_cxxnet();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* app_name_;
   static ::std::string* _default_app_name_;
   ::PS::LM::Config* linear_method_;
+  ::PS::GP::Config* graph_partition_;
+  ::PS::FM::Config* factor_machine_;
+  ::PS::CXXNET::Config* cxxnet_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_system_2fproto_2fapp_2eproto();
   friend void protobuf_AssignDesc_system_2fproto_2fapp_2eproto();
@@ -248,6 +287,120 @@ inline void AppConfig::set_allocated_linear_method(::PS::LM::Config* linear_meth
     set_has_linear_method();
   } else {
     clear_has_linear_method();
+  }
+}
+
+// optional .PS.GP.Config graph_partition = 5;
+inline bool AppConfig::has_graph_partition() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void AppConfig::set_has_graph_partition() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void AppConfig::clear_has_graph_partition() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void AppConfig::clear_graph_partition() {
+  if (graph_partition_ != NULL) graph_partition_->::PS::GP::Config::Clear();
+  clear_has_graph_partition();
+}
+inline const ::PS::GP::Config& AppConfig::graph_partition() const {
+  return graph_partition_ != NULL ? *graph_partition_ : *default_instance_->graph_partition_;
+}
+inline ::PS::GP::Config* AppConfig::mutable_graph_partition() {
+  set_has_graph_partition();
+  if (graph_partition_ == NULL) graph_partition_ = new ::PS::GP::Config;
+  return graph_partition_;
+}
+inline ::PS::GP::Config* AppConfig::release_graph_partition() {
+  clear_has_graph_partition();
+  ::PS::GP::Config* temp = graph_partition_;
+  graph_partition_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_graph_partition(::PS::GP::Config* graph_partition) {
+  delete graph_partition_;
+  graph_partition_ = graph_partition;
+  if (graph_partition) {
+    set_has_graph_partition();
+  } else {
+    clear_has_graph_partition();
+  }
+}
+
+// optional .PS.FM.Config factor_machine = 6;
+inline bool AppConfig::has_factor_machine() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void AppConfig::set_has_factor_machine() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void AppConfig::clear_has_factor_machine() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void AppConfig::clear_factor_machine() {
+  if (factor_machine_ != NULL) factor_machine_->::PS::FM::Config::Clear();
+  clear_has_factor_machine();
+}
+inline const ::PS::FM::Config& AppConfig::factor_machine() const {
+  return factor_machine_ != NULL ? *factor_machine_ : *default_instance_->factor_machine_;
+}
+inline ::PS::FM::Config* AppConfig::mutable_factor_machine() {
+  set_has_factor_machine();
+  if (factor_machine_ == NULL) factor_machine_ = new ::PS::FM::Config;
+  return factor_machine_;
+}
+inline ::PS::FM::Config* AppConfig::release_factor_machine() {
+  clear_has_factor_machine();
+  ::PS::FM::Config* temp = factor_machine_;
+  factor_machine_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_factor_machine(::PS::FM::Config* factor_machine) {
+  delete factor_machine_;
+  factor_machine_ = factor_machine;
+  if (factor_machine) {
+    set_has_factor_machine();
+  } else {
+    clear_has_factor_machine();
+  }
+}
+
+// optional .PS.CXXNET.Config cxxnet = 7;
+inline bool AppConfig::has_cxxnet() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void AppConfig::set_has_cxxnet() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void AppConfig::clear_has_cxxnet() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void AppConfig::clear_cxxnet() {
+  if (cxxnet_ != NULL) cxxnet_->::PS::CXXNET::Config::Clear();
+  clear_has_cxxnet();
+}
+inline const ::PS::CXXNET::Config& AppConfig::cxxnet() const {
+  return cxxnet_ != NULL ? *cxxnet_ : *default_instance_->cxxnet_;
+}
+inline ::PS::CXXNET::Config* AppConfig::mutable_cxxnet() {
+  set_has_cxxnet();
+  if (cxxnet_ == NULL) cxxnet_ = new ::PS::CXXNET::Config;
+  return cxxnet_;
+}
+inline ::PS::CXXNET::Config* AppConfig::release_cxxnet() {
+  clear_has_cxxnet();
+  ::PS::CXXNET::Config* temp = cxxnet_;
+  cxxnet_ = NULL;
+  return temp;
+}
+inline void AppConfig::set_allocated_cxxnet(::PS::CXXNET::Config* cxxnet) {
+  delete cxxnet_;
+  cxxnet_ = cxxnet;
+  if (cxxnet) {
+    set_has_cxxnet();
+  } else {
+    clear_has_cxxnet();
   }
 }
 

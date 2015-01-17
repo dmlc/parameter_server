@@ -5,9 +5,9 @@
 namespace PS {
 namespace CXXNET {
 
-App* createApp(const string& name, const CXXNetConfig& conf) {
+App* createApp(const string& name, const Config& conf) {
   auto my_role = Postoffice::instance().myNode().role();
-
+  App *app = NULL;
   if (conf.has_pressure_test()) {
     if (my_role == Node::SCHEDULER) {
       app = new PressureScheduler(name, conf);
@@ -25,9 +25,9 @@ App* createApp(const string& name, const CXXNetConfig& conf) {
       app = new CXXNetServer(name, conf);
     }
   }
+  return CHECK_NOTNULL(app);
 }
 
-}
 
 } // namespace CXXNET
 } // namespace PS

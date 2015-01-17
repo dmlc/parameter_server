@@ -23,7 +23,6 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
-#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 #include "data/proto/data.pb.h"
 // @@protoc_insertion_point(includes)
@@ -37,32 +36,8 @@ void protobuf_AssignDesc_cxxnet_2fproto_2fcxxnet_2eproto();
 void protobuf_ShutdownFile_cxxnet_2fproto_2fcxxnet_2eproto();
 
 class Config;
-class Progress;
-class Call;
 class PressureTest;
 
-enum Call_Command {
-  Call_Command_UPDATE_MODEL = 1,
-  Call_Command_REPORT_PROGRESS = 2,
-  Call_Command_SAVE_MODEL = 3,
-  Call_Command_RECOVER = 4,
-  Call_Command_COMPUTE_VALIDATION_AUC = 5
-};
-bool Call_Command_IsValid(int value);
-const Call_Command Call_Command_Command_MIN = Call_Command_UPDATE_MODEL;
-const Call_Command Call_Command_Command_MAX = Call_Command_COMPUTE_VALIDATION_AUC;
-const int Call_Command_Command_ARRAYSIZE = Call_Command_Command_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* Call_Command_descriptor();
-inline const ::std::string& Call_Command_Name(Call_Command value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Call_Command_descriptor(), value);
-}
-inline bool Call_Command_Parse(
-    const ::std::string& name, Call_Command* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Call_Command>(
-    Call_Command_descriptor(), name, value);
-}
 // ===================================================================
 
 class Config : public ::google::protobuf::Message {
@@ -126,12 +101,14 @@ class Config : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 report_interval() const;
   inline void set_report_interval(::google::protobuf::int32 value);
 
-  // optional bool pressure_test = 10;
+  // optional .PS.CXXNET.PressureTest pressure_test = 10;
   inline bool has_pressure_test() const;
   inline void clear_pressure_test();
   static const int kPressureTestFieldNumber = 10;
-  inline bool pressure_test() const;
-  inline void set_pressure_test(bool value);
+  inline const ::PS::CXXNET::PressureTest& pressure_test() const;
+  inline ::PS::CXXNET::PressureTest* mutable_pressure_test();
+  inline ::PS::CXXNET::PressureTest* release_pressure_test();
+  inline void set_allocated_pressure_test(::PS::CXXNET::PressureTest* pressure_test);
 
   // @@protoc_insertion_point(class_scope:PS.CXXNET.Config)
  private:
@@ -142,8 +119,8 @@ class Config : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::PS::CXXNET::PressureTest* pressure_test_;
   ::google::protobuf::int32 report_interval_;
-  bool pressure_test_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
@@ -154,235 +131,6 @@ class Config : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Config* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Progress : public ::google::protobuf::Message {
- public:
-  Progress();
-  virtual ~Progress();
-
-  Progress(const Progress& from);
-
-  inline Progress& operator=(const Progress& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Progress& default_instance();
-
-  void Swap(Progress* other);
-
-  // implements Message ----------------------------------------------
-
-  Progress* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Progress& from);
-  void MergeFrom(const Progress& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated double objective = 1;
-  inline int objective_size() const;
-  inline void clear_objective();
-  static const int kObjectiveFieldNumber = 1;
-  inline double objective(int index) const;
-  inline void set_objective(int index, double value);
-  inline void add_objective(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      objective() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_objective();
-
-  // optional uint64 num_examples_processed = 2;
-  inline bool has_num_examples_processed() const;
-  inline void clear_num_examples_processed();
-  static const int kNumExamplesProcessedFieldNumber = 2;
-  inline ::google::protobuf::uint64 num_examples_processed() const;
-  inline void set_num_examples_processed(::google::protobuf::uint64 value);
-
-  // repeated double accuracy = 3;
-  inline int accuracy_size() const;
-  inline void clear_accuracy();
-  static const int kAccuracyFieldNumber = 3;
-  inline double accuracy(int index) const;
-  inline void set_accuracy(int index, double value);
-  inline void add_accuracy(double value);
-  inline const ::google::protobuf::RepeatedField< double >&
-      accuracy() const;
-  inline ::google::protobuf::RepeatedField< double >*
-      mutable_accuracy();
-
-  // @@protoc_insertion_point(class_scope:PS.CXXNET.Progress)
- private:
-  inline void set_has_num_examples_processed();
-  inline void clear_has_num_examples_processed();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::RepeatedField< double > objective_;
-  ::google::protobuf::uint64 num_examples_processed_;
-  ::google::protobuf::RepeatedField< double > accuracy_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_cxxnet_2fproto_2fcxxnet_2eproto();
-  friend void protobuf_AssignDesc_cxxnet_2fproto_2fcxxnet_2eproto();
-  friend void protobuf_ShutdownFile_cxxnet_2fproto_2fcxxnet_2eproto();
-
-  void InitAsDefaultInstance();
-  static Progress* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Call : public ::google::protobuf::Message {
- public:
-  Call();
-  virtual ~Call();
-
-  Call(const Call& from);
-
-  inline Call& operator=(const Call& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Call& default_instance();
-
-  void Swap(Call* other);
-
-  // implements Message ----------------------------------------------
-
-  Call* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Call& from);
-  void MergeFrom(const Call& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef Call_Command Command;
-  static const Command UPDATE_MODEL = Call_Command_UPDATE_MODEL;
-  static const Command REPORT_PROGRESS = Call_Command_REPORT_PROGRESS;
-  static const Command SAVE_MODEL = Call_Command_SAVE_MODEL;
-  static const Command RECOVER = Call_Command_RECOVER;
-  static const Command COMPUTE_VALIDATION_AUC = Call_Command_COMPUTE_VALIDATION_AUC;
-  static inline bool Command_IsValid(int value) {
-    return Call_Command_IsValid(value);
-  }
-  static const Command Command_MIN =
-    Call_Command_Command_MIN;
-  static const Command Command_MAX =
-    Call_Command_Command_MAX;
-  static const int Command_ARRAYSIZE =
-    Call_Command_Command_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Command_descriptor() {
-    return Call_Command_descriptor();
-  }
-  static inline const ::std::string& Command_Name(Command value) {
-    return Call_Command_Name(value);
-  }
-  static inline bool Command_Parse(const ::std::string& name,
-      Command* value) {
-    return Call_Command_Parse(name, value);
-  }
-
-  // accessors -------------------------------------------------------
-
-  // required .PS.CXXNET.Call.Command cmd = 1;
-  inline bool has_cmd() const;
-  inline void clear_cmd();
-  static const int kCmdFieldNumber = 1;
-  inline ::PS::CXXNET::Call_Command cmd() const;
-  inline void set_cmd(::PS::CXXNET::Call_Command value);
-
-  // optional .PS.DataConfig data = 2;
-  inline bool has_data() const;
-  inline void clear_data();
-  static const int kDataFieldNumber = 2;
-  inline const ::PS::DataConfig& data() const;
-  inline ::PS::DataConfig* mutable_data();
-  inline ::PS::DataConfig* release_data();
-  inline void set_allocated_data(::PS::DataConfig* data);
-
-  // @@protoc_insertion_point(class_scope:PS.CXXNET.Call)
- private:
-  inline void set_has_cmd();
-  inline void clear_has_cmd();
-  inline void set_has_data();
-  inline void clear_has_data();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::PS::DataConfig* data_;
-  int cmd_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_cxxnet_2fproto_2fcxxnet_2eproto();
-  friend void protobuf_AssignDesc_cxxnet_2fproto_2fcxxnet_2eproto();
-  friend void protobuf_ShutdownFile_cxxnet_2fproto_2fcxxnet_2eproto();
-
-  void InitAsDefaultInstance();
-  static Call* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -521,7 +269,7 @@ inline void Config::set_report_interval(::google::protobuf::int32 value) {
   report_interval_ = value;
 }
 
-// optional bool pressure_test = 10;
+// optional .PS.CXXNET.PressureTest pressure_test = 10;
 inline bool Config::has_pressure_test() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -532,155 +280,30 @@ inline void Config::clear_has_pressure_test() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void Config::clear_pressure_test() {
-  pressure_test_ = false;
+  if (pressure_test_ != NULL) pressure_test_->::PS::CXXNET::PressureTest::Clear();
   clear_has_pressure_test();
 }
-inline bool Config::pressure_test() const {
+inline const ::PS::CXXNET::PressureTest& Config::pressure_test() const {
+  return pressure_test_ != NULL ? *pressure_test_ : *default_instance_->pressure_test_;
+}
+inline ::PS::CXXNET::PressureTest* Config::mutable_pressure_test() {
+  set_has_pressure_test();
+  if (pressure_test_ == NULL) pressure_test_ = new ::PS::CXXNET::PressureTest;
   return pressure_test_;
 }
-inline void Config::set_pressure_test(bool value) {
-  set_has_pressure_test();
-  pressure_test_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// Progress
-
-// repeated double objective = 1;
-inline int Progress::objective_size() const {
-  return objective_.size();
-}
-inline void Progress::clear_objective() {
-  objective_.Clear();
-}
-inline double Progress::objective(int index) const {
-  return objective_.Get(index);
-}
-inline void Progress::set_objective(int index, double value) {
-  objective_.Set(index, value);
-}
-inline void Progress::add_objective(double value) {
-  objective_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::objective() const {
-  return objective_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_objective() {
-  return &objective_;
-}
-
-// optional uint64 num_examples_processed = 2;
-inline bool Progress::has_num_examples_processed() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Progress::set_has_num_examples_processed() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Progress::clear_has_num_examples_processed() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Progress::clear_num_examples_processed() {
-  num_examples_processed_ = GOOGLE_ULONGLONG(0);
-  clear_has_num_examples_processed();
-}
-inline ::google::protobuf::uint64 Progress::num_examples_processed() const {
-  return num_examples_processed_;
-}
-inline void Progress::set_num_examples_processed(::google::protobuf::uint64 value) {
-  set_has_num_examples_processed();
-  num_examples_processed_ = value;
-}
-
-// repeated double accuracy = 3;
-inline int Progress::accuracy_size() const {
-  return accuracy_.size();
-}
-inline void Progress::clear_accuracy() {
-  accuracy_.Clear();
-}
-inline double Progress::accuracy(int index) const {
-  return accuracy_.Get(index);
-}
-inline void Progress::set_accuracy(int index, double value) {
-  accuracy_.Set(index, value);
-}
-inline void Progress::add_accuracy(double value) {
-  accuracy_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< double >&
-Progress::accuracy() const {
-  return accuracy_;
-}
-inline ::google::protobuf::RepeatedField< double >*
-Progress::mutable_accuracy() {
-  return &accuracy_;
-}
-
-// -------------------------------------------------------------------
-
-// Call
-
-// required .PS.CXXNET.Call.Command cmd = 1;
-inline bool Call::has_cmd() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Call::set_has_cmd() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Call::clear_has_cmd() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Call::clear_cmd() {
-  cmd_ = 1;
-  clear_has_cmd();
-}
-inline ::PS::CXXNET::Call_Command Call::cmd() const {
-  return static_cast< ::PS::CXXNET::Call_Command >(cmd_);
-}
-inline void Call::set_cmd(::PS::CXXNET::Call_Command value) {
-  assert(::PS::CXXNET::Call_Command_IsValid(value));
-  set_has_cmd();
-  cmd_ = value;
-}
-
-// optional .PS.DataConfig data = 2;
-inline bool Call::has_data() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Call::set_has_data() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Call::clear_has_data() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Call::clear_data() {
-  if (data_ != NULL) data_->::PS::DataConfig::Clear();
-  clear_has_data();
-}
-inline const ::PS::DataConfig& Call::data() const {
-  return data_ != NULL ? *data_ : *default_instance_->data_;
-}
-inline ::PS::DataConfig* Call::mutable_data() {
-  set_has_data();
-  if (data_ == NULL) data_ = new ::PS::DataConfig;
-  return data_;
-}
-inline ::PS::DataConfig* Call::release_data() {
-  clear_has_data();
-  ::PS::DataConfig* temp = data_;
-  data_ = NULL;
+inline ::PS::CXXNET::PressureTest* Config::release_pressure_test() {
+  clear_has_pressure_test();
+  ::PS::CXXNET::PressureTest* temp = pressure_test_;
+  pressure_test_ = NULL;
   return temp;
 }
-inline void Call::set_allocated_data(::PS::DataConfig* data) {
-  delete data_;
-  data_ = data;
-  if (data) {
-    set_has_data();
+inline void Config::set_allocated_pressure_test(::PS::CXXNET::PressureTest* pressure_test) {
+  delete pressure_test_;
+  pressure_test_ = pressure_test;
+  if (pressure_test) {
+    set_has_pressure_test();
   } else {
-    clear_has_data();
+    clear_has_pressure_test();
   }
 }
 
@@ -770,10 +393,6 @@ inline void PressureTest::set_max_delay(::google::protobuf::int32 value) {
 namespace google {
 namespace protobuf {
 
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::CXXNET::Call_Command>() {
-  return ::PS::CXXNET::Call_Command_descriptor();
-}
 
 }  // namespace google
 }  // namespace protobuf

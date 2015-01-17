@@ -31,7 +31,6 @@
 #include "system/proto/app.pb.h"
 #include "parameter/proto/param.pb.h"
 #include "filter/proto/filter.pb.h"
-#include "linear_method/proto/lm.pb.h"
 #include "learner/proto/sgd.pb.h"
 #include "learner/proto/bcd.pb.h"
 // @@protoc_insertion_point(includes)

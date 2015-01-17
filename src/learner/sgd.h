@@ -18,6 +18,7 @@ class ISGDScheduler : public App {
   }
   virtual ~ISGDScheduler() { }
 
+ protected:
   void saveModel() {
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
@@ -25,7 +26,6 @@ class ISGDScheduler : public App {
   }
 
   void updateModel(const DataConfig& data) {
-    monitor_.monitor(1, std::bind(&ISGDScheduler::showProgress, this));
     // ask the servers to report the progress
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
@@ -41,7 +41,10 @@ class ISGDScheduler : public App {
     port(kWorkerGroup)->submitAndWait(tasks);
   }
 
- protected:
+  void startMonitor(int interval = 1) {
+    monitor_.monitor(interval, std::bind(&ISGDScheduler::showProgress, this));
+  }
+
   virtual void showProgress() {
     Lock l(progress_mu_);
     uint64 num_ex = 0, nnz_w = 0;
@@ -66,7 +69,7 @@ class ISGDScheduler : public App {
            auc.mean(), auc.std(), nnz_w);
   }
 
-  void addProgress(const NodeID& sender, const SGDProgress& prog) {
+  virtual void addProgress(const NodeID& sender, const SGDProgress& prog) {
     Lock l(progress_mu_);
     recent_progress_.push_back(std::make_pair(sender, prog));
   }
@@ -78,55 +81,51 @@ class ISGDScheduler : public App {
 
 };
 
-class SGDCompNode : public App {
+class ISGDCompNode : public App {
  public:
-  SGDCompNode(const string& name)
+  ISGDCompNode(const string& name)
       : App(name),
         reporter_(name+"_monitor", name) { }
-  virtual ~SGDCompNode() { }
+  virtual ~ISGDCompNode() { }
 
  protected:
+  void startReporter(int interval = 1) {
+    reporter_.reporter(schedulerID(), interval, [this](SGDProgress* prog) {
+        evaluate(prog);
+      });
+  }
+  virtual void evaluate(SGDProgress* prog) =  0;
   DistMonitor<SGDProgress> reporter_;
 };
 
-class ISGDServer : public SGDCompNode {
+class ISGDServer : public ISGDCompNode {
  public:
-  ISGDServer(const string& name) : SGDCompNode(name) { }
+  ISGDServer(const string& name) : ISGDCompNode(name) { }
   virtual ~ISGDServer() { }
 
   virtual void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
-      this->reporter_.reporter(
-          this->schedulerID(), sgd.report_interval(), [this](SGDProgress* prog) {
-            evaluate(prog);
-        });
+      startReporter(sgd.report_interval());
     } else if (sgd.cmd() == SGDCall::SAVE_MODEL) {
       saveModel();
     }
   }
-
-  // virtual void updateModel() = 0;
-  virtual void evaluate(SGDProgress* prog) =  0;
   virtual void saveModel() = 0;
 };
 
 template <typename Reader, typename Minibatch>
-class ISGDWorker : public SGDCompNode {
+class ISGDWorker : public ISGDCompNode {
  public:
-  ISGDWorker(const string& name) : SGDCompNode(name) { }
+  ISGDWorker(const string& name) : ISGDCompNode(name) { }
   virtual ~ISGDWorker() { }
 
   virtual void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
       // start the progress reporter
-      this->reporter_.reporter(
-          this->schedulerID(), sgd.report_interval(), [this](SGDProgress* prog){
-            Lock l(progress_mu_);
-            *prog = progress_;
-            progress_.Clear();
-        });
+      this->startReporter(sgd.report_interval());
+
       // start data prefecter thread
       Reader reader;
       reader.init(sgd.data());
@@ -137,12 +136,19 @@ class ISGDWorker : public SGDCompNode {
             *size = data->size();
             return true;
         });
+
       // compute gradient
       Minibatch data;
       while (data_prefetcher_.pop(&data)) {
         computeGradient(data);
       }
     }
+  }
+
+  virtual void evaluate(SGDProgress* prog) {
+    Lock l(progress_mu_);
+    *prog = progress_;
+    progress_.Clear();
   }
 
   virtual bool readMinibatch(Reader& reader, Minibatch* data) = 0;
@@ -164,33 +170,5 @@ struct SparseMinibatch {
   int batch_id;
   int pull_time;
 };
-
-// template<typename V>
-// struct AdaGradEntry {
-//   AdaGradEntry() { weight = 0; sum_sqr_grad = 1e-20; }
-//   V weight;
-//   V sum_sqr_grad;
-//   static V eta = .1;
-//   static V lambda = 1;
-//   void get(char const* data) {
-//     V grad = *((V*)data);
-//     sum_sqr_grad += grad * grad;
-//     V delta = eta * (grad / sqrt(sum_sqr_grad) + lambda * weight);
-//     weight -= delta > 1.0 ? 1.0 : ( delta < -1.0 ? -1.0 : delta );
-//   }
-//   void set(char* data) {
-//     *((V*)data) = weight;
-//   }
-// };
-
-// template<typename V>
-// class AdaGradUpdater : public KVStore<Key, AdaGradEntry<V>> {
-// public:
-
-// };
-
-
-// template<typename V>
-// using AdaGradUpdaterPtr = std::shared_ptr<AdaGradUpdater<V>>;
 
 } // namespace PS

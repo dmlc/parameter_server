@@ -1,7 +1,6 @@
 #include "cxxnet/cxxnet_node.h"
 namespace PS {
 namespace CXXNET {
-//
 
 class PressureScheduler : public CXXNetScheduler {
  public:
@@ -13,7 +12,7 @@ class PressureScheduler : public CXXNetScheduler {
 
   }
 
-  virtual void addProgress(const NodeID& sender, const Progress& prog) {
+  virtual void addProgress(const NodeID& sender, const SGDProgress& prog) {
 
   }
 };
@@ -25,7 +24,7 @@ class PressureServer : public CXXNetServer {
       : CXXNetServer(name, conf) { }
   virtual ~PressureServer() { }
  protected:
-  virtual updateModel() {
+  virtual void updateModel() {
 
   }
 };

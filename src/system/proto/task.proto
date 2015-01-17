@@ -5,10 +5,9 @@ import "system/proto/node.proto";
 import "system/proto/app.proto";
 import "parameter/proto/param.proto";
 import "filter/proto/filter.proto";
-import "linear_method/proto/lm.proto";
 import "learner/proto/sgd.proto";
 import "learner/proto/bcd.proto";
-// import "graph_partition/graph_partition.proto";
+// import "cxxnet/proto/cxxnet.proto";
 
 message Task {
   enum Type {
