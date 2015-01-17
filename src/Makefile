@@ -30,8 +30,9 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, liblm.a libps.a libprotos.a) #linear_method/linear_method.o # libgp.a libfm.a liblm.a
+LIBS = $(addprefix $(LIB)/, liblm.a libps.a libprotos.a)
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
+LDFLAGS += -ltcmalloc_and_profiler
 
 all: dir $(BIN)/ps
 clean:
@@ -98,6 +99,3 @@ $(LIB):
 	mkdir -p $(LIB)
 $(BIN):
 	mkdir -p $(BIN)
-
-# ../bin/app_test: system/app_test.cc
-# 	$(CC) $(CFLAGS) $< -lgtest $(LDFLAGS) -o $@

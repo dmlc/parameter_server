@@ -51,13 +51,17 @@ void SArray<V>::operator=(const std::initializer_list<W>& list) {
 }
 
 template <typename V>
-void SArray<V>::reset(V* data, size_t size) {
+void SArray<V>::reset(V* data, size_t size, bool deletable) {
   capacity_ = size;
   size_ = size;
   data_ = data;
-  ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) {
-      delete [] p;
-    });
+  if (deletable) {
+    ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) {
+        delete [] p;
+      });
+  } else {
+    ptr_.reset(reinterpret_cast<char*>(data_), [](char *p) {});
+  }
 }
 
 template <typename V>

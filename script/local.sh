@@ -1,5 +1,5 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../third_party/lib
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../third_party/lib
 if [ $# -lt 3 ]; then
     echo "usage: ./local.sh num_servers num_workers app_conf [args]"
     exit -1;
@@ -28,6 +28,7 @@ for ((i=0; i<${num_servers}; ++i)); do
     port=$((9600 + ${i}))
     N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'S${i}'"
     # CPUPROFILE=/tmp/S${i} \
+    # HEAPPROFILE=/tmp/S${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
 done
 
@@ -36,6 +37,7 @@ for ((i=0; i<${num_workers}; ++i)); do
     port=$((9500 + ${i}))
     N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'W${i}'"
     # CPUPROFILE=/tmp/W${i} \
+    # HEAPPROFILE=/tmp/W${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
 done
 

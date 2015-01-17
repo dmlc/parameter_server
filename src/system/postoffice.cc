@@ -118,7 +118,7 @@ void Postoffice::run() {
 
 void Postoffice::reply(
     const NodeID& recver, const Task& task, const string& reply_msg) {
-  if (!task.request() || task.do_not_reply()) return;
+  if (!task.request()) return;
   Task tk;
   tk.set_customer(task.customer());
   tk.set_request(false);

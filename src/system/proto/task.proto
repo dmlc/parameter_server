@@ -22,8 +22,6 @@ message Task {
   optional Type type = 1 [default = CALL_CUSTOMER];
   // whether request or reply message
   optional bool request = 2 [default = false];
-  // will not send a reply message if true
-  optional bool do_not_reply = 3 [default = false];
   // the customer name
   optional string customer = 4;
 
