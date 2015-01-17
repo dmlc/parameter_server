@@ -150,8 +150,6 @@ DataConfig searchFiles(const DataConfig& config) {
 }
 
 std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
-  CHECK_GT(data.file_size(), 0) << "empty files" << data.DebugString();
-  CHECK_GE(data.file_size(), num) << "too many partitions";
   // evenly divide files
   std::vector<DataConfig> parts;
   for (int i = 0; i < num; ++i) {

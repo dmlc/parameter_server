@@ -54,7 +54,9 @@ $(LIB)/liblm.a: $(linear_method_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### cxxnet
-LDFLAGS += -L../plugin/mshadow
+CFLAGS += -I../plugin/mshadow -I/opt/intel/mkl/include \
+	-Wno-unknown-pragmas -funroll-loops -DMSHADOW_USE_CUDA=0
+LDFLAGS += -L/opt/intel/mkl/lib/intel64
 $(LIB)/cxxnet.a: $(cxxnet_srcs:.cc=.o)
 	ar crv $@ $?
 
@@ -77,8 +79,6 @@ PROTOS= $(wildcard */*/*.proto) $(wildcard */*.proto)
 $(LIB)/libprotos.a: $(PROTOS:.proto=.pb.o)
 	ar crv $@ $?
 
-# PROTOS_CC = $(PROTOS:.proto=.pb.cc)
-# PROTOS_OBJS = $(PROTOS:.proto=.pb.o)
 
 ### dependencies
 ALL_SRCS = $(wildcard */*.cc) $(wildcard */*/*.cc)
@@ -103,3 +103,8 @@ $(LIB):
 	mkdir -p $(LIB)
 $(BIN):
 	mkdir -p $(BIN)
+
+
+
+# PROTOS_CC = $(PROTOS:.proto=.pb.cc)
+# PROTOS_OBJS = $(PROTOS:.proto=.pb.o)

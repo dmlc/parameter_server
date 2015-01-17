@@ -129,10 +129,12 @@ int RNode::submit(MessagePtrList& msgs) {
 }
 
 void RNode::waitOutgoingTask(int time) {
+  // if (time <= Message::kInvalidTime) return;
   for (auto& w : exec_.group(id())) w->outgoing_task_.wait(time);
 }
 
 bool RNode::tryWaitOutgoingTask(int time) {
+  // if (time <= Message::kInvalidTime) return true;
   for (auto& w : exec_.group(id()))
     if (!w->outgoing_task_.tryWait(time)) return false;
   return true;
@@ -143,9 +145,11 @@ void RNode::finishOutgoingTask(int time) {
 }
 
 void RNode::waitIncomingTask(int time) {
+  // if (time <= Message::kInvalidTime) return;
   for (auto& w : exec_.group(id())) w->incoming_task_.wait(time);
 }
 bool RNode::tryWaitIncomingTask(int time) {
+  // if (time <= Message::kInvalidTime) return true;
   for (auto& w : exec_.group(id()))
     if (!w->incoming_task_.tryWait(time)) return false;
   return true;

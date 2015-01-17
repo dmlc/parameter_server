@@ -6,8 +6,11 @@ template <typename V>
 class KVArray : public SharedParameter<Key> {
  public:
   KVArray(const string& my_name, const string& parent_name) :
-      SharedParameter<K>(my_name, parent_name) { }
+      SharedParameter<Key>(my_name, parent_name) { }
   virtual ~KVArray() { }
+
+  // using SharedParameter<Key>::push;
+  // using SharedParameter<Key>::pull;
 
   SArray<V>& array(int key) { return val_[key]; }
 
@@ -20,12 +23,12 @@ class KVArray : public SharedParameter<Key> {
   // an array is place into multiple servers only if its length > min_slice_size
   size_t min_slice_size_ = 1000;
  private:
-  USING_SHARED_PARAMETER;
+  // USING_SHARED_PARAMETER;
 };
 
 
 template <typename V>
-void KVArray<K,V>::setValue(const MessagePtr& msg) {
+void KVArray<V>::setValue(const MessagePtr& msg) {
   CHECK_EQ(msg->value.size(), 1);
   SArray<V> recv_data(msg->value[0]);
   Range<Key> kr(msg->task.key_range());
@@ -33,13 +36,16 @@ void KVArray<K,V>::setValue(const MessagePtr& msg) {
   auto& my_val = val_[msg->task.key_channel()];
 
   if (IamWorker()) {
+    if (my_val.empty()) my_val.resize(kr.size(), 0);
     CHECK_GE(my_val.size(), kr.end());
     my_val.segment(kr).copyFrom(recv_data);
   } else if (IamServer()) {
     // TODO this server can do flexible consistency control here
 
-    // TODO user-defined intiailizer
-    if (my_val.empty()) my_val.resize(kr.size(), 0);
+    if (my_val.empty()) {
+      // TODO user-defined intiailizer
+      my_val.resize(kr.size(), 0);
+    }
 
     // TODO user-defined updater
     CHECK_GE(my_val.size(), kr.end());
@@ -49,19 +55,19 @@ void KVArray<K,V>::setValue(const MessagePtr& msg) {
 
 // only be called at servers, namely a worker pull data from this server
 template <typename V>
-void KVArray<K,V>::getValue(const MessagePtr& msg) {
+void KVArray<V>::getValue(const MessagePtr& msg) {
   auto& my_val = val_[msg->task.key_channel()];
   Range<Key> kr(msg->task.key_range());
   CHECK_GE(my_val.size(), kr.end());
   SArray<V> send_data(kr.size());
-  send_data.copyFrom(my_val.segment());
+  send_data.copyFrom(my_val.segment(kr));
   msg->addValue(send_data);
 }
 
 // divide a message into n part, where part i goes to server i. it's a zero-copy
 // implementation
 template <typename V>
-MessagePtrList KVArray<K,V>::slice(const MessagePtr& msg, const KeyRangeList& krs) {
+MessagePtrList KVArray<V>::slice(const MessagePtr& msg, const KeyRangeList& krs) {
   // divide the key range
   size_t n = krs.size();
   MessagePtrList ret(n);
@@ -86,8 +92,8 @@ MessagePtrList KVArray<K,V>::slice(const MessagePtr& msg, const KeyRangeList& kr
   }
 
   // divide the data
-  for (int i = 0; i < msg->value.size(), ++i) {
-    SArray<V> data(msg->value(i));
+  for (int i = 0; i < msg->value.size(); ++i) {
+    SArray<V> data(msg->value[i]);
     CHECK_EQ(data.size(), kr.size());
     for (int j = 0; j < n; ++j) {
       if (ret[j]->valid) {

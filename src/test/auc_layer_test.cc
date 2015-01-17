@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "neural_network/auc_layer.h"
+// #include "neural_network/auc_layer.h"
 #include "util/shared_array_inl.h"
 
 using namespace PS;
