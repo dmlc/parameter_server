@@ -182,7 +182,9 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     data->localizer->countUniqIndex(ins[1], &uniq_key, &key_cnt);
 
     // pull the features and weights from servers with tails filtered
-    MessagePtr msg(new Message(kServerGroup));
+    auto it = push_time_.find(data->batch_id - sgd.max_delay());
+    int wait_time = it == push_time_.end() ? -1 : it->second;
+    MessagePtr msg(new Message(kServerGroup, -1, wait_time));
     msg->task.set_key_channel(data->batch_id);
     msg->setKey(uniq_key);
     msg->addValue(key_cnt);
@@ -196,10 +198,9 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
   }
 
   virtual void computeGradient(SparseMinibatch<V>& data) {
-    // release some memory
     int id = data.batch_id;
-    if (pre_batch_ >= 0) model_.clear(pre_batch_);
-    pre_batch_ = id;
+    // release some memory
+    if (id > 0) model_.clear(id);
     // waiting the model working set
     model_.waitOutMsg(kServerGroup, data.pull_time);
 
@@ -216,11 +217,13 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     // not with penalty.
     // + penalty_->evaluate(w.matrix());
     V auc = Evaluation<V>::auc(Y->value(), Xw);
+    V acc = Evaluation<V>::accuracy(Y->value(), Xw);
     {
       Lock l(this->progress_mu_);
       auto& p = this->progress_;
       p.add_objective(objv);
       p.add_auc(auc);
+      p.add_accuracy(acc);
       p.set_num_examples_processed(
           p.num_examples_processed() + Xw.size());
     }
@@ -233,13 +236,16 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     msg->addValue(grad);
     msg->task.set_key_channel(id);
     msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-    model_.push(msg);
+    push_time_[id] = model_.push(msg);
   }
 private:
   KVVector<Key, V> model_;
   LossPtr<V> loss_;
   int batch_id_ = 0;
-  int pre_batch_ = -1;
+
+  std::unordered_map<int, int> push_time_;
+  // int pre_batch_ = -1;
+
 };
 
 } // namespace LM

@@ -2,6 +2,7 @@
 // #include "linear_method/ftrl.h"
 #include "linear_method/async_sgd.h"
 #include "linear_method/darlin.h"
+#include "linear_method/model_evaluation.h"
 namespace PS {
 namespace LM {
 
@@ -26,7 +27,7 @@ App* createApp(const string& name, const Config& conf) {
       app = new AsyncSGDServer<Real>(name, conf);
     }
   } else if (conf.has_validation_data()) {
-    // app =  new ModelEvaluation(name);
+    app =  new ModelEvaluation(name, conf);
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
              << " at " << Postoffice::instance().myNode().ShortDebugString();

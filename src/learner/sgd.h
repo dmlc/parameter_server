@@ -51,8 +51,7 @@ class ISGDScheduler : public App {
   virtual void showProgress() {
     Lock l(progress_mu_);
     uint64 num_ex = 0, nnz_w = 0;
-    SArray<double> objv;
-    SArray<double> auc;
+    SArray<double> objv, auc, acc;
     for (const auto& it : progress_) {
       auto& prog = it.second;
       num_ex += prog.num_examples_processed();
@@ -62,6 +61,9 @@ class ISGDScheduler : public App {
       }
       for (int i = 0; i < prog.auc_size(); ++i) {
         auc.pushBack(prog.auc(i));
+      }
+      for (int i = 0; i < prog.accuracy_size(); ++i) {
+        acc.pushBack(prog.accuracy(i));
       }
     }
     progress_.clear();
@@ -74,8 +76,8 @@ class ISGDScheduler : public App {
       // printf("%10lu examples, loss %.3e +/- %.1e, auc %.4f +/- %.2f, |w|_0 %8llu\n",
       //        num_ex_processed_ , objv.mean(), objv.std(),
       //        auc.mean(), auc.std(), nnz_w);
-      printf("%.2e examples, loss %.3e, auc %.4f, |w|_0 %.2e\n",
-             (double)num_ex_processed_ , objv.mean(), auc.mean(), (double)nnz_w);
+      printf("%.2e examples, loss %.3e, auc %.4f, acc %.4f, |w|_0 %.2e\n",
+             (double)num_ex_processed_ , objv.mean(), auc.mean(), acc.mean(), (double)nnz_w);
     }
   }
 

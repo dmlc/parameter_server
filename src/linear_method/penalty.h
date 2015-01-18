@@ -39,11 +39,7 @@ class ElasticNet : public Penalty<T> {
     CHECK_GT(eta, 0);
     T leta = lambda1_ * eta;
     if (z <= leta && z >= -leta) return 0;
-    if (z > 0) {
-      return z > leta ? (z - leta) / ( 1 + lambda2_ * eta) : 0;
-    } else {
-      return z < -leta ? (z + leta) / ( 1 + lambda2_ * eta) : 0;
-    }
+    return z > 0 ? (z - leta) / ( 1 + lambda2_ * eta) : (z + leta) / ( 1 + lambda2_ * eta);
   }
  private:
   T lambda1_, lambda2_;

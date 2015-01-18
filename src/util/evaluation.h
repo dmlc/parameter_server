@@ -9,8 +9,12 @@ namespace PS {
 template <typename V>
 class Evaluation {
  public:
-  static V auc(const SArray<V>& label, const SArray<V>& predict);
+  static V auc(const SArray<V>& label,
+               const SArray<V>& predict);
 
+  static V accuracy(const SArray<V>& label,
+                    const SArray<V>& predict,
+                    V threshold = 0);
 
 };
 
@@ -41,6 +45,21 @@ V Evaluation<V>::auc(const SArray<V>& label, const SArray<V>& predict) {
   }
   area /= cum_tp * (n - cum_tp);
   return area < 0.5 ? 1 - area : area;
+}
+
+
+template <typename V>
+V Evaluation<V>::accuracy(const SArray<V>& label, const SArray<V>& predict, V threshold) {
+  int n = label.size();
+  CHECK_EQ(n, predict.size());
+  V correct = 0;
+  for (int i = 0; i < n; ++i) {
+    if ((label[i] > 0 && predict[i] > threshold) ||
+        (label[i] < 0 && predict[i] <= threshold))
+      correct += 1;
+  }
+  V acc = correct / (V) n;
+  return acc > 0.5 ? acc : 1 - acc;
 }
 
 } // namespace PS
