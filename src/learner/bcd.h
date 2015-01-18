@@ -121,6 +121,12 @@ class BCDScheduler : public App, public BCDCommon {
     total_timer_.restart();
   }
 
+  void saveModel(const DataConfig& data) {
+    Task task;
+    task.mutable_bcd()->set_cmd(BCDCall::SAVE_MODEL);
+    *task.mutable_bcd()->mutable_data() = data;
+    port(kServerGroup)->submitAndWait(task);
+  }
  protected:
   void mergeProgress(int iter) {
     BCDProgress recv;

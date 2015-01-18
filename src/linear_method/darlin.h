@@ -124,6 +124,9 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
         LI << "Reached maximal " << max_iter << " data passes";
       }
     }
+
+    // save model
+    saveModel(conf_.model_output());
   }
  protected:
   // TOOD merge
