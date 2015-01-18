@@ -19,7 +19,7 @@ App* App::create(const AppConfig& conf) {
   } else if (conf.has_factor_machine()) {
   //   ptr = FM::FactorizationMachine::create(conf.factorization_machine());
   } else if (conf.has_cxxnet()) {
-    ptr = CXXNET::createApp(conf.app_name(), conf.cxxnet());
+    // ptr = CXXNET::createApp(conf.app_name(), conf.cxxnet());
   } else {
     ptr = new AppTest(conf.app_name());
   }

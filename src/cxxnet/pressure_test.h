@@ -102,12 +102,12 @@ class PressureWorker : public CXXNetWorker {
       }
     }
 
-    // for (int i = 0; i < n; ++i) {
-    //   int d = 0;
-    //   ps_->PullWait(key[i], d);
+    for (int i = 0; i < n; ++i) {
+      int d = 0;
+      ps_->PullWait(key[i], d);
     //   LL << "key " << key[i];
     //   Print2DTensor(weight[i][0]);
-    // }
+    }
     LL << "done";
   }
  protected:

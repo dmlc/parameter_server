@@ -39,7 +39,7 @@ message PressureTestEntry {
 }
 
 message PressureTest {
-  required int32 ndevice = 1;
+  required int32 ndevice = 1 [default = 1];
   repeated PressureTestEntry param = 2;
   optional int32 repeat = 3 [default = 10];
 }

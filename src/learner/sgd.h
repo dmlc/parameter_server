@@ -13,8 +13,10 @@ class ISGDScheduler : public App {
   ISGDScheduler(const string& name)
       : App(name), monitor_(name+"_monitor", name) {
     using namespace std::placeholders;
-    monitor_.setDataMerger(std::bind(&ISGDScheduler::addProgress, this, _1, _2));
-
+    monitor_.setDataMerger([this](const NodeID& sender, const SGDProgress& prog) {
+        Lock l(progress_mu_);
+        mergeProgress(prog, &progress_[sender]);
+      });
   }
   virtual ~ISGDScheduler() { }
 
@@ -25,24 +27,25 @@ class ISGDScheduler : public App {
     port(kServerGroup)->submitAndWait(task);
   }
 
-  void updateModel(const DataConfig& data) {
-    // ask the servers to report the progress
+  void updateModel(const DataConfig& data, int report_interval) {
+
+    startMonitor(report_interval);
     Task task;
     task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+    task.mutable_sgd()->set_report_interval(report_interval);
     port(kServerGroup)->submitAndWait(task);
     // ask the workers to commpute the gradients
     auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
-    std::vector<Task> tasks(conf.size());
+    std::vector<Task> tasks(conf.size(), task);
     for (int i = 0; i < conf.size(); ++i) {
-      auto sgd = tasks[i].mutable_sgd();
-      sgd->set_cmd(SGDCall::UPDATE_MODEL);
-      *sgd->mutable_data() = conf[i];
+      *tasks[i].mutable_sgd()->mutable_data() = conf[i];
     }
     port(kWorkerGroup)->submitAndWait(tasks);
   }
 
   void startMonitor(int interval = 1) {
     monitor_.monitor(interval, std::bind(&ISGDScheduler::showProgress, this));
+    timer_.start();
   }
 
   virtual void showProgress() {
@@ -50,7 +53,7 @@ class ISGDScheduler : public App {
     uint64 num_ex = 0, nnz_w = 0;
     SArray<double> objv;
     SArray<double> auc;
-    for (const auto& it : recent_progress_) {
+    for (const auto& it : progress_) {
       auto& prog = it.second;
       num_ex += prog.num_examples_processed();
       nnz_w += prog.nnz();
@@ -61,24 +64,32 @@ class ISGDScheduler : public App {
         auc.pushBack(prog.auc(i));
       }
     }
-    recent_progress_.clear();
+    progress_.clear();
     num_ex_processed_ += num_ex;
 
-    printf("%10lu examples, loss %.3e +- %.3e, auc %.4f +- %.4f, |w|_0 %8llu\n",
-           num_ex_processed_ , objv.mean(), objv.std(),
-           auc.mean(), auc.std(), nnz_w);
+    printf("%4d sec: ", (int)timer_.stop()); timer_.start();
+    if (num_ex == 0) {
+      printf("  no progress\n");
+    } else {
+      // printf("%10lu examples, loss %.3e +/- %.1e, auc %.4f +/- %.2f, |w|_0 %8llu\n",
+      //        num_ex_processed_ , objv.mean(), objv.std(),
+      //        auc.mean(), auc.std(), nnz_w);
+      printf("%.2e examples, loss %.3e, auc %.4f, |w|_0 %.2e\n",
+             (double)num_ex_processed_ , objv.mean(), auc.mean(), (double)nnz_w);
+    }
   }
 
-  virtual void addProgress(const NodeID& sender, const SGDProgress& prog) {
-    Lock l(progress_mu_);
-    recent_progress_.push_back(std::make_pair(sender, prog));
+  virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst) {
+    auto old = *dst; *dst = src;
+    dst->set_num_examples_processed(
+        dst->num_examples_processed() + old.num_examples_processed());
   }
 
   DistMonitor<SGDProgress> monitor_;
-  std::vector<std::pair<NodeID, SGDProgress>> recent_progress_;
+  std::unordered_map<NodeID, SGDProgress> progress_;
   std::mutex progress_mu_;
   size_t num_ex_processed_ = 0;
-
+  Timer timer_;
 };
 
 class ISGDCompNode : public App {

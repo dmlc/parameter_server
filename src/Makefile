@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O0 -ggdb
-# OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
+OPT = -O3 -ggdb
 
 ### third_party path
 THIRD_PARTY=$(shell cd ..;pwd)/third_party
@@ -30,7 +30,8 @@ endif
 ### all
 BIN = ../bin
 LIB = ../lib
-LIBS = $(addprefix $(LIB)/, liblm.a cxxnet.a libps.a libprotos.a)
+# cxxnet.a
+LIBS = $(addprefix $(LIB)/, lm.a ps.a proto.a)
 LDFLAGS += -L$(LIB) $(LIBS) $(THIRD_LIBS) -lpthread -lrt
 # LDFLAGS += -ltcmalloc_and_profiler
 
@@ -46,11 +47,11 @@ sys_srcs = \
 	$(addprefix util/, $(util_srcs)) \
 	$(addprefix data/, $(data_srcs)) \
 	$(addprefix filter/, $(filter_srcs))
-$(LIB)/libps.a: $(sys_srcs:.cc=.o)
+$(LIB)/ps.a: $(sys_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### linear methods
-$(LIB)/liblm.a: $(linear_method_srcs:.cc=.o)
+$(LIB)/lm.a: $(linear_method_srcs:.cc=.o)
 	ar crv $@ $?
 
 ### cxxnet
@@ -60,23 +61,17 @@ LDFLAGS += -L/opt/intel/mkl/lib/intel64
 $(LIB)/cxxnet.a: $(cxxnet_srcs:.cc=.o)
 	ar crv $@ $?
 
-### graph partitioning
-GP_SRCS = $(addprefix graph_partition/, $(graph_partition_srcs))
-GP_OBJS = $(GP_SRCS:.cc=.o)
-$(LIB)/libgp.a: $(GP_OBJS)
-	ar crv $@ $(GP_OBJS)
+$(LIB)/gp.a: $(graph_partition_srcs:.cc=.o)
+	ar crv $@ $?
 
-### factorization machine
-FM_SRCS = $(addprefix factorization_machine/, fm.cc)
-FM_OBJS = $(FM_SRCS:.cc=.o)
-$(LIB)/libfm.a: $(FM_OBJS)
-	ar crv $@ $(FM_OBJS)
+$(LIB)/fm.a: $(graph_partition_srcs:.cc=.o)
+	ar crv $@ $?
 
 ### protobuf
 PROTOS= $(wildcard */*/*.proto) $(wildcard */*.proto)
 %.pb.cc %.pb.h : %.proto
 	${THIRD_BIN}/protoc --cpp_out=. $<
-$(LIB)/libprotos.a: $(PROTOS:.proto=.pb.o)
+$(LIB)/proto.a: $(PROTOS:.proto=.pb.o)
 	ar crv $@ $?
 
 

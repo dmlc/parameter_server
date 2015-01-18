@@ -291,7 +291,7 @@ class PressureTest : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required int32 ndevice = 1;
+  // required int32 ndevice = 1 [default = 1];
   inline bool has_ndevice() const;
   inline void clear_ndevice();
   static const int kNdeviceFieldNumber = 1;
@@ -481,7 +481,7 @@ inline void PressureTestEntry::set_width(::google::protobuf::int32 value) {
 
 // PressureTest
 
-// required int32 ndevice = 1;
+// required int32 ndevice = 1 [default = 1];
 inline bool PressureTest::has_ndevice() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -492,7 +492,7 @@ inline void PressureTest::clear_has_ndevice() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void PressureTest::clear_ndevice() {
-  ndevice_ = 0;
+  ndevice_ = 1;
   clear_has_ndevice();
 }
 inline ::google::protobuf::int32 PressureTest::ndevice() const {

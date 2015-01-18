@@ -22,7 +22,7 @@ class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
   virtual ~AsyncSGDScheduler() { }
 
   virtual void run() {
-    updateModel(conf_.training_data());
+    updateModel(conf_.training_data(), conf_.async_sgd().report_interval());
     saveModel();
   }
 };
@@ -116,15 +116,12 @@ public:
   AsyncSGDServer(const string& name, const Config& conf)
       : ISGDServer(name), LinearMethod(conf) {
     if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
-      model_ = CHECK_NOTNULL((
-          new KVStore<Key, FTRLEntry<V>, SGDState<V>>(name+"_model", name)));
+      model_ = new KVStore<Key, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
     } else {
       if (conf_.async_sgd().ada_grad()) {
-        model_ = CHECK_NOTNULL((
-            new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name)));
+        model_ = new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name);
       } else {
-        model_ = CHECK_NOTNULL((
-            new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name)));
+        model_ = new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
       }
     }
   }
@@ -134,7 +131,7 @@ public:
   }
 
   void init() {
-    model_->setEntrySyncSize(sizeof(V));
+    CHECK_NOTNULL(model_)->setEntrySyncSize(sizeof(V));
 
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     model_->setState(state);
@@ -153,7 +150,7 @@ public:
     // TODO
   }
  protected:
-  KVState<Key, SGDState<V>>* model_;
+  KVState<Key, SGDState<V>>* model_ = nullptr;
 };
 
 template <typename V>
