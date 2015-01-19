@@ -1,0 +1,15 @@
+
+*compile:*
+
+#+BEGIN_SRC bash
+cd root_dir
+make build/hello -j8
+#+END_SRC
+
+*run this example:*
+
+#+BEGIN_SRC bash
+cd root_dir
+cd script
+./local.sh ../build/hello 2 2
+#+END_SRC
