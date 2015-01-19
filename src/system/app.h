@@ -5,8 +5,10 @@ namespace PS {
 
 class App : public Customer {
  public:
-  App(const string& name) : Customer(name) { }
+  App(const string& name = "app") : Customer(name) { }
   virtual ~App() { }
+
+  static App* create(const std::string& name, const std::string& conf);
 
   // factory function, implemented in src/main.cc
   static App* create(const AppConfig& config);

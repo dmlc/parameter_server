@@ -91,8 +91,8 @@ class File {
 };
 
 
-// bool readFileToString(const std::string& file_name, std::string* output);
-// bool writeStringToFile(const std::string& data, const std::string& file_name);
+bool readFileToString(const std::string& file_name, std::string* output);
+bool writeStringToFile(const std::string& data, const std::string& file_name);
 
 //// convenient functions dealing with protobuf
 

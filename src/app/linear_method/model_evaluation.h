@@ -64,9 +64,10 @@ void ModelEvaluation::run() {
     LI << "load " << label.size() << " examples";
   } while (good);
 
+  // label.writeToFile("label");
+  // predict.writeToFile("predict");
+
   // evaluation
-  label.writeToFile("label");
-  predict.writeToFile("predict");
   LI << "auc: " << Evaluation<Real>::auc(label, predict);
   LI << "accuracy: " << Evaluation<Real>::accuracy(label, predict);
 }

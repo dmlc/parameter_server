@@ -14,7 +14,10 @@ DEFINE_int32(num_servers, 0, "number of servers");
 DEFINE_int32(num_workers, 0, "number of clients");
 DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
-DEFINE_string(app, "../config/rcv1/batch_l1lr.conf", "the configuration file of app");
+DEFINE_string(app, "", "the configuration file of app");
+
+DEFINE_string(app_name, "app", "the name of this app");
+DEFINE_string(app_conf, "", "the configuration file of app");
 DECLARE_string(interface);
 DEFINE_bool(traffic_statistics, false, "print traffic statistic at the end");
 
@@ -26,14 +29,6 @@ DEFINE_bool(verbose, false, "print extra debug info");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
 
 Postoffice::Postoffice() {
-  // omp_set_dynamic(0);
-  // omp_set_num_threads(FLAGS_num_threads);
-  if (FLAGS_log_to_file) {
-    google::SetLogDestination(
-        google::INFO, ("./log_" + myNode().id() + "_").c_str());
-    FLAGS_logtostderr = 0;
-  }
-  yp().init();
 }
 
 Postoffice::~Postoffice() {
@@ -43,11 +38,23 @@ Postoffice::~Postoffice() {
   delete app_;
 }
 
-void Postoffice::run() {
+void Postoffice::start(int argc, char *argv[]) {
+  google::InitGoogleLogging(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  if (FLAGS_log_to_file) {
+    google::SetLogDestination(
+        google::INFO, ("./log_" + myNode().id() + "_").c_str());
+    FLAGS_logtostderr = 0;
+  }
+  yp().init();
+  // omp_set_dynamic(0);
+  // omp_set_num_threads(FLAGS_num_threads);
+
   if (IamScheduler()) {
     // create the app
-    readFileToProtoOrDie(FLAGS_app, &app_conf_);
-    app_ = App::create(app_conf_);
+    if (!readFileToString(FLAGS_app_conf, &app_conf_)) app_conf_ = FLAGS_app_conf;
+    app_ = App::create(FLAGS_app_name, app_conf_);
+    CHECK_NOTNULL(app_)->init();
   } else {
     // connect to the scheduler, which will send back a create_app request
     Task task;
@@ -69,7 +76,7 @@ void Postoffice::run() {
       std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
 
   if (IamScheduler()) {
-    // add my self into app_
+    // add my node into app_
     Task task;
     task.set_request(true);
     task.set_customer(app_->name());
@@ -90,8 +97,8 @@ void Postoffice::run() {
       auto nodes = yp().nodes();
       nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
       Task task;
-      task.set_request(true);
-      task.set_customer(app_->name());
+      // task.set_request(true);
+      // task.set_customer(app_->name());
       task.set_type(Task::MANAGE);
       task.mutable_mng_node()->set_cmd(ManageNode::ADD);
       for (const auto& n : nodes) {
@@ -100,11 +107,21 @@ void Postoffice::run() {
       // then add them in servers and worekrs
       app_->port(kCompGroup)->submitAndWait(task);
     }
-
     // run the application
     app_->run();
 
-    // stop
+    Task run;
+    run.set_type(Task::MANAGE);
+    run.mutable_mng_app()->set_cmd(ManageApp::RUN);
+    app_->port(kCompGroup)->submitAndWait(run);
+  } else {
+    app_is_ready_.get_future().wait();
+    CHECK_NOTNULL(app_)->run();
+  }
+}
+
+void Postoffice::stop() {
+  if (IamScheduler()) {
     Task terminate;
     terminate.set_type(Task::TERMINATE);
     app_->port(kLiveGroup)->submit(terminate);
@@ -208,10 +225,13 @@ void Postoffice::recv() {
 
 void Postoffice::manageApp(const Task& tk) {
   CHECK(tk.has_mng_app());
-  auto& mng = tk.mng_app();
-  if (mng.cmd() == ManageApp::ADD) {
-    App* app = CHECK_NOTNULL(App::create(mng.app_config()));
-    yp().depositCustomer(app->name());
+  auto cmd = tk.mng_app().cmd();
+  if (cmd == ManageApp::ADD) {
+    app_ = App::create(tk.customer(), tk.mng_app().conf());
+    CHECK_NOTNULL(app_)->init();
+    // yp().depositCustomer(app->name());
+  } else if (cmd == ManageApp::RUN) {
+    app_is_ready_.set_value();
   }
 }
 
@@ -223,17 +243,17 @@ void Postoffice::manageNode(Task& tk) {
     CHECK_EQ(mng.node_size(), 1);
     // first add this node into app
     Task add = tk;
-    add.set_customer(app_conf_.app_name());
+    add.set_customer(CHECK_NOTNULL(app_)->name());
     add.mutable_mng_node()->set_cmd(ManageNode::ADD);
     manageNode(add);
     // create the app in this node
     Task task;
     task.set_request(true);
-    task.set_customer(app_conf_.app_name());
+    task.set_customer(app_->name());
     task.set_type(Task::MANAGE);
     task.set_time(1);
     task.mutable_mng_app()->set_cmd(ManageApp::ADD);
-    *task.mutable_mng_app()->mutable_app_config() = app_conf_;
+    task.mutable_mng_app()->set_conf(app_conf_);
     app_->port(mng.node(0).id())->submit(task);
     // check if all nodes are connected
     if (yp().num_workers() >= FLAGS_num_workers &&

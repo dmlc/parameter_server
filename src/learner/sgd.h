@@ -176,7 +176,8 @@ class ISGDWorker : public ISGDCompNode {
 template <typename V>
 struct SparseMinibatch {
   size_t size() {
-    return label->memSize() + localizer->memSize();
+    return 1;
+    // return label->memSize() + localizer->memSize();
   }
   MatrixPtr<V> label;
   LocalizerPtr<Key, V> localizer;

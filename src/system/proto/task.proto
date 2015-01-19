@@ -39,21 +39,17 @@ message Task {
   repeated DataType value_type = 14;
 
   repeated FilterConfig filter = 12;
-  // general task
-  optional bytes msg = 101;
-  optional ManageNode mng_node = 102;
-  optional ManageApp mng_app = 103;
+
+  optional bytes msg = 17;
+  optional ManageNode mng_node = 18;
+  optional ManageApp mng_app = 19;
 
   // parameters
-  optional CallSharedPara shared_para = 201;
+  optional CallSharedPara shared_para = 20;
+  optional SGDCall sgd = 21;
+  optional BCDCall bcd = 22;
 
-  // applications
-  // optional LM.Call linear_method = 301;
-
-  // optional GP.Call graph_partition = 303;
-  // optional FM.Call factorization_machine = 304;
-  optional SGDCall sgd = 20;
-  optional BCDCall bcd = 21;
+  extensions 100 to 199;
 }
 
 message ManageNode {
@@ -74,9 +70,10 @@ message ManageApp {
   enum Command {
     ADD = 1;
     REMOVE = 2;
+    RUN = 3;
   }
   required Command cmd = 1;
-  required AppConfig app_config = 2;
+  optional string conf = 2;
 }
 
 enum DataType {

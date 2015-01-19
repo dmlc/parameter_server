@@ -14,6 +14,8 @@ class KVState : public SharedParameter<K> {
   void setEntrySyncSize(int k) { k_ = k; }
   void setState(const S& s) { state_ = s; }
   const S& state() { return state_; }
+  virtual void writeToFile(
+      std::function<void (const K& key, char const* val)> writer) = 0;
  protected:
   int k_ = 1;
   S state_;
@@ -62,6 +64,15 @@ class KVStore : public KVState<K, S> {
     return sliceKeyOrderedMsg<K>(msg, krs);
   }
 
+  virtual void writeToFile(
+      std::function<void (const K& key, char const* val)> writer) {
+    char* v = new char[k_];
+    for (auto& e : data_) {
+      e.second.put(v, &state_);
+      writer(e.first, v);
+    }
+    delete [] v;
+  }
   // TODO fault tolerance
   void setReplica(const MessagePtr& msg) { }
   void getReplica(const MessagePtr& msg) { }

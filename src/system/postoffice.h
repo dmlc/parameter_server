@@ -4,7 +4,7 @@
 #include "system/yellow_pages.h"
 #include "system/heartbeat_info.h"
 #include "util/threadsafe_queue.h"
-#include "dashboard.h"
+#include "system/dashboard.h"
 namespace PS {
 
 
@@ -21,6 +21,8 @@ class Postoffice {
   SINGLETON(Postoffice);
   ~Postoffice();
 
+  void start(int argc, char *argv[]);
+  void stop();
   // Run the system
   void run();
 
@@ -57,13 +59,14 @@ class Postoffice {
   // void addMyNode(const string& name, const Node& recver);
 
   // app info only available for the scheduler, check IamScheduler() before using
-  AppConfig app_conf_;
+  string app_conf_;
   App* app_ = nullptr;
 
   std::mutex mutex_;
   bool done_ = false;
 
   std::promise<void> nodes_are_ready_;
+  std::promise<void> app_is_ready_;
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
   threadsafe_queue<MessagePtr> sending_queue_;

@@ -8,6 +8,16 @@
 namespace PS {
 namespace LM {
 
+// solve argmin_y x*y + .5*lambda_2*y^2 + lambda_1*|y|
+template <typename V>
+V softThresholding(V x, V lambda_1, V lambda_2) {
+  if (x > 0) {
+    return x > lambda_1 ? (x - lambda_1) / lambda_2 : 0;
+  } else {
+    return x < - lambda_1 ? (x + lambda_1) / lambda_2 : 0;
+  }
+}
+
 // project value into [-bound, bound]
 template <typename V>
 V project(V value, V bound) {
@@ -37,6 +47,7 @@ struct SGDState {
   virtual ~SGDState() { }
 
   void update(V new_weight, V old_weight) {
+    // LL << new_weight << " " << old_weight;
     if (new_weight == 0 && old_weight != 0) {
       -- nnz;
     } else if (new_weight != 0 && old_weight == 0) {
@@ -94,12 +105,15 @@ struct FTRLEntry {
     V grad = *((V*)data);
     V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
     V sigma = (sqrt_n_new - sqrt_n) / state->lr->alpha();
-
     z += grad  - sigma * w;
     sqrt_n = sqrt_n_new;
 
+    V lambda2 = (state->lr->beta() + sqrt_n_new) / state->lr->alpha();
+    V w1 = - softThresholding(z, (V)1, lambda2);
+
     V eta = state->lr->eval(sqrt_n);
     w = state->h->proximal(-z*eta, eta);
+    // if (w != 0) LL << w << " " << w1-w << " " << eta << " " << z << " " << grad;
     state->update(w, w_old);
   }
 
@@ -147,7 +161,17 @@ public:
   }
 
   void saveModel() {
-    // TODO
+    auto output = conf_.model_output();
+    if (output.format() == DataConfig::TEXT) {
+      CHECK(output.file_size());
+      std::string file = output.file(0) + "_" + myNodeID();
+      std::ofstream out(file); CHECK(out.good());
+      CHECK_NOTNULL(model_)->writeToFile([&out](const Key& key, char const* val) {
+          V v = *((V const *)val);
+          if (v != 0) out << key << "\t" << v << std::endl;
+        });
+      LI << myNodeID() << " written the model to " << file;
+    }
   }
  protected:
   KVState<Key, SGDState<V>>* model_ = nullptr;
@@ -182,8 +206,11 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     data->localizer->countUniqIndex(ins[1], &uniq_key, &key_cnt);
 
     // pull the features and weights from servers with tails filtered
-    auto it = push_time_.find(data->batch_id - sgd.max_delay());
-    int wait_time = it == push_time_.end() ? -1 : it->second;
+    // LL << data->batch_id - sgd.max_delay() - 1;
+    // auto it = push_time_.find(data->batch_id - sgd.max_delay() - 1);
+    // int wait_time = it == push_time_.end() ? -1 : it->second;
+    int wait_time = model_.port(kServerGroup)->time();
+    // LL <<
     MessagePtr msg(new Message(kServerGroup, -1, wait_time));
     msg->task.set_key_channel(data->batch_id);
     msg->setKey(uniq_key);
@@ -194,6 +221,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     tail->set_query_key(sgd.tail_feature_freq());
     tail->set_query_value(true);
     data->pull_time = model_.pull(msg);
+    LL << data->pull_time  << " " << wait_time;
     return true;
   }
 
@@ -212,6 +240,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     // compute the gradient
     SArray<V> Xw(Y->rows());
     auto w = model_.value(id);
+    LL << w.vec().norm();
     Xw.eigenArray() = *X * w.eigenArray();
     V objv = loss_->evaluate({Y, Xw.matrix()});
     // not with penalty.
@@ -243,6 +272,7 @@ private:
   LossPtr<V> loss_;
   int batch_id_ = 0;
 
+  std::mutex push_time_mu_;
   std::unordered_map<int, int> push_time_;
   // int pre_batch_ = -1;
 

@@ -93,11 +93,12 @@ inline bool ManageNode_Command_Parse(
 }
 enum ManageApp_Command {
   ManageApp_Command_ADD = 1,
-  ManageApp_Command_REMOVE = 2
+  ManageApp_Command_REMOVE = 2,
+  ManageApp_Command_RUN = 3
 };
 bool ManageApp_Command_IsValid(int value);
 const ManageApp_Command ManageApp_Command_Command_MIN = ManageApp_Command_ADD;
-const ManageApp_Command ManageApp_Command_Command_MAX = ManageApp_Command_REMOVE;
+const ManageApp_Command ManageApp_Command_Command_MAX = ManageApp_Command_RUN;
 const int ManageApp_Command_Command_ARRAYSIZE = ManageApp_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ManageApp_Command_descriptor();
@@ -319,10 +320,10 @@ class Task : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig >*
       mutable_filter();
 
-  // optional bytes msg = 101;
+  // optional bytes msg = 17;
   inline bool has_msg() const;
   inline void clear_msg();
-  static const int kMsgFieldNumber = 101;
+  static const int kMsgFieldNumber = 17;
   inline const ::std::string& msg() const;
   inline void set_msg(const ::std::string& value);
   inline void set_msg(const char* value);
@@ -331,51 +332,52 @@ class Task : public ::google::protobuf::Message {
   inline ::std::string* release_msg();
   inline void set_allocated_msg(::std::string* msg);
 
-  // optional .PS.ManageNode mng_node = 102;
+  // optional .PS.ManageNode mng_node = 18;
   inline bool has_mng_node() const;
   inline void clear_mng_node();
-  static const int kMngNodeFieldNumber = 102;
+  static const int kMngNodeFieldNumber = 18;
   inline const ::PS::ManageNode& mng_node() const;
   inline ::PS::ManageNode* mutable_mng_node();
   inline ::PS::ManageNode* release_mng_node();
   inline void set_allocated_mng_node(::PS::ManageNode* mng_node);
 
-  // optional .PS.ManageApp mng_app = 103;
+  // optional .PS.ManageApp mng_app = 19;
   inline bool has_mng_app() const;
   inline void clear_mng_app();
-  static const int kMngAppFieldNumber = 103;
+  static const int kMngAppFieldNumber = 19;
   inline const ::PS::ManageApp& mng_app() const;
   inline ::PS::ManageApp* mutable_mng_app();
   inline ::PS::ManageApp* release_mng_app();
   inline void set_allocated_mng_app(::PS::ManageApp* mng_app);
 
-  // optional .PS.CallSharedPara shared_para = 201;
+  // optional .PS.CallSharedPara shared_para = 20;
   inline bool has_shared_para() const;
   inline void clear_shared_para();
-  static const int kSharedParaFieldNumber = 201;
+  static const int kSharedParaFieldNumber = 20;
   inline const ::PS::CallSharedPara& shared_para() const;
   inline ::PS::CallSharedPara* mutable_shared_para();
   inline ::PS::CallSharedPara* release_shared_para();
   inline void set_allocated_shared_para(::PS::CallSharedPara* shared_para);
 
-  // optional .PS.SGDCall sgd = 20;
+  // optional .PS.SGDCall sgd = 21;
   inline bool has_sgd() const;
   inline void clear_sgd();
-  static const int kSgdFieldNumber = 20;
+  static const int kSgdFieldNumber = 21;
   inline const ::PS::SGDCall& sgd() const;
   inline ::PS::SGDCall* mutable_sgd();
   inline ::PS::SGDCall* release_sgd();
   inline void set_allocated_sgd(::PS::SGDCall* sgd);
 
-  // optional .PS.BCDCall bcd = 21;
+  // optional .PS.BCDCall bcd = 22;
   inline bool has_bcd() const;
   inline void clear_bcd();
-  static const int kBcdFieldNumber = 21;
+  static const int kBcdFieldNumber = 22;
   inline const ::PS::BCDCall& bcd() const;
   inline ::PS::BCDCall* mutable_bcd();
   inline ::PS::BCDCall* release_bcd();
   inline void set_allocated_bcd(::PS::BCDCall* bcd);
 
+  GOOGLE_PROTOBUF_EXTENSION_ACCESSORS(Task)
   // @@protoc_insertion_point(class_scope:PS.Task)
  private:
   inline void set_has_type();
@@ -406,6 +408,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_sgd();
   inline void set_has_bcd();
   inline void clear_has_bcd();
+
+  ::google::protobuf::internal::ExtensionSet _extensions_;
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -616,6 +620,7 @@ class ManageApp : public ::google::protobuf::Message {
   typedef ManageApp_Command Command;
   static const Command ADD = ManageApp_Command_ADD;
   static const Command REMOVE = ManageApp_Command_REMOVE;
+  static const Command RUN = ManageApp_Command_RUN;
   static inline bool Command_IsValid(int value) {
     return ManageApp_Command_IsValid(value);
   }
@@ -646,25 +651,28 @@ class ManageApp : public ::google::protobuf::Message {
   inline ::PS::ManageApp_Command cmd() const;
   inline void set_cmd(::PS::ManageApp_Command value);
 
-  // required .PS.AppConfig app_config = 2;
-  inline bool has_app_config() const;
-  inline void clear_app_config();
-  static const int kAppConfigFieldNumber = 2;
-  inline const ::PS::AppConfig& app_config() const;
-  inline ::PS::AppConfig* mutable_app_config();
-  inline ::PS::AppConfig* release_app_config();
-  inline void set_allocated_app_config(::PS::AppConfig* app_config);
+  // optional string conf = 2;
+  inline bool has_conf() const;
+  inline void clear_conf();
+  static const int kConfFieldNumber = 2;
+  inline const ::std::string& conf() const;
+  inline void set_conf(const ::std::string& value);
+  inline void set_conf(const char* value);
+  inline void set_conf(const char* value, size_t size);
+  inline ::std::string* mutable_conf();
+  inline ::std::string* release_conf();
+  inline void set_allocated_conf(::std::string* conf);
 
   // @@protoc_insertion_point(class_scope:PS.ManageApp)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
-  inline void set_has_app_config();
-  inline void clear_has_app_config();
+  inline void set_has_conf();
+  inline void clear_has_conf();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::PS::AppConfig* app_config_;
+  ::std::string* conf_;
   int cmd_;
 
   mutable int _cached_size_;
@@ -1003,7 +1011,7 @@ Task::mutable_filter() {
   return &filter_;
 }
 
-// optional bytes msg = 101;
+// optional bytes msg = 17;
 inline bool Task::has_msg() const {
   return (_has_bits_[0] & 0x00000800u) != 0;
 }
@@ -1073,7 +1081,7 @@ inline void Task::set_allocated_msg(::std::string* msg) {
   }
 }
 
-// optional .PS.ManageNode mng_node = 102;
+// optional .PS.ManageNode mng_node = 18;
 inline bool Task::has_mng_node() const {
   return (_has_bits_[0] & 0x00001000u) != 0;
 }
@@ -1111,7 +1119,7 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
   }
 }
 
-// optional .PS.ManageApp mng_app = 103;
+// optional .PS.ManageApp mng_app = 19;
 inline bool Task::has_mng_app() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
@@ -1149,7 +1157,7 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
   }
 }
 
-// optional .PS.CallSharedPara shared_para = 201;
+// optional .PS.CallSharedPara shared_para = 20;
 inline bool Task::has_shared_para() const {
   return (_has_bits_[0] & 0x00004000u) != 0;
 }
@@ -1187,7 +1195,7 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
   }
 }
 
-// optional .PS.SGDCall sgd = 20;
+// optional .PS.SGDCall sgd = 21;
 inline bool Task::has_sgd() const {
   return (_has_bits_[0] & 0x00008000u) != 0;
 }
@@ -1225,7 +1233,7 @@ inline void Task::set_allocated_sgd(::PS::SGDCall* sgd) {
   }
 }
 
-// optional .PS.BCDCall bcd = 21;
+// optional .PS.BCDCall bcd = 22;
 inline bool Task::has_bcd() const {
   return (_has_bits_[0] & 0x00010000u) != 0;
 }
@@ -1342,41 +1350,73 @@ inline void ManageApp::set_cmd(::PS::ManageApp_Command value) {
   cmd_ = value;
 }
 
-// required .PS.AppConfig app_config = 2;
-inline bool ManageApp::has_app_config() const {
+// optional string conf = 2;
+inline bool ManageApp::has_conf() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void ManageApp::set_has_app_config() {
+inline void ManageApp::set_has_conf() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void ManageApp::clear_has_app_config() {
+inline void ManageApp::clear_has_conf() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void ManageApp::clear_app_config() {
-  if (app_config_ != NULL) app_config_->::PS::AppConfig::Clear();
-  clear_has_app_config();
+inline void ManageApp::clear_conf() {
+  if (conf_ != &::google::protobuf::internal::kEmptyString) {
+    conf_->clear();
+  }
+  clear_has_conf();
 }
-inline const ::PS::AppConfig& ManageApp::app_config() const {
-  return app_config_ != NULL ? *app_config_ : *default_instance_->app_config_;
+inline const ::std::string& ManageApp::conf() const {
+  return *conf_;
 }
-inline ::PS::AppConfig* ManageApp::mutable_app_config() {
-  set_has_app_config();
-  if (app_config_ == NULL) app_config_ = new ::PS::AppConfig;
-  return app_config_;
+inline void ManageApp::set_conf(const ::std::string& value) {
+  set_has_conf();
+  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+    conf_ = new ::std::string;
+  }
+  conf_->assign(value);
 }
-inline ::PS::AppConfig* ManageApp::release_app_config() {
-  clear_has_app_config();
-  ::PS::AppConfig* temp = app_config_;
-  app_config_ = NULL;
-  return temp;
+inline void ManageApp::set_conf(const char* value) {
+  set_has_conf();
+  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+    conf_ = new ::std::string;
+  }
+  conf_->assign(value);
 }
-inline void ManageApp::set_allocated_app_config(::PS::AppConfig* app_config) {
-  delete app_config_;
-  app_config_ = app_config;
-  if (app_config) {
-    set_has_app_config();
+inline void ManageApp::set_conf(const char* value, size_t size) {
+  set_has_conf();
+  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+    conf_ = new ::std::string;
+  }
+  conf_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ManageApp::mutable_conf() {
+  set_has_conf();
+  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+    conf_ = new ::std::string;
+  }
+  return conf_;
+}
+inline ::std::string* ManageApp::release_conf() {
+  clear_has_conf();
+  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
   } else {
-    clear_has_app_config();
+    ::std::string* temp = conf_;
+    conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void ManageApp::set_allocated_conf(::std::string* conf) {
+  if (conf_ != &::google::protobuf::internal::kEmptyString) {
+    delete conf_;
+  }
+  if (conf) {
+    set_has_conf();
+    conf_ = conf;
+  } else {
+    clear_has_conf();
+    conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
