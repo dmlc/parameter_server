@@ -221,7 +221,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     tail->set_query_key(sgd.tail_feature_freq());
     tail->set_query_value(true);
     data->pull_time = model_.pull(msg);
-    LL << data->pull_time  << " " << wait_time;
+    // LL << data->pull_time  << " " << wait_time;
     return true;
   }
 
@@ -240,7 +240,6 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     // compute the gradient
     SArray<V> Xw(Y->rows());
     auto w = model_.value(id);
-    LL << w.vec().norm();
     Xw.eigenArray() = *X * w.eigenArray();
     V objv = loss_->evaluate({Y, Xw.matrix()});
     // not with penalty.
@@ -258,7 +257,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     }
     SArray<V> grad(X->cols());
     loss_->compute({Y, X, Xw.matrix()}, {grad.matrix()});
-
+    LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
     // push the gradient
     MessagePtr msg(new Message(kServerGroup));
     msg->setKey(model_.key(data.batch_id));

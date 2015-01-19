@@ -49,3 +49,4 @@ build/%.o: src/%.cc
 	${THIRD_PATH}/bin/protoc --cpp_out=./src --proto_path=./src $<
 
 -include build/*/*.d
+-include build/*/*/*.d

@@ -17,6 +17,7 @@ class ModelEvaluation : public App, public LinearMethod {
 };
 
 void ModelEvaluation::run() {
+  if (!isScheduler()) return;
   // load model
   std::unordered_map<Key, Real> weight;
   auto model = searchFiles(conf_.model_input());
