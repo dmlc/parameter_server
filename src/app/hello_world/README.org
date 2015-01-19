@@ -6,10 +6,23 @@ cd root_dir
 make build/hello -j8
 #+END_SRC
 
-*run this example:*
+*run this example by 3 servers and 2 workers*
 
 #+BEGIN_SRC bash
 cd root_dir
 cd script
-./local.sh ../build/hello 2 2
+./local.sh ../build/hello 3 2
+#+END_SRC
+
+*example output*
+
+#+BEGIN_SRC
+this is H, a scheduler node with rank 0, creates model [app_model] in app [app]
+this is S2, a server node with rank 2, creates model [app_model] in app [app]
+this is S1, a server node with rank 1, creates model [app_model] in app [app]
+this is W1, a worker node with rank 1, creates model [app_model] in app [app]
+this is W0, a worker node with rank 0, creates model [app_model] in app [app]
+this is S0, a server node with rank 0, creates model [app_model] in app [app]
+W0: key: [4]: 0 2 4 5 ; value: [4]: 0 0.2 0.4 0.5
+W1: key: [4]: 0 1 3 4 ; value: [4]: 0 0.1 0.3 0.4
 #+END_SRC
