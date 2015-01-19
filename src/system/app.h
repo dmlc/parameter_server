@@ -6,8 +6,10 @@ class App : public Customer {
   App(const string& name) : Customer(name) { }
   virtual ~App() { }
 
+  // factory functionn
   static App* create(const std::string& name, const std::string& conf);
 
+  // init() is called after this app has been created at all nodes.
   virtual void init() { }
 
   // run() is executed after all nodes have been executed init()
@@ -16,8 +18,3 @@ class App : public Customer {
 };
 
 } // namespace PS
-
-  // factory function, implemented in src/main.cc
-  // static App* create(const AppConfig& config);
-  // // TODO rename to app_conf_
-  // AppConfig app_cf_;

@@ -36,16 +36,16 @@ class Customer {
   // query about my node
   NodeID myNodeID() { return exec_.myNode().id(); }
   int myRank() { return exec_.myNode().rank(); }
-  bool IamWorker() { return exec_.myNode().role() == Node::WORKER; }
-  bool IamServer() { return exec_.myNode().role() == Node::SERVER; }
-  bool IamScheduler() { return exec_.myNode().role() == Node::SCHEDULER; }
+  bool isWorker() { return exec_.myNode().role() == Node::WORKER; }
+  bool isServer() { return exec_.myNode().role() == Node::SERVER; }
+  bool isScheduler() { return exec_.myNode().role() == Node::SCHEDULER; }
 
-  // the unqiue scheduler id
+  // the unique scheduler id
   NodeID schedulerID() { return sys_.scheduler().id(); }
-  // return the executor
-  Executor& exec() { return exec_; }
   // return the remote_note by its name
   RNodePtr port(const NodeID& k) { return exec_.rnode(k); }
+  // return the executor
+  Executor& exec() { return exec_; }
 
  protected:
   string name_;

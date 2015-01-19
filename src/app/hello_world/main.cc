@@ -10,22 +10,22 @@ class Hello : public App {
   void init() {
     model_ = new KVVector<uint64, float>(name()+"_model", name());
     LL << "this is " << myNodeID() << ", a " <<
-        (IamWorker() ? "worker" :
-         (IamServer() ? "server" :
-          (IamScheduler() ? "scheduler" : "idle")))
+        (isWorker() ? "worker" :
+         (isServer() ? "server" :
+          (isScheduler() ? "scheduler" : "idle")))
               << " node with rank " << myRank()
        << ", creates model ["
        << model_->name() << "] in app [" << name() << "]";
 
     // initial the weight at server
-    if (IamServer()) {
+    if (isServer()) {
       model_->key() = SArray<uint64>({0, 1, 2, 3, 4, 5});
       model_->value() = SArray<float>({.0, .1, .2, .3, .4, .5});
     }
   }
 
   void run() {
-    if (IamWorker()) {
+    if (isWorker()) {
       // pull
       if (myRank() == 0) {
         model_->key() = SArray<uint64>({0, 2, 4, 5});
