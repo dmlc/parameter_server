@@ -1,8 +1,8 @@
 #pragma once
 #include "system/app.h"
-#include "linear_method/linear_method.h"
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
+#include "app/linear_method/linear.h"
 namespace PS {
 namespace LM {
 

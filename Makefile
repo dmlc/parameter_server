@@ -16,14 +16,16 @@ INCPATH = -I./src -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 LDFLAGS += ./build/libps.a $(THIRD_LIB) -lpthread -lrt
 
-all: ps build/hello
+all: ps app
 clean:
 	rm -rf build
 
 ps: build/libps.a
+app: build/ps
 
 build/hello: build/app/hello_world/main.o build/libps.a
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+
 
 sys_srcs	= $(wildcard src/*/*.cc)
 sys_protos	= $(wildcard src/*/proto/*.proto)
@@ -32,6 +34,11 @@ sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
 build/libps.a: $(sys_objs)
 	ar crv $@ $?
 
+app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
+
+build/ps:  build/app/main/main.o $(app_objs) build/libps.a
+	echo $(app_objs)
+	$(CC) $(CFLAGS) $< $(app_objs) $(LDFLAGS) -o $@
 
 build/%.o: src/%.cc
 	@mkdir -p $(@D)
@@ -42,8 +49,3 @@ build/%.o: src/%.cc
 	${THIRD_PATH}/bin/protoc --cpp_out=./src --proto_path=./src $<
 
 -include build/*/*.d
-
-# test :
-# 	make -C src test -j8
-# clean :
-# 	make -C src clean

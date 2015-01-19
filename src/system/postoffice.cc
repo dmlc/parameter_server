@@ -8,18 +8,19 @@
 
 namespace PS {
 
-DEFINE_bool(enable_fault_tolerance, false, "enable fault tolerance feature");
-DEFINE_int32(num_replicas, 0, "number of replica");
 DEFINE_int32(num_servers, 0, "number of servers");
 DEFINE_int32(num_workers, 0, "number of clients");
 DEFINE_int32(num_unused, 0, "number of unused nodes");
 DEFINE_int32(num_threads, 2, "number of computational threads");
-DEFINE_string(app, "", "the configuration file of app");
+// DEFINE_string(app, "", "the configuration file of app");
 
 DEFINE_string(app_name, "app", "the name of this app");
-DEFINE_string(app_conf, "", "the configuration file of app");
+DEFINE_string(app_conf, "", "the string configuration of app");
+DEFINE_string(app_file, "", "the configuration file of app");
+
 DECLARE_string(interface);
 DEFINE_bool(traffic_statistics, false, "print traffic statistic at the end");
+
 
 DEFINE_int32(report_interval, 0,
   "Servers/Workers report running status to scheduler "
@@ -27,6 +28,8 @@ DEFINE_int32(report_interval, 0,
   "default: 0; if set to 0, heartbeat is disabled");
 DEFINE_bool(verbose, false, "print extra debug info");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
+DEFINE_bool(enable_fault_tolerance, false, "enable fault tolerance feature");
+DEFINE_int32(num_replicas, 0, "number of replica");
 
 Postoffice::Postoffice() {}
 
@@ -46,15 +49,25 @@ void Postoffice::start(int argc, char *argv[]) {
     google::SetLogDestination(
         google::INFO, ("./log_" + myNode().id() + "_").c_str());
     FLAGS_logtostderr = 0;
+  } else {
+    FLAGS_logtostderr = 1;
   }
+  FLAGS_logbuflevel = -1;
+
   yp().init();
   // omp_set_dynamic(0);
   // omp_set_num_threads(FLAGS_num_threads);
 
   if (IamScheduler()) {
     // create the app
-    if (!readFileToString(FLAGS_app_conf, &app_conf_)) app_conf_ = FLAGS_app_conf;
+    if (!FLAGS_app_conf.empty()) {
+      app_conf_ = FLAGS_app_conf;
+    } else {
+      CHECK(readFileToString(FLAGS_app_file, &app_conf_))
+          << " failed to read conf file " << FLAGS_app_file;
+    }
     app_ = App::create(FLAGS_app_name, app_conf_);
+    CHECK(app_ != NULL) << ": failed to create [" << FLAGS_app_name << "] with conf\n" << app_conf_;
   } else {
     // connect to the scheduler, which will send back a create_app request
     Task task;

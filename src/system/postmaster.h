@@ -1,7 +1,6 @@
 #pragma once
 #include "util/common.h"
 #include "system/proto/node.pb.h"
-#include "system/proto/app.pb.h"
 #include "system/customer.h"
 namespace PS {
 

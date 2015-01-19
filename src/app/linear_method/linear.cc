@@ -1,8 +1,7 @@
-#include "linear_method/linear_method.h"
-// #include "linear_method/ftrl.h"
-#include "linear_method/async_sgd.h"
-#include "linear_method/darlin.h"
-#include "linear_method/model_evaluation.h"
+#include "app/linear_method/linear.h"
+#include "app/linear_method/async_sgd.h"
+#include "app/linear_method/darlin.h"
+#include "app/linear_method/model_evaluation.h"
 namespace PS {
 namespace LM {
 

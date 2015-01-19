@@ -1,7 +1,7 @@
 #pragma once
-#include "linear_method/proto/lm.pb.h"
-#include "linear_method/loss.h"
-#include "linear_method/penalty.h"
+#include "app/linear_method/proto/linear.pb.h"
+#include "app/linear_method/loss.h"
+#include "app/linear_method/penalty.h"
 #include "system/app.h"
 namespace PS {
 namespace LM {

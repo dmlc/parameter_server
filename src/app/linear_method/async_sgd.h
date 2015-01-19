@@ -4,7 +4,7 @@
 #include "util/evaluation.h"
 #include "parameter/kv_vector.h"
 #include "parameter/kv_store.h"
-#include "linear_method/learning_rate.h"
+#include "app/linear_method/learning_rate.h"
 namespace PS {
 namespace LM {
 

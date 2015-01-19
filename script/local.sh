@@ -9,7 +9,7 @@ fi
 dir=`dirname "$0"`
 cd ${dir}
 
-killall -q ps
+# killall -q ${bin}
 
 bin=$1
 shift

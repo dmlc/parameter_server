@@ -3,7 +3,7 @@
 #include "learner/bcd.h"
 #include "util/bitmap.h"
 #include "filter/sparse_filter.h"
-#include "linear_method/linear_method.h"
+#include "app/linear_method/linear.h"
 
 namespace PS {
 namespace LM {

@@ -28,7 +28,6 @@
 #include "util/proto/range.pb.h"
 #include "data/proto/data.pb.h"
 #include "system/proto/node.pb.h"
-#include "system/proto/app.pb.h"
 #include "parameter/proto/param.pb.h"
 #include "filter/proto/filter.pb.h"
 #include "learner/proto/sgd.pb.h"

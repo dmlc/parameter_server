@@ -2,7 +2,6 @@ package PS;
 import "util/proto/range.proto";
 import "data/proto/data.proto";
 import "system/proto/node.proto";
-import "system/proto/app.proto";
 import "parameter/proto/param.proto";
 import "filter/proto/filter.proto";
 import "learner/proto/sgd.proto";

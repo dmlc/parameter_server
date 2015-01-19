@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
 #include "util/matrix.h"
-#include "linear_method/proto/lm.pb.h"
+#include "app/linear_method/proto/linear.pb.h"
 namespace PS {
 namespace LM {
 

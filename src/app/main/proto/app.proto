@@ -1,0 +1,14 @@
+package PS;
+import "app/linear_method/proto/linear.proto";
+// import "app/graph_partition/proto/gp.proto";
+// import "app/factor_machine/proto/fm.proto";
+// import "app/cxxnet/proto/cxxnet.proto";
+
+message AppConfig {
+  optional LM.Config linear_method = 3;
+
+  // optional GP.Config graph_partition = 5;
+  // optional FM.Config factor_machine = 6;
+  // optional CXXNET.Config cxxnet = 7;
+
+}
