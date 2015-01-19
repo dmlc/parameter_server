@@ -40,6 +40,30 @@ std::vector<Node> Postmaster::partitionServerKeyRange(
   return ret;
 }
 
+std::vector<Node> Postmaster::assignNodeRank(const std::vector<Node>& nodes) {
+  int server_r = 0;
+  int worker_r = 0;
+  int sch_r = 0;
+  int other_r = 0;
+
+  auto ret = nodes;
+  for (auto& o : ret) {
+    int k = 0;
+    auto r = o.role();
+    if (r == Node::SERVER) {
+      k = server_r++;
+    } else if (r == Node::WORKER) {
+      k = worker_r++;
+    } else if (r == Node::SCHEDULER) {
+      CHECK_EQ(++sch_r, 1);
+    } else {
+      k = other_r++;
+    }
+    o.set_rank(k);
+  }
+  return ret;
+}
+
 // void Postmaster::createApp(
 //     const std::vector<Node>& nodes, const std::vector<AppConfig>& apps) {
 //   // CHECK_EQ(obj_->myNodeID(), obj_->schedulerID());

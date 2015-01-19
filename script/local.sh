@@ -1,21 +1,23 @@
 #!/bin/bash
 # set -x
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../third_party/lib
-if [ $# -lt 2 ]; then
-    echo "usage: ./local.sh num_servers num_workers app_conf [args]"
+if [ $# -lt 3 ]; then
+    echo "usage: ./local.sh bin num_servers num_workers [args..]"
     exit -1;
 fi
+
 dir=`dirname "$0"`
 cd ${dir}
 
 killall -q ps
 
+bin=$1
+shift
 num_servers=$1
 shift
 num_workers=$1
 shift
-bin="../build/hello"
-arg="-num_servers ${num_servers} -num_workers ${num_workers}" #" -app ${dir}/$@"
+arg="-num_servers ${num_servers} -num_workers ${num_workers} $@" #" -app ${dir}/$@"
 
 mkdir -p ../output
 FLAGS_logtostderr=1

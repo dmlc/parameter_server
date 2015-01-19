@@ -56,6 +56,9 @@ void Executor::copyNodesFrom(const Executor& other) {
 
 void Executor::add(const Node& node) {
   // insert into nodes_
+  if (node.id() == my_node_.id()) {
+   my_node_ = node;
+  }
   auto id = node.id();
   CHECK_EQ(nodes_.count(id), 0) << id << " already exists";
   RNodePtr w(new RNode(node, *this));

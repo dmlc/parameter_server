@@ -1,10 +1,11 @@
 #pragma once
 #include "util/common.h"
-
 #include "system/message.h"
 #include "system/postoffice.h"
 #include "system/executor.h"
 namespace PS{
+
+DECLARE_string(app_name);
 class Postmaster;
 
 // An object shared across multiple nodes.
@@ -21,7 +22,7 @@ class Customer {
   // process a message received from a remote node. It will be called by
   // executor's processing thread
   virtual void process(const MessagePtr& msg) {
-    LL << "error: you should define your own _process_";
+    LL << "error: you should define your own _process_ function";
   }
 
   // this function slices the message _msg_ into n messages such that the i-th
@@ -31,11 +32,16 @@ class Customer {
 
   // accessor
   const string& name() const { return name_; }
+
+  // query about my node
   NodeID myNodeID() { return exec_.myNode().id(); }
+  int myRank() { return exec_.myNode().rank(); }
   bool IamWorker() { return exec_.myNode().role() == Node::WORKER; }
   bool IamServer() { return exec_.myNode().role() == Node::SERVER; }
-  NodeID schedulerID() { return sys_.scheduler().id(); }
+  bool IamScheduler() { return exec_.myNode().role() == Node::SCHEDULER; }
 
+  // the unqiue scheduler id
+  NodeID schedulerID() { return sys_.scheduler().id(); }
   // return the executor
   Executor& exec() { return exec_; }
   // return the remote_note by its name

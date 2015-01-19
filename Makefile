@@ -25,10 +25,6 @@ ps: build/libps.a
 build/hello: build/app/hello_world/main.o build/libps.a
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
-
-app:
-	echo xx
-
 sys_srcs	= $(wildcard src/*/*.cc)
 sys_protos	= $(wildcard src/*/proto/*.proto)
 sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \

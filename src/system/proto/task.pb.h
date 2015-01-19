@@ -94,11 +94,12 @@ inline bool ManageNode_Command_Parse(
 enum ManageApp_Command {
   ManageApp_Command_ADD = 1,
   ManageApp_Command_REMOVE = 2,
+  ManageApp_Command_INIT = 4,
   ManageApp_Command_RUN = 3
 };
 bool ManageApp_Command_IsValid(int value);
 const ManageApp_Command ManageApp_Command_Command_MIN = ManageApp_Command_ADD;
-const ManageApp_Command ManageApp_Command_Command_MAX = ManageApp_Command_RUN;
+const ManageApp_Command ManageApp_Command_Command_MAX = ManageApp_Command_INIT;
 const int ManageApp_Command_Command_ARRAYSIZE = ManageApp_Command_Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ManageApp_Command_descriptor();
@@ -620,6 +621,7 @@ class ManageApp : public ::google::protobuf::Message {
   typedef ManageApp_Command Command;
   static const Command ADD = ManageApp_Command_ADD;
   static const Command REMOVE = ManageApp_Command_REMOVE;
+  static const Command INIT = ManageApp_Command_INIT;
   static const Command RUN = ManageApp_Command_RUN;
   static inline bool Command_IsValid(int value) {
     return ManageApp_Command_IsValid(value);

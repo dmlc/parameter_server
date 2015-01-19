@@ -18,9 +18,9 @@ class KVVector : public SharedParameter<K> {
   // KVVector(int k) : val_entry_size_(k) { }
   virtual ~KVVector() { }
 
-  SArray<K>& key(int channel) { Lock l(mu_); return key_[channel]; }
-  SArray<V>& value(int channel) { Lock l(mu_); return val_[channel]; }
-  void clear(int channel) { Lock l(mu_); key_.erase(channel); val_.erase(channel); }
+  SArray<K>& key(int channel = 0) { Lock l(mu_); return key_[channel]; }
+  SArray<V>& value(int channel = 0) { Lock l(mu_); return val_[channel]; }
+  void clear(int channel = 0) { Lock l(mu_); key_.erase(channel); val_.erase(channel); }
 
   // find the local positions of a global key range
   SizeR find(int channel, const Range<K>& key_range) {

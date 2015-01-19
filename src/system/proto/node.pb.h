@@ -163,6 +163,13 @@ class Node : public ::google::protobuf::Message {
   inline ::std::string* release_id();
   inline void set_allocated_id(::std::string* id);
 
+  // optional int32 rank = 5;
+  inline bool has_rank() const;
+  inline void clear_rank();
+  static const int kRankFieldNumber = 5;
+  inline ::google::protobuf::int32 rank() const;
+  inline void set_rank(::google::protobuf::int32 value);
+
   // optional string hostname = 3;
   inline bool has_hostname() const;
   inline void clear_hostname();
@@ -182,10 +189,10 @@ class Node : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 port() const;
   inline void set_port(::google::protobuf::int32 value);
 
-  // optional .PS.PbRange key = 11;
+  // optional .PS.PbRange key = 6;
   inline bool has_key() const;
   inline void clear_key();
-  static const int kKeyFieldNumber = 11;
+  static const int kKeyFieldNumber = 6;
   inline const ::PS::PbRange& key() const;
   inline ::PS::PbRange* mutable_key();
   inline ::PS::PbRange* release_key();
@@ -197,6 +204,8 @@ class Node : public ::google::protobuf::Message {
   inline void clear_has_role();
   inline void set_has_id();
   inline void clear_has_id();
+  inline void set_has_rank();
+  inline void clear_has_rank();
   inline void set_has_hostname();
   inline void clear_has_hostname();
   inline void set_has_port();
@@ -208,12 +217,13 @@ class Node : public ::google::protobuf::Message {
 
   ::std::string* id_;
   int role_;
-  ::google::protobuf::int32 port_;
+  ::google::protobuf::int32 rank_;
   ::std::string* hostname_;
   ::PS::PbRange* key_;
+  ::google::protobuf::int32 port_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_system_2fproto_2fnode_2eproto();
   friend void protobuf_AssignDesc_system_2fproto_2fnode_2eproto();
@@ -322,15 +332,37 @@ inline void Node::set_allocated_id(::std::string* id) {
   }
 }
 
-// optional string hostname = 3;
-inline bool Node::has_hostname() const {
+// optional int32 rank = 5;
+inline bool Node::has_rank() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void Node::set_has_hostname() {
+inline void Node::set_has_rank() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void Node::clear_has_hostname() {
+inline void Node::clear_has_rank() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void Node::clear_rank() {
+  rank_ = 0;
+  clear_has_rank();
+}
+inline ::google::protobuf::int32 Node::rank() const {
+  return rank_;
+}
+inline void Node::set_rank(::google::protobuf::int32 value) {
+  set_has_rank();
+  rank_ = value;
+}
+
+// optional string hostname = 3;
+inline bool Node::has_hostname() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Node::set_has_hostname() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Node::clear_has_hostname() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void Node::clear_hostname() {
   if (hostname_ != &::google::protobuf::internal::kEmptyString) {
@@ -394,13 +426,13 @@ inline void Node::set_allocated_hostname(::std::string* hostname) {
 
 // optional int32 port = 4;
 inline bool Node::has_port() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Node::set_has_port() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Node::clear_has_port() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Node::clear_port() {
   port_ = 0;
@@ -414,15 +446,15 @@ inline void Node::set_port(::google::protobuf::int32 value) {
   port_ = value;
 }
 
-// optional .PS.PbRange key = 11;
+// optional .PS.PbRange key = 6;
 inline bool Node::has_key() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void Node::set_has_key() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void Node::clear_has_key() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void Node::clear_key() {
   if (key_ != NULL) key_->::PS::PbRange::Clear();

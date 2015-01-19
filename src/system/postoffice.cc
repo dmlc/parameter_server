@@ -28,13 +28,14 @@ DEFINE_int32(report_interval, 0,
 DEFINE_bool(verbose, false, "print extra debug info");
 DEFINE_bool(log_to_file, false, "redirect INFO log to file; eg. log_w1_datetime");
 
-Postoffice::Postoffice() {
-}
+Postoffice::Postoffice() {}
 
 Postoffice::~Postoffice() {
-  recving_->join();
-  MessagePtr stop(new Message()); stop->terminate = true; queue(stop);
-  sending_->join();
+  if (recving_) recving_->join();
+  if (sending_) {
+    MessagePtr stop(new Message()); stop->terminate = true; queue(stop);
+    sending_->join();
+  }
   delete app_;
 }
 
@@ -54,7 +55,6 @@ void Postoffice::start(int argc, char *argv[]) {
     // create the app
     if (!readFileToString(FLAGS_app_conf, &app_conf_)) app_conf_ = FLAGS_app_conf;
     app_ = App::create(FLAGS_app_name, app_conf_);
-    CHECK_NOTNULL(app_)->init();
   } else {
     // connect to the scheduler, which will send back a create_app request
     Task task;
@@ -96,6 +96,7 @@ void Postoffice::start(int argc, char *argv[]) {
       // add all nodes into app
       auto nodes = yp().nodes();
       nodes = Postmaster::partitionServerKeyRange(nodes, Range<Key>::all());
+      nodes = Postmaster::assignNodeRank(nodes);
       Task task;
       // task.set_request(true);
       // task.set_customer(app_->name());
@@ -107,16 +108,34 @@ void Postoffice::start(int argc, char *argv[]) {
       // then add them in servers and worekrs
       app_->port(kCompGroup)->submitAndWait(task);
     }
-    // run the application
-    app_->run();
 
+    // init app
+    Task init;
+    init.set_type(Task::MANAGE);
+    init.mutable_mng_app()->set_cmd(ManageApp::INIT);
+    int init_wait = app_->port(kCompGroup)->submit(init);
+    CHECK_NOTNULL(app_)->init();
+    app_->port(kCompGroup)->waitOutgoingTask(init_wait);
+
+    // run app
     Task run;
     run.set_type(Task::MANAGE);
     run.mutable_mng_app()->set_cmd(ManageApp::RUN);
-    app_->port(kCompGroup)->submitAndWait(run);
+    int run_wait = app_->port(kCompGroup)->submit(run);
+    app_->run();
+    app_->port(kCompGroup)->waitOutgoingTask(run_wait);
   } else {
-    app_is_ready_.get_future().wait();
+    // init app
+    init_app_promise_.get_future().wait();
+    CHECK_NOTNULL(app_)->init();
+    app_msg_->finished = true;
+    finish(app_msg_);
+
+    // ruun app
+    run_app_promise_.get_future().wait();
     CHECK_NOTNULL(app_)->run();
+    app_msg_->finished = true;
+    finish(app_msg_);
   }
 }
 
@@ -128,7 +147,7 @@ void Postoffice::stop() {
     usleep(800);
     LI << "System stopped\n";
   } else {
-    // run as a daemon
+    // run as a daemon until received the termination messag
     while (!done_) usleep(300);
   }
 }
@@ -205,7 +224,7 @@ void Postoffice::recv() {
       // dashboard_.addReport(msg->sender, tk.msg());
     } else if (type == Task::MANAGE) {
       if (request && tk.has_mng_app()) {
-        manageApp(tk);
+        manageApp(msg);
       }
       if (request && tk.has_mng_node()) {
         manageNode(tk);
@@ -217,21 +236,35 @@ void Postoffice::recv() {
       done_ = true;
       break;
     }
-    auto ptr = yp().customer(tk.customer());
-    if (ptr != nullptr) ptr->exec().finish(msg);
+    finish(msg);
+  }
+}
+
+void Postoffice::finish(MessagePtr msg) {
+  if (msg->finished) {
+    auto obj = CHECK_NOTNULL(yp().customer(msg->task.customer()));
+    obj->exec().finish(msg);
     reply(msg->sender, msg->task);
   }
 }
 
-void Postoffice::manageApp(const Task& tk) {
+void Postoffice::manageApp(MessagePtr msg) {
+  Task tk = msg->task;
   CHECK(tk.has_mng_app());
   auto cmd = tk.mng_app().cmd();
   if (cmd == ManageApp::ADD) {
     app_ = App::create(tk.customer(), tk.mng_app().conf());
-    CHECK_NOTNULL(app_)->init();
     // yp().depositCustomer(app->name());
+  } else if (cmd == ManageApp::INIT) {
+    msg->finished = false;
+    if (!app_msg_) app_msg_ = MessagePtr(new Message());
+    *app_msg_ = *msg;
+    init_app_promise_.set_value();
   } else if (cmd == ManageApp::RUN) {
-    app_is_ready_.set_value();
+    msg->finished = false;
+    if (!app_msg_) app_msg_ = MessagePtr(new Message());
+    *app_msg_ = *msg;
+    run_app_promise_.set_value();
   }
 }
 

@@ -51,8 +51,9 @@ class Postoffice {
   Postoffice();
 
   bool IamScheduler() { return myNode().role() == Node::SCHEDULER; }
-  void manageNode(Task& pt);
-  void manageApp(const Task& pt);
+  void manageNode(Task& tk);
+  void manageApp(MessagePtr msg);
+  void finish(MessagePtr msg);
   void send();
   void recv();
 
@@ -61,12 +62,13 @@ class Postoffice {
   // app info only available for the scheduler, check IamScheduler() before using
   string app_conf_;
   App* app_ = nullptr;
-
   std::mutex mutex_;
   bool done_ = false;
 
   std::promise<void> nodes_are_ready_;
-  std::promise<void> app_is_ready_;
+  std::promise<void> init_app_promise_;
+  std::promise<void> run_app_promise_;
+  MessagePtr app_msg_;
   std::unique_ptr<std::thread> recving_;
   std::unique_ptr<std::thread> sending_;
   threadsafe_queue<MessagePtr> sending_queue_;

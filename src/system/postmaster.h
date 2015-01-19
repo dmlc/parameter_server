@@ -18,6 +18,7 @@ class Postmaster {
 
   static std::vector<Node> partitionServerKeyRange(
       const std::vector<Node>& nodes, Range<Key> range);
+  static std::vector<Node> assignNodeRank(const std::vector<Node>& nodes);
  private:
   Customer* obj_;
 };

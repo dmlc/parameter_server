@@ -13,11 +13,10 @@ message Node {
 
   required Role role = 1;
   optional string id = 2;
-
+  optional int32 rank = 5;
   // network address
   optional string hostname = 3;
   optional int32 port = 4;
 
-  optional PbRange key = 11;
-  // optional PbRange record = 12;
+  optional PbRange key = 6;
 }
