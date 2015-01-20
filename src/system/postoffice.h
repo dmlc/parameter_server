@@ -40,6 +40,7 @@ class Postoffice {
   void replyProtocalMessage(const MessagePtr& msg,
                             const P& proto);
 
+  App* app() { return CHECK_NOTNULL(app_); }
   // accessors and mutators
   YellowPages& yp() { return yellow_pages_; }
   Node& myNode() { return yellow_pages_.van().myNode(); }

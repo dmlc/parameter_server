@@ -16,15 +16,15 @@ INCPATH = -I./src -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 LDFLAGS += ./build/libps.a $(THIRD_LIB) -lpthread -lrt
 
-all: ps app
+all: ps app build/hello
 clean:
 	rm -rf build
 
-ps: build/libps.a
+ps: build/libps.a build/psmain.o
 app: build/ps
 
 build/hello: build/app/hello_world/main.o build/libps.a
-	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $< build/psmain.o $(LDFLAGS) -o $@
 
 
 sys_srcs	= $(wildcard src/*/*.cc)

@@ -108,8 +108,8 @@ struct FTRLEntry {
     z += grad  - sigma * w;
     sqrt_n = sqrt_n_new;
 
-    V lambda2 = (state->lr->beta() + sqrt_n_new) / state->lr->alpha();
-    V w1 = - softThresholding(z, (V)1, lambda2);
+    // V lambda2 = (state->lr->beta() + sqrt_n_new) / state->lr->alpha();
+    // V w1 = - softThresholding(z, (V)1, lambda2);
 
     V eta = state->lr->eval(sqrt_n);
     w = state->h->proximal(-z*eta, eta);

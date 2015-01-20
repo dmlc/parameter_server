@@ -29,10 +29,8 @@ class Executor {
   // wake up the processing thread
   void notify() { Lock l(recved_msg_mu_); dag_cond_.notify_one(); }
 
-  void finish(const MessagePtr& msg) {
-    auto r = rnode(msg->sender);
-    if (r) r->finishIncomingTask(msg->task.time());
-  }
+  // mark this message as finshed in executor
+  void finish(const MessagePtr& msg);
 
   // accessors
   RNodePtr rnode(const NodeID& k);
@@ -74,3 +72,6 @@ class Executor {
 
 
 } // namespace PS
+
+  // stop the processing thread
+  // void stop();

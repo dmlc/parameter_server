@@ -60,11 +60,11 @@ void Postoffice::start(int argc, char *argv[]) {
 
   if (IamScheduler()) {
     // create the app
-    if (!FLAGS_app_conf.empty()) {
-      app_conf_ = FLAGS_app_conf;
-    } else {
+    if (!FLAGS_app_file.empty()) {
       CHECK(readFileToString(FLAGS_app_file, &app_conf_))
           << " failed to read conf file " << FLAGS_app_file;
+    } else {
+      app_conf_ = FLAGS_app_conf;
     }
     app_ = App::create(FLAGS_app_name, app_conf_);
     CHECK(app_ != NULL) << ": failed to create [" << FLAGS_app_name << "] with conf\n" << app_conf_;

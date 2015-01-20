@@ -12,7 +12,7 @@ template<typename K, typename V> using KVVectorPtr = std::shared_ptr<KVVector<K,
 template <typename K, typename V>
 class KVVector : public SharedParameter<K> {
  public:
-  KVVector(const string& my_name, const string& parent_name, int k = 1) :
+  KVVector(const string& my_name, const string& parent_name = FLAGS_app_name, int k = 1) :
       SharedParameter<K>(my_name, parent_name), val_entry_size_(k) { }
   // KVVector() : val_entry_size_(1) { }
   // KVVector(int k) : val_entry_size_(k) { }

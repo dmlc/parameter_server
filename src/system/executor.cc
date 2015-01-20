@@ -25,6 +25,14 @@ Executor::~Executor() {
   thread_->join();
 }
 
+// void Executor::stop() {
+// }
+
+void Executor::finish(const MessagePtr& msg) {
+  auto r = rnode(msg->sender);
+  if (r) r->finishIncomingTask(msg->task.time());
+}
+
 RNodePtr Executor::rnode(const NodeID& k) {
   Lock l(node_mu_);
   auto it = nodes_.find(k);

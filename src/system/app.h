@@ -3,7 +3,7 @@
 namespace PS {
 class App : public Customer {
  public:
-  App(const string& name) : Customer(name) { }
+  App(const string& name = FLAGS_app_name) : Customer(name) { }
   virtual ~App() { }
 
   // factory functionn
