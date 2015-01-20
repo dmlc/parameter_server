@@ -6,7 +6,7 @@ int PSMain(int argc, char *argv[]);
 PS::App* CreateServer(const std::string& conf);
 
 inline int PSRank() {
-  return PS::Postoffice::instance().myNode().rank();
+  return PS::Postoffice::instance().app()->myRank();
 }
 
 inline std::string PSNodeID() {

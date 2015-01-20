@@ -71,6 +71,7 @@ message ManageApp {
     REMOVE = 2;
     INIT = 4;
     RUN = 3;
+    DONE = 5;
   }
   required Command cmd = 1;
   optional string conf = 2;

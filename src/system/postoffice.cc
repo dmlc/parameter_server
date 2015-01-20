@@ -137,6 +137,8 @@ void Postoffice::start(int argc, char *argv[]) {
     int run_wait = app_->port(kCompGroup)->submit(run);
     app_->run();
     app_->port(kCompGroup)->waitOutgoingTask(run_wait);
+
+
   } else {
     // init app
     init_app_promise_.get_future().wait();
@@ -144,22 +146,29 @@ void Postoffice::start(int argc, char *argv[]) {
     app_msg_->finished = true;
     finish(app_msg_);
 
-    // ruun app
+    // run app
     run_app_promise_.get_future().wait();
     CHECK_NOTNULL(app_)->run();
     app_msg_->finished = true;
     finish(app_msg_);
+
+
   }
 }
 
 void Postoffice::stop() {
   if (IamScheduler()) {
+    nodes_are_done_.get_future().wait();
     Task terminate;
     terminate.set_type(Task::TERMINATE);
     app_->port(kLiveGroup)->submit(terminate);
     usleep(800);
     LI << "System stopped\n";
   } else {
+    Task done;
+    done.set_type(Task::MANAGE);
+    done.mutable_mng_app()->set_cmd(ManageApp::DONE);
+    app_->port(app_->schedulerID())->submit(done);
     // run as a daemon until received the termination messag
     while (!done_) usleep(300);
   }
@@ -278,6 +287,11 @@ void Postoffice::manageApp(MessagePtr msg) {
     if (!app_msg_) app_msg_ = MessagePtr(new Message());
     *app_msg_ = *msg;
     run_app_promise_.set_value();
+  } else if (cmd == ManageApp::DONE) {
+    finished_nodes_ ++;
+    if (finished_nodes_ >= FLAGS_num_workers + FLAGS_num_servers) {
+      nodes_are_done_.set_value();
+    }
   }
 }
 

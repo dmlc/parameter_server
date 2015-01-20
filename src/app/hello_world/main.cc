@@ -9,19 +9,12 @@ class HelloServer : public App {
   virtual ~HelloServer() { }
 
   void init() {
-    model_ = new KVVector<uint64, float>("w");
-    LL << "this is " << myNodeID() << ", a " <<
-        (isWorker() ? "worker" :
-         (isServer() ? "server" :
-          (isScheduler() ? "scheduler" : "idle")))
-              << " node with rank " << myRank()
-       << ", creates model ["
-       << model_->name() << "] in app [" << name() << "]";
+    LL << myNodeID() << ", this is server " << myRank();
 
     // initial the weight at server
-    model_->key() = SArray<uint64>({0, 1, 2, 3, 4, 5});
-    model_->value() = SArray<float>({.0, .1, .2, .3, .4, .5});
-
+    model_ = new KVVector<uint64, float>("w");
+    model_->key() = {0, 1, 2, 3, 4, 5};
+    model_->value() = {.0, .1, .2, .3, .4, .5};
   }
 
  private:
@@ -36,6 +29,7 @@ PS::App* CreateServer(const std::string& conf) {
 
 int PSMain(int argc, char *argv[]) {
 
+  LL << PSNodeID() <<  ": this is worker " << PSRank();
   using namespace PS;
   KVVector<uint64, float> model("w");
 

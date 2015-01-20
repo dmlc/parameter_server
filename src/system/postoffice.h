@@ -66,6 +66,9 @@ class Postoffice {
   std::mutex mutex_;
   bool done_ = false;
 
+  int finished_nodes_ = 0;
+  std::promise<void> nodes_are_done_;
+
   std::promise<void> nodes_are_ready_;
   std::promise<void> init_app_promise_;
   std::promise<void> run_app_promise_;
