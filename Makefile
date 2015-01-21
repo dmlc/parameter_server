@@ -1,7 +1,7 @@
 CC = g++
 
-OPT = -O0 -ggdb
-# OPT = -O3 -ggdb
+# OPT = -O0 -ggdb
+OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
 STATIC_THIRD_LIB=0

@@ -58,6 +58,7 @@ class KVStore : public KVState<K, S> {
     for (size_t i = 0; i < n; ++i) {
       data_[key[i]].get(val.data() + i * k_, &state_);
     }
+    state_.update();
   }
 
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs) {

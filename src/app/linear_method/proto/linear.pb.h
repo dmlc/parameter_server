@@ -437,6 +437,13 @@ class SGDConfig : public ::google::protobuf::Message {
   inline float countmin_n() const;
   inline void set_countmin_n(float value);
 
+  // optional float noise_std = 9 [default = 0.1];
+  inline bool has_noise_std() const;
+  inline void clear_noise_std();
+  static const int kNoiseStdFieldNumber = 9;
+  inline float noise_std() const;
+  inline void set_noise_std(float value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.SGDConfig)
  private:
   inline void set_has_algo();
@@ -455,6 +462,8 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_countmin_k();
   inline void set_has_countmin_n();
   inline void clear_has_countmin_n();
+  inline void set_has_noise_std();
+  inline void clear_has_noise_std();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -466,9 +475,10 @@ class SGDConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
+  float noise_std_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
   friend void protobuf_AssignDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
@@ -1370,6 +1380,28 @@ inline float SGDConfig::countmin_n() const {
 inline void SGDConfig::set_countmin_n(float value) {
   set_has_countmin_n();
   countmin_n_ = value;
+}
+
+// optional float noise_std = 9 [default = 0.1];
+inline bool SGDConfig::has_noise_std() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void SGDConfig::set_has_noise_std() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void SGDConfig::clear_has_noise_std() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void SGDConfig::clear_noise_std() {
+  noise_std_ = 0.1f;
+  clear_has_noise_std();
+}
+inline float SGDConfig::noise_std() const {
+  return noise_std_;
+}
+inline void SGDConfig::set_noise_std(float value) {
+  set_has_noise_std();
+  noise_std_ = value;
 }
 
 // -------------------------------------------------------------------

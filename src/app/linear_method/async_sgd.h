@@ -1,4 +1,5 @@
 #pragma once
+#include <random>
 #include "learner/sgd.h"
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
@@ -8,21 +9,21 @@
 namespace PS {
 namespace LM {
 
-// solve argmin_y x*y + .5*lambda_2*y^2 + lambda_1*|y|
-template <typename V>
-V softThresholding(V x, V lambda_1, V lambda_2) {
-  if (x > 0) {
-    return x > lambda_1 ? (x - lambda_1) / lambda_2 : 0;
-  } else {
-    return x < - lambda_1 ? (x + lambda_1) / lambda_2 : 0;
-  }
-}
+// // solve argmin_y x*y + .5*lambda_2*y^2 + lambda_1*|y|
+// template <typename V>
+// V softThresholding(V x, V lambda_1, V lambda_2) {
+//   if (x > 0) {
+//     return x > lambda_1 ? (x - lambda_1) / lambda_2 : 0;
+//   } else {
+//     return x < - lambda_1 ? (x + lambda_1) / lambda_2 : 0;
+//   }
+// }
 
-// project value into [-bound, bound]
-template <typename V>
-V project(V value, V bound) {
-  return (value > bound ? bound : (value < - bound ? - bound : value));
-}
+// // project value into [-bound, bound]
+// template <typename V>
+// V project(V value, V bound) {
+//   return (value > bound ? bound : (value < - bound ? - bound : value));
+// }
 
 // async sgd. support various loss functions and regularizers
 class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
@@ -46,7 +47,13 @@ struct SGDState {
   }
   virtual ~SGDState() { }
 
-  void update(V new_weight, V old_weight) {
+  void update() {
+    if (reporter) {
+      SGDProgress prog; prog.set_nnz(nnz);
+      reporter->report(prog);
+    }
+  }
+  void updateWeight(V new_weight, V old_weight) {
     // LL << new_weight << " " << old_weight;
     if (new_weight == 0 && old_weight != 0) {
       -- nnz;
@@ -61,6 +68,7 @@ struct SGDState {
   int iter = 0;
   size_t nnz = 0;
   V max_delta = 1.0;  // maximal change of weight
+  MonitorSlaver<SGDProgress>* reporter = nullptr;
 };
 
 template <typename V>
@@ -114,7 +122,7 @@ struct FTRLEntry {
     V eta = state->lr->eval(sqrt_n);
     w = state->h->proximal(-z*eta, eta);
     // if (w != 0) LL << w << " " << w1-w << " " << eta << " " << z << " " << grad;
-    state->update(w, w_old);
+    state->updateWeight(w, w_old);
   }
 
   void put(char* data, SGDState<V>* state) {
@@ -148,6 +156,7 @@ public:
     CHECK_NOTNULL(model_)->setEntrySyncSize(sizeof(V));
 
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
+    state.reporter = &(this->reporter_);
     model_->setState(state);
 
     // tail feature filter
@@ -156,9 +165,6 @@ public:
         conf_.async_sgd().countmin_k());
   }
 
-  void evaluate(SGDProgress* prog) {
-    prog->set_nnz(model_->state().nnz);
-  }
 
   void saveModel() {
     auto output = conf_.model_output();
@@ -237,27 +243,33 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     auto Y = data.label;
     CHECK_EQ(X->rows(), Y->rows());
 
-    // compute the gradient
+    // evalute
     SArray<V> Xw(Y->rows());
     auto w = model_.value(id);
     Xw.eigenArray() = *X * w.eigenArray();
-    V objv = loss_->evaluate({Y, Xw.matrix()});
+    SGDProgress prog;
+    prog.add_objective(loss_->evaluate({Y, Xw.matrix()}));
     // not with penalty.
     // + penalty_->evaluate(w.matrix());
-    V auc = Evaluation<V>::auc(Y->value(), Xw);
-    V acc = Evaluation<V>::accuracy(Y->value(), Xw);
-    {
-      Lock l(this->progress_mu_);
-      auto& p = this->progress_;
-      p.add_objective(objv);
-      p.add_auc(auc);
-      p.add_accuracy(acc);
-      p.set_num_examples_processed(
-          p.num_examples_processed() + Xw.size());
-    }
+    prog.add_auc(Evaluation<V>::auc(Y->value(), Xw));
+    prog.add_accuracy(Evaluation<V>::accuracy(Y->value(), Xw));
+    prog.set_num_examples_processed(
+        prog.num_examples_processed() + Xw.size());
+    this->reporter_.report(prog);
+
+    // compute the gradient
     SArray<V> grad(X->cols());
     loss_->compute({Y, X, Xw.matrix()}, {grad.matrix()});
-    LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
+
+    // add noise to gradien
+    V std = (V)conf_.async_sgd().noise_std();
+    if (std > 0) {
+      std::default_random_engine generator;
+      std::normal_distribution<V> distribution(0, std);
+      for (auto& g : grad) g += distribution(generator);
+    }
+
+    // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
     // push the gradient
     MessagePtr msg(new Message(kServerGroup));
     msg->setKey(model_.key(data.batch_id));

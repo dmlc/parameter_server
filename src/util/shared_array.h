@@ -142,8 +142,8 @@ template<typename V> class SArray {
   }
 
 
-
-  double mean() const { return empty() ? 0 : eigenArray().sum() / (double)size(); }
+  double sum() const { return eigenArray().sum(); }
+  double mean() const { return empty() ? 0 : sum() / (double)size(); }
   double std() const {
     return empty() ? 0 :
         (eigenArray() - mean()).matrix().norm() / sqrt((double)size());
