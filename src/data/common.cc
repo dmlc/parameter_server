@@ -166,6 +166,16 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num) {
   return parts;
 }
 
+DataConfig shuffleFiles(const DataConfig& data) {
+  DataConfig ret = data; ret.clear_file();
+  int n = data.file_size();
+  std::vector<int> idx(n);
+  for (int i = 0; i < n; ++i) idx[i] = i;
+  std::random_shuffle(idx.begin(), idx.end());
+  for (int i = 0; i < n; ++i) ret.add_file(data.file(idx[i]));
+  return ret;
+}
+
 } // namespace PS
 
 

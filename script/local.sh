@@ -9,7 +9,6 @@ fi
 dir=`dirname "$0"`
 cd ${dir}
 
-# killall -q ${bin}
 
 bin=$1
 shift
@@ -21,6 +20,9 @@ arg="-num_servers ${num_servers} -num_workers ${num_workers} $@" #" -app ${dir}/
 
 mkdir -p ../output
 FLAGS_logtostderr=1
+
+# killall -q $(basename ${bin})
+killall -q ${bin}
 
 # start the scheduler
 Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8001,id:'H'"

@@ -256,6 +256,7 @@ class AsyncSGDWorker : public AsyncSGDWorkerBase<V>, public LinearMethod {
     prog.set_num_examples_processed(
         prog.num_examples_processed() + Xw.size());
     this->reporter_.report(prog);
+    LL << prog.objective(0) << " " << prog.auc(0);
 
     // compute the gradient
     SArray<V> grad(X->cols());

@@ -27,5 +27,7 @@ MatrixInfo readMatrixInfo(
     const ExampleInfo& info, int slot_id, int sizeof_idx, int sizeof_val);
 
 
+DataConfig shuffleFiles(const DataConfig& data);
+
 
 } // namespace PS

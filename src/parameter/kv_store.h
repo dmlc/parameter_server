@@ -33,7 +33,7 @@ class KVStore : public KVState<K, S> {
  public:
   KVStore(const string& my_name, const string& parent_name) :
       KVState<K, S>(my_name, parent_name) { }
-  virtual ~KVStore() {}
+  virtual ~KVStore() { this->exec_.stop(); }
 
   using KVState<K, S>::k_;
   using KVState<K, S>::state_;

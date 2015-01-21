@@ -32,6 +32,9 @@ class Executor {
   // mark this message as finshed in executor
   void finish(const MessagePtr& msg);
 
+  // stop the processing thread
+  void stop();
+
   // accessors
   RNodePtr rnode(const NodeID& k);
   std::vector<RNodePtr>& group(const NodeID& k);
@@ -72,6 +75,3 @@ class Executor {
 
 
 } // namespace PS
-
-  // stop the processing thread
-  // void stop();

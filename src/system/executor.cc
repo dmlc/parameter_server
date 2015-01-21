@@ -20,13 +20,17 @@ Executor::Executor(Customer& obj) : obj_(obj) {
 }
 
 Executor::~Executor() {
-  done_ = true;
-  notify();
-  thread_->join();
+  stop();
 }
 
-// void Executor::stop() {
-// }
+void Executor::stop() {
+  if (!done_) {
+    done_ = true;
+    notify();
+    thread_->join();
+    thread_.release();
+  }
+}
 
 void Executor::finish(const MessagePtr& msg) {
   auto r = rnode(msg->sender);
