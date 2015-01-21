@@ -7,6 +7,8 @@
 #include "data/info_parser.h"
 #include "util/filelinereader.h"
 #include "util/recordio.h"
+#include "util/sparse_matrix.h"
+
 namespace PS {
 
 template<typename V>

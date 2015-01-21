@@ -20,5 +20,6 @@ message SGDCall {
   required Command cmd = 1;
   optional DataConfig data = 2;
   optional int32 report_interval = 3 [default = 1];
+  optional int32 data_buf = 4 [default = 100];  // in mb
   // optional PbRange key = 3;
 }

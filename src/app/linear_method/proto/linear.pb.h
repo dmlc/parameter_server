@@ -395,6 +395,13 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 minibatch() const;
   inline void set_minibatch(::google::protobuf::int32 value);
 
+  // optional int32 data_buf = 12 [default = 100];
+  inline bool has_data_buf() const;
+  inline void clear_data_buf();
+  static const int kDataBufFieldNumber = 12;
+  inline ::google::protobuf::int32 data_buf() const;
+  inline void set_data_buf(::google::protobuf::int32 value);
+
   // optional bool ada_grad = 5 [default = true];
   inline bool has_ada_grad() const;
   inline void clear_ada_grad();
@@ -450,6 +457,8 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_algo();
   inline void set_has_minibatch();
   inline void clear_has_minibatch();
+  inline void set_has_data_buf();
+  inline void clear_has_data_buf();
   inline void set_has_ada_grad();
   inline void clear_has_ada_grad();
   inline void set_has_max_delay();
@@ -469,6 +478,7 @@ class SGDConfig : public ::google::protobuf::Message {
 
   int algo_;
   ::google::protobuf::int32 minibatch_;
+  ::google::protobuf::int32 data_buf_;
   bool ada_grad_;
   ::google::protobuf::int32 max_delay_;
   ::google::protobuf::int32 report_interval_;
@@ -478,7 +488,7 @@ class SGDConfig : public ::google::protobuf::Message {
   float noise_std_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
   friend void protobuf_AssignDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
@@ -1250,15 +1260,37 @@ inline void SGDConfig::set_minibatch(::google::protobuf::int32 value) {
   minibatch_ = value;
 }
 
-// optional bool ada_grad = 5 [default = true];
-inline bool SGDConfig::has_ada_grad() const {
+// optional int32 data_buf = 12 [default = 100];
+inline bool SGDConfig::has_data_buf() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void SGDConfig::set_has_ada_grad() {
+inline void SGDConfig::set_has_data_buf() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void SGDConfig::clear_has_ada_grad() {
+inline void SGDConfig::clear_has_data_buf() {
   _has_bits_[0] &= ~0x00000004u;
+}
+inline void SGDConfig::clear_data_buf() {
+  data_buf_ = 100;
+  clear_has_data_buf();
+}
+inline ::google::protobuf::int32 SGDConfig::data_buf() const {
+  return data_buf_;
+}
+inline void SGDConfig::set_data_buf(::google::protobuf::int32 value) {
+  set_has_data_buf();
+  data_buf_ = value;
+}
+
+// optional bool ada_grad = 5 [default = true];
+inline bool SGDConfig::has_ada_grad() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SGDConfig::set_has_ada_grad() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SGDConfig::clear_has_ada_grad() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void SGDConfig::clear_ada_grad() {
   ada_grad_ = true;
@@ -1274,13 +1306,13 @@ inline void SGDConfig::set_ada_grad(bool value) {
 
 // optional int32 max_delay = 4 [default = 0];
 inline bool SGDConfig::has_max_delay() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void SGDConfig::set_has_max_delay() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void SGDConfig::clear_has_max_delay() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void SGDConfig::clear_max_delay() {
   max_delay_ = 0;
@@ -1296,13 +1328,13 @@ inline void SGDConfig::set_max_delay(::google::protobuf::int32 value) {
 
 // optional int32 report_interval = 3 [default = 1];
 inline bool SGDConfig::has_report_interval() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void SGDConfig::set_has_report_interval() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void SGDConfig::clear_has_report_interval() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void SGDConfig::clear_report_interval() {
   report_interval_ = 1;
@@ -1318,13 +1350,13 @@ inline void SGDConfig::set_report_interval(::google::protobuf::int32 value) {
 
 // optional int32 tail_feature_freq = 6 [default = 4];
 inline bool SGDConfig::has_tail_feature_freq() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void SGDConfig::set_has_tail_feature_freq() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void SGDConfig::clear_has_tail_feature_freq() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void SGDConfig::clear_tail_feature_freq() {
   tail_feature_freq_ = 4;
@@ -1340,13 +1372,13 @@ inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
 
 // optional int32 countmin_k = 7 [default = 2];
 inline bool SGDConfig::has_countmin_k() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void SGDConfig::set_has_countmin_k() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void SGDConfig::clear_has_countmin_k() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void SGDConfig::clear_countmin_k() {
   countmin_k_ = 2;
@@ -1362,13 +1394,13 @@ inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
 
 // optional float countmin_n = 8 [default = 1e+08];
 inline bool SGDConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void SGDConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void SGDConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void SGDConfig::clear_countmin_n() {
   countmin_n_ = 1e+08f;
@@ -1384,13 +1416,13 @@ inline void SGDConfig::set_countmin_n(float value) {
 
 // optional float noise_std = 9 [default = 0.1];
 inline bool SGDConfig::has_noise_std() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void SGDConfig::set_has_noise_std() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void SGDConfig::clear_has_noise_std() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void SGDConfig::clear_noise_std() {
   noise_std_ = 0.1f;

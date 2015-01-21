@@ -40,6 +40,7 @@ message SGDConfig {
 
   optional int32 minibatch = 2 [default = 1000];
 
+  optional int32 data_buf = 12 [default = 100];  // in mb
   optional bool ada_grad = 5 [default = true];
 
   optional int32 max_delay = 4 [default = 0];

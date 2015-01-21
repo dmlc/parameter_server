@@ -15,7 +15,7 @@ std::vector<DataConfig>
 Postmaster::partitionData(const DataConfig& conf, int num_workers) {
   auto data = searchFiles(conf);
   LI << "Found " << data.file_size() << " files";
-  data = shuffleFiles(data);
+  // data = shuffleFiles(data);
   auto ret = divideFiles(data, num_workers);
   int n = 0; for (const auto& p : ret) n += p.file_size();
   LI << "Assign " << n << " files to " << num_workers << " workers";

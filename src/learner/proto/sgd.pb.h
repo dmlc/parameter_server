@@ -297,6 +297,13 @@ class SGDCall : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 report_interval() const;
   inline void set_report_interval(::google::protobuf::int32 value);
 
+  // optional int32 data_buf = 4 [default = 100];
+  inline bool has_data_buf() const;
+  inline void clear_data_buf();
+  static const int kDataBufFieldNumber = 4;
+  inline ::google::protobuf::int32 data_buf() const;
+  inline void set_data_buf(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.SGDCall)
  private:
   inline void set_has_cmd();
@@ -305,15 +312,18 @@ class SGDCall : public ::google::protobuf::Message {
   inline void clear_has_data();
   inline void set_has_report_interval();
   inline void clear_has_report_interval();
+  inline void set_has_data_buf();
+  inline void clear_has_data_buf();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::PS::DataConfig* data_;
   int cmd_;
   ::google::protobuf::int32 report_interval_;
+  ::google::protobuf::int32 data_buf_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_learner_2fproto_2fsgd_2eproto();
   friend void protobuf_AssignDesc_learner_2fproto_2fsgd_2eproto();
@@ -533,6 +543,28 @@ inline ::google::protobuf::int32 SGDCall::report_interval() const {
 inline void SGDCall::set_report_interval(::google::protobuf::int32 value) {
   set_has_report_interval();
   report_interval_ = value;
+}
+
+// optional int32 data_buf = 4 [default = 100];
+inline bool SGDCall::has_data_buf() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SGDCall::set_has_data_buf() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SGDCall::clear_has_data_buf() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SGDCall::clear_data_buf() {
+  data_buf_ = 100;
+  clear_has_data_buf();
+}
+inline ::google::protobuf::int32 SGDCall::data_buf() const {
+  return data_buf_;
+}
+inline void SGDCall::set_data_buf(::google::protobuf::int32 value) {
+  set_has_data_buf();
+  data_buf_ = value;
 }
 
 
