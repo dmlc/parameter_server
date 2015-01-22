@@ -120,25 +120,26 @@ void Postoffice::start(int argc, char *argv[]) {
       }
       // then add them in servers and worekrs
       app_->port(kCompGroup)->submitAndWait(task);
+
+      // init app
+      Task init;
+      init.set_type(Task::MANAGE);
+      init.mutable_mng_app()->set_cmd(ManageApp::INIT);
+      int init_wait = app_->port(kCompGroup)->submit(init);
+      CHECK_NOTNULL(app_)->init();
+      app_->port(kCompGroup)->waitOutgoingTask(init_wait);
+
+      // run app
+      Task run;
+      run.set_type(Task::MANAGE);
+      run.mutable_mng_app()->set_cmd(ManageApp::RUN);
+      int run_wait = app_->port(kCompGroup)->submit(run);
+      app_->run();
+      app_->port(kCompGroup)->waitOutgoingTask(run_wait);
+    } else {
+      CHECK_NOTNULL(app_)->init();
+      app_->run();
     }
-
-    // init app
-    Task init;
-    init.set_type(Task::MANAGE);
-    init.mutable_mng_app()->set_cmd(ManageApp::INIT);
-    int init_wait = app_->port(kCompGroup)->submit(init);
-    CHECK_NOTNULL(app_)->init();
-    app_->port(kCompGroup)->waitOutgoingTask(init_wait);
-
-    // run app
-    Task run;
-    run.set_type(Task::MANAGE);
-    run.mutable_mng_app()->set_cmd(ManageApp::RUN);
-    int run_wait = app_->port(kCompGroup)->submit(run);
-    app_->run();
-    app_->port(kCompGroup)->waitOutgoingTask(run_wait);
-
-
   } else {
     // init app
     init_app_promise_.get_future().wait();
@@ -158,7 +159,9 @@ void Postoffice::start(int argc, char *argv[]) {
 
 void Postoffice::stop() {
   if (IamScheduler()) {
-    nodes_are_done_.get_future().wait();
+    if (FLAGS_num_workers + FLAGS_num_servers) {
+      nodes_are_done_.get_future().wait();
+    }
     Task terminate;
     terminate.set_type(Task::TERMINATE);
     app_->port(kLiveGroup)->submit(terminate);

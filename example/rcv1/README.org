@@ -1,0 +1,19 @@
+Examples run applications on data RCV1.
+
+Use =data/rcv1_small.sh= or =data/rcv1_large.sh= to prepare the dataset.
+
+Script =script/local.sh= can be used to start multiple processes in local
+machine.
+
+Examples to run l1-regularized logistic regression:
+
+#+BEGIN_SRC bash
+cd script
+# block coordinate descent with 1 server and 4 workers:
+./local.sh ../build/ps 1 4 -app_file ../example/rcv1/batch_l1lr.conf
+# online gradient descent with 1 server and 4 workers:
+./local.sh ../build/ps 1 4 -app_file ../example/rcv1/online_l1lr.conf
+# test the trained models
+./local.sh ../build/ps 0 0 -app_file ../example/rcv1/eval_batch.conf
+./local.sh ../build/ps 0 0 -app_file ../example/rcv1/eval_online.conf
+#+END_SRC

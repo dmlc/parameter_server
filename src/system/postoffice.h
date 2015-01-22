@@ -79,6 +79,17 @@ class Postoffice {
 
   // yp_ should stay behind sending_queue_ so it will be destroied earlier
   YellowPages yellow_pages_;
+};
+
+template <class P>
+void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
+  string str; proto.SerializeToString(&str);
+  reply(msg->sender, msg->task, str);
+  msg->replied = true;
+}
+
+} // namespace PS
+
 
   // string printDashboardTitle();
   // string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);
@@ -91,13 +102,3 @@ class Postoffice {
   // // heartbeat info for workers/servers
   // HeartbeatInfo heartbeat_info_;
   // Dashboard dashboard_;
-};
-
-template <class P>
-void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
-  string str; proto.SerializeToString(&str);
-  reply(msg->sender, msg->task, str);
-  msg->replied = true;
-}
-
-} // namespace PS
