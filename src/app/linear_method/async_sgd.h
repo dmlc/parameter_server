@@ -105,12 +105,8 @@ struct FTRLEntry {
     z += grad  - sigma * w;
     sqrt_n = sqrt_n_new;
 
-    // V lambda2 = (state->lr->beta() + sqrt_n_new) / state->lr->alpha();
-    // V w1 = - softThresholding(z, (V)1, lambda2);
-
     V eta = state->lr->eval(sqrt_n);
     w = state->h->proximal(-z*eta, eta);
-    // if (w != 0) LL << w << " " << w1-w << " " << eta << " " << z << " " << grad;
     state->updateWeight(w, w_old);
   }
 
@@ -250,15 +246,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     SArray<V> grad(X->cols());
     loss_->compute({Y, X, Xw.matrix()}, {grad.matrix()});
 
-    // add noise to gradien
-    V std = (V)conf_.async_sgd().noise_std();
-    if (std > 0) {
-      std::default_random_engine generator;
-      std::normal_distribution<V> distribution(0, std);
-      for (auto& g : grad) g += distribution(generator);
-    }
-    // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
-
     // push the gradient
     MessagePtr msg(new Message(kServerGroup));
     msg->setKey(model_.key(id));
@@ -282,3 +269,19 @@ private:
 
 } // namespace LM
 } // namespace PS
+
+    // V n1 = 0, n2 = 0;
+    // // add noise to gradient
+    // V std = (V)conf_.async_sgd().noise_std();
+    // if (std > 0) {
+    //   std::default_random_engine generator;
+    //   std::normal_distribution<V> distribution(0, std);
+    //   for (auto& g : grad) {
+    //     n1 += g * g;
+    //     V s =  distribution(generator);
+    //     n2 += s * s;
+    //     g += s;
+    //   }
+    //   LL << sqrt(n1) << " " << sqrt(n2);
+    // }
+    // // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
