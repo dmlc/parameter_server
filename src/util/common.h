@@ -81,14 +81,14 @@ using google::protobuf::TextFormat;
 DECLARE_int32(num_threads);
 
 // http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
-static int32 NumberOfSetBits(int32 i) {
+inline int32 NumberOfSetBits(int32 i) {
     i = i - ((i >> 1) & 0x55555555);
     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
 
 template <typename V>
-static string dbstr(const V* data, int n, int m = 5) {
+inline string dbstr(const V* data, int n, int m = 5) {
   std::stringstream ss;
   ss << "[" << n << "]: ";
   if (n < 2 * m) {

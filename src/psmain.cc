@@ -14,7 +14,7 @@ App* App::create(const string& name, const string& conf) {
 
 int main(int argc, char *argv[]) {
   auto& sys = PS::Postoffice::instance();
-  sys.start(argc, argv);
+  sys.start(&argc, &argv);
 
   int ret = 0;
   if (sys.myNode().role() == PS::Node::WORKER) {

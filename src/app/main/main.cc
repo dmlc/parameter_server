@@ -31,7 +31,7 @@ App* App::create(const string& name, const string& conf_str) {
 } // namespace PS
 
 int main(int argc, char *argv[]) {
-  PS::Postoffice::instance().start(argc, argv);
+  PS::Postoffice::instance().start(&argc, &argv);
   // if (FLAGS_log_instant) FLAGS_logbuflevel = -1;
 
   PS::Postoffice::instance().stop();

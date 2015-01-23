@@ -42,9 +42,9 @@ Postoffice::~Postoffice() {
   delete app_;
 }
 
-void Postoffice::start(int argc, char *argv[]) {
-  google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
+void Postoffice::start(int* argc, char*** argv) {
+  google::InitGoogleLogging((*argv)[0]);
+  google::ParseCommandLineFlags(argc, argv, true);
   if (FLAGS_log_to_file) {
     google::SetLogDestination(
         google::INFO, ("./log_" + myNode().id() + "_").c_str());

@@ -21,7 +21,7 @@ class Postoffice {
   SINGLETON(Postoffice);
   ~Postoffice();
 
-  void start(int argc, char *argv[]);
+  void start(int* argc, char***);
   void stop();
   // Run the system
   void run();

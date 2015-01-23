@@ -8,7 +8,8 @@ Customer::Customer(const string& my_name, const string& parent_name)
   // init parent info
   if (parent_name.size()) {
     sys_.yp().addRelation(my_name, parent_name);
-    auto parent_ptr = CHECK_NOTNULL(sys_.yp().customer(parent_name));
+    auto parent_ptr = sys_.yp().customer(parent_name);
+    CHECK(parent_ptr) << "parent [" <<  parent_name << "] doesn't exist";
     exec_.copyNodesFrom(parent_ptr->exec());
   }
 
