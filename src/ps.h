@@ -4,7 +4,6 @@
 
 // A simple interface to write parameter server (PS) programs. see example in
 // src/app/hello_world
-namespace PS {
 
 // A typical PS program should define the following two functions:
 
@@ -16,6 +15,8 @@ namespace PS {
 // but file is a commandline argument
 int WorkerNodeMain(int argc, char *argv[]);
 
+namespace PS {
+
 // Return an instance of a server node. This node is started with "-app_file
 // app.conf -app_conf 'key: value'", then conf has both the content of file "app.conf"
 // and 'key:value'
@@ -24,14 +25,14 @@ App* CreateServerNode(const std::string& conf);
 // Utility functions.
 
 // The app this node runs
-inline App* MyApp() { return Postoffice::instance().app(); }
+inline App* MyApp() { return PS::Postoffice::instance().app(); }
 
 // The rank ID. If there are W workers (S servers). Then each worker (server) is
 // assigned an unique ID from 0, 1, ... W (0, 2, ..., S).
 inline int MyRank() { return MyApp()->myRank(); }
 
 // Each node has an unique string id.
-inline std::string MyNodeID() { return Postoffice::instance().myNode().id(); }
+inline std::string MyNodeID() { return PS::Postoffice::instance().myNode().id(); }
 
 
 } // namespace PS

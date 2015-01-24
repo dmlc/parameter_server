@@ -21,13 +21,13 @@ class HelloServer : public App {
   KVVector<uint64, float> *model_;
 };
 
-
 App* CreateServerNode(const std::string& conf) {
   return new HelloServer();
 }
+} // namespace PS
 
 int WorkerNodeMain(int argc, char *argv[]) {
-
+  using namespace PS;
   LOG(ERROR) << MyNodeID() <<  ": this is worker " << MyRank();
 
   KVVector<uint64, float> model("w");
@@ -46,4 +46,3 @@ int WorkerNodeMain(int argc, char *argv[]) {
              << "; value: " << model.value();
   return 0;
 }
-} // namespace PS

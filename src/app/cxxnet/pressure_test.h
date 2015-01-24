@@ -56,7 +56,7 @@ class PressureServer : public CXXNetServer {
     LL << "init " << myNodeID();
   }
 
-  ps::IParamServer<cpu, float>* ps_;
+  ps::ISharedModel<cpu, float>* ps_;
 };
 
 
@@ -112,7 +112,7 @@ class PressureWorker : public CXXNetWorker {
   }
  protected:
 
-  ps::IParamServer<cpu, float>* ps_;
+  ps::ISharedModel<cpu, float>* ps_;
 };
 
 } // namespace CXXNET

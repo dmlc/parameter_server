@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 
   int ret = 0;
   if (sys.myNode().role() == PS::Node::WORKER) {
-    ret = PS::WorkerNodeMain(argc, argv);
+    ret = WorkerNodeMain(argc, argv);
   }
 
   sys.stop();

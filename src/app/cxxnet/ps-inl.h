@@ -5,9 +5,9 @@ namespace mshadow {
 namespace ps {
 
 template<typename xpu, typename DType>
-class ParamServer: public IParamServer<xpu, DType>  {
+class ParamServer: public ISharedModel<xpu, DType>  {
  public:
-  typedef typename IParamServer<xpu, DType>::CallbackFunction CallbackFunction;
+  typedef typename ISharedModel<xpu, DType>::CallbackFunction CallbackFunction;
   virtual void SetParam(const char *name, const char *val) {
     if (!strcmp(name, "name")) {
       name_ = std::string(val);
