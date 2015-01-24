@@ -42,7 +42,6 @@ build/libpsmain.a: build/ps_main.o
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
 
 build/ps:  build/app/main/main.o $(app_objs) $(PS_LIB)
-	echo $(app_objs)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 build/%.o: src/%.cc
