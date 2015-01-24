@@ -14,18 +14,20 @@ endif
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += ./build/libps.a $(THIRD_LIB) -lpthread -lrt
+LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+
+PS_LIB = build/libps.a
+PS_MAIN = build/libpsmain.a
 
 all: ps app build/hello
 clean:
 	rm -rf build
 
-ps: build/libps.a build/psmain.o
+ps: $(PS_LIB) $(PS_MAIN)
 app: build/ps
 
-build/hello: build/app/hello_world/main.o build/libps.a
-	$(CC) $(CFLAGS) $< build/psmain.o $(LDFLAGS) -o $@
-
+build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sys_srcs	= $(wildcard src/*/*.cc)
 sys_protos	= $(wildcard src/*/proto/*.proto)
@@ -34,11 +36,14 @@ sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
 build/libps.a: $(sys_objs)
 	ar crv $@ $?
 
+build/libpsmain.a: build/ps_main.o
+	ar crv $@ $?
+
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
 
-build/ps:  build/app/main/main.o $(app_objs) build/libps.a
+build/ps:  build/app/main/main.o $(app_objs) $(PS_LIB)
 	echo $(app_objs)
-	$(CC) $(CFLAGS) $< $(app_objs) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 build/%.o: src/%.cc
 	@mkdir -p $(@D)

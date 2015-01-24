@@ -20,20 +20,19 @@ class HelloServer : public App {
  private:
   KVVector<uint64, float> *model_;
 };
-} // namespace PS
 
 
-PS::App* CreateServer(const std::string& conf) {
-  return new PS::HelloServer();
+App* CreateServerNode(const std::string& conf) {
+  return new HelloServer();
 }
 
-int PSMain(int argc, char *argv[]) {
+int WorkerNodeMain(int argc, char *argv[]) {
 
-  LL << PSNodeID() <<  ": this is worker " << PSRank();
-  using namespace PS;
+  LOG(ERROR) << MyNodeID() <<  ": this is worker " << MyRank();
+
   KVVector<uint64, float> model("w");
 
-  if (PSRank() == 0) {
+  if (MyRank() == 0) {
     model.key() = {0, 2, 4, 5};
   } else {
     model.key() = {0, 1, 3, 4};
@@ -43,7 +42,8 @@ int PSMain(int argc, char *argv[]) {
   int pull_time = model.pull(msg);
 
   model.waitOutMsg(kServerGroup, pull_time);
-  LL << PSNodeID() << ": key: " << model.key()
-         << "; value: " << model.value();
+  LOG(ERROR) << MyNodeID() << ": key: " << model.key()
+             << "; value: " << model.value();
   return 0;
 }
+} // namespace PS
