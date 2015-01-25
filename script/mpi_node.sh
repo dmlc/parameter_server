@@ -1,6 +1,7 @@
 #!/bin/bash
 # set -x
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
+    echo $#
     echo "usage: ./self scheduler_node mpi.conf"
     exit -1;
 fi
@@ -41,10 +42,10 @@ if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
 fi
 
 # mkdir -p ${3}/../output
+    # -num_threads ${num_threads} \
 ${bin} \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
-    -num_threads ${num_threads} \
     -scheduler ${1} \
     -my_rank ${my_rank} \
     -interface ${network_interface} \
