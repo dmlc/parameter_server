@@ -22,7 +22,7 @@ cd ../../client/script
 
 *Submit parameter server*
 
-The following example submits to kubernetes the parameter server with 2 workers, 6 servers and a config file containing data and output path.
+The following example submits to kubernetes the parameter server with 2 servers, 6 workers and a config file containing data and output path.
 
 #+BEGIN_SRC bash
 python submit.py submit 2 6 ../../../example/rcv1/batch_l1lr.conf
