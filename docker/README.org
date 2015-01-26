@@ -4,42 +4,36 @@ The containerized parameter server runs workers and servers on cluster as docker
 
 *Requirements*
 - A linux cluster with docker installed
-- Dependent libraries: MPI
 
 *Bring up the containerized kubernetes on cluster*
 
 #+BEGIN_SRC bash
-cd server
-python run.py up host/master_file host/minions_file
+cd server/script
+#make sure you have written minions in server/host/minions_file then 
+./kube-up.sh
 #+END_SRC
 
 *Check kubernetes*
 
 #+BEGIN_SRC bash
-cd ../client
-./bin/kubecfg list minions
+cd ../../client/script
+../bin/kubecfg list minions
 #+END_SRC
 
 *Submit parameter server*
 
-The following example submits to kubernetes the parameter server with 2 workers, 2 servers and a config file containing data and output path.
+The following example submits to kubernetes the parameter server with 2 servers, 6 workers and a config file containing data and output path.
 
 #+BEGIN_SRC bash
-python submit.py submit 2 2 ../../../config/rcv1/batch_l1lr.conf
+python submit.py submit 2 6 ../../../example/rcv1/batch_l1lr.conf
 #+END_SRC
 
 *Check parameter server status and result*
 
 #+BEGIN_SRC bash
-./bin/kubecfg list pods
-#Ssh to minions and use "docker logs <container>" to see results 
-#+END_SRC
-
-*Scale workers and servers*
-
-#+BEGIN_SRC bash
-./bin/kubecfg resize worker <num>
-./bin/kubecfg resize server <num>
+../bin/kubecfg list pods
+#ssh to scheduler minion and use "docker logs <scheduler_container>" or "cat /tmp/docker/log/scheduler/van_H" to see running status
+#cd to your output dir configured in config file to see model output 
 #+END_SRC
 
 *Kill parameter server on kubernetes*
@@ -51,8 +45,8 @@ python submit.py clear
 *Show down the kubernetes on cluster*
 
 #+BEGIN_SRC bash
-cd ../server
-python run.py down host/master_file host/minions_file
+cd ../../server/script
+./kube-down.sh
 #+END_SRC
 
 

@@ -2,55 +2,56 @@ import os
 import sys
 import json
 import time
-
+def getMinionNum():
+        out=os.popen('../bin/kubecfg list minions').read()
+        return len(out.splitlines()[2:-1])
 def extractDatAndOutputPath(path):
-	'''
-	Get from config file the absolute dir of data
-	'''
-	fread=open(path,'r')
-	fwrite=open("../config/config.conf",'w')
-	flag=""
-	data_dir=""
-	output_dir=""
-	filename=""
-	for line in fread:
-		items=line.strip().split()
-		if len(items)>0:
-			if items[0]=="training_data":
-				flag=items[0]
-			elif items[0]=="model_output":
-				flag=items[0]
-			elif items[0]=="file:":
-				if flag=="training_data":
-					flag=""
-					data_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
-					fwrite.write("file: \"/home/parameter_server/dat/%s\"\n" % filename)
-					continue
-				elif flag=="model_output":
-					flag=""
-					output_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
-					fwrite.write("file: \"/home/parameter_server/output/%s\"\n" % filename)
-					continue
-		fwrite.write("%s" % line)
-	fread.close()
-	return data_dir,output_dir
+        '''
+        Get from config file the absolute dir of data
+        '''
+        fread=open(path,'r')
+        fwrite=open("../config/config.conf",'w')
+        flag=""
+        data_dir=""
+        output_dir=""
+        filename=""
+        for line in fread:
+                items=line.strip().split()
+                if len(items)>0:
+                        if items[0]=="training_data":
+                                flag=items[0]
+                        elif items[0]=="model_output":
+                                flag=items[0]
+                        elif items[0]=="file:":
+                                if flag=="training_data":
+                                        flag=""
+                                        data_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
+                                        fwrite.write("file: \"/home/parameter_server/data/%s\"\n" % filename)
+                                        continue
+                                elif flag=="model_output":
+                                        flag=""
+                                        output_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
+                                        fwrite.write("file: \"/home/parameter_server/output/%s\"\n" % filename)
+                                        continue
+                fwrite.write("%s" % line)
+        fread.close()
+        return data_dir,output_dir
 
 def killAll():
-	'''
-	Kill all pods and controller managers on kubernetes
-	'''
-	#kill replicationControllers
-	os.system('../bin/kubecfg stop worker')
-	os.system('../bin/kubecfg stop server')
-	os.system('../bin/kubecfg rm worker')
-	os.system('../bin/kubecfg rm server')
-	
-	#kill pods
-	out=os.popen('../bin/kubecfg list pods').read()
-	for line in out.splitlines()[2:]:
-		line=line.strip().split()
-		if len(line)>0:
-			os.system('../bin/kubecfg delete pods/'+line[0])
+        '''
+        Kill all pods and controller managers on kubernetes
+        '''
+        #kill replicationControllers
+        out=os.popen('../bin/kubecfg list replicationControllers').read()
+        for line in out.splitlines()[2:]:
+              line=line.strip().split()
+              if len(line)>0:
+                      os.system('../bin/kubecfg stop '+line[0])
+                      os.system('../bin/kubecfg rm '+line[0])
+
+        #kill scheduler
+        os.system("../bin/kubecfg delete pods/scheduler")
+
 
 def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	'''
@@ -65,7 +66,7 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	container=dict()
 	container['name']='scheduler'
 	#image
-	container['image']='qicongc/ps'
+	container['image']='qicongc/parameter_server'
 	port=dict()
 	#port mapping
 	port['containerPort']=8000
@@ -79,7 +80,7 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	#working directory when container starts running
 	container['workingDir']='/home/parameter_server/script'
 	#command
-	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van  -bind_to 8000 '
+	cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van  -bind_to 8000 '
 	cmd+="-scheduler \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\" "
 	cmd+="-my_node \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\""
 	command=['sh','-c']
@@ -98,13 +99,13 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	container['volumeMounts'].append(volumeMount)
 	#path to config file
 	volumeMount=dict()
-	volumeMount['name']='cfg'
-	volumeMount['mountPath']='/home/parameter_server/cfg'
+	volumeMount['name']='config'
+	volumeMount['mountPath']='/home/parameter_server/config'
 	container['volumeMounts'].append(volumeMount)
 	#path to data
 	volumeMount=dict()
-	volumeMount['name']='dat'
-	volumeMount['mountPath']='/home/parameter_server/dat'
+	volumeMount['name']='data'
+	volumeMount['mountPath']='/home/parameter_server/data'
 	container['volumeMounts'].append(volumeMount)
 	#path to output
 	volumeMount=dict()
@@ -130,14 +131,14 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	volumes.append(volume)
 	#path to config file
 	volume=dict()
-	volume['name']='cfg'
+	volume['name']='config'
 	volume['source']=dict()
 	volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']=os.path.split(os.path.abspath("../config/config.conf"))[0]
 	volumes.append(volume)
 	#path to data
 	volume=dict()
-	volume['name']='dat'
+	volume['name']='data'
 	volume['source']=dict()
 	volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']=data_dir
@@ -186,110 +187,110 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 				print line
 				if len(line)>4  and line[4]=='Running':
 					return line[2].strip('/')
-	
 
+def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,output_dir):
+        '''
+        Bring up worker as a pod -- worker
+        '''
+        worker=dict()
+        worker['id']='worker'+str(index)
+        worker['kind']='ReplicationController'
+        worker['apiVersion']='v1beta1'
 
-def upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir):
-	'''
-	Bring up workers as pods managed by a replication controller -- worker
-	'''
-	worker=dict()
-	worker['id']='worker'
-	worker['kind']='ReplicationController'
-	worker['apiVersion']='v1beta1'
-
-	###set container###
-	container=dict()
-	container['name']='worker'
-	#image
-	container['image']='qicongc/ps'
-	#port mapping
-	port=dict()
-	port['containerPort']=8001
-	port['hostPort']=11001
-	container['ports']=[port]
-	#environment variables
-	env=dict()
-	env['name']='LD_LIBRARY_PATH'
-	env['value']='/home/parameter_server/third_party/lib/'
-	container['env']=[env]
-	#working directory when container starts running
-	container['workingDir']='/home/parameter_server/script'
-	#command
-	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van -bind_to 8001 '
-	cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
-	cmd+="-my_node \"role:WORKER,hostname:\'`cat /tmp/docker/host/host`\',port:11001,id:\'W_$(hostname)\'\""
-	command=['sh','-c']
+        ###set container###
+        container=dict()
+        container['name']='worker'+str(index)
+        #image
+        container['image']='qicongc/parameter_server'
+        port=dict()
+        #port mapping
+        port['containerPort']=8001
+        hostPort=11401+index
+        port['hostPort']=hostPort
+        container['ports']=[port]
+        #environment variables
+        env=dict()
+        env['name']='LD_LIBRARY_PATH'
+        env['value']='/home/parameter_server/third_party/lib/'
+        container['env']=[env]
+        #working directory when container starts running
+        container['workingDir']='/home/parameter_server/script'
+        #command
+        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van -bind_to 8001 '
+        cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
+        cmd+="-my_node \"role:WORKER,hostname:\'`cat /tmp/docker/host/host`\',port:"+str(hostPort)+",id:\'W_$(hostname)\'\""
+        command=['sh','-c']
 	command.append(cmd)
-	print cmd
-	container['command']=command
-	#volume mapping -- container side
-	#path for container to identify current minion
-	volumeMount=dict()
-	volumeMount['name']='host'
-	volumeMount['mountPath']='/tmp/docker/host'
-	container['volumeMounts']=[volumeMount]
-	#path to van print
-	volumeMount=dict()
-	volumeMount['name']='log'
-	volumeMount['mountPath']='/home/parameter_server/script'
-	container['volumeMounts'].append(volumeMount)
-	#path to config file
-	volumeMount=dict()
-	volumeMount['name']='cfg'
-	volumeMount['mountPath']='/home/parameter_server/cfg'
-	container['volumeMounts'].append(volumeMount)
-	#path to data
-	volumeMount=dict()
-	volumeMount['name']='dat'
-	volumeMount['mountPath']='/home/parameter_server/dat'
-	container['volumeMounts'].append(volumeMount)
-	#path to output
-	volumeMount=dict()
-	volumeMount['name']='output'
-	volumeMount['mountPath']='/home/parameter_server/output'
-	container['volumeMounts'].append(volumeMount)
+        container['command']=command
+        #volume mapping -- container side
+        #path for container to identify current minion
+        volumeMount=dict()
+        volumeMount['name']='host'
+        volumeMount['mountPath']='/tmp/docker/host'
+        container['volumeMounts']=[volumeMount]
+        #path to van print
+        volumeMount=dict()
+        volumeMount['name']='log'
+        volumeMount['mountPath']='/home/parameter_server/script'
+        container['volumeMounts'].append(volumeMount)
+        #path to config file
+        volumeMount=dict()
+        volumeMount['name']='config'
+        volumeMount['mountPath']='/home/parameter_server/config'
+        container['volumeMounts'].append(volumeMount)
+        #path to data
+        volumeMount=dict()
+        volumeMount['name']='data'
+        volumeMount['mountPath']='/home/parameter_server/data'
+        container['volumeMounts'].append(volumeMount)
+        #path to output
+        volumeMount=dict()
+        volumeMount['name']='output'
+        volumeMount['mountPath']='/home/parameter_server/output'
+        container['volumeMounts'].append(volumeMount)
+        ###set container done###
 
-	#volume mapping -- minion side
-	#path for container to identify current minion
-	volume=dict()
-	volume['name']='host'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']='/tmp/docker/host'
-	volumes=[volume]
-	#path to van print
-	volume=dict()
-	volume['name']='log'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']='/tmp/docker/log/worker'
-	volumes.append(volume)
-	#path to config file
-	volume=dict()
-	volume['name']='cfg'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=os.path.split(os.path.abspath("../config/config.conf"))[0]
-	volumes.append(volume)
-	#path to data
-	volume=dict()
-	volume['name']='dat'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=data_dir
-	volumes.append(volume)
-	#path to output
-	volume=dict()
-	volume['name']='output'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=output_dir
-	volumes.append(volume)
+        #volume mapping -- minion side
+        #path for container to identify current minion
+        volume=dict()
+        volume['name']='host'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']='/tmp/docker/host'
+        volumes=[volume]
+        #path to van print
+        volume=dict()
+        volume['name']='log'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']='/tmp/docker/log/worker'
+        volumes.append(volume)
+        #path to config file
+        volume=dict()
+        volume['name']='config'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=os.path.split(os.path.abspath("../config/config.conf"))[0]
+        volumes.append(volume)
+        #path to data
+        volume=dict()
+	volume['name']='data'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=data_dir
+        volumes.append(volume)
+        #path to output
+        volume=dict()
+        volume['name']='output'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=output_dir
+        volumes.append(volume)
 
-	manifest=dict()
+
+        manifest=dict()
 	manifest['version']='v1beta1'
-	manifest['id']='worker'
+	manifest['id']='worker'+str(index)
 	manifest['containers']=[container]
 	manifest['volumes']=volumes
 
@@ -299,17 +300,17 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	podTemplate=dict()
 	podTemplate['desiredState']=desiredState
 	podTemplate['labels']=dict()
-	podTemplate['labels']['name']='worker'
+	podTemplate['labels']['name']='worker'+str(index)
 
 	desiredState=dict()
 	desiredState['podTemplate']=podTemplate
-	desiredState['replicas']=num_workers
+	desiredState['replicas']=num_replicas
 	desiredState['replicaSelector']=dict()
-	desiredState['replicaSelector']['name']='worker'
+	desiredState['replicaSelector']['name']='worker'+str(index)
 
 	worker['desiredState']=desiredState
 	worker['labels']=dict()
-	worker['labels']['name']='worker'
+	worker['labels']['name']='worker'+str(index)
 
 	#convert scheduler to json
 	fpath='../json/replicationControllers/'+worker['id']+'.json'
@@ -320,108 +321,108 @@ def upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	print cmd
 	os.system(cmd)
 
-def upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir):
-	'''
-	Bring up servers as pods managed by a replication controller -- server
-	'''
-	server=dict()
-	server['id']='server'
-	server['kind']='ReplicationController'
-	server['apiVersion']='v1beta1'
+def upServer(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,output_dir):
+        '''
+        Bring up worker as a pod -- worker
+        '''
+        server=dict()
+        server['id']='server'+str(index)
+        server['kind']='ReplicationController'
+        server['apiVersion']='v1beta1'
 
-	###set container###
-	container=dict()
-	container['name']='server'
+        ###set container###
+        container=dict()
+        container['name']='server'+str(index)
 	#image
-	container['image']='qicongc/ps'
-	#port mapping
-	port=dict()
-	port['containerPort']=8002
-	port['hostPort']=11002
-	container['ports']=[port]
-	#environment variables
-	env=dict()
-	env['name']='LD_LIBRARY_PATH'
-	env['value']='/home/parameter_server/third_party/lib/'
-	container['env']=[env]
-	#working directory when container starts running
-	container['workingDir']='/home/parameter_server/script'
-	#command
-	cmd='../bin/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app ../cfg/config.conf -print_van  -bind_to 8002 '
-	cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
-	cmd+="-my_node \"role:SERVER,hostname:\'`cat /tmp/docker/host/host`\',port:11002,id:\'S_$(hostname)\'\""
-	command=['sh','-c']
-	command.append(cmd)
-	print cmd
-	container['command']=command
-	#volume mapping -- container side
-	#path for container to identify current minion
-	volumeMount=dict()
-	volumeMount['name']='host'
-	volumeMount['mountPath']='/tmp/docker/host'
-	container['volumeMounts']=[volumeMount]
-	#path to van print
-	volumeMount=dict()
-	volumeMount['name']='log'
-	volumeMount['mountPath']='/home/parameter_server/script'
-	container['volumeMounts'].append(volumeMount)
-	#path to config file
-	volumeMount=dict()
-	volumeMount['name']='cfg'
-	volumeMount['mountPath']='/home/parameter_server/cfg'
-	container['volumeMounts'].append(volumeMount)
-	#path to data
-	volumeMount=dict()
-	volumeMount['name']='dat'
-	volumeMount['mountPath']='/home/parameter_server/dat'
-	container['volumeMounts'].append(volumeMount)
-	#path to output
-	volumeMount=dict()
-	volumeMount['name']='output'
-	volumeMount['mountPath']='/home/parameter_server/output'
-	container['volumeMounts'].append(volumeMount)
+        container['image']='qicongc/parameter_server'
+        port=dict()
+        #port mapping
+        port['containerPort']=8002
+        hostPort=11101+index
+        port['hostPort']=hostPort
+        container['ports']=[port]
+        #environment variables
+        env=dict()
+        env['name']='LD_LIBRARY_PATH'
+        env['value']='/home/parameter_server/third_party/lib/'
+        container['env']=[env]
+        #working directory when container starts running
+        container['workingDir']='/home/parameter_server/script'
+        #command
+        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van  -bind_to 8002 '
+        cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
+        cmd+="-my_node \"role:SERVER,hostname:\'`cat /tmp/docker/host/host`\',port:"+str(hostPort)+",id:\'S_$(hostname)\'\""
+        command=['sh','-c']
+        command.append(cmd)
+        container['command']=command
+        #volume mapping -- container side
+        #path for container to identify current minion
+        volumeMount=dict()
+        volumeMount['name']='host'
+        volumeMount['mountPath']='/tmp/docker/host'
+        container['volumeMounts']=[volumeMount]
+        #path to van print
+        volumeMount=dict()
+        volumeMount['name']='log'
+        volumeMount['mountPath']='/home/parameter_server/script'
+        container['volumeMounts'].append(volumeMount)
+        #path to config file
+        volumeMount=dict()
+        volumeMount['name']='config'
+        volumeMount['mountPath']='/home/parameter_server/config'
+        container['volumeMounts'].append(volumeMount)
+        #path to data
+        volumeMount=dict()
+        volumeMount['name']='data'
+        volumeMount['mountPath']='/home/parameter_server/data'
+        container['volumeMounts'].append(volumeMount)
+        #path to output
+        volumeMount=dict()
+        volumeMount['name']='output'
+        volumeMount['mountPath']='/home/parameter_server/output'
+        container['volumeMounts'].append(volumeMount)
+        ###set container done###
 
-
-	#volume mapping -- minion side
-	#path for container to identify current minion
-	volume=dict()
-	volume['name']='host'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
+        #volume mapping -- minion side
+        #path for container to identify current minion
+        volume=dict()
+        volume['name']='host'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
 	volume['source']['hostDir']['path']='/tmp/docker/host'
-	volumes=[volume]
-	#path to van print
-	volume=dict()
-	volume['name']='log'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']='/tmp/docker/log/server'
-	volumes.append(volume)
-	#path to config file
-	volume=dict()
-	volume['name']='cfg'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=os.path.split(os.path.abspath("../config/config.conf"))[0]
-	volumes.append(volume)
-	#path to data
-	volume=dict()
-	volume['name']='dat'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=data_dir
-	volumes.append(volume)
-	#path to output
-	volume=dict()
-	volume['name']='output'
-	volume['source']=dict()
-	volume['source']['hostDir']=dict()
-	volume['source']['hostDir']['path']=output_dir
-	volumes.append(volume)
+        volumes=[volume]
+        #path to van print
+        volume=dict()
+        volume['name']='log'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']='/tmp/docker/log/server'
+        volumes.append(volume)
+        #path to config file
+        volume=dict()
+        volume['name']='config'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=os.path.split(os.path.abspath("../config/config.conf"))[0]
+        volumes.append(volume)
+        #path to data
+        volume=dict()
+        volume['name']='data'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=data_dir
+        volumes.append(volume)
+        #path to output
+        volume=dict()
+        volume['name']='output'
+        volume['source']=dict()
+        volume['source']['hostDir']=dict()
+        volume['source']['hostDir']['path']=output_dir
+        volumes.append(volume)
 
-	manifest=dict()
+        manifest=dict()
 	manifest['version']='v1beta1'
-	manifest['id']='server'
+	manifest['id']='server'+str(index)
 	manifest['containers']=[container]
 	manifest['volumes']=volumes
 
@@ -431,17 +432,17 @@ def upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	podTemplate=dict()
 	podTemplate['desiredState']=desiredState
 	podTemplate['labels']=dict()
-	podTemplate['labels']['name']='server'
+	podTemplate['labels']['name']='server'+str(index)
 
 	desiredState=dict()
 	desiredState['podTemplate']=podTemplate
-	desiredState['replicas']=num_servers
+	desiredState['replicas']=num_replicas
 	desiredState['replicaSelector']=dict()
-	desiredState['replicaSelector']['name']='server'
+	desiredState['replicaSelector']['name']='server'+str(index)
 
 	server['desiredState']=desiredState
 	server['labels']=dict()
-	server['labels']['name']='server'
+	server['labels']['name']='server'+str(index)
 
 	#convert scheduler to json
 	fpath='../json/replicationControllers/'+server['id']+'.json'
@@ -452,23 +453,37 @@ def upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir):
 	print cmd
 	os.system(cmd)
 
+
 if __name__=='__main__':
-	program=sys.argv[1]
-	if program=="clear":
-		killAll()
-	elif program=="submit":
-		num_servers=int(sys.argv[2])
-		num_workers=int(sys.argv[3])
-		config_path=os.path.abspath(sys.argv[4])
-		data_dir,output_dir=extractDatAndOutputPath(config_path)
-		scheduler_host=upScheduler(num_servers,num_workers,data_dir,output_dir)
-		print "Detect scheduler at "+scheduler_host
-		print "Waiting for seconds, to ensure scheduler successfully binded."
-		time.sleep(20)
-		upServer(scheduler_host,num_servers,num_workers,data_dir,output_dir)
-		upWorker(scheduler_host,num_servers,num_workers,data_dir,output_dir)
- 
+        program=sys.argv[1]
+        if program=="clear":
+                killAll()
+        elif program=="submit":
+                num_minions=getMinionNum()
+                num_servers=int(sys.argv[2])
+                num_workers=int(sys.argv[3])
+                config_path=os.path.abspath(sys.argv[4])
+                data_dir,output_dir=extractDatAndOutputPath(config_path)
+		print data_dir
+		print output_dir
+                scheduler_host=upScheduler(num_servers,num_workers,data_dir,output_dir)
+		print 'detect scheduler at '+scheduler_host
+		#launch servers
+		remained=num_servers
+		index=0
+		while remained>num_minions:
+			upServer(index,num_minions,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+			remained-=num_minions
+			index+=1
+		upServer(index,remained,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+		#launch workers
+		remained=num_workers
+		index=0
+		while remained>num_minions:
+			upWorker(index,num_minions,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+			remained-=num_minions
+			index+=1
+		upWorker(index,remained,scheduler_host,num_servers,num_workers,data_dir,output_dir)
 
 
-
-
+                

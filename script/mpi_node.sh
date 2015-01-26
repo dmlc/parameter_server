@@ -1,7 +1,8 @@
 #!/bin/bash
 # set -x
-if [ $# -ne 3 ]; then
-    echo "usage: ./self scheduler_node mpi.conf dir_of_mpi_node_sh"
+if [ $# -ne 2 ]; then
+    echo $#
+    echo "usage: ./self scheduler_node mpi.conf"
     exit -1;
 fi
 
@@ -40,16 +41,15 @@ if (( ${rank_size} < ${num_workers} + ${num_servers} + 1 )); then
     exit -1
 fi
 
-mkdir -p ${3}/../output
-${3}/../bin/ps \
+# mkdir -p ${3}/../output
+    # -num_threads ${num_threads} \
+${bin} \
     -num_servers ${num_servers} \
     -num_workers ${num_workers} \
-    -num_threads ${num_threads} \
     -scheduler ${1} \
     -my_rank ${my_rank} \
-    -app ${3}/${app_conf} \
     -interface ${network_interface} \
-    ${args}
+    ${arg}
 
 exit $?
 #  echo "rank:${my_rank} launch failed"; exit -1;

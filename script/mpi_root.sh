@@ -6,20 +6,20 @@ if [ $# -ne 1 ]; then
     exit -1;
 fi
 
-dir=`dirname "$0"`
-conf=${dir}/${1}
-# mpirun=${dir}/mpirun
-
+conf=${1}
 source ${conf}
 
+# mpirun=${dir}/mpirun
+
+dir=`dirname "$0"`
 root_node=`${dir}/get_root_node.sh ${network_interface} ${network_port}`
 np=$((${num_workers} + ${num_servers} + 1))
 
 if [ ! -z ${hostfile} ]; then
-    hf="-hostfile ${dir}/${hostfile}"
+    hostfile="-hostfile ${hostfile}"
 fi
 
-# mpirun ${hf} killall -q ps
-# mpirun ${hf} md5sum ../bin/ps
+# mpirun ${hostfile} killall -q ps
+# mpirun ${hostfile} md5sum ../bin/ps
 
-mpirun ${hf} -np ${np} ${dir}/mpi_node.sh ${root_node} ${conf} ${dir}
+mpirun ${hostfile} -np ${np} ${dir}/mpi_node.sh ${root_node} ${conf}
