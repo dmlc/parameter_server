@@ -126,7 +126,9 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
     }
 
     // save model
-    saveModel(conf_.model_output());
+    if (conf_.has_model_output()) {
+      saveModel(conf_.model_output());
+    }
   }
  protected:
   // TOOD merge

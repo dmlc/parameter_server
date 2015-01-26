@@ -63,7 +63,9 @@ class Van {
   size_t received_from_others_ = 0;
 
   std::ofstream debug_out_;
-
+//   #ifndef debug_out_
+// #define debug_out_ std::cerr
+//   #endif
   Node assembleMyNode();
 };
 

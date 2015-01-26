@@ -62,7 +62,7 @@ class ISGDScheduler : public App {
     }
     progress->clear();
     num_ex_processed_ += num_ex;
-    printf("%4d sec, %.2e examples, loss %.3e, auc %.4f, acc %.4f, |w|_0 %.2e\n",
+    fprintf(stderr, "%4d sec, %.2e examples, loss %.3e, auc %.4f, acc %.4f, |w|_0 %.2e\n",
            (int)time, (double)num_ex_processed_ , objv.sum()/(double)num_ex,
            auc.mean(), acc.mean(), (double)nnz_w);
   }

@@ -31,8 +31,8 @@ ${bin} -my_node ${Sch} -scheduler ${Sch} ${arg} &
 for ((i=0; i<${num_servers}; ++i)); do
     port=$((9600 + ${i}))
     N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'S${i}'"
-    # CPUPROFILE=/tmp/S${i} \
     # HEAPPROFILE=/tmp/S${i} \
+    CPUPROFILE=/tmp/S${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
 done
 
@@ -40,8 +40,8 @@ done
 for ((i=0; i<${num_workers}; ++i)); do
     port=$((9500 + ${i}))
     N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'W${i}'"
-    # CPUPROFILE=/tmp/W${i} \
     # HEAPPROFILE=/tmp/W${i} \
+    CPUPROFILE=/tmp/W${i} \
     ${bin} -my_node ${N} -scheduler ${Sch} ${arg} &
 done
 
