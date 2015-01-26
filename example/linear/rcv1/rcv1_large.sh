@@ -12,8 +12,9 @@ if ! [ -e rcv1_test.binary ]; then
     bunzip2 rcv1_test.binary.bz2
 fi
 
-train=rcv1/train
-test=rcv1/test
+dir=`dirname "$0"`
+train=data/train
+test=data/test
 mkdir -p $train
 mkdir -p $test
 

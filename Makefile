@@ -1,4 +1,4 @@
-CC = g++-4.8
+CC = g++
 
 # OPT = -O0 -ggdb
 OPT = -O3 -ggdb

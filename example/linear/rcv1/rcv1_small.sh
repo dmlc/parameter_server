@@ -6,13 +6,12 @@ if ! [ -e rcv1_train.binary ]; then
     bunzip2 rcv1_train.binary.bz2
 fi
 
-
-split -l 1000 rcv1_train.binary rcv1_train_
-
-train=train
-test=test
+train=data/train
+test=data/test
 mkdir -p $train
 mkdir -p $test
+
+split -l 1000 rcv1_train.binary rcv1_train_
 
 rm -f $train/* $test/*
 

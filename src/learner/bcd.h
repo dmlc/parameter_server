@@ -249,9 +249,13 @@ class BCDServer : public App, public BCDCommon {
   }
 
   void saveModel(const DataConfig& output) {
+
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + myNodeID();
+      if (!dirExists(getPath(file))) {
+        createDir(getPath(file));
+      }
       std::ofstream out(file); CHECK(out.good());
       for (int grp : fea_grp_) {
         auto key = model_.key(grp);

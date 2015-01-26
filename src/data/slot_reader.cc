@@ -130,7 +130,7 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
   // time. a nature way is doing it at init(). but i'm afraid to it may be
   // problemic to have multiple processes doing it at the same time.
   if (!dirExists(getPath(info_name))) {
-    CHECK(createDir(getPath(info_name)));
+    createDir(getPath(info_name));
   }
   // save in cache
   info = info_parser.info();
