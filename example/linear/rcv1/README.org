@@ -1,0 +1,25 @@
+Examples run applications on data RCV1.
+
+First, download the dataset by =./rcv1_small.sh= or =./rcv1_large.sh=
+
+Then we can run the system by either building the binary or downloading a docker images.
+
+*Run in local*
+
+Use the binary you compiled to run l1-regularized logistic regression:
+
+#+BEGIN_SRC bash
+# block coordinate descent with 1 server and 4 workers:
+../../../script/local.sh ../../../build/ps 1 4 -app_file batch_l1lr.conf
+# online gradient descent with 1 server and 4 workers:
+../../../script/local.sh ../../../build/ps 1 4 -app_file online_l1lr.conf
+# test the trained models
+../../../script/local.sh ../../../build/ps 0 0 -app_file eval_batch.conf
+../../../script/local.sh ../../../build/ps 0 0 -app_file eval_online.conf
+#+END_SRC
+
+Or run the same application by [[www.docker.com][docker:]]
+
+#+BEGIN_SRC bash
+sudo ../../../docker/local.sh 1 1 batch_l1lr.conf data model
+#+END_SRC
