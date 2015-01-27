@@ -27,12 +27,26 @@ App* CreateServerNode(const std::string& conf);
 // The app this node runs
 inline App* MyApp() { return PS::Postoffice::instance().app(); }
 
-// The rank ID. If there are W workers (S servers). Then each worker (server) is
-// assigned an unique ID from 0, 1, ... W (0, 2, ..., S).
-inline int MyRank() { return MyApp()->myRank(); }
+inline Node MyNode() { return PS::Postoffice::instance().myNode(); }
 
 // Each node has an unique string id.
-inline std::string MyNodeID() { return PS::Postoffice::instance().myNode().id(); }
+inline std::string MyNodeID() { return MyNode().id(); }
 
+// query the role of this node
+inline int IsWorker() { return MyNode().role() == Node::WORKER; }
+inline int IsServer() { return MyNode().role() == Node::SERVER; }
+inline int IsScheduler() { return MyNode().role() == Node::SCHEDULER; }
+
+
+// The rank ID of this node in its group. Assume this a worker node in a worker
+// group with N workers. Then this node will be assigned an unique ID from 0,
+// ..., N. Similarly for server and scheduler.
+inline int MyRank() { return MyApp()->myRank(); }
+
+// Total nodes in this node group.
+inline int RankSize() {
+  auto& yp = PS::Postoffice::instance().yp();
+  return IsWorker() ? yp.num_workers() : (IsServer() ? yp.num_servers() : 1);
+}
 
 } // namespace PS
