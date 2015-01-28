@@ -20,7 +20,7 @@ LDFLAGS += $(THIRD_LIB) -lpthread -lrt
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
 
-all: ps app build/hello
+all: ps app build/hello build/minerva
 clean:
 	rm -rf build
 
@@ -28,6 +28,9 @@ ps: $(PS_LIB) $(PS_MAIN)
 app: build/ps
 
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+build/minerva: build/app/minerva/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sys_srcs	= $(wildcard src/*/*.cc)
