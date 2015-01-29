@@ -33,6 +33,7 @@ message Task {
   optional int32 key_channel = 8;
   // indiciate whether or not has the key list
   optional bool has_key = 9 [default = false];
+  optional string key_channel_str = 10;
 
   optional DataType key_type = 13;
   repeated DataType value_type = 14;

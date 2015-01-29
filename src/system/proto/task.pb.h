@@ -292,6 +292,18 @@ class Task : public ::google::protobuf::Message {
   inline bool has_key() const;
   inline void set_has_key(bool value);
 
+  // optional string key_channel_str = 10;
+  inline bool has_key_channel_str() const;
+  inline void clear_key_channel_str();
+  static const int kKeyChannelStrFieldNumber = 10;
+  inline const ::std::string& key_channel_str() const;
+  inline void set_key_channel_str(const ::std::string& value);
+  inline void set_key_channel_str(const char* value);
+  inline void set_key_channel_str(const char* value, size_t size);
+  inline ::std::string* mutable_key_channel_str();
+  inline ::std::string* release_key_channel_str();
+  inline void set_allocated_key_channel_str(::std::string* key_channel_str);
+
   // optional .PS.DataType key_type = 13;
   inline bool has_key_type() const;
   inline void clear_key_type();
@@ -395,6 +407,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_key_channel();
   inline void set_has_has_key();
   inline void clear_has_has_key();
+  inline void set_has_key_channel_str();
+  inline void clear_has_key_channel_str();
   inline void set_has_key_type();
   inline void clear_has_key_type();
   inline void set_has_msg();
@@ -422,6 +436,7 @@ class Task : public ::google::protobuf::Message {
   bool has_key_;
   ::google::protobuf::int32 key_channel_;
   ::PS::PbRange* key_range_;
+  ::std::string* key_channel_str_;
   ::google::protobuf::RepeatedField<int> value_type_;
   ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig > filter_;
   ::std::string* msg_;
@@ -433,7 +448,7 @@ class Task : public ::google::protobuf::Message {
   int key_type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
 
   friend void  protobuf_AddDesc_system_2fproto_2ftask_2eproto();
   friend void protobuf_AssignDesc_system_2fproto_2ftask_2eproto();
@@ -939,15 +954,85 @@ inline void Task::set_has_key(bool value) {
   has_key_ = value;
 }
 
-// optional .PS.DataType key_type = 13;
-inline bool Task::has_key_type() const {
+// optional string key_channel_str = 10;
+inline bool Task::has_key_channel_str() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void Task::set_has_key_type() {
+inline void Task::set_has_key_channel_str() {
   _has_bits_[0] |= 0x00000100u;
 }
-inline void Task::clear_has_key_type() {
+inline void Task::clear_has_key_channel_str() {
   _has_bits_[0] &= ~0x00000100u;
+}
+inline void Task::clear_key_channel_str() {
+  if (key_channel_str_ != &::google::protobuf::internal::kEmptyString) {
+    key_channel_str_->clear();
+  }
+  clear_has_key_channel_str();
+}
+inline const ::std::string& Task::key_channel_str() const {
+  return *key_channel_str_;
+}
+inline void Task::set_key_channel_str(const ::std::string& value) {
+  set_has_key_channel_str();
+  if (key_channel_str_ == &::google::protobuf::internal::kEmptyString) {
+    key_channel_str_ = new ::std::string;
+  }
+  key_channel_str_->assign(value);
+}
+inline void Task::set_key_channel_str(const char* value) {
+  set_has_key_channel_str();
+  if (key_channel_str_ == &::google::protobuf::internal::kEmptyString) {
+    key_channel_str_ = new ::std::string;
+  }
+  key_channel_str_->assign(value);
+}
+inline void Task::set_key_channel_str(const char* value, size_t size) {
+  set_has_key_channel_str();
+  if (key_channel_str_ == &::google::protobuf::internal::kEmptyString) {
+    key_channel_str_ = new ::std::string;
+  }
+  key_channel_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Task::mutable_key_channel_str() {
+  set_has_key_channel_str();
+  if (key_channel_str_ == &::google::protobuf::internal::kEmptyString) {
+    key_channel_str_ = new ::std::string;
+  }
+  return key_channel_str_;
+}
+inline ::std::string* Task::release_key_channel_str() {
+  clear_has_key_channel_str();
+  if (key_channel_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = key_channel_str_;
+    key_channel_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Task::set_allocated_key_channel_str(::std::string* key_channel_str) {
+  if (key_channel_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete key_channel_str_;
+  }
+  if (key_channel_str) {
+    set_has_key_channel_str();
+    key_channel_str_ = key_channel_str;
+  } else {
+    clear_has_key_channel_str();
+    key_channel_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional .PS.DataType key_type = 13;
+inline bool Task::has_key_type() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Task::set_has_key_type() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Task::clear_has_key_type() {
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Task::clear_key_type() {
   key_type_ = 0;
@@ -1016,13 +1101,13 @@ Task::mutable_filter() {
 
 // optional bytes msg = 17;
 inline bool Task::has_msg() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Task::set_has_msg() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Task::clear_has_msg() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Task::clear_msg() {
   if (msg_ != &::google::protobuf::internal::kEmptyString) {
@@ -1086,13 +1171,13 @@ inline void Task::set_allocated_msg(::std::string* msg) {
 
 // optional .PS.ManageNode mng_node = 18;
 inline bool Task::has_mng_node() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Task::set_has_mng_node() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Task::clear_has_mng_node() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Task::clear_mng_node() {
   if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
@@ -1124,13 +1209,13 @@ inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
 
 // optional .PS.ManageApp mng_app = 19;
 inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_mng_app() {
   if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
@@ -1162,13 +1247,13 @@ inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
 
 // optional .PS.CallSharedPara shared_para = 20;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1200,13 +1285,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.SGDCall sgd = 21;
 inline bool Task::has_sgd() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void Task::set_has_sgd() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void Task::clear_has_sgd() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Task::clear_sgd() {
   if (sgd_ != NULL) sgd_->::PS::SGDCall::Clear();
@@ -1238,13 +1323,13 @@ inline void Task::set_allocated_sgd(::PS::SGDCall* sgd) {
 
 // optional .PS.BCDCall bcd = 22;
 inline bool Task::has_bcd() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00020000u) != 0;
 }
 inline void Task::set_has_bcd() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00020000u;
 }
 inline void Task::clear_has_bcd() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00020000u;
 }
 inline void Task::clear_bcd() {
   if (bcd_ != NULL) bcd_->::PS::BCDCall::Clear();

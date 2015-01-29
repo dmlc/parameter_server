@@ -3,6 +3,10 @@ CC = g++
 # OPT = -O0 -ggdb
 OPT = -O3 -ggdb
 
+MINERVA_INC=/home/hct/minerva/minerva
+MINERVA_LIB=/home/hct/minerva/release/libminerva.so
+
+
 THIRD_PATH=$(shell pwd)/third_party
 STATIC_THIRD_LIB=1
 ifeq ($(STATIC_THIRD_LIB), 1)
@@ -13,9 +17,9 @@ endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
-INCPATH = -I./src -I$(THIRD_PATH)/include
+INCPATH = -I./src -I$(THIRD_PATH)/include -I$(MINERVA_INC)
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+LDFLAGS += $(THIRD_LIB) -lpthread -lrt $(MINERVA_LIB)
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
@@ -30,7 +34,7 @@ app: build/ps
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-build/minerva: build/app/minerva/main.o $(PS_LIB) $(PS_MAIN)
+build/minerva: build/app/minerva/main.o build/app/minerva/minerva_ps.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sys_srcs	= $(wildcard src/*/*.cc)
