@@ -8,6 +8,7 @@ DECLARE_string(app_name);
 
 template <typename V>
 class SharedModel : public SharedParameter<Key> {
+  typedef typename minerva::Updater<V> UpdaterT;
  public:
   SharedModel(const string& my_name = FLAGS_app_name + "_model",
           const string& parent_name = FLAGS_app_name) :
@@ -17,7 +18,7 @@ class SharedModel : public SharedParameter<Key> {
   void setLayer(string name, V* data, size_t size) {
     val_[name] = SArray<V>(data, size, false);
   }
-  void setUpdater(minerva::Updater<V>* updater) {
+  void setUpdater(UpdaterT * updater) {
     updater_ = updater;
   }
 
@@ -30,7 +31,7 @@ class SharedModel : public SharedParameter<Key> {
   // an array is placed into multiple servers only if its length > min_slice_size
   size_t min_slice_size_ = 1000;
 
-  minerva::Updater<V>* updater_ = nullptr;
+  UpdaterT * updater_ = nullptr;
 };
 
 

@@ -1,4 +1,8 @@
 #include "minerva_ps.h"
+#include "shared_model.h"
+
+
+static PS::SharedModel<float> *shared_model = nullptr;
 
 namespace minerva {
 namespace basic {

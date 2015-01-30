@@ -1,27 +1,24 @@
 #pragma once
 
-namespace minerva {
+#include "minerva_ps.h"
+
+namespace PS {
+  namespace minerva{
 
 template<typename V>
 class Updater {
- public:
+public:
   Updater() { }
   virtual ~Updater() { }
 
   virtual void InitLayer(const std::string &name, V* weight, size_t size) {
-    // init by 0, gaussian random, or others
-    for (int i = 0; i < size; ++i) {
-      weight[i] = 0;
-    }
+    ::InitLayer(name, weight, size);
   }
 
   virtual void Update(const std::string &name, V* weight, V* gradient, size_t size) {
-    // weight -= eta * gradient
-    V eta = .1;
-    for (int i = 0; i < size; ++i) {
-      weight[i] -= eta * gradient[i];
-    }
+    ::UpdateLayer(name, weight, gradient, size);
   }
 };
 
-} // namespace minerva
+  } // namespace minerva
+} // namespace PS
