@@ -1,8 +1,6 @@
+#include <mutex>
 #include "minerva_ps.h"
 #include "shared_model.h"
-
-
-static PS::SharedModel<float> *shared_model = nullptr;
 
 namespace minerva {
 namespace basic {
@@ -11,8 +9,13 @@ namespace basic {
 
 void PushGradAndPullWeight(const float * grad, float * weight, size_t size,
                            const std::string & layer_name) {
+  static PS::SharedModel<float> *shared_model = nullptr;
+  static std::mutex mu;
+
   if (!shared_model) {
-    shared_model = new PS::SharedModel<float>();
+    std::lock_guard<std::mutex> lg(mu);
+    if (!shared_model)
+      shared_model = new PS::SharedModel<float>();
   }
 
   // push
