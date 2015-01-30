@@ -3,7 +3,6 @@
 #include "shared_model.h"
 
 namespace minerva {
-namespace basic {
 
 // shared_model = nullptr;
 
@@ -40,5 +39,4 @@ void PushGradAndPullWeight(const float * grad, float * weight, size_t size,
   shared_model->pull(pull_msg);
 }
 
-}
 }

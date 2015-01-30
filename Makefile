@@ -51,7 +51,7 @@ build/libminervaps.a: build/ps_main.o build/app/minerva/main.o build/app/minerva
 	@mkdir -p build/tmp/glog; cd build/tmp/glog; ar -x $(THIRD_PATH)/lib/libglog.a; cd -
 	@mkdir -p build/tmp/z; cd build/tmp/z; ar -x $(THIRD_PATH)/lib/libz.a; cd -
 	@mkdir -p build/tmp/snappy; cd build/tmp/snappy; ar -x $(THIRD_PATH)/lib/libsnappy.a; cd -
-	ar -qcv $@ $? build/tmp/gflags/*.o build/tmp/zmq/*.o build/tmp/protobuf/*.o build/tmp/glog/*.o build/tmp/z/*.o build/tmp/snappy/*.o
+	ar -qc $@ $? build/tmp/gflags/*.o build/tmp/zmq/*.o build/tmp/protobuf/*.o build/tmp/glog/*.o build/tmp/z/*.o build/tmp/snappy/*.o
 
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
 

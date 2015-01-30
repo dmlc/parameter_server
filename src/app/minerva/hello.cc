@@ -23,7 +23,7 @@ void UpdateLayer(const std::string & name, float * weight, float * grad, size_t 
 
 int MinervaWorkerMain(int rank, int size, int argc, char ** argv)
 {
-  using minerva::basic::PushGradAndPullWeight;
+  using minerva::PushGradAndPullWeight;
   const int n = 10;
   float grad[10];
   float weight[10];
