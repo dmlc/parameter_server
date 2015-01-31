@@ -45,6 +45,7 @@ message SGDConfig {
 
   optional int32 max_delay = 4 [default = 0];
 
+  optional int32 num_data_pass = 11 [default = 1];
   // in sec
   optional int32 report_interval = 3 [default = 1];
 

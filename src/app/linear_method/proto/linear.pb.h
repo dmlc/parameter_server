@@ -416,6 +416,13 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 max_delay() const;
   inline void set_max_delay(::google::protobuf::int32 value);
 
+  // optional int32 num_data_pass = 11 [default = 1];
+  inline bool has_num_data_pass() const;
+  inline void clear_num_data_pass();
+  static const int kNumDataPassFieldNumber = 11;
+  inline ::google::protobuf::int32 num_data_pass() const;
+  inline void set_num_data_pass(::google::protobuf::int32 value);
+
   // optional int32 report_interval = 3 [default = 1];
   inline bool has_report_interval() const;
   inline void clear_report_interval();
@@ -456,6 +463,8 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_ada_grad();
   inline void set_has_max_delay();
   inline void clear_has_max_delay();
+  inline void set_has_num_data_pass();
+  inline void clear_has_num_data_pass();
   inline void set_has_report_interval();
   inline void clear_has_report_interval();
   inline void set_has_tail_feature_freq();
@@ -472,13 +481,14 @@ class SGDConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 data_buf_;
   bool ada_grad_;
   ::google::protobuf::int32 max_delay_;
+  ::google::protobuf::int32 num_data_pass_;
   ::google::protobuf::int32 report_interval_;
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
   friend void protobuf_AssignDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
@@ -1316,15 +1326,37 @@ inline void SGDConfig::set_max_delay(::google::protobuf::int32 value) {
   max_delay_ = value;
 }
 
-// optional int32 report_interval = 3 [default = 1];
-inline bool SGDConfig::has_report_interval() const {
+// optional int32 num_data_pass = 11 [default = 1];
+inline bool SGDConfig::has_num_data_pass() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void SGDConfig::set_has_report_interval() {
+inline void SGDConfig::set_has_num_data_pass() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void SGDConfig::clear_has_report_interval() {
+inline void SGDConfig::clear_has_num_data_pass() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void SGDConfig::clear_num_data_pass() {
+  num_data_pass_ = 1;
+  clear_has_num_data_pass();
+}
+inline ::google::protobuf::int32 SGDConfig::num_data_pass() const {
+  return num_data_pass_;
+}
+inline void SGDConfig::set_num_data_pass(::google::protobuf::int32 value) {
+  set_has_num_data_pass();
+  num_data_pass_ = value;
+}
+
+// optional int32 report_interval = 3 [default = 1];
+inline bool SGDConfig::has_report_interval() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void SGDConfig::set_has_report_interval() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void SGDConfig::clear_has_report_interval() {
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void SGDConfig::clear_report_interval() {
   report_interval_ = 1;
@@ -1340,13 +1372,13 @@ inline void SGDConfig::set_report_interval(::google::protobuf::int32 value) {
 
 // optional int32 tail_feature_freq = 6 [default = 0];
 inline bool SGDConfig::has_tail_feature_freq() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void SGDConfig::set_has_tail_feature_freq() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void SGDConfig::clear_has_tail_feature_freq() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void SGDConfig::clear_tail_feature_freq() {
   tail_feature_freq_ = 0;
@@ -1362,13 +1394,13 @@ inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
 
 // optional int32 countmin_k = 7 [default = 2];
 inline bool SGDConfig::has_countmin_k() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void SGDConfig::set_has_countmin_k() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void SGDConfig::clear_has_countmin_k() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void SGDConfig::clear_countmin_k() {
   countmin_k_ = 2;
@@ -1384,13 +1416,13 @@ inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
 
 // optional float countmin_n = 8 [default = 1e+07];
 inline bool SGDConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void SGDConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void SGDConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void SGDConfig::clear_countmin_n() {
   countmin_n_ = 1e+07f;

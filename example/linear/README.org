@@ -1,25 +1,26 @@
-Examples run applications on data RCV1.
+* Sample configurations to run linear method
 
-First, download the dataset by =./rcv1_small.sh= or =./rcv1_large.sh=
+** Data
 
-Then we can run the system by either building the binary or downloading a docker images.
+Use the script such as =rcv1/download.sh= and =ctr/download.sh= to download data
 
-*Run in local*
+** Run in local machine
+
+The system can be run by either building the binary or downloading a docker images.
+
+*by build binary*
 
 Use the binary you compiled to run l1-regularized logistic regression:
 
 #+BEGIN_SRC bash
-# block coordinate descent with 1 server and 4 workers:
-../../../script/local.sh ../../../build/ps 1 4 -app_file batch_l1lr.conf
-# online gradient descent with 1 server and 4 workers:
-../../../script/local.sh ../../../build/ps 1 4 -app_file online_l1lr.conf
-# test the trained models
-../../../script/local.sh ../../../build/ps 0 0 -app_file eval_batch.conf
-../../../script/local.sh ../../../build/ps 0 0 -app_file eval_online.conf
+# run block coordinate descent with 2 servers and 2 workers:
+../../script/local.sh ../../build/ps 2 2 -app_file ctr/batch_l1lr.conf
+# evaluate the model
+../../script/local.sh ../../build/ps 0 0 -app_file ctr/eval_batch.conf
 #+END_SRC
 
-Or run the same application by [[www.docker.com][docker:]]
+*by [[www.docker.com][docker]]*
 
 #+BEGIN_SRC bash
-sudo ../../../docker/local.sh 1 1 batch_l1lr.conf data model
+sudo ../../docker/local.sh 2 2 ctr/batch_l1lr.conf data model
 #+END_SRC

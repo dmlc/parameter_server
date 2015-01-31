@@ -197,7 +197,23 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
   void updateModel(const SGDCall& call) {
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
-    reader.setReader(call.data(), sgd.minibatch(), sgd.data_buf());
+
+    // random shuffle the file order
+    int n = std::max(sgd.num_data_pass(), 1);
+    int m = call.data().file_size();
+    std::vector<int> idx(m);
+    for (int i = 0; i < m; ++i) idx[i] = i;
+
+    DataConfig data = call.data();
+    data.clear_file();
+    for (int i = 0; i < n; ++i) {
+      std::random_shuffle(idx.begin(), idx.end());
+      for (int j = 0; j < m; ++j) {
+        data.add_file(call.data().file(idx[j]));
+      }
+    }
+
+    reader.setReader(data, sgd.minibatch(), sgd.data_buf());
     reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
     reader.start();
 
