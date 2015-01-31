@@ -14,14 +14,23 @@ DEFINE_bool(shuffle_fea_id, false,
 void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
   ignore_fea_slot_ = ignore_fea_slot;
   using namespace std::placeholders;
-  if (format == DataConfig::LIBSVM) {
-    parser_ = std::bind(&ExampleParser::parseLibsvm, this, _1, _2);
-  } else if (format == DataConfig::ADFEA) {
-    parser_ = std::bind(&ExampleParser::parseAdfea, this, _1, _2);
-  } else if (format == DataConfig::TERAFEA) {
-    parser_ = std::bind(&ExampleParser::parseTerafea, this, _1, _2);
-  } else {
-    CHECK(false) << "unknown text format " << format;
+  switch (format) {
+    case DataConfig::LIBSVM:
+      parser_ = std::bind(&ExampleParser::parseLibsvm, this, _1, _2);
+      break;
+    case DataConfig::ADFEA:
+      parser_ = std::bind(&ExampleParser::parseAdfea, this, _1, _2);
+      break;
+    case DataConfig::TERAFEA:
+      parser_ = std::bind(&ExampleParser::parseTerafea, this, _1, _2);
+      break;
+    case DataConfig::DENSE:
+    case DataConfig::SPARSE:
+    case DataConfig::SPARSE_BINARY:
+      parser_ = std::bind(&ExampleParser::parsePS, this, _1, _2, format);
+      break;
+    default:
+      CHECK(false) << "unknown text format " << format;
   }
 }
 
@@ -172,7 +181,7 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
 }
 
 
-// ps format: TODO
+// ps format:
 //
 // label; group_id feature[:weight] feature[:weight] ...; groud_id ...; ...
 //
@@ -187,8 +196,59 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
 //
 // - weight: only valid for non-bianry sparse training data, a float number
 //   presenting the feature value.
-//
-//
+
+bool ExampleParser::parsePS(char* line, Example* ex, TextFormat format) {
+  char* saveptr;
+  char* tk = strtok_r(line, ";", &saveptr);
+
+  // label
+  int32 label = 0;
+  if (!strtoi32(tk, &label)) return false;
+  Slot* slot = ex->add_slot();
+  slot->set_id(0);
+  slot->add_val(label > 0 ? 1.0 : -1.0);
+
+  // slot
+  int32 slot_id = -1;
+  while (true) {
+    tk = strtok_r(NULL, ";", &saveptr);
+    if (tk == NULL) break;
+
+    // slot id
+    char* saveptr2;
+    char* tk2 = strtok_r(tk, " ", &saveptr2);
+
+    if (!ignore_fea_slot_ || (ignore_fea_slot_ && slot_id == -1)) {
+      if (ignore_fea_slot_) {
+        slot_id = 1;
+      } else {
+        if (!strtoi32(tk2, &slot_id)) return false;
+      }
+      slot = ex->add_slot();
+      slot->set_id(slot_id);
+    }
+
+    // slot feature
+    for (int i = 0; ; ++i) {
+      tk2 = strtok_r(NULL, " :", &saveptr2);
+      if (tk2 == NULL) break;
+
+      if (format == DataConfig::DENSE
+          || (format == DataConfig::SPARSE && i % 2 == 1)) {
+        float val = 0;
+        if (!strtofloat(tk2, &val)) return false;
+        slot->add_val(val);
+      } else {
+        uint64 key = -1;
+        if (!strtou64(tk2, &key)) return false;
+        slot->add_key(key);
+      }
+    }
+  }
+  // LL << ex->ShortDebugString();
+  return true;
+}
+
 // vw: TODO
 //
 }

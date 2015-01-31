@@ -24,7 +24,7 @@ message BCDConfig {
   optional double epsilon = 5 [default = 1e-4];
 
   // features which occurs <= *tail_feature_freq* will be filtered before training
-  optional int32 tail_feature_freq  = 6 [default = 4];
+  optional int32 tail_feature_freq  = 6 [default = 0];
   // countmin sketch is used to filter the tail features. It has two
   // parameters, k and n.
   optional int32 countmin_k = 7 [default = 2];

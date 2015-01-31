@@ -156,6 +156,9 @@ public:
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + myNodeID();
+      if (!dirExists(getPath(file))) {
+        createDir(getPath(file));
+      }
       std::ofstream out(file); CHECK(out.good());
       CHECK_NOTNULL(model_)->writeToFile([&out](const Key& key, char const* val) {
           V v = *((V const *)val);

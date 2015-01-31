@@ -9,13 +9,15 @@ message DataConfig {
   }
   required DataFormat format = 1;
 
+  // see https://github.com/mli/parameter_server/wiki/Data
   enum TextFormat {
-    PS_SPARSE_BINARY = 3;
-    PS_SPARSE = 2;
-    PS_DENSE = 1;
+    DENSE = 1;
+    SPARSE = 2;
+    SPARSE_BINARY = 3;
     ADFEA = 4;
     LIBSVM = 5;
     TERAFEA = 6;
+    VW = 7;
   }
   optional TextFormat text = 2;
 

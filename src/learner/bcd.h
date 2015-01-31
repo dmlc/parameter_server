@@ -385,7 +385,7 @@ class BCDWorker : public App, public BCDCommon {
           LI << "started toColMajor [" << i + 1 << "/" << grp_size << "]";
         }
 
-        if (bcd_conf_.has_feature_block_ratio()) X = X->toColMajor();
+        if (bcd_conf_.feature_block_ratio()) X = X->toColMajor();
 
         if (FLAGS_verbose) {
           LI << "finished toColMajor [" << i + 1 << "/" << grp_size << "]";

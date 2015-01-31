@@ -59,16 +59,17 @@ inline bool DataConfig_DataFormat_Parse(
     DataConfig_DataFormat_descriptor(), name, value);
 }
 enum DataConfig_TextFormat {
-  DataConfig_TextFormat_PS_SPARSE_BINARY = 3,
-  DataConfig_TextFormat_PS_SPARSE = 2,
-  DataConfig_TextFormat_PS_DENSE = 1,
+  DataConfig_TextFormat_DENSE = 1,
+  DataConfig_TextFormat_SPARSE = 2,
+  DataConfig_TextFormat_SPARSE_BINARY = 3,
   DataConfig_TextFormat_ADFEA = 4,
   DataConfig_TextFormat_LIBSVM = 5,
-  DataConfig_TextFormat_TERAFEA = 6
+  DataConfig_TextFormat_TERAFEA = 6,
+  DataConfig_TextFormat_VW = 7
 };
 bool DataConfig_TextFormat_IsValid(int value);
-const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MIN = DataConfig_TextFormat_PS_DENSE;
-const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_TERAFEA;
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MIN = DataConfig_TextFormat_DENSE;
+const DataConfig_TextFormat DataConfig_TextFormat_TextFormat_MAX = DataConfig_TextFormat_VW;
 const int DataConfig_TextFormat_TextFormat_ARRAYSIZE = DataConfig_TextFormat_TextFormat_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DataConfig_TextFormat_descriptor();
@@ -161,12 +162,13 @@ class DataConfig : public ::google::protobuf::Message {
   }
 
   typedef DataConfig_TextFormat TextFormat;
-  static const TextFormat PS_SPARSE_BINARY = DataConfig_TextFormat_PS_SPARSE_BINARY;
-  static const TextFormat PS_SPARSE = DataConfig_TextFormat_PS_SPARSE;
-  static const TextFormat PS_DENSE = DataConfig_TextFormat_PS_DENSE;
+  static const TextFormat DENSE = DataConfig_TextFormat_DENSE;
+  static const TextFormat SPARSE = DataConfig_TextFormat_SPARSE;
+  static const TextFormat SPARSE_BINARY = DataConfig_TextFormat_SPARSE_BINARY;
   static const TextFormat ADFEA = DataConfig_TextFormat_ADFEA;
   static const TextFormat LIBSVM = DataConfig_TextFormat_LIBSVM;
   static const TextFormat TERAFEA = DataConfig_TextFormat_TERAFEA;
+  static const TextFormat VW = DataConfig_TextFormat_VW;
   static inline bool TextFormat_IsValid(int value) {
     return DataConfig_TextFormat_IsValid(value);
   }
@@ -455,7 +457,7 @@ inline void DataConfig::clear_has_text() {
   _has_bits_[0] &= ~0x00000002u;
 }
 inline void DataConfig::clear_text() {
-  text_ = 3;
+  text_ = 1;
   clear_has_text();
 }
 inline ::PS::DataConfig_TextFormat DataConfig::text() const {
