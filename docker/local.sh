@@ -37,7 +37,7 @@ shift
 
 port=8000
 bin="muli/parameter-server /build/ps"
-bin_v="-v /home/muli/work/ps/build:/build"
+# bin_v="-v /home/muli/work/ps/build:/build"
 app_v="-v $app:/app.conf"
 data_v="-v $data:/data -v $model:/model"
 mount="$bin_v $app_v $data_v"

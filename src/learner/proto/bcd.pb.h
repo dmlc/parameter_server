@@ -177,7 +177,7 @@ class BCDConfig : public ::google::protobuf::Message {
   inline double epsilon() const;
   inline void set_epsilon(double value);
 
-  // optional int32 tail_feature_freq = 6 [default = 4];
+  // optional int32 tail_feature_freq = 6 [default = 0];
   inline bool has_tail_feature_freq() const;
   inline void clear_tail_feature_freq();
   static const int kTailFeatureFreqFieldNumber = 6;
@@ -873,7 +873,7 @@ inline void BCDConfig::set_epsilon(double value) {
   epsilon_ = value;
 }
 
-// optional int32 tail_feature_freq = 6 [default = 4];
+// optional int32 tail_feature_freq = 6 [default = 0];
 inline bool BCDConfig::has_tail_feature_freq() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
@@ -884,7 +884,7 @@ inline void BCDConfig::clear_has_tail_feature_freq() {
   _has_bits_[0] &= ~0x00000080u;
 }
 inline void BCDConfig::clear_tail_feature_freq() {
-  tail_feature_freq_ = 4;
+  tail_feature_freq_ = 0;
   clear_has_tail_feature_freq();
 }
 inline ::google::protobuf::int32 BCDConfig::tail_feature_freq() const {
