@@ -35,7 +35,7 @@ python submit.py submit 2 6 batch ../../../example/linear/rcv1/rcv1/train/ ../mo
 #+BEGIN_SRC bash
 ../bin/kubecfg list pods
 #ssh to scheduler minion and use "docker logs <scheduler_container>" or "cat /tmp/docker/log/scheduler/van_H" to see running status
-#cd to your output dir configured in config file to see model output 
+#cd to your model output directory pointed in the submit command to see model output 
 #+END_SRC
 
 *Kill parameter server on kubernetes*
