@@ -3,7 +3,7 @@
 The containerized parameter server runs workers and servers on cluster as docker containers managed by a cluster-wide containerized resource manager.
 
 *Requirements*
-- A linux cluster with docker installed
+- A linux cluster with docker installed and can [[http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo][run docker without sudo]] 
 
 *Bring up the containerized kubernetes on cluster*
 
@@ -11,7 +11,7 @@ The containerized parameter server runs workers and servers on cluster as docker
 cd server/script
 #make sure you have written minions in server/host/minions_file then 
 ./kube-up.sh
-#if your ssh need key, instead use
+#if your ssh needs key, instead use
 ./kube-up.sh your_path_to_key
 #+END_SRC
 
@@ -49,7 +49,7 @@ python submit.py clear
 #+BEGIN_SRC bash
 cd ../../server/script
 ./kube-down.sh
-#if your ssh need key, instead use
+#if your ssh needs key, instead use
 ./kube-down.sh your_path_to_key
 #+END_SRC
 
