@@ -6,7 +6,8 @@ The containerized parameter server runs workers and servers on cluster as docker
 - A linux cluster with docker installed and can [[http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo][run docker without sudo]] 
 - On every node clone parameter_server, download data, and place them at same directory (will become more convenient in future)
 
-*Bring up the containerized kubernetes on cluster*
+
+*Bring up the containerized kubernetes cluster-wide through a single master machine*
 
 #+BEGIN_SRC bash
 cd server/script
