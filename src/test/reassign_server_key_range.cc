@@ -1,9 +1,11 @@
 #include "gtest/gtest.h"
 #include "system/postoffice.h"
 #include "system/postmaster.h"
+#include "system/app.h"
 
+// build: make build/reassign_server_key_range
+// test: script/local.sh build/reassign_server_key_range 3 3
 namespace PS {
-
 class Root : public App {
  public:
   Root() : App() { }
@@ -12,7 +14,7 @@ class Root : public App {
   void init() {
     // repartition the key range
     Range<Key> range(0, 100);
-    auto nodes = yp().nodes();
+    auto nodes = sys_.yp().nodes();
     nodes = Postmaster::partitionServerKeyRange(nodes, range);
 
     Task task;
@@ -21,7 +23,7 @@ class Root : public App {
     for (const auto& n : nodes) {
       *task.mutable_mng_node()->add_node() = n;
     }
-    port(kCompGroup)->submitAndWait(task);
+    port(kLiveGroup)->submitAndWait(task);
   }
 };
 
@@ -31,9 +33,9 @@ class Slave : public App {
   virtual ~Slave() { }
 
   void run() {
-    LL << exec_.myNode().key().ShortDebugString();
+    LL << exec_.myNode().id() << " key range: "
+       << exec_.myNode().key().ShortDebugString();
   }
- }
 };
 
 App* App::create(const string& name, const string& conf) {

@@ -18,13 +18,18 @@ DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
 
 void Van::init() {
+
   scheduler_ = parseNode(FLAGS_scheduler);
   if (FLAGS_my_rank < 0) {
     my_node_ = parseNode(FLAGS_my_node);
   } else {
     my_node_ = assembleMyNode();
   }
-  // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+
+  if (FLAGS_print_van) {
+    debug_out_.open("van_"+my_node_.id());
+    // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+  }
 
   context_ = zmq_ctx_new();
   // TODO the following does not work...
@@ -37,9 +42,6 @@ void Van::init() {
   connect(my_node_);
   connect(scheduler_);
 
-  if (FLAGS_print_van) {
-    debug_out_.open("van_"+my_node_.id());
-  }
 }
 
 void Van::destroy() {
@@ -104,7 +106,8 @@ Status Van::connect(const Node& node) {
   hostnames_[id] = node.hostname();
 
   if (FLAGS_print_van) {
-    debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
+    debug_out_ << my_node_.id() << ": connect to " << id
+               << " [" << addr << "]" << std::endl;
   }
   return Status::OK();
 }

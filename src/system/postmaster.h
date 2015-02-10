@@ -8,10 +8,6 @@ class Postmaster {
  public:
   Postmaster(Customer* obj) : obj_(CHECK_NOTNULL(obj)) { }
 
-  // std::vector<Node> nodes();
-  // void createApp(const std::vector<Node>& nodes, const std::vector<AppConfig>& apps);
-  // void stopApp();
-
   static std::vector<DataConfig> partitionData(
       const DataConfig& conf, int num_workers);
 

@@ -46,13 +46,12 @@ void YellowPages::removeNode(const Node& node) {
 }
 
 void YellowPages::addNode(const Node& node) {
-  if (nodes_.find(node.id()) != nodes_.end()) {
-    removeNode(node);
+  if (nodes_.find(node.id()) == nodes_.end()) {
+    CHECK(van_.connect(node).ok());
+    if (node.role() == Node::WORKER) ++ num_workers_;
+    if (node.role() == Node::SERVER) ++ num_servers_;
   }
   nodes_[node.id()] = node;
-  CHECK(van_.connect(node).ok());
-  if (node.role() == Node::WORKER) ++ num_workers_;
-  if (node.role() == Node::SERVER) ++ num_servers_;
 }
 
 std::vector<Node> YellowPages::nodes() {

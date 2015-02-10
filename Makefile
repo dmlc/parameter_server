@@ -54,11 +54,6 @@ build/%.o: src/%.cc
 %.pb.cc %.pb.h : %.proto
 	${THIRD_PATH}/bin/protoc --cpp_out=./src --proto_path=./src $<
 
-build/%: src/test/%.cc $(app_objs) $(PS_LIB)
-	@mkdir -p $(@D)
-	$(CC) $(INCPATH) -std=c++0x -MM -MT build/$*.o $< >build/$*.d
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
 -include build/*/*.d
 -include build/*/*/*.d
 -include src/test/build.mk
