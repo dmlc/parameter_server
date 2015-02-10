@@ -36,9 +36,20 @@ void YellowPages::removeCustomer(const string& name) {
   customers_.erase(it);
 }
 
+void YellowPages::removeNode(const Node& node) {
+  van_.disconnect(node);
+  if (nodes_.find(node.id()) != nodes_.end()) {
+    if (node.role() == Node::WORKER) -- num_workers_;
+    if (node.role() == Node::SERVER) -- num_servers_;
+    nodes_.erase(node.id());
+  }
+}
+
 void YellowPages::addNode(const Node& node) {
+  if (nodes_.find(node.id()) != nodes_.end()) {
+    removeNode(node);
+  }
   nodes_[node.id()] = node;
-  // connect anyway, it's safe to connect to the same node twice
   CHECK(van_.connect(node).ok());
   if (node.role() == Node::WORKER) ++ num_workers_;
   if (node.role() == Node::SERVER) ++ num_servers_;

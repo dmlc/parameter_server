@@ -21,6 +21,13 @@ Executor::Executor(Customer& obj) : obj_(obj) {
 
 Executor::~Executor() {
   stop();
+  {
+    Lock l(node_mu_);
+    for (auto it : nodes_) delete it.second;
+    nodes_.clear();
+    groups_.clear();
+    key_ranges_.clear();
+  }
 }
 
 void Executor::stop() {
@@ -66,14 +73,22 @@ void Executor::copyNodesFrom(const Executor& other) {
   }
 }
 
+void Executor::remove(const Node& node) {
+  // if (nodes_.find(id) == nodes_.end()) return;
+  // FIXME
+}
+
 void Executor::add(const Node& node) {
   // insert into nodes_
   if (node.id() == my_node_.id()) {
-   my_node_ = node;
+    my_node_ = node;
   }
   auto id = node.id();
-  CHECK_EQ(nodes_.count(id), 0) << id << " already exists";
-  RNodePtr w(new RNode(node, *this));
+  if (nodes_.find(id) != nodes_.end()) {
+    remove(node);
+  }
+  // RNodePtr w(new RNode(node, *this));
+  RNodePtr w = new RNode(node, *this);
   nodes_[id] = w;
 
   // update key_ranges_:
@@ -98,7 +113,7 @@ void Executor::add(const Node& node) {
 
   auto role = node.role();
   if (role != Node::GROUP) {
-    groups_[id] = RNodePtrList({w});
+    groups_[id].push_back(w);
     add_to_key_ranges(id, w);
     add_to_group(kLiveGroup, w);
   }
@@ -278,53 +293,6 @@ void Executor::accept(const MessagePtr& msg) {
   recved_msgs_.push_back(msg);
   dag_cond_.notify_one();
 }
-
-void Executor::replace(const Node& dead, const Node& live) {
-  // TODO
-  // auto dead_id = dead.id();
-  // auto live_id = live.id();
-  // if (live_id == my_node_.id()) return;
-
-  // // FIXME update kLiveGroup
-  // // modify
-  // auto ptr = nodes_[dead_id];
-  // CHECK(ptr.get() != nullptr);
-  // Lock l(ptr->mu_);
-  // ptr->node_ = live;
-
-  // // insert the live
-  // {
-  //   Lock l2(node_mu_);
-  //   nodes_[live_id] = ptr;
-  //   node_groups_[live_id] = node_groups_[dead_id];
-  //   node_key_partition_[live_id] = node_key_partition_[dead_id];
-
-  //   // remove the dead
-  //   CHECK(dead.role() != Node::GROUP);
-  //   nodes_.erase(dead_id);
-  //   node_groups_.erase(dead_id);
-  //   node_key_partition_.erase(dead_id);
-
-  //   // LL << my_node_.id() << ": " << obj_.name() << "'s node info is updated";
-  // }
-
-  // // resent unfinished tasks
-  // ptr->clearCache();
-  // if (ptr->pending_msgs_.size() > 0) {
-  //   bool first = true;
-  //   for (auto& it : ptr->pending_msgs_) {
-  //     auto& msg = it.second;
-  //     msg.recver = live_id;
-  //     if (first) msg.task.set_wait_time(RNode::kInvalidTime);
-  //     first = false;
-  //     ptr->sys_.queue(ptr->cacheKeySender(msg));
-  //     // LL << my_node_.id() << ": resent " << msg;
-  //   }
-  //   LL << my_node_.id() << ": re-sent " << ptr->pending_msgs_.size()
-  //      << " pnending messages to " << live_id;
-  // }
-}
-
 
 // NodeList Executor::nodes() {
 //   NodeList ret;

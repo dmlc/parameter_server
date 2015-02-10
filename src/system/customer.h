@@ -43,7 +43,10 @@ class Customer {
   // the unique scheduler id
   NodeID schedulerID() { return sys_.scheduler().id(); }
   // return the remote_note by its name
-  RNodePtr port(const NodeID& k) { return exec_.rnode(k); }
+  RNodePtr port(const NodeID& k) {
+    return CHECK_NOTNULL(exec_.rnode(k));
+  }
+
   // return the executor
   Executor& exec() { return exec_; }
 

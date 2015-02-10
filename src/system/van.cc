@@ -69,14 +69,21 @@ void Van::bind() {
   }
 }
 
+void Van::disconnect(const Node& node) {
+  CHECK(node.has_id()) << node.ShortDebugString();
+  NodeID id = node.id();
+  if (senders_.find(id) != senders_.end()) {
+    zmq_close (senders_[id]);
+  }
+  senders_.erase(id);
+}
+
 Status Van::connect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
-  // the socket already exists? probably we are re-connecting to this node
   if (senders_.find(id) != senders_.end()) {
-    // zmq_close (senders_[id]);
     return Status::OK();
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);

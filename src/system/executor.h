@@ -41,10 +41,9 @@ class Executor {
   const std::vector<Range<Key>>& keyRanges(const NodeID& k);
   const Node& myNode() { return my_node_; }
 
-  void copyNodesFrom(const Executor& other);
   void add(const Node& node);
-  // (somewhat) thread-safe, will called by postoffice's recving thread
-  void replace(const Node& dead, const Node& live);
+  void remove(const Node& node);
+  void copyNodesFrom(const Executor& other);
 
   // will be called by postoffice's receiving thread
   // or the thread call wk->submit

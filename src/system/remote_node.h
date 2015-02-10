@@ -10,8 +10,9 @@ namespace PS {
 class Executor;
 class Postoffice;
 class RNode;
-typedef shared_ptr<RNode> RNodePtr;
-typedef std::vector<RNodePtr> RNodePtrList;
+// typedef shared_ptr<RNode> RNodePtr;
+typedef RNode* RNodePtr;
+// typedef std::vector<RNodePtr> RNodePtrList;
 
 // a remote node that the local node (the node runs executor) can submit a task to
 // or receive a task from. (it is similar to remote precedure call)

@@ -4,7 +4,7 @@ CC = g++
 OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
-STATIC_THIRD_LIB=1
+STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
 else
@@ -30,7 +30,8 @@ app: build/ps
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-sys_srcs	= $(wildcard src/*/*.cc)
+sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
+			  $(wildcard src/system/*.cc) $(wildcard src/filter/*.cc)
 sys_protos	= $(wildcard src/*/proto/*.proto)
 sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
 		      $(patsubst src/%.cc, build/%.o, $(sys_srcs))
@@ -53,5 +54,11 @@ build/%.o: src/%.cc
 %.pb.cc %.pb.h : %.proto
 	${THIRD_PATH}/bin/protoc --cpp_out=./src --proto_path=./src $<
 
+build/%: src/test/%.cc $(app_objs) $(PS_LIB)
+	@mkdir -p $(@D)
+	$(CC) $(INCPATH) -std=c++0x -MM -MT build/$*.o $< >build/$*.d
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
 -include build/*/*.d
 -include build/*/*/*.d
+-include src/test/build.mk
