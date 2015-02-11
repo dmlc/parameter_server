@@ -1,6 +1,17 @@
 #include "gtest/gtest.h"
 #include "filter/fixing_float.h"
+
 using namespace PS;
+TEST(FIXING_FLOAT, BoolRand) {
+  int n = 100000;
+  SArray<float> res(n);
+  int seed = time(NULL);
+  for (int i = 0; i < n; ++i) {
+    res[i] = FixingFloatFilter::boolrand(&seed);
+  }
+  LL << res.mean() << " " << res.std();
+}
+
 TEST(FIXING_FLOAT, EncodeDecode) {
   MessagePtr msg(new Message());
   auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->mutable_fixed_point();
@@ -22,4 +33,5 @@ TEST(FIXING_FLOAT, EncodeDecode) {
 
 
 TEST(FIXING_FLOAT, Error) {
+
 }
