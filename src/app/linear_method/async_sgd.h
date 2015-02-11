@@ -70,16 +70,16 @@ struct SGDState {
 
 template <typename V>
 struct AdaGradEntry {
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // update model
-    V grad = *((V*)data);
+    V grad = *data;
     sum_sq_grad += grad * grad;
     // state->update(weight, grad, sqrt(sum_sq_grad));
     // TODO
   }
 
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = weight;
+  void put(V* data, SGDState<V>* state) {
+    *data = weight;
   }
   V weight = 0;
   V sum_sq_grad = 0;
@@ -87,13 +87,13 @@ struct AdaGradEntry {
 
 template <typename V>
 struct SGDEntry {
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // V grad = *((V*)data);
     // state->update(weight, grad);
     // TODO
   }
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = weight;
+  void put(V* data, SGDState<V>* state) {
+    *data = weight;
   }
   V weight = 0;
 };
@@ -104,10 +104,10 @@ struct FTRLEntry {
   V z = 0;
   V sqrt_n = 0;
 
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // update model
     V w_old = w;
-    V grad = *((V*)data);
+    V grad = *data;
     V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
     V sigma = (sqrt_n_new - sqrt_n) / state->lr->alpha();
     z += grad  - sigma * w;
@@ -118,8 +118,8 @@ struct FTRLEntry {
     state->updateWeight(w, w_old);
   }
 
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = w;
+  void put(V* data, SGDState<V>* state) {
+    *data = w;
   }
 };
 
@@ -131,12 +131,12 @@ public:
   AsyncSGDServer(const string& name, const Config& conf)
       : ISGDCompNode(name), LinearMethod(conf) {
     if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
-      model_ = new KVStore<Key, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
+      model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
     } else {
       if (conf_.async_sgd().ada_grad()) {
-        model_ = new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>(name+"_model", name);
       } else {
-        model_ = new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
       }
     }
   }
@@ -146,11 +146,9 @@ public:
   }
 
   void init() {
-    CHECK_NOTNULL(model_)->setEntrySyncSize(sizeof(V));
-
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     state.reporter = &(this->reporter_);
-    model_->setState(state);
+    CHECK_NOTNULL(model_)->setState(state);
 
     // tail feature filter
     model_->setTailFilterSize(
@@ -164,14 +162,7 @@ public:
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + myNodeID();
-      if (!dirExists(getPath(file))) {
-        createDir(getPath(file));
-      }
-      std::ofstream out(file); CHECK(out.good());
-      CHECK_NOTNULL(model_)->writeToFile([&out](const Key& key, char const* val) {
-          V v = *((V const *)val);
-          if (v != 0) out << key << "\t" << v << std::endl;
-        });
+      CHECK_NOTNULL(model_)->writeToFile(file);
       LI << myNodeID() << " written the model to " << file;
     }
   }
@@ -236,9 +227,15 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       // pull the weight
       MessagePtr msg(new Message(kServerGroup));
       msg->setKey(key);
-      msg->addFilter(FilterConfig::KEY_CACHING);
       msg->task.set_key_channel(id);
       msg->fin_handle = [this, id]() { computeGradient(id); };
+      msg->addFilter(FilterConfig::KEY_CACHING);
+      if (sgd.fixing_float_by_nbytes()) {
+        auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->mutable_fixed_point();
+        conf->set_min_value(- 2.0);
+        conf->set_max_value(2.0);
+        conf->set_num_bytes(sgd.fixing_float_by_nbytes());
+      }
       model_.key(id) = key;
       model_.pull(msg);
 
@@ -280,6 +277,13 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     msg->addValue(grad);
     msg->task.set_key_channel(id);
     msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
+    if (nbytes) {
+      auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->mutable_fixed_point();
+      conf->set_min_value(Xw.size() * -0.5);
+      conf->set_max_value(Xw.size() * 0.5);
+      conf->set_num_bytes(nbytes);
+    }
     model_.push(msg);
     model_.clear(id);
 

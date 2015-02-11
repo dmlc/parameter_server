@@ -38,6 +38,7 @@ message SGDConfig {
   }
   required Algo algo = 1;
 
+  // The size of minibatch
   optional int32 minibatch = 2 [default = 1000];
 
   optional int32 data_buf = 12 [default = 1000];  // in mb
@@ -45,15 +46,25 @@ message SGDConfig {
 
   optional int32 max_delay = 4 [default = 0];
 
+  // The number of data passes
   optional int32 num_data_pass = 11 [default = 1];
+
   // in sec
   optional int32 report_interval = 3 [default = 1];
 
+  // features which occurs <= *tail_feature_freq* will be filtered before
+  // training. it save both memory and bandwidth.
   optional int32 tail_feature_freq = 6 [default = 0];
-  optional int32 countmin_k = 7 [default = 2];
-  optional float countmin_n = 8 [default = 1e8];
 
-  // optional float noise_std = 9 [default = .1];
+  // It controls the countmin size. We filter the tail features by countmin, which
+  // is more efficient than hash, but still is the memory bottleneck for servers. A
+  // smaller ratio reduces the memory footprint, but may increase the size of
+  // filtered feature.
+  optional float countmin_n = 8 [default = 1e8];
+  optional int32 countmin_k = 7 [default = 2];
+
+  // if > 0, then use *fixing_float_by_nbytes* bytes to encode float during communication
+  optional int32 fixing_float_by_nbytes = 13 [default = 0];
 }
 
 message LossConfig {

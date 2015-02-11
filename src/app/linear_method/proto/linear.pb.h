@@ -451,6 +451,13 @@ class SGDConfig : public ::google::protobuf::Message {
   inline float countmin_n() const;
   inline void set_countmin_n(float value);
 
+  // optional int32 fixing_float_by_nbytes = 13 [default = 0];
+  inline bool has_fixing_float_by_nbytes() const;
+  inline void clear_fixing_float_by_nbytes();
+  static const int kFixingFloatByNbytesFieldNumber = 13;
+  inline ::google::protobuf::int32 fixing_float_by_nbytes() const;
+  inline void set_fixing_float_by_nbytes(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:PS.LM.SGDConfig)
  private:
   inline void set_has_algo();
@@ -473,6 +480,8 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_countmin_k();
   inline void set_has_countmin_n();
   inline void clear_has_countmin_n();
+  inline void set_has_fixing_float_by_nbytes();
+  inline void clear_has_fixing_float_by_nbytes();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -486,9 +495,10 @@ class SGDConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 tail_feature_freq_;
   ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
+  ::google::protobuf::int32 fixing_float_by_nbytes_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
   friend void protobuf_AssignDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
@@ -1434,6 +1444,28 @@ inline float SGDConfig::countmin_n() const {
 inline void SGDConfig::set_countmin_n(float value) {
   set_has_countmin_n();
   countmin_n_ = value;
+}
+
+// optional int32 fixing_float_by_nbytes = 13 [default = 0];
+inline bool SGDConfig::has_fixing_float_by_nbytes() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void SGDConfig::set_has_fixing_float_by_nbytes() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void SGDConfig::clear_has_fixing_float_by_nbytes() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void SGDConfig::clear_fixing_float_by_nbytes() {
+  fixing_float_by_nbytes_ = 0;
+  clear_has_fixing_float_by_nbytes();
+}
+inline ::google::protobuf::int32 SGDConfig::fixing_float_by_nbytes() const {
+  return fixing_float_by_nbytes_;
+}
+inline void SGDConfig::set_fixing_float_by_nbytes(::google::protobuf::int32 value) {
+  set_has_fixing_float_by_nbytes();
+  fixing_float_by_nbytes_ = value;
 }
 
 // -------------------------------------------------------------------

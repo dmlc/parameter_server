@@ -1,11 +1,9 @@
 #pragma once
-
 #include "util/common.h"
 #include "util/threadpool.h"
 #include "util/shared_array.h"
 #include "system/proto/task.pb.h"
 #include "filter/proto/filter.pb.h"
-
 namespace PS {
 
 typedef std::string NodeID;
@@ -95,8 +93,12 @@ struct Message {
     if (std::is_same<V, uint64>::value) return DataType::UINT64;
     if (std::is_same<V, int32>::value) return DataType::INT32;
     if (std::is_same<V, int64>::value) return DataType::INT64;
-    if (std::is_same<V, float>::value) return DataType::FLOAT;
+    if (std::is_same<typename std::remove_cv<V>::type, float>::value)
+      return DataType::FLOAT;
     if (std::is_same<V, double>::value) return DataType::DOUBLE;
+    if (std::is_same<V, uint8>::value) return DataType::UINT8;
+    if (std::is_same<V, int8>::value) return DataType::INT8;
+    if (std::is_same<V, char>::value) return DataType::CHAR;
     return DataType::OTHER;
   }
 };
@@ -148,7 +150,8 @@ MessagePtrList sliceKeyOrderedMsg(const MessagePtr& msg, const KeyRangeList& krs
       SizeR lr(pos[i], pos[i+1]);
       ret[i]->setKey(key.segment(lr));
       for (auto& v : msg->value) {
-        ret[i]->addValue(v.segment(lr * (v.size() / key.size())));
+        // ret[i]->addValue(v.segment(lr * (v.size() / key.size())));
+        ret[i]->value.push_back(v.segment(lr * (v.size() / key.size())));
       }
     }
   }
