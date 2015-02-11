@@ -166,12 +166,30 @@ class SGDProgress : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 nnz() const;
   inline void set_nnz(::google::protobuf::uint64 value);
 
+  // optional double weight_sum = 6;
+  inline bool has_weight_sum() const;
+  inline void clear_weight_sum();
+  static const int kWeightSumFieldNumber = 6;
+  inline double weight_sum() const;
+  inline void set_weight_sum(double value);
+
+  // optional double delta_sum = 7;
+  inline bool has_delta_sum() const;
+  inline void clear_delta_sum();
+  static const int kDeltaSumFieldNumber = 7;
+  inline double delta_sum() const;
+  inline void set_delta_sum(double value);
+
   // @@protoc_insertion_point(class_scope:PS.SGDProgress)
  private:
   inline void set_has_num_examples_processed();
   inline void clear_has_num_examples_processed();
   inline void set_has_nnz();
   inline void clear_has_nnz();
+  inline void set_has_weight_sum();
+  inline void clear_has_weight_sum();
+  inline void set_has_delta_sum();
+  inline void clear_has_delta_sum();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -180,9 +198,11 @@ class SGDProgress : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedField< double > accuracy_;
   ::google::protobuf::RepeatedField< double > auc_;
   ::google::protobuf::uint64 nnz_;
+  double weight_sum_;
+  double delta_sum_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_learner_2fproto_2fsgd_2eproto();
   friend void protobuf_AssignDesc_learner_2fproto_2fsgd_2eproto();
@@ -297,7 +317,7 @@ class SGDCall : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 report_interval() const;
   inline void set_report_interval(::google::protobuf::int32 value);
 
-  // optional int32 data_buf = 4 [default = 100];
+  // optional int32 data_buf = 4 [default = 1000];
   inline bool has_data_buf() const;
   inline void clear_data_buf();
   static const int kDataBufFieldNumber = 4;
@@ -458,6 +478,50 @@ inline void SGDProgress::set_nnz(::google::protobuf::uint64 value) {
   nnz_ = value;
 }
 
+// optional double weight_sum = 6;
+inline bool SGDProgress::has_weight_sum() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void SGDProgress::set_has_weight_sum() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void SGDProgress::clear_has_weight_sum() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void SGDProgress::clear_weight_sum() {
+  weight_sum_ = 0;
+  clear_has_weight_sum();
+}
+inline double SGDProgress::weight_sum() const {
+  return weight_sum_;
+}
+inline void SGDProgress::set_weight_sum(double value) {
+  set_has_weight_sum();
+  weight_sum_ = value;
+}
+
+// optional double delta_sum = 7;
+inline bool SGDProgress::has_delta_sum() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void SGDProgress::set_has_delta_sum() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void SGDProgress::clear_has_delta_sum() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void SGDProgress::clear_delta_sum() {
+  delta_sum_ = 0;
+  clear_has_delta_sum();
+}
+inline double SGDProgress::delta_sum() const {
+  return delta_sum_;
+}
+inline void SGDProgress::set_delta_sum(double value) {
+  set_has_delta_sum();
+  delta_sum_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // SGDCall
@@ -545,7 +609,7 @@ inline void SGDCall::set_report_interval(::google::protobuf::int32 value) {
   report_interval_ = value;
 }
 
-// optional int32 data_buf = 4 [default = 100];
+// optional int32 data_buf = 4 [default = 1000];
 inline bool SGDCall::has_data_buf() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -556,7 +620,7 @@ inline void SGDCall::clear_has_data_buf() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void SGDCall::clear_data_buf() {
-  data_buf_ = 100;
+  data_buf_ = 1000;
   clear_has_data_buf();
 }
 inline ::google::protobuf::int32 SGDCall::data_buf() const {

@@ -17,8 +17,9 @@ class ThreadsafeLimitedQueue {
   void push(const T& value, size_t capacity, bool finished = false) {
     CHECK(!done_) << "must not call push again if *finished* is set true";
     if (capacity > max_capacity_) {
-      LL << "too small capacity [" << max_capacity_
-         << "]. you will be blocked here forever...";
+      LL << "push obj with size " << capacity
+         << " into queue with capacity " << max_capacity_
+         << ". you will be blocked here forever...";
     }
     // do not insert
     if (finished == false && capacity == 0) return;

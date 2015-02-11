@@ -395,7 +395,7 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 minibatch() const;
   inline void set_minibatch(::google::protobuf::int32 value);
 
-  // optional int32 data_buf = 12 [default = 100];
+  // optional int32 data_buf = 12 [default = 1000];
   inline bool has_data_buf() const;
   inline void clear_data_buf();
   static const int kDataBufFieldNumber = 12;
@@ -1260,7 +1260,7 @@ inline void SGDConfig::set_minibatch(::google::protobuf::int32 value) {
   minibatch_ = value;
 }
 
-// optional int32 data_buf = 12 [default = 100];
+// optional int32 data_buf = 12 [default = 1000];
 inline bool SGDConfig::has_data_buf() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1271,7 +1271,7 @@ inline void SGDConfig::clear_has_data_buf() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void SGDConfig::clear_data_buf() {
-  data_buf_ = 100;
+  data_buf_ = 1000;
   clear_has_data_buf();
 }
 inline ::google::protobuf::int32 SGDConfig::data_buf() const {

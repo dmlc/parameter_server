@@ -90,16 +90,20 @@ struct Message {
 
   // helper
   template <typename V>
-  static DataType type() {
-    // TODO
+  static DataType encodeType() {
+    if (std::is_same<V, uint32>::value) return DataType::UINT32;
+    if (std::is_same<V, uint64>::value) return DataType::UINT64;
+    if (std::is_same<V, int32>::value) return DataType::INT32;
+    if (std::is_same<V, int64>::value) return DataType::INT64;
+    if (std::is_same<V, float>::value) return DataType::FLOAT;
+    if (std::is_same<V, double>::value) return DataType::DOUBLE;
     return DataType::OTHER;
   }
- private:
 };
 
 
 template <typename T> void Message::setKey(const SArray<T>& key) {
-  task.set_key_type(type<T>());
+  task.set_key_type(encodeType<T>());
   if (hasKey()) clearKey();
   task.set_has_key(true);
   this->key = SArray<char>(key);
@@ -107,7 +111,7 @@ template <typename T> void Message::setKey(const SArray<T>& key) {
 }
 
 template <typename T> void Message::addValue(const SArray<T>& value) {
-  task.add_value_type(type<T>());
+  task.add_value_type(encodeType<T>());
   this->value.push_back(SArray<char>(value));
 }
 

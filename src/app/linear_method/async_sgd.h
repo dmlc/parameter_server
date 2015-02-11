@@ -38,7 +38,10 @@ struct SGDState {
 
   void update() {
     if (reporter) {
-      SGDProgress prog; prog.set_nnz(nnz);
+      SGDProgress prog;
+      prog.set_nnz(nnz);
+      prog.set_weight_sum(weight_sum); weight_sum = 0;
+      prog.set_delta_sum(delta_sum); delta_sum = 0;
       reporter->report(prog);
     }
   }
@@ -49,6 +52,9 @@ struct SGDState {
     } else if (new_weight != 0 && old_weight == 0) {
       ++ nnz;
     }
+    weight_sum += new_weight * new_weight;
+    V delta = new_weight - old_weight;
+    delta_sum += delta * delta;
   }
 
   shared_ptr<LearningRate<V>> lr;
@@ -56,6 +62,8 @@ struct SGDState {
 
   int iter = 0;
   size_t nnz = 0;
+  V weight_sum = 0;
+  V delta_sum = 0;
   V max_delta = 1.0;  // maximal change of weight
   MonitorSlaver<SGDProgress>* reporter = nullptr;
 };
@@ -213,7 +221,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
         data.add_file(call.data().file(idx[j]));
       }
     }
-
     reader.setReader(data, sgd.minibatch(), sgd.data_buf());
     reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
     reader.start();
@@ -262,7 +269,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     prog.set_num_examples_processed(
         prog.num_examples_processed() + Xw.size());
     this->reporter_.report(prog);
-    // LL << prog.objective(0) << " " << prog.auc(0);
 
     // compute the gradient
     SArray<V> grad(X->cols());
@@ -278,6 +284,13 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     model_.clear(id);
 
     ++ processed_batch_;
+
+    // auto we = w.eigenArray();
+    // auto ge = grad.eigenArray();
+    // LL << we.minCoeff() << " " << we.maxCoeff() << " "
+    //    << w.mean() << " " << w.std() << " "
+    //    << ge.minCoeff() << " " << ge.maxCoeff() << " "
+    //    << grad.mean() << " " << grad.std();
   }
 
 private:

@@ -4,6 +4,7 @@
 namespace PS {
 
 class KeyCachingFilter : public Filter {
+ public:
   // thread safe
   void encode(const MessagePtr& msg) {
     // if (!msg->task.has_key_range()) return;

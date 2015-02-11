@@ -59,6 +59,7 @@ class ScalarLoss : public Loss<T> {
     if (gradient.size() != 0) CHECK_EQ(gradient.size(), X->cols());
     if (diag_hessian.size() != 0) CHECK_EQ(diag_hessian.size(), X->cols());
 
+    if (!y.size()) return;
     compute(y.eigenArray(), X, Xw.eigenArray(), gradient.eigenArray(), diag_hessian.eigenArray());
   }
 

@@ -7,19 +7,21 @@ message SGDProgress {
   repeated double accuracy = 3;
   repeated double auc = 4;
   optional uint64 nnz = 5;
+  optional double weight_sum = 6;
+  optional double delta_sum = 7;
 }
 
 message SGDCall {
   enum Command {
     UPDATE_MODEL = 1;
     REPORT_PROGRESS = 2;
-    SAVE_MODEL = 3;  // save w
+    SAVE_MODEL = 3;
     RECOVER = 4;
     COMPUTE_VALIDATION_AUC = 5;
   }
   required Command cmd = 1;
   optional DataConfig data = 2;
   optional int32 report_interval = 3 [default = 1];
-  optional int32 data_buf = 4 [default = 100];  // in mb
+  optional int32 data_buf = 4 [default = 1000];  // in mb
   // optional PbRange key = 3;
 }
