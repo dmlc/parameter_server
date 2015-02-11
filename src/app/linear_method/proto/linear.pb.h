@@ -444,7 +444,7 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 countmin_k() const;
   inline void set_countmin_k(::google::protobuf::int32 value);
 
-  // optional float countmin_n = 8 [default = 1e+07];
+  // optional float countmin_n = 8 [default = 1e+08];
   inline bool has_countmin_n() const;
   inline void clear_countmin_n();
   static const int kCountminNFieldNumber = 8;
@@ -1414,7 +1414,7 @@ inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
   countmin_k_ = value;
 }
 
-// optional float countmin_n = 8 [default = 1e+07];
+// optional float countmin_n = 8 [default = 1e+08];
 inline bool SGDConfig::has_countmin_n() const {
   return (_has_bits_[0] & 0x00000200u) != 0;
 }
@@ -1425,7 +1425,7 @@ inline void SGDConfig::clear_has_countmin_n() {
   _has_bits_[0] &= ~0x00000200u;
 }
 inline void SGDConfig::clear_countmin_n() {
-  countmin_n_ = 1e+07f;
+  countmin_n_ = 1e+08f;
   clear_has_countmin_n();
 }
 inline float SGDConfig::countmin_n() const {

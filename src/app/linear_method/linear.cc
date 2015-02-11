@@ -17,7 +17,7 @@ App* createApp(const string& name, const Config& conf) {
       app = new DarlinServer(name, conf);
     }
   } else if (conf.has_async_sgd()) {
-    typedef double Real;
+    typedef float Real;
     if (my_role == Node::SCHEDULER) {
       app = new AsyncSGDScheduler(name, conf);
     } else if (my_role == Node::WORKER) {
@@ -30,7 +30,6 @@ App* createApp(const string& name, const Config& conf) {
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
              << " at " << Postoffice::instance().myNode().ShortDebugString();
-  // app->init(conf);
   return app;
 }
 
