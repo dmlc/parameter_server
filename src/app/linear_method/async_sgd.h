@@ -182,7 +182,8 @@ template <typename V>
 class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
  public:
   AsyncSGDWorker(const string& name, const Config& conf)
-      : ISGDCompNode(name), LinearMethod(conf), model_(name+"_model", name) {
+      : ISGDCompNode(name), LinearMethod(conf), model_(name+"_model", name),
+        processed_batch_(0) {
     loss_ = createLoss<V>(conf_.loss());
   }
   virtual ~AsyncSGDWorker() { }
@@ -236,6 +237,8 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
 
       ++ id;
     }
+
+    while (processed_batch_ < id) { usleep(100); }
   }
 
   void computeGradient(int id) {
@@ -273,6 +276,8 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     model_.push(msg);
     model_.clear(id);
+
+    ++ processed_batch_;
   }
 
 private:
@@ -282,6 +287,7 @@ private:
   std::unordered_map<int, std::pair<MatrixPtr<V>, MatrixPtr<V>>> data_;
 
   std::mutex mu_;
+  std::atomic_int processed_batch_;
   // std::unordered_map<int, int> push_time_;
 
 };

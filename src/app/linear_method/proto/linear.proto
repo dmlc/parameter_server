@@ -51,7 +51,7 @@ message SGDConfig {
 
   optional int32 tail_feature_freq = 6 [default = 0];
   optional int32 countmin_k = 7 [default = 2];
-  optional float countmin_n = 8 [default = 1e7];
+  optional float countmin_n = 8 [default = 1e8];
 
   // optional float noise_std = 9 [default = .1];
 }
