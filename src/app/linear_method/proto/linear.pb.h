@@ -437,19 +437,19 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 tail_feature_freq() const;
   inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
-  // optional int32 countmin_k = 7 [default = 2];
-  inline bool has_countmin_k() const;
-  inline void clear_countmin_k();
-  static const int kCountminKFieldNumber = 7;
-  inline ::google::protobuf::int32 countmin_k() const;
-  inline void set_countmin_k(::google::protobuf::int32 value);
-
   // optional float countmin_n = 8 [default = 1e+08];
   inline bool has_countmin_n() const;
   inline void clear_countmin_n();
   static const int kCountminNFieldNumber = 8;
   inline float countmin_n() const;
   inline void set_countmin_n(float value);
+
+  // optional int32 countmin_k = 7 [default = 2];
+  inline bool has_countmin_k() const;
+  inline void clear_countmin_k();
+  static const int kCountminKFieldNumber = 7;
+  inline ::google::protobuf::int32 countmin_k() const;
+  inline void set_countmin_k(::google::protobuf::int32 value);
 
   // optional int32 fixing_float_by_nbytes = 13 [default = 0];
   inline bool has_fixing_float_by_nbytes() const;
@@ -476,10 +476,10 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_report_interval();
   inline void set_has_tail_feature_freq();
   inline void clear_has_tail_feature_freq();
-  inline void set_has_countmin_k();
-  inline void clear_has_countmin_k();
   inline void set_has_countmin_n();
   inline void clear_has_countmin_n();
+  inline void set_has_countmin_k();
+  inline void clear_has_countmin_k();
   inline void set_has_fixing_float_by_nbytes();
   inline void clear_has_fixing_float_by_nbytes();
 
@@ -493,8 +493,8 @@ class SGDConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 num_data_pass_;
   ::google::protobuf::int32 report_interval_;
   ::google::protobuf::int32 tail_feature_freq_;
-  ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
+  ::google::protobuf::int32 countmin_k_;
   ::google::protobuf::int32 fixing_float_by_nbytes_;
 
   mutable int _cached_size_;
@@ -1402,37 +1402,15 @@ inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
   tail_feature_freq_ = value;
 }
 
-// optional int32 countmin_k = 7 [default = 2];
-inline bool SGDConfig::has_countmin_k() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void SGDConfig::set_has_countmin_k() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void SGDConfig::clear_has_countmin_k() {
-  _has_bits_[0] &= ~0x00000100u;
-}
-inline void SGDConfig::clear_countmin_k() {
-  countmin_k_ = 2;
-  clear_has_countmin_k();
-}
-inline ::google::protobuf::int32 SGDConfig::countmin_k() const {
-  return countmin_k_;
-}
-inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
-  set_has_countmin_k();
-  countmin_k_ = value;
-}
-
 // optional float countmin_n = 8 [default = 1e+08];
 inline bool SGDConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void SGDConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void SGDConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void SGDConfig::clear_countmin_n() {
   countmin_n_ = 1e+08f;
@@ -1444,6 +1422,28 @@ inline float SGDConfig::countmin_n() const {
 inline void SGDConfig::set_countmin_n(float value) {
   set_has_countmin_n();
   countmin_n_ = value;
+}
+
+// optional int32 countmin_k = 7 [default = 2];
+inline bool SGDConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void SGDConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void SGDConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void SGDConfig::clear_countmin_k() {
+  countmin_k_ = 2;
+  clear_has_countmin_k();
+}
+inline ::google::protobuf::int32 SGDConfig::countmin_k() const {
+  return countmin_k_;
+}
+inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
+  set_has_countmin_k();
+  countmin_k_ = value;
 }
 
 // optional int32 fixing_float_by_nbytes = 13 [default = 0];

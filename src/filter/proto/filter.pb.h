@@ -35,7 +35,7 @@ void protobuf_AssignDesc_filter_2fproto_2ffilter_2eproto();
 void protobuf_ShutdownFile_filter_2fproto_2ffilter_2eproto();
 
 class FilterConfig;
-class FilterConfig_FixedConfig;
+class FilterConfig_FixedFloatConfig;
 
 enum FilterConfig_Type {
   FilterConfig_Type_KEY_CACHING = 1,
@@ -59,14 +59,14 @@ inline bool FilterConfig_Type_Parse(
 }
 // ===================================================================
 
-class FilterConfig_FixedConfig : public ::google::protobuf::Message {
+class FilterConfig_FixedFloatConfig : public ::google::protobuf::Message {
  public:
-  FilterConfig_FixedConfig();
-  virtual ~FilterConfig_FixedConfig();
+  FilterConfig_FixedFloatConfig();
+  virtual ~FilterConfig_FixedFloatConfig();
 
-  FilterConfig_FixedConfig(const FilterConfig_FixedConfig& from);
+  FilterConfig_FixedFloatConfig(const FilterConfig_FixedFloatConfig& from);
 
-  inline FilterConfig_FixedConfig& operator=(const FilterConfig_FixedConfig& from) {
+  inline FilterConfig_FixedFloatConfig& operator=(const FilterConfig_FixedFloatConfig& from) {
     CopyFrom(from);
     return *this;
   }
@@ -80,17 +80,17 @@ class FilterConfig_FixedConfig : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const FilterConfig_FixedConfig& default_instance();
+  static const FilterConfig_FixedFloatConfig& default_instance();
 
-  void Swap(FilterConfig_FixedConfig* other);
+  void Swap(FilterConfig_FixedFloatConfig* other);
 
   // implements Message ----------------------------------------------
 
-  FilterConfig_FixedConfig* New() const;
+  FilterConfig_FixedFloatConfig* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const FilterConfig_FixedConfig& from);
-  void MergeFrom(const FilterConfig_FixedConfig& from);
+  void CopyFrom(const FilterConfig_FixedFloatConfig& from);
+  void MergeFrom(const FilterConfig_FixedFloatConfig& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -134,7 +134,7 @@ class FilterConfig_FixedConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 num_bytes() const;
   inline void set_num_bytes(::google::protobuf::int32 value);
 
-  // @@protoc_insertion_point(class_scope:PS.FilterConfig.FixedConfig)
+  // @@protoc_insertion_point(class_scope:PS.FilterConfig.FixedFloatConfig)
  private:
   inline void set_has_min_value();
   inline void clear_has_min_value();
@@ -157,7 +157,7 @@ class FilterConfig_FixedConfig : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_filter_2fproto_2ffilter_2eproto();
 
   void InitAsDefaultInstance();
-  static FilterConfig_FixedConfig* default_instance_;
+  static FilterConfig_FixedFloatConfig* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -213,7 +213,7 @@ class FilterConfig : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef FilterConfig_FixedConfig FixedConfig;
+  typedef FilterConfig_FixedFloatConfig FixedFloatConfig;
 
   typedef FilterConfig_Type Type;
   static const Type KEY_CACHING = FilterConfig_Type_KEY_CACHING;
@@ -256,14 +256,17 @@ class FilterConfig : public ::google::protobuf::Message {
   inline bool clear_cache_if_done() const;
   inline void set_clear_cache_if_done(bool value);
 
-  // optional .PS.FilterConfig.FixedConfig fixed_point = 4;
-  inline bool has_fixed_point() const;
+  // repeated .PS.FilterConfig.FixedFloatConfig fixed_point = 4;
+  inline int fixed_point_size() const;
   inline void clear_fixed_point();
   static const int kFixedPointFieldNumber = 4;
-  inline const ::PS::FilterConfig_FixedConfig& fixed_point() const;
-  inline ::PS::FilterConfig_FixedConfig* mutable_fixed_point();
-  inline ::PS::FilterConfig_FixedConfig* release_fixed_point();
-  inline void set_allocated_fixed_point(::PS::FilterConfig_FixedConfig* fixed_point);
+  inline const ::PS::FilterConfig_FixedFloatConfig& fixed_point(int index) const;
+  inline ::PS::FilterConfig_FixedFloatConfig* mutable_fixed_point(int index);
+  inline ::PS::FilterConfig_FixedFloatConfig* add_fixed_point();
+  inline const ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig_FixedFloatConfig >&
+      fixed_point() const;
+  inline ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig_FixedFloatConfig >*
+      mutable_fixed_point();
 
   // optional uint32 signature = 2;
   inline bool has_signature() const;
@@ -290,8 +293,6 @@ class FilterConfig : public ::google::protobuf::Message {
   inline void clear_has_type();
   inline void set_has_clear_cache_if_done();
   inline void clear_has_clear_cache_if_done();
-  inline void set_has_fixed_point();
-  inline void clear_has_fixed_point();
   inline void set_has_signature();
   inline void clear_has_signature();
 
@@ -299,7 +300,7 @@ class FilterConfig : public ::google::protobuf::Message {
 
   int type_;
   bool clear_cache_if_done_;
-  ::PS::FilterConfig_FixedConfig* fixed_point_;
+  ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig_FixedFloatConfig > fixed_point_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > uncompressed_size_;
   ::google::protobuf::uint32 signature_;
 
@@ -318,70 +319,70 @@ class FilterConfig : public ::google::protobuf::Message {
 
 // ===================================================================
 
-// FilterConfig_FixedConfig
+// FilterConfig_FixedFloatConfig
 
 // optional float min_value = 1 [default = -1];
-inline bool FilterConfig_FixedConfig::has_min_value() const {
+inline bool FilterConfig_FixedFloatConfig::has_min_value() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void FilterConfig_FixedConfig::set_has_min_value() {
+inline void FilterConfig_FixedFloatConfig::set_has_min_value() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void FilterConfig_FixedConfig::clear_has_min_value() {
+inline void FilterConfig_FixedFloatConfig::clear_has_min_value() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void FilterConfig_FixedConfig::clear_min_value() {
+inline void FilterConfig_FixedFloatConfig::clear_min_value() {
   min_value_ = -1;
   clear_has_min_value();
 }
-inline float FilterConfig_FixedConfig::min_value() const {
+inline float FilterConfig_FixedFloatConfig::min_value() const {
   return min_value_;
 }
-inline void FilterConfig_FixedConfig::set_min_value(float value) {
+inline void FilterConfig_FixedFloatConfig::set_min_value(float value) {
   set_has_min_value();
   min_value_ = value;
 }
 
 // optional float max_value = 2 [default = 1];
-inline bool FilterConfig_FixedConfig::has_max_value() const {
+inline bool FilterConfig_FixedFloatConfig::has_max_value() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void FilterConfig_FixedConfig::set_has_max_value() {
+inline void FilterConfig_FixedFloatConfig::set_has_max_value() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void FilterConfig_FixedConfig::clear_has_max_value() {
+inline void FilterConfig_FixedFloatConfig::clear_has_max_value() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void FilterConfig_FixedConfig::clear_max_value() {
+inline void FilterConfig_FixedFloatConfig::clear_max_value() {
   max_value_ = 1;
   clear_has_max_value();
 }
-inline float FilterConfig_FixedConfig::max_value() const {
+inline float FilterConfig_FixedFloatConfig::max_value() const {
   return max_value_;
 }
-inline void FilterConfig_FixedConfig::set_max_value(float value) {
+inline void FilterConfig_FixedFloatConfig::set_max_value(float value) {
   set_has_max_value();
   max_value_ = value;
 }
 
 // optional int32 num_bytes = 3 [default = 3];
-inline bool FilterConfig_FixedConfig::has_num_bytes() const {
+inline bool FilterConfig_FixedFloatConfig::has_num_bytes() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void FilterConfig_FixedConfig::set_has_num_bytes() {
+inline void FilterConfig_FixedFloatConfig::set_has_num_bytes() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void FilterConfig_FixedConfig::clear_has_num_bytes() {
+inline void FilterConfig_FixedFloatConfig::clear_has_num_bytes() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void FilterConfig_FixedConfig::clear_num_bytes() {
+inline void FilterConfig_FixedFloatConfig::clear_num_bytes() {
   num_bytes_ = 3;
   clear_has_num_bytes();
 }
-inline ::google::protobuf::int32 FilterConfig_FixedConfig::num_bytes() const {
+inline ::google::protobuf::int32 FilterConfig_FixedFloatConfig::num_bytes() const {
   return num_bytes_;
 }
-inline void FilterConfig_FixedConfig::set_num_bytes(::google::protobuf::int32 value) {
+inline void FilterConfig_FixedFloatConfig::set_num_bytes(::google::protobuf::int32 value) {
   set_has_num_bytes();
   num_bytes_ = value;
 }
@@ -435,42 +436,29 @@ inline void FilterConfig::set_clear_cache_if_done(bool value) {
   clear_cache_if_done_ = value;
 }
 
-// optional .PS.FilterConfig.FixedConfig fixed_point = 4;
-inline bool FilterConfig::has_fixed_point() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void FilterConfig::set_has_fixed_point() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void FilterConfig::clear_has_fixed_point() {
-  _has_bits_[0] &= ~0x00000004u;
+// repeated .PS.FilterConfig.FixedFloatConfig fixed_point = 4;
+inline int FilterConfig::fixed_point_size() const {
+  return fixed_point_.size();
 }
 inline void FilterConfig::clear_fixed_point() {
-  if (fixed_point_ != NULL) fixed_point_->::PS::FilterConfig_FixedConfig::Clear();
-  clear_has_fixed_point();
+  fixed_point_.Clear();
 }
-inline const ::PS::FilterConfig_FixedConfig& FilterConfig::fixed_point() const {
-  return fixed_point_ != NULL ? *fixed_point_ : *default_instance_->fixed_point_;
+inline const ::PS::FilterConfig_FixedFloatConfig& FilterConfig::fixed_point(int index) const {
+  return fixed_point_.Get(index);
 }
-inline ::PS::FilterConfig_FixedConfig* FilterConfig::mutable_fixed_point() {
-  set_has_fixed_point();
-  if (fixed_point_ == NULL) fixed_point_ = new ::PS::FilterConfig_FixedConfig;
+inline ::PS::FilterConfig_FixedFloatConfig* FilterConfig::mutable_fixed_point(int index) {
+  return fixed_point_.Mutable(index);
+}
+inline ::PS::FilterConfig_FixedFloatConfig* FilterConfig::add_fixed_point() {
+  return fixed_point_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig_FixedFloatConfig >&
+FilterConfig::fixed_point() const {
   return fixed_point_;
 }
-inline ::PS::FilterConfig_FixedConfig* FilterConfig::release_fixed_point() {
-  clear_has_fixed_point();
-  ::PS::FilterConfig_FixedConfig* temp = fixed_point_;
-  fixed_point_ = NULL;
-  return temp;
-}
-inline void FilterConfig::set_allocated_fixed_point(::PS::FilterConfig_FixedConfig* fixed_point) {
-  delete fixed_point_;
-  fixed_point_ = fixed_point;
-  if (fixed_point) {
-    set_has_fixed_point();
-  } else {
-    clear_has_fixed_point();
-  }
+inline ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig_FixedFloatConfig >*
+FilterConfig::mutable_fixed_point() {
+  return &fixed_point_;
 }
 
 // optional uint32 signature = 2;

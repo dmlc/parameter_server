@@ -229,13 +229,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       msg->setKey(key);
       msg->task.set_key_channel(id);
       msg->fin_handle = [this, id]() { computeGradient(id); };
-      msg->addFilter(FilterConfig::KEY_CACHING);
-      if (sgd.fixing_float_by_nbytes()) {
-        auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->mutable_fixed_point();
-        conf->set_min_value(- 2.0);
-        conf->set_max_value(2.0);
-        conf->set_num_bytes(sgd.fixing_float_by_nbytes());
-      }
       model_.key(id) = key;
       model_.pull(msg);
 
@@ -279,9 +272,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
     if (nbytes) {
-      auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->mutable_fixed_point();
-      conf->set_min_value(Xw.size() * -0.5);
-      conf->set_max_value(Xw.size() * 0.5);
+      auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
       conf->set_num_bytes(nbytes);
     }
     model_.push(msg);
