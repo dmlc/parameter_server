@@ -74,6 +74,7 @@ void Executor::copyNodesFrom(const Executor& other) {
 // }
 
 void Executor::add(const Node& node) {
+  Lock l(node_mu_);
   if (node.id() == my_node_.id()) {
     my_node_ = node;
   }
@@ -276,15 +277,16 @@ void Executor::accept(const MessagePtr& msg) {
 }
 
 void Executor::NodeInfo::addSubNode(RNode* s) {
-  sub_nodes.push_back(CHECK_NOTNULL(s));
-  std::sort(sub_nodes.begin(), sub_nodes.end(), [](RNode* a, RNode* b) {
-      return CHECK_NOTNULL(a)->keyRange().inLeft(CHECK_NOTNULL(b)->keyRange());
-    });
-
-  key_ranges.clear();
-  for (auto n : sub_nodes) {
-    key_ranges.push_back(CHECK_NOTNULL(n)->keyRange());
+  CHECK_NOTNULL(s);
+  // insert s into sub_nodes such as sub_nodes is still ordered
+  int pos = 0;
+  while (pos < sub_nodes.size() &&
+         CHECK_NOTNULL(sub_nodes[pos])->keyRange().inLeft(s->keyRange())) {
+    ++ pos;
   }
+  sub_nodes.insert(sub_nodes.begin()+pos, s);
+  // update the key range
+  key_ranges.insert(key_ranges.begin() + pos, s->keyRange());
 }
 
 void Executor::NodeInfo::removeSubNode(RNode* s) {

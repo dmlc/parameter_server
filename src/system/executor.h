@@ -64,9 +64,11 @@ class Executor {
   MessagePtr active_msg_;
   std::condition_variable dag_cond_;
 
-  std::initializer_list<NodeID> groupIDs() {
-    return {kServerGroup, kWorkerGroup, kCompGroup,
-          kReplicaGroup, kOwnerGroup, kLiveGroup};
+  std::vector<NodeID> groupIDs() {
+   std::vector<NodeID> ids = {
+     kServerGroup, kWorkerGroup, kCompGroup,
+     kReplicaGroup, kOwnerGroup, kLiveGroup};
+    return ids;
   }
 
   struct NodeInfo {
