@@ -33,6 +33,8 @@ class YellowPages {
 
   // manage nodes
   void addNode(const Node& node);
+  void removeNode(const Node& node);
+
   int num_workers() { return num_workers_; }
   int num_servers() { return num_servers_; }
   std::vector<Node> nodes();

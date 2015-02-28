@@ -16,6 +16,7 @@ class Van {
   void init();
   void destroy();
 
+  void disconnect(const Node&  node);
   Status connect(const Node&  node);
 
   // check whether I could connect to a specified node

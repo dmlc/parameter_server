@@ -130,7 +130,10 @@ int RNode::submit(MessagePtrList& msgs) {
 
 void RNode::waitOutgoingTask(int time) {
   // if (time <= Message::kInvalidTime) return;
-  for (auto& w : exec_.group(id())) w->outgoing_task_.wait(time);
+  for (auto& w : exec_.group(id())) {
+    // LL << w->id();
+    w->outgoing_task_.wait(time);
+  }
 }
 
 bool RNode::tryWaitOutgoingTask(int time) {

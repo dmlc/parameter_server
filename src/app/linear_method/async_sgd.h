@@ -38,7 +38,10 @@ struct SGDState {
 
   void update() {
     if (reporter) {
-      SGDProgress prog; prog.set_nnz(nnz);
+      SGDProgress prog;
+      prog.set_nnz(nnz);
+      prog.set_weight_sum(weight_sum); weight_sum = 0;
+      prog.set_delta_sum(delta_sum); delta_sum = 0;
       reporter->report(prog);
     }
   }
@@ -49,6 +52,9 @@ struct SGDState {
     } else if (new_weight != 0 && old_weight == 0) {
       ++ nnz;
     }
+    weight_sum += new_weight * new_weight;
+    V delta = new_weight - old_weight;
+    delta_sum += delta * delta;
   }
 
   shared_ptr<LearningRate<V>> lr;
@@ -56,22 +62,24 @@ struct SGDState {
 
   int iter = 0;
   size_t nnz = 0;
+  V weight_sum = 0;
+  V delta_sum = 0;
   V max_delta = 1.0;  // maximal change of weight
   MonitorSlaver<SGDProgress>* reporter = nullptr;
 };
 
 template <typename V>
 struct AdaGradEntry {
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // update model
-    V grad = *((V*)data);
+    V grad = *data;
     sum_sq_grad += grad * grad;
     // state->update(weight, grad, sqrt(sum_sq_grad));
     // TODO
   }
 
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = weight;
+  void put(V* data, SGDState<V>* state) {
+    *data = weight;
   }
   V weight = 0;
   V sum_sq_grad = 0;
@@ -79,13 +87,13 @@ struct AdaGradEntry {
 
 template <typename V>
 struct SGDEntry {
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // V grad = *((V*)data);
     // state->update(weight, grad);
     // TODO
   }
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = weight;
+  void put(V* data, SGDState<V>* state) {
+    *data = weight;
   }
   V weight = 0;
 };
@@ -96,10 +104,10 @@ struct FTRLEntry {
   V z = 0;
   V sqrt_n = 0;
 
-  void get(char const* data, SGDState<V>* state) {
+  void get(V const* data, SGDState<V>* state) {
     // update model
     V w_old = w;
-    V grad = *((V*)data);
+    V grad = *data;
     V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
     V sigma = (sqrt_n_new - sqrt_n) / state->lr->alpha();
     z += grad  - sigma * w;
@@ -110,8 +118,8 @@ struct FTRLEntry {
     state->updateWeight(w, w_old);
   }
 
-  void put(char* data, SGDState<V>* state) {
-    *((V*)data) = w;
+  void put(V* data, SGDState<V>* state) {
+    *data = w;
   }
 };
 
@@ -123,12 +131,12 @@ public:
   AsyncSGDServer(const string& name, const Config& conf)
       : ISGDCompNode(name), LinearMethod(conf) {
     if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
-      model_ = new KVStore<Key, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
+      model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
     } else {
       if (conf_.async_sgd().ada_grad()) {
-        model_ = new KVStore<Key, SGDEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>(name+"_model", name);
       } else {
-        model_ = new KVStore<Key, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
       }
     }
   }
@@ -138,11 +146,9 @@ public:
   }
 
   void init() {
-    CHECK_NOTNULL(model_)->setEntrySyncSize(sizeof(V));
-
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     state.reporter = &(this->reporter_);
-    model_->setState(state);
+    CHECK_NOTNULL(model_)->setState(state);
 
     // tail feature filter
     model_->setTailFilterSize(
@@ -156,14 +162,7 @@ public:
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + myNodeID();
-      if (!dirExists(getPath(file))) {
-        createDir(getPath(file));
-      }
-      std::ofstream out(file); CHECK(out.good());
-      CHECK_NOTNULL(model_)->writeToFile([&out](const Key& key, char const* val) {
-          V v = *((V const *)val);
-          if (v != 0) out << key << "\t" << v << std::endl;
-        });
+      CHECK_NOTNULL(model_)->writeToFile(file);
       LI << myNodeID() << " written the model to " << file;
     }
   }
@@ -182,7 +181,8 @@ template <typename V>
 class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
  public:
   AsyncSGDWorker(const string& name, const Config& conf)
-      : ISGDCompNode(name), LinearMethod(conf), model_(name+"_model", name) {
+      : ISGDCompNode(name), LinearMethod(conf), model_(name+"_model", name),
+        processed_batch_(0) {
     loss_ = createLoss<V>(conf_.loss());
   }
   virtual ~AsyncSGDWorker() { }
@@ -212,7 +212,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
         data.add_file(call.data().file(idx[j]));
       }
     }
-
     reader.setReader(data, sgd.minibatch(), sgd.data_buf());
     reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
     reader.start();
@@ -228,7 +227,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       // pull the weight
       MessagePtr msg(new Message(kServerGroup));
       msg->setKey(key);
-      msg->addFilter(FilterConfig::KEY_CACHING);
       msg->task.set_key_channel(id);
       msg->fin_handle = [this, id]() { computeGradient(id); };
       model_.key(id) = key;
@@ -236,6 +234,8 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
 
       ++ id;
     }
+
+    while (processed_batch_ < id) { usleep(100); }
   }
 
   void computeGradient(int id) {
@@ -259,7 +259,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     prog.set_num_examples_processed(
         prog.num_examples_processed() + Xw.size());
     this->reporter_.report(prog);
-    // LL << prog.objective(0) << " " << prog.auc(0);
 
     // compute the gradient
     SArray<V> grad(X->cols());
@@ -271,8 +270,22 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     msg->addValue(grad);
     msg->task.set_key_channel(id);
     msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
+    if (nbytes) {
+      auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
+      conf->set_num_bytes(nbytes);
+    }
     model_.push(msg);
     model_.clear(id);
+
+    ++ processed_batch_;
+
+    // auto we = w.eigenArray();
+    // auto ge = grad.eigenArray();
+    // LL << we.minCoeff() << " " << we.maxCoeff() << " "
+    //    << w.mean() << " " << w.std() << " "
+    //    << ge.minCoeff() << " " << ge.maxCoeff() << " "
+    //    << grad.mean() << " " << grad.std();
   }
 
 private:
@@ -282,6 +295,7 @@ private:
   std::unordered_map<int, std::pair<MatrixPtr<V>, MatrixPtr<V>>> data_;
 
   std::mutex mu_;
+  std::atomic_int processed_batch_;
   // std::unordered_map<int, int> push_time_;
 
 };

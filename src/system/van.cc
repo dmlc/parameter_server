@@ -18,13 +18,18 @@ DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
 
 void Van::init() {
+
   scheduler_ = parseNode(FLAGS_scheduler);
   if (FLAGS_my_rank < 0) {
     my_node_ = parseNode(FLAGS_my_node);
   } else {
     my_node_ = assembleMyNode();
   }
-  // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+
+  if (FLAGS_print_van) {
+    debug_out_.open("van_"+my_node_.id());
+    // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
+  }
 
   context_ = zmq_ctx_new();
   // TODO the following does not work...
@@ -37,9 +42,6 @@ void Van::init() {
   connect(my_node_);
   connect(scheduler_);
 
-  if (FLAGS_print_van) {
-    debug_out_.open("van_"+my_node_.id());
-  }
 }
 
 void Van::destroy() {
@@ -69,14 +71,21 @@ void Van::bind() {
   }
 }
 
+void Van::disconnect(const Node& node) {
+  CHECK(node.has_id()) << node.ShortDebugString();
+  NodeID id = node.id();
+  if (senders_.find(id) != senders_.end()) {
+    zmq_close (senders_[id]);
+  }
+  senders_.erase(id);
+}
+
 Status Van::connect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
-  // the socket already exists? probably we are re-connecting to this node
   if (senders_.find(id) != senders_.end()) {
-    // zmq_close (senders_[id]);
     return Status::OK();
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);
@@ -97,7 +106,8 @@ Status Van::connect(const Node& node) {
   hostnames_[id] = node.hostname();
 
   if (FLAGS_print_van) {
-    debug_out_ << my_node_.id() << ": connect to " << addr << std::endl;
+    debug_out_ << my_node_.id() << ": connect to " << id
+               << " [" << addr << "]" << std::endl;
   }
   return Status::OK();
 }

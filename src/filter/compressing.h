@@ -4,6 +4,7 @@
 namespace PS {
 
 class CompressingFilter : public Filter {
+ public:
   void encode(const MessagePtr& msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;

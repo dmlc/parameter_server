@@ -4,10 +4,11 @@ namespace PS {
 template <typename K, typename V>
 class KVMap : public SharedParameter<K> {
  public:
-  USING_SHARED_PARAMETER;
+  KVMap(const string& my_name, const string& parent_name = FLAGS_app_name) :
+      SharedParameter<K>(my_name, parent_name) { }
+  virtual ~KVMap() { }
 
- public: // implement the virtual functions required
-  virtual MessagePtrList slice(const MessagePtr& msg, const KeyList& sep) {
+  virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& sep) {
     return sliceKeyOrderedMsg<K>(msg, sep);
   }
 
@@ -37,6 +38,8 @@ class KVMap : public SharedParameter<K> {
   void setReplica(const MessagePtr& msg) { }
   void getReplica(const MessagePtr& msg) { }
   void recoverFrom(const MessagePtr& msg) { }
+
+  USING_SHARED_PARAMETER;
  protected:
   std::unordered_map<K, V> data_;
 };

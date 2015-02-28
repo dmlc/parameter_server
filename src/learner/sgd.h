@@ -46,6 +46,7 @@ class ISGDScheduler : public App {
       double time, std::unordered_map<NodeID, SGDProgress>* progress) {
     uint64 num_ex = 0, nnz_w = 0;
     SArray<double> objv, auc, acc;
+    double weight_sum = 0, delta_sum = 1e-20;
     for (const auto& it : *progress) {
       auto& prog = it.second;
       num_ex += prog.num_examples_processed();
@@ -59,12 +60,23 @@ class ISGDScheduler : public App {
       for (int i = 0; i < prog.accuracy_size(); ++i) {
         acc.pushBack(prog.accuracy(i));
       }
+      weight_sum += prog.weight_sum();
+      delta_sum += prog.delta_sum();
     }
     progress->clear();
     num_ex_processed_ += num_ex;
-    fprintf(stderr, "%4d sec, %.2e examples, loss %.3e, auc %.4f, acc %.4f, |w|_0 %.2e\n",
-           (int)time, (double)num_ex_processed_ , objv.sum()/(double)num_ex,
-           auc.mean(), acc.mean(), (double)nnz_w);
+    if (show_prog_head_) {
+      fprintf(stderr, " sec  examples    loss      auc   accuracy   |w|_0  updt ratio\n");
+      show_prog_head_ = false;
+    }
+    fprintf(stderr, "%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e\n",
+            (int)time,
+            (double)num_ex_processed_ ,
+            objv.sum()/(double)num_ex,
+            auc.mean(),
+            acc.mean(),
+            (double)nnz_w,
+            sqrt(delta_sum) / sqrt(weight_sum));
   }
 
   virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst) {
@@ -75,6 +87,7 @@ class ISGDScheduler : public App {
   }
   MonitorMaster<SGDProgress> monitor_;
   size_t num_ex_processed_ = 0;
+  bool show_prog_head_ = true;
 };
 
 class ISGDCompNode : public App {
@@ -93,7 +106,7 @@ class MinibatchReader {
   MinibatchReader() { }
   ~MinibatchReader() { }
 
-  void setReader(const DataConfig& file, int minibatch_size, int data_buf = 100) {
+  void setReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
     reader_.init(file);
     minibatch_size_ = minibatch_size;
     data_prefetcher_.setCapacity(data_buf);

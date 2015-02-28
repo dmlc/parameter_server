@@ -21,4 +21,4 @@ See more details in [[https://github.com/mli/parameter_server/wiki/setup][wiki]]
 
 *Run*
 
-See examples in [[example/linear/rcv1]]. More information are in the [[https://github.com/mli/parameter_server/wiki][wiki]].
+See examples in [[example/linear]]. More information are in the [[https://github.com/mli/parameter_server/wiki][wiki]].

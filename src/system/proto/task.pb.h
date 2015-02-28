@@ -123,11 +123,12 @@ enum DataType {
   UINT32 = 7,
   UINT64 = 8,
   FLOAT = 9,
-  DOUBLE = 10
+  DOUBLE = 10,
+  CHAR = 11
 };
 bool DataType_IsValid(int value);
 const DataType DataType_MIN = OTHER;
-const DataType DataType_MAX = DOUBLE;
+const DataType DataType_MAX = CHAR;
 const int DataType_ARRAYSIZE = DataType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* DataType_descriptor();

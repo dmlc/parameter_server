@@ -5,38 +5,6 @@ import time
 def getMinionNum():
         out=os.popen('../bin/kubecfg list minions').read()
         return len(out.splitlines()[2:-1])
-def extractDatAndOutputPath(path):
-        '''
-        Get from config file the absolute dir of data
-        '''
-        fread=open(path,'r')
-        fwrite=open("../config/config.conf",'w')
-        flag=""
-        data_dir=""
-        output_dir=""
-        filename=""
-        for line in fread:
-                items=line.strip().split()
-                if len(items)>0:
-                        if items[0]=="training_data":
-                                flag=items[0]
-                        elif items[0]=="model_output":
-                                flag=items[0]
-                        elif items[0]=="file:":
-                                if flag=="training_data":
-                                        flag=""
-                                        data_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
-                                        fwrite.write("file: \"/home/parameter_server/data/%s\"\n" % filename)
-                                        continue
-                                elif flag=="model_output":
-                                        flag=""
-                                        output_dir,filename=os.path.split(os.path.abspath(items[1][1:-1]))
-                                        fwrite.write("file: \"/home/parameter_server/output/%s\"\n" % filename)
-                                        continue
-                fwrite.write("%s" % line)
-        fread.close()
-        return data_dir,output_dir
-
 def killAll():
         '''
         Kill all pods and controller managers on kubernetes
@@ -53,7 +21,7 @@ def killAll():
         os.system("../bin/kubecfg delete pods/scheduler")
 
 
-def upScheduler(num_servers,num_workers,data_dir,output_dir):
+def upScheduler(num_servers,num_workers,algorithm,data_dir,output_dir):
 	'''
 	Bring up scheduler as a pod -- scheduler
 	'''
@@ -66,7 +34,7 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	container=dict()
 	container['name']='scheduler'
 	#image
-	container['image']='qicongc/parameter_server'
+	container['image']='qicongc/pserver'
 	port=dict()
 	#port mapping
 	port['containerPort']=8000
@@ -80,7 +48,7 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 	#working directory when container starts running
 	container['workingDir']='/home/parameter_server/script'
 	#command
-	cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van  -bind_to 8000 '
+	cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/'+algorithm+'_l1lr.conf -print_van  -bind_to 8000 '
 	cmd+="-scheduler \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\" "
 	cmd+="-my_node \"role:SCHEDULER,hostname:\'`cat /tmp/docker/host/host`\',port:11000,id:\'H\'\""
 	command=['sh','-c']
@@ -188,7 +156,7 @@ def upScheduler(num_servers,num_workers,data_dir,output_dir):
 				if len(line)>4  and line[4]=='Running':
 					return line[2].strip('/')
 
-def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,output_dir):
+def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir):
         '''
         Bring up worker as a pod -- worker
         '''
@@ -201,7 +169,7 @@ def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,
         container=dict()
         container['name']='worker'+str(index)
         #image
-        container['image']='qicongc/parameter_server'
+        container['image']='qicongc/pserver'
         port=dict()
         #port mapping
         port['containerPort']=8001
@@ -216,7 +184,7 @@ def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,
         #working directory when container starts running
         container['workingDir']='/home/parameter_server/script'
         #command
-        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van -bind_to 8001 '
+        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/'+algorithm+'_l1lr.conf -print_van -bind_to 8001 '
         cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
         cmd+="-my_node \"role:WORKER,hostname:\'`cat /tmp/docker/host/host`\',port:"+str(hostPort)+",id:\'W_$(hostname)\'\""
         command=['sh','-c']
@@ -321,7 +289,7 @@ def upWorker(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,
 	print cmd
 	os.system(cmd)
 
-def upServer(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,output_dir):
+def upServer(index,num_replicas,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir):
         '''
         Bring up worker as a pod -- worker
         '''
@@ -334,7 +302,7 @@ def upServer(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,
         container=dict()
         container['name']='server'+str(index)
 	#image
-        container['image']='qicongc/parameter_server'
+        container['image']='qicongc/pserver'
         port=dict()
         #port mapping
         port['containerPort']=8002
@@ -349,7 +317,7 @@ def upServer(index,num_replicas,scheduler_host,num_servers,num_workers,data_dir,
         #working directory when container starts running
         container['workingDir']='/home/parameter_server/script'
         #command
-        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/config.conf -print_van  -bind_to 8002 '
+        cmd='../build/ps -num_servers '+str(num_servers)+' -num_workers '+str(num_workers)+' -num_threads '+str(num_servers+num_workers)+' -app_file ../config/'+algorithm+'_l1lr.conf -print_van  -bind_to 8002 '
         cmd+="-scheduler \"role:SCHEDULER,hostname:\'"+scheduler_host+"\',port:11000,id:\'H\'\" "
         cmd+="-my_node \"role:SERVER,hostname:\'`cat /tmp/docker/host/host`\',port:"+str(hostPort)+",id:\'S_$(hostname)\'\""
         command=['sh','-c']
@@ -459,31 +427,38 @@ if __name__=='__main__':
         if program=="clear":
                 killAll()
         elif program=="submit":
+		if len(sys.argv)<6:
+			print 'usage : python submit.py submit num_servers num_workers algorithm data_dir output_dir'
+			exit(1)
+		if sys.argv[4]!='batch' and sys.argv[4]!='online':
+			print 'algorithm currently has online | batch'
+			exit(1)
                 num_minions=getMinionNum()
                 num_servers=int(sys.argv[2])
                 num_workers=int(sys.argv[3])
-                config_path=os.path.abspath(sys.argv[4])
-                data_dir,output_dir=extractDatAndOutputPath(config_path)
+		algorithm=sys.argv[4]
+		data_dir=os.path.abspath(sys.argv[5])
+		output_dir=os.path.abspath(sys.argv[6])
 		print data_dir
 		print output_dir
-                scheduler_host=upScheduler(num_servers,num_workers,data_dir,output_dir)
+                scheduler_host=upScheduler(num_servers,num_workers,algorithm,data_dir,output_dir)
 		print 'detect scheduler at '+scheduler_host
 		#launch servers
 		remained=num_servers
 		index=0
 		while remained>num_minions:
-			upServer(index,num_minions,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+			upServer(index,num_minions,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir)
 			remained-=num_minions
 			index+=1
-		upServer(index,remained,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+		upServer(index,remained,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir)
 		#launch workers
 		remained=num_workers
 		index=0
 		while remained>num_minions:
-			upWorker(index,num_minions,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+			upWorker(index,num_minions,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir)
 			remained-=num_minions
 			index+=1
-		upWorker(index,remained,scheduler_host,num_servers,num_workers,data_dir,output_dir)
+		upWorker(index,remained,scheduler_host,num_servers,num_workers,algorithm,data_dir,output_dir)
 
 
                 

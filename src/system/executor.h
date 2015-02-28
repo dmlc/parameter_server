@@ -36,15 +36,14 @@ class Executor {
   void stop();
 
   // accessors
-  RNodePtr rnode(const NodeID& k);
-  std::vector<RNodePtr>& group(const NodeID& k);
+  RNode* rnode(const NodeID& k);
+  std::vector<RNode*>& group(const NodeID& k);
   const std::vector<Range<Key>>& keyRanges(const NodeID& k);
   const Node& myNode() { return my_node_; }
 
-  void copyNodesFrom(const Executor& other);
   void add(const Node& node);
-  // (somewhat) thread-safe, will called by postoffice's recving thread
-  void replace(const Node& dead, const Node& live);
+  // void remove(const Node& node);
+  void copyNodesFrom(const Executor& other);
 
   // will be called by postoffice's receiving thread
   // or the thread call wk->submit
@@ -64,9 +63,29 @@ class Executor {
   // the message is going to be processed or is the last one be processed
   MessagePtr active_msg_;
   std::condition_variable dag_cond_;
-  std::unordered_map<NodeID, RNodePtr> nodes_;
-  std::unordered_map<NodeID, std::vector<RNodePtr>> groups_;
-  std::unordered_map<NodeID, std::vector<Range<Key>>> key_ranges_;
+
+  std::vector<NodeID> groupIDs() {
+   std::vector<NodeID> ids = {
+     kServerGroup, kWorkerGroup, kCompGroup,
+     kReplicaGroup, kOwnerGroup, kLiveGroup};
+    return ids;
+  }
+
+  struct NodeInfo {
+    NodeInfo() { };
+    ~NodeInfo() { delete node; }
+
+    void addSubNode(RNode* s);
+    void removeSubNode(RNode* s);
+
+    RNode* node = NULL;
+    // sub_nodes = {node} or all nodes in this node group
+    std::vector<RNode*> sub_nodes;
+    std::vector<Range<Key>> key_ranges;
+  };
+
+  std::unordered_map<NodeID, NodeInfo> nodes_;
+
   Node my_node_;
   std::mutex node_mu_;
   bool done_ = false;

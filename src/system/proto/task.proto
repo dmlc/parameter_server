@@ -90,6 +90,7 @@ enum DataType {
   UINT64 = 8;
   FLOAT = 9;
   DOUBLE = 10;
+  CHAR = 11;
 }
 
 // optional CallSketch sketch = 302;

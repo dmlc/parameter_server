@@ -395,7 +395,7 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 minibatch() const;
   inline void set_minibatch(::google::protobuf::int32 value);
 
-  // optional int32 data_buf = 12 [default = 100];
+  // optional int32 data_buf = 12 [default = 1000];
   inline bool has_data_buf() const;
   inline void clear_data_buf();
   static const int kDataBufFieldNumber = 12;
@@ -437,6 +437,13 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 tail_feature_freq() const;
   inline void set_tail_feature_freq(::google::protobuf::int32 value);
 
+  // optional float countmin_n = 8 [default = 1e+08];
+  inline bool has_countmin_n() const;
+  inline void clear_countmin_n();
+  static const int kCountminNFieldNumber = 8;
+  inline float countmin_n() const;
+  inline void set_countmin_n(float value);
+
   // optional int32 countmin_k = 7 [default = 2];
   inline bool has_countmin_k() const;
   inline void clear_countmin_k();
@@ -444,12 +451,12 @@ class SGDConfig : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 countmin_k() const;
   inline void set_countmin_k(::google::protobuf::int32 value);
 
-  // optional float countmin_n = 8 [default = 1e+07];
-  inline bool has_countmin_n() const;
-  inline void clear_countmin_n();
-  static const int kCountminNFieldNumber = 8;
-  inline float countmin_n() const;
-  inline void set_countmin_n(float value);
+  // optional int32 fixing_float_by_nbytes = 13 [default = 0];
+  inline bool has_fixing_float_by_nbytes() const;
+  inline void clear_fixing_float_by_nbytes();
+  static const int kFixingFloatByNbytesFieldNumber = 13;
+  inline ::google::protobuf::int32 fixing_float_by_nbytes() const;
+  inline void set_fixing_float_by_nbytes(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:PS.LM.SGDConfig)
  private:
@@ -469,10 +476,12 @@ class SGDConfig : public ::google::protobuf::Message {
   inline void clear_has_report_interval();
   inline void set_has_tail_feature_freq();
   inline void clear_has_tail_feature_freq();
-  inline void set_has_countmin_k();
-  inline void clear_has_countmin_k();
   inline void set_has_countmin_n();
   inline void clear_has_countmin_n();
+  inline void set_has_countmin_k();
+  inline void clear_has_countmin_k();
+  inline void set_has_fixing_float_by_nbytes();
+  inline void clear_has_fixing_float_by_nbytes();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -484,11 +493,12 @@ class SGDConfig : public ::google::protobuf::Message {
   ::google::protobuf::int32 num_data_pass_;
   ::google::protobuf::int32 report_interval_;
   ::google::protobuf::int32 tail_feature_freq_;
-  ::google::protobuf::int32 countmin_k_;
   float countmin_n_;
+  ::google::protobuf::int32 countmin_k_;
+  ::google::protobuf::int32 fixing_float_by_nbytes_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
   friend void protobuf_AssignDesc_app_2flinear_5fmethod_2fproto_2flinear_2eproto();
@@ -1260,7 +1270,7 @@ inline void SGDConfig::set_minibatch(::google::protobuf::int32 value) {
   minibatch_ = value;
 }
 
-// optional int32 data_buf = 12 [default = 100];
+// optional int32 data_buf = 12 [default = 1000];
 inline bool SGDConfig::has_data_buf() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1271,7 +1281,7 @@ inline void SGDConfig::clear_has_data_buf() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void SGDConfig::clear_data_buf() {
-  data_buf_ = 100;
+  data_buf_ = 1000;
   clear_has_data_buf();
 }
 inline ::google::protobuf::int32 SGDConfig::data_buf() const {
@@ -1392,15 +1402,37 @@ inline void SGDConfig::set_tail_feature_freq(::google::protobuf::int32 value) {
   tail_feature_freq_ = value;
 }
 
-// optional int32 countmin_k = 7 [default = 2];
-inline bool SGDConfig::has_countmin_k() const {
+// optional float countmin_n = 8 [default = 1e+08];
+inline bool SGDConfig::has_countmin_n() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void SGDConfig::set_has_countmin_k() {
+inline void SGDConfig::set_has_countmin_n() {
   _has_bits_[0] |= 0x00000100u;
 }
-inline void SGDConfig::clear_has_countmin_k() {
+inline void SGDConfig::clear_has_countmin_n() {
   _has_bits_[0] &= ~0x00000100u;
+}
+inline void SGDConfig::clear_countmin_n() {
+  countmin_n_ = 1e+08f;
+  clear_has_countmin_n();
+}
+inline float SGDConfig::countmin_n() const {
+  return countmin_n_;
+}
+inline void SGDConfig::set_countmin_n(float value) {
+  set_has_countmin_n();
+  countmin_n_ = value;
+}
+
+// optional int32 countmin_k = 7 [default = 2];
+inline bool SGDConfig::has_countmin_k() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void SGDConfig::set_has_countmin_k() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void SGDConfig::clear_has_countmin_k() {
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void SGDConfig::clear_countmin_k() {
   countmin_k_ = 2;
@@ -1414,26 +1446,26 @@ inline void SGDConfig::set_countmin_k(::google::protobuf::int32 value) {
   countmin_k_ = value;
 }
 
-// optional float countmin_n = 8 [default = 1e+07];
-inline bool SGDConfig::has_countmin_n() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+// optional int32 fixing_float_by_nbytes = 13 [default = 0];
+inline bool SGDConfig::has_fixing_float_by_nbytes() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void SGDConfig::set_has_countmin_n() {
-  _has_bits_[0] |= 0x00000200u;
+inline void SGDConfig::set_has_fixing_float_by_nbytes() {
+  _has_bits_[0] |= 0x00000400u;
 }
-inline void SGDConfig::clear_has_countmin_n() {
-  _has_bits_[0] &= ~0x00000200u;
+inline void SGDConfig::clear_has_fixing_float_by_nbytes() {
+  _has_bits_[0] &= ~0x00000400u;
 }
-inline void SGDConfig::clear_countmin_n() {
-  countmin_n_ = 1e+07f;
-  clear_has_countmin_n();
+inline void SGDConfig::clear_fixing_float_by_nbytes() {
+  fixing_float_by_nbytes_ = 0;
+  clear_has_fixing_float_by_nbytes();
 }
-inline float SGDConfig::countmin_n() const {
-  return countmin_n_;
+inline ::google::protobuf::int32 SGDConfig::fixing_float_by_nbytes() const {
+  return fixing_float_by_nbytes_;
 }
-inline void SGDConfig::set_countmin_n(float value) {
-  set_has_countmin_n();
-  countmin_n_ = value;
+inline void SGDConfig::set_fixing_float_by_nbytes(::google::protobuf::int32 value) {
+  set_has_fixing_float_by_nbytes();
+  fixing_float_by_nbytes_ = value;
 }
 
 // -------------------------------------------------------------------

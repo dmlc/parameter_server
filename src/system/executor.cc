@@ -8,8 +8,7 @@ DECLARE_bool(verbose);
 Executor::Executor(Customer& obj) : obj_(obj) {
   my_node_ = Postoffice::instance().myNode();
   // insert virtual group nodes
-  for (auto id : {kServerGroup, kWorkerGroup, kCompGroup,
-          kReplicaGroup, kOwnerGroup, kLiveGroup}) {
+  for (auto id : groupIDs()) {
     Node node;
     node.set_role(Node::GROUP);
     node.set_id(id);
@@ -33,83 +32,81 @@ void Executor::stop() {
 }
 
 void Executor::finish(const MessagePtr& msg) {
-  auto r = rnode(msg->sender);
+  RNode* r = rnode(msg->sender);
   if (r) r->finishIncomingTask(msg->task.time());
 }
 
-RNodePtr Executor::rnode(const NodeID& k) {
+RNode* Executor::rnode(const NodeID& k) {
   Lock l(node_mu_);
   auto it = nodes_.find(k);
-  if (it == nodes_.end()) return RNodePtr();
-  return it->second;
+  return it == nodes_.end() ? NULL : it->second.node;
 }
 
-std::vector<RNodePtr>& Executor::group(const NodeID& k) {
+std::vector<RNode*>& Executor::group(const NodeID& k) {
   Lock l(node_mu_);
-  auto it = groups_.find(k);
-  CHECK(it != groups_.end()) << "unkonw node group: " << k;
-  return it->second;
+  auto it = nodes_.find(k);
+  CHECK(it != nodes_.end()) << "unkonw node group: " << k;
+  return it->second.sub_nodes;
 }
 
 const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
   Lock l(node_mu_);
-  return key_ranges_[k];
-  // auto it = key_ranges_.find(k);
-  // CHECK(it != key_ranges_.end()) << "unkonw node group: " << k;
-  // return it->second;
+  auto it = nodes_.find(k);
+  CHECK(it != nodes_.end()) << "unkonw node: " << k;
+  return it->second.key_ranges;
 }
 
 void Executor::copyNodesFrom(const Executor& other) {
   for (const auto& n : other.nodes_) {
-    auto d = n.second->node_;
+    auto d = n.second.node->node_;
     if (d.role() != Node::GROUP) add(d);
   }
 }
 
+// void Executor::remove(const Node& node) {
+//   auto id = node.id();
+//   if (nodes_.find(id) == nodes_.end()) return;
+//   RNode* w = nodes_[id].node;
+//   for (const NodeID& gid : groupIDs()) {
+//     nodes_[gid].removeSubNode(w);
+//   }
+//   nodes_.erase(id);
+// }
+
 void Executor::add(const Node& node) {
-  // insert into nodes_
+  Lock l(node_mu_);
   if (node.id() == my_node_.id()) {
-   my_node_ = node;
+    my_node_ = node;
   }
   auto id = node.id();
-  CHECK_EQ(nodes_.count(id), 0) << id << " already exists";
-  RNodePtr w(new RNode(node, *this));
-  nodes_[id] = w;
+  RNode* w = NULL;
+  if (nodes_.find(id) != nodes_.end()) {
+    // update
+    w = nodes_[id].node;
+    w->node_ = node;
+    nodes_[id].removeSubNode(w);
+    for (const NodeID& gid : groupIDs()) {
+      nodes_[gid].removeSubNode(w);
+    }
+  } else {
+    // create
+    w = new RNode(node, *this);
+    nodes_[id].node = w;
+  }
 
-  // update key_ranges_:
-  auto add_to_key_ranges =
-      [this] (const NodeID& id, const RNodePtr& rnode) {
-    auto& keys = key_ranges_[id];
-    keys.push_back(rnode->keyRange());
-    std::sort(keys.begin(), keys.end(), [](
-        const Range<Key>& a, const Range<Key>& b) { return a.inLeft(b); });
-  };
-
-  // update groups_: insert a node, and make the node group be ordered
-  auto add_to_group =
-      [this, &add_to_key_ranges](const NodeID& id, const RNodePtr& rnode) {
-    auto& list = groups_[id];
-    list.push_back(rnode);
-    std::sort(list.begin(), list.end(), [](const RNodePtr& a, const RNodePtr& b) {
-        return a->keyRange().inLeft(b->keyRange());
-      });
-    add_to_key_ranges(id, rnode);
-  };
 
   auto role = node.role();
   if (role != Node::GROUP) {
-    groups_[id] = RNodePtrList({w});
-    add_to_key_ranges(id, w);
-    add_to_group(kLiveGroup, w);
-  }
-  if (role == Node::WORKER || role == Node::SERVER) {
-    add_to_group(kCompGroup, w);
+    nodes_[id].addSubNode(w);
+    nodes_[kLiveGroup].addSubNode(w);
   }
   if (role == Node::SERVER) {
-    add_to_group(kServerGroup, w);
+    nodes_[kServerGroup].addSubNode(w);
+    nodes_[kCompGroup].addSubNode(w);
   }
   if (role == Node::WORKER) {
-    add_to_group(kWorkerGroup, w);
+    nodes_[kWorkerGroup].addSubNode(w);
+    nodes_[kCompGroup].addSubNode(w);
   }
 
   // update replica group and owner group if i'm a server node
@@ -279,52 +276,29 @@ void Executor::accept(const MessagePtr& msg) {
   dag_cond_.notify_one();
 }
 
-void Executor::replace(const Node& dead, const Node& live) {
-  // TODO
-  // auto dead_id = dead.id();
-  // auto live_id = live.id();
-  // if (live_id == my_node_.id()) return;
-
-  // // FIXME update kLiveGroup
-  // // modify
-  // auto ptr = nodes_[dead_id];
-  // CHECK(ptr.get() != nullptr);
-  // Lock l(ptr->mu_);
-  // ptr->node_ = live;
-
-  // // insert the live
-  // {
-  //   Lock l2(node_mu_);
-  //   nodes_[live_id] = ptr;
-  //   node_groups_[live_id] = node_groups_[dead_id];
-  //   node_key_partition_[live_id] = node_key_partition_[dead_id];
-
-  //   // remove the dead
-  //   CHECK(dead.role() != Node::GROUP);
-  //   nodes_.erase(dead_id);
-  //   node_groups_.erase(dead_id);
-  //   node_key_partition_.erase(dead_id);
-
-  //   // LL << my_node_.id() << ": " << obj_.name() << "'s node info is updated";
-  // }
-
-  // // resent unfinished tasks
-  // ptr->clearCache();
-  // if (ptr->pending_msgs_.size() > 0) {
-  //   bool first = true;
-  //   for (auto& it : ptr->pending_msgs_) {
-  //     auto& msg = it.second;
-  //     msg.recver = live_id;
-  //     if (first) msg.task.set_wait_time(RNode::kInvalidTime);
-  //     first = false;
-  //     ptr->sys_.queue(ptr->cacheKeySender(msg));
-  //     // LL << my_node_.id() << ": resent " << msg;
-  //   }
-  //   LL << my_node_.id() << ": re-sent " << ptr->pending_msgs_.size()
-  //      << " pnending messages to " << live_id;
-  // }
+void Executor::NodeInfo::addSubNode(RNode* s) {
+  CHECK_NOTNULL(s);
+  // insert s into sub_nodes such as sub_nodes is still ordered
+  int pos = 0;
+  while (pos < sub_nodes.size() &&
+         CHECK_NOTNULL(sub_nodes[pos])->keyRange().inLeft(s->keyRange())) {
+    ++ pos;
+  }
+  sub_nodes.insert(sub_nodes.begin()+pos, s);
+  // update the key range
+  key_ranges.insert(key_ranges.begin() + pos, s->keyRange());
 }
 
+void Executor::NodeInfo::removeSubNode(RNode* s) {
+  size_t n = sub_nodes.size();
+  CHECK_EQ(n, key_ranges.size());
+  for (int i = 0; i < n; ++i) {
+    if (sub_nodes[i] == s) {
+      sub_nodes.erase(sub_nodes.begin() + i);
+      key_ranges.erase(key_ranges.begin() + i);
+    }
+  }
+}
 
 // NodeList Executor::nodes() {
 //   NodeList ret;
