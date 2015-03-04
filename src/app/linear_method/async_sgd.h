@@ -152,7 +152,7 @@ public:
 
     // tail feature filter
     model_->setTailFilterSize(
-        0, conf_.async_sgd().countmin_n()/sys_.yp().num_servers(),
+        0, conf_.async_sgd().countmin_n()/sys_.manager().numServers(),
         conf_.async_sgd().countmin_k());
   }
 

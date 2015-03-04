@@ -1,21 +1,19 @@
-CC = g++
+ifneq ("$(wildcard ./config.mk)","")
+include ./config.mk
+else
+include make/config.mk
+endif
 
-# OPT = -O0 -ggdb
-OPT = -O3 -ggdb
-
-THIRD_PATH=$(shell pwd)/third_party
-STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
 else
 THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
 endif
-# THIRD_LIB+=-ltcmalloc_and_profiler
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
-CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) $(EXTRA_CFLAGS)
+LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread -lrt
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a

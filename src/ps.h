@@ -25,9 +25,9 @@ App* CreateServerNode(const std::string& conf);
 // Utility functions.
 
 // The app this node runs
-inline App* MyApp() { return PS::Postoffice::instance().app(); }
+inline App* MyApp() { return PS::Postoffice::instance().manager().app(); }
 
-inline Node MyNode() { return PS::Postoffice::instance().myNode(); }
+inline Node MyNode() { return PS::Postoffice::instance().manager().van().myNode(); }
 
 // Each node has an unique string id.
 inline std::string MyNodeID() { return MyNode().id(); }
@@ -45,8 +45,8 @@ inline int MyRank() { return MyApp()->myRank(); }
 
 // Total nodes in this node group.
 inline int RankSize() {
-  auto& yp = PS::Postoffice::instance().yp();
-  return IsWorker() ? yp.num_workers() : (IsServer() ? yp.num_servers() : 1);
+  auto& mng = PS::Postoffice::instance().manager();
+  return IsWorker() ? mng.numWorkers() : (IsServer() ? mng.numServers() : 1);
 }
 
 } // namespace PS

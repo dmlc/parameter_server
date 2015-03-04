@@ -6,7 +6,7 @@ template <typename Progress>
 class MonitorMaster : public Customer {
  public:
   MonitorMaster(const string& my_name, const string& parent_name)
-      : Customer(my_name, parent_name) {
+      : Customer(my_name) {
   }
   MonitorMaster(Customer* parent)
       : MonitorMaster(parent->name()+"monitor", parent->name()) { }
@@ -58,7 +58,7 @@ class MonitorSlaver : public Customer {
   MonitorSlaver(const NodeID& master,
                 const string& my_name,
                 const string& parent_name)
-      : Customer(my_name, parent_name), master_(master) { }
+      : Customer(my_name), master_(master) { }
   MonitorSlaver(const NodeID& master, Customer* parent)
       : MonitorSlaver(master, parent->name()+"monitor", parent->name()) { }
 

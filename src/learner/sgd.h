@@ -2,7 +2,6 @@
 #include "util/producer_consumer.h"
 #include "learner/proto/sgd.pb.h"
 #include "system/monitor.h"
-#include "system/postmaster.h"
 #include "system/app.h"
 
 #include "data/stream_reader.h"
@@ -32,14 +31,15 @@ class ISGDScheduler : public App {
         report_interval, std::bind(&ISGDScheduler::showProgress, this, _1, _2));
 
     // ask the workers to commpute the gradients
-    auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
-    std::vector<Task> tasks(conf.size());
-    for (int i = 0; i < conf.size(); ++i) {
-      auto sgd = tasks[i].mutable_sgd();
-      sgd->set_cmd(SGDCall::UPDATE_MODEL);
-      *sgd->mutable_data() = conf[i];
-    }
-    port(kWorkerGroup)->submitAndWait(tasks);
+    // FIXME
+    // auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
+    // std::vector<Task> tasks(conf.size());
+    // for (int i = 0; i < conf.size(); ++i) {
+    //   auto sgd = tasks[i].mutable_sgd();
+    //   sgd->set_cmd(SGDCall::UPDATE_MODEL);
+    //   *sgd->mutable_data() = conf[i];
+    // }
+    // port(kWorkerGroup)->submitAndWait(tasks);
   }
 
   virtual void showProgress(

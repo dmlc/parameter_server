@@ -6,16 +6,11 @@ import "parameter/proto/param.proto";
 import "filter/proto/filter.proto";
 import "learner/proto/sgd.proto";
 import "learner/proto/bcd.proto";
-// import "cxxnet/proto/cxxnet.proto";
 
 message Task {
   enum Type {
-    TERMINATE = 1;
-    TERMINATE_CONFIRM = 2;
-    REPLY = 3;
-    MANAGE = 4;
-    CALL_CUSTOMER = 5;
-    HEARTBEATING = 6;
+    CALL_CUSTOMER = 1;
+    CONTROL = 2;
   }
   optional Type type = 1 [default = CALL_CUSTOMER];
   // whether request or reply message
@@ -33,7 +28,7 @@ message Task {
   optional int32 key_channel = 8;
   // indiciate whether or not has the key list
   optional bool has_key = 9 [default = false];
-  optional string key_channel_str = 10;
+  optional string key_channel_str = 10;  // deprecated
 
   optional DataType key_type = 13;
   repeated DataType value_type = 14;
@@ -41,8 +36,7 @@ message Task {
   repeated FilterConfig filter = 12;
 
   optional bytes msg = 17;
-  optional ManageNode mng_node = 18;
-  optional ManageApp mng_app = 19;
+  optional Control control = 18;
 
   // parameters
   optional CallSharedPara shared_para = 20;
@@ -52,31 +46,25 @@ message Task {
   extensions 100 to 199;
 }
 
-message ManageNode {
+message Control {
   enum Command {
+    // a node => scheduler
     CONNECT = 1;
+    STOP = 6;
+    HEARTBEAT = 9;
+    // the scheduler => a node
     ADD = 2;
     UPDATE = 3;
     REPLACE = 4;
     REMOVE = 5;
+    TERMINATE = 7;
+    CREATE_APP = 8;
   }
   required Command cmd = 1;
   repeated Node node = 2;
-  // optional int num_workers = 3;
-  // optional int num_servers = 4;
+  optional string app_conf = 3;
 }
 
-message ManageApp {
-  enum Command {
-    ADD = 1;
-    REMOVE = 2;
-    INIT = 4;
-    RUN = 3;
-    DONE = 5;
-  }
-  required Command cmd = 1;
-  optional string conf = 2;
-}
 
 enum DataType {
   OTHER = 0;
@@ -92,6 +80,18 @@ enum DataType {
   DOUBLE = 10;
   CHAR = 11;
 }
+
+// message ManageApp {
+//   enum Command {
+//     ADD = 1;
+//     REMOVE = 2;
+//     INIT = 4;
+//     RUN = 3;
+//     DONE = 5;
+//   }
+//   required Command cmd = 1;
+//   optional string conf = 2;
+// }
 
 // optional CallSketch sketch = 302;
 // message CallSketch {

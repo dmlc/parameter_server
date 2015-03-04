@@ -5,17 +5,17 @@
 namespace PS {
 
 // all server nodes
-const static NodeID kServerGroup = Van::id("all_servers");
+const static NodeID kServerGroup = "all_servers";
 // all worker nodes
-const static NodeID kWorkerGroup = Van::id("all_workers");
+const static NodeID kWorkerGroup = "all_workers";
 // kServerGroup + kWorkerGroup
-const static NodeID kCompGroup = Van::id("all_comp_nodes");
+const static NodeID kCompGroup = "all_comp_nodes";
 // the nodes maintaining a replica of the key segment I own
-const static NodeID kReplicaGroup = Van::id("all_replicas");
+const static NodeID kReplicaGroup = "all_replicas";
 // the owner nodes of the key segments this node backup
-const static NodeID kOwnerGroup = Van::id("all_owners");
+const static NodeID kOwnerGroup = "all_owners";
 // all live nodes, including scheduler, workers, servers, unused nodes...
-const static NodeID kLiveGroup = Van::id("all_lives");
+const static NodeID kLiveGroup = "all_lives";
 
 typedef std::vector<Node> NodeList;
 
@@ -41,16 +41,19 @@ class Executor {
   const std::vector<Range<Key>>& keyRanges(const NodeID& k);
   const Node& myNode() { return my_node_; }
 
-  void add(const Node& node);
-  // void remove(const Node& node);
+  void addNode(const Node& node);
+  void removeNode(const Node& node);
+  void replaceNode(const Node& old_node, const Node& new_node);
   void copyNodesFrom(const Executor& other);
 
   // will be called by postoffice's receiving thread
   // or the thread call wk->submit
   void accept(const MessagePtr& msg);
+
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
-  string lastRecvReply();
+
+  // string lastRecvReply();
 
   Customer& obj() { return obj_; }
  private:

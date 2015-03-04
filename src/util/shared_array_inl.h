@@ -117,9 +117,9 @@ void SArray<V>::setValue(const ParameterInitConfig& cf) {
   } else if (cf.type() == Type::CONSTANT) {
     setValue((V)cf.constant());
   } else if (cf.type() == Type::GAUSSIAN) {
+    std::default_random_engine generator;
+    std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
     for (size_t i = 0; i < size_; ++i) {
-      std::default_random_engine generator;
-      std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
       data_[i] = distribution(generator);
     }
   } else if (cf.type() == Type::FILE) {

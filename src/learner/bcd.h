@@ -2,7 +2,6 @@
 #include "learner/proto/bcd.pb.h"
 #include "data/slot_reader.h"
 #include "data/common.h"
-#include "system/postmaster.h"
 #include "parameter/kv_buffered_vector.h"
 namespace PS {
 DECLARE_bool(verbose);
@@ -31,27 +30,29 @@ class BCDScheduler : public App, public BCDCommon {
 
   void loadTrainingData(const DataConfig& train) {
     // ask the workers to load the data
-    auto load_time = tic();
-    auto confs = Postmaster::partitionData(train, sys_.yp().num_workers());
-    std::vector<Task> loads(confs.size());
-    for (int i = 0; i < confs.size(); ++i) {
-      auto bcd = loads[i].mutable_bcd();
-      bcd->set_cmd(BCDCall::LOAD_DATA);
-      *bcd->mutable_data() = confs[i];
-    }
+    // FIXME
+    // auto load_time = tic();
+    // auto confs = Postmaster::partitionData(train, sys_.yp().num_workers());
+    // std::vector<Task> loads(confs.size());
+    // for (int i = 0; i < confs.size(); ++i) {
+    //   auto bcd = loads[i].mutable_bcd();
+    //   bcd->set_cmd(BCDCall::LOAD_DATA);
+    //   *bcd->mutable_data() = confs[i];
+    // }
     int hit_cache = 0;
-    port(kWorkerGroup)->submitAndWait(loads, [this, &hit_cache](){
-        LoadDataReturn info; CHECK(info.ParseFromString(exec_.lastRecvReply()));
-        // LL << info.DebugString();
-        g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
-        hit_cache += info.hit_cache();
-      });
-    if (hit_cache > 0) {
-      CHECK_EQ(hit_cache, loads.size()) << "clear the local caches";
-      LI << "Hit local caches for the training data";
-    }
-    LI << "Loaded " << g_train_info_.num_ex() << " examples in "
-       << toc(load_time) << " sec";
+    // port(kWorkerGroup)->submitAndWait(loads, [this, &hit_cache](){
+    //     LoadDataReturn info;
+    //     CHECK(info.ParseFromString(exec_.activeMessage()->task.msg()))
+    //     // LL << info.DebugString();
+    //     g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
+    //     hit_cache += info.hit_cache();
+    //   });
+    // if (hit_cache > 0) {
+    //   CHECK_EQ(hit_cache, loads.size()) << "clear the local caches";
+    //   LI << "Hit local caches for the training data";
+    // }
+    // LI << "Loaded " << g_train_info_.num_ex() << " examples in "
+    //    << toc(load_time) << " sec";
 
 
     // preprocess the training data
@@ -130,7 +131,7 @@ class BCDScheduler : public App, public BCDCommon {
  protected:
   void mergeProgress(int iter) {
     BCDProgress recv;
-    CHECK(recv.ParseFromString(exec_.lastRecvReply()));
+    CHECK(recv.ParseFromString(exec_.activeMessage()->task.msg()));
     auto& p = g_progress_[iter];
     p.set_objective(p.objective() + recv.objective());
     p.set_nnz_w(p.nnz_w() + recv.nnz_w());

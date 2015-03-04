@@ -15,6 +15,7 @@ class App : public Customer {
   // run() is executed after all nodes have been executed init()
   virtual void run() { }
 
+ private:
 };
 
 } // namespace PS

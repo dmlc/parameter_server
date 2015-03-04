@@ -12,7 +12,7 @@ template <typename K>
 class SharedParameter : public Customer {
  public:
   SharedParameter(const string& my_name, const string& parent_name)
-      : Customer(my_name, parent_name) { }
+      : Customer(my_name) { }
   // convenient wrappers of functions in remote_node.h
   int sync(MessagePtr msg) {
     CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();

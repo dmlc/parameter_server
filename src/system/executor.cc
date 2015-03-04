@@ -6,13 +6,13 @@ namespace PS {
 DECLARE_bool(verbose);
 
 Executor::Executor(Customer& obj) : obj_(obj) {
-  my_node_ = Postoffice::instance().myNode();
+  my_node_ = Postoffice::instance().manager().van().myNode();
   // insert virtual group nodes
   for (auto id : groupIDs()) {
     Node node;
     node.set_role(Node::GROUP);
     node.set_id(id);
-    add(node);
+    addNode(node);
   }
 
   thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, this));
@@ -59,21 +59,26 @@ const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
 void Executor::copyNodesFrom(const Executor& other) {
   for (const auto& n : other.nodes_) {
     auto d = n.second.node->node_;
-    if (d.role() != Node::GROUP) add(d);
+    if (d.role() != Node::GROUP) addNode(d);
   }
 }
 
-// void Executor::remove(const Node& node) {
-//   auto id = node.id();
-//   if (nodes_.find(id) == nodes_.end()) return;
-//   RNode* w = nodes_[id].node;
-//   for (const NodeID& gid : groupIDs()) {
-//     nodes_[gid].removeSubNode(w);
-//   }
-//   nodes_.erase(id);
-// }
+void Executor::replaceNode(const Node& old_node, const Node& new_node) {
+  // TODO
+}
 
-void Executor::add(const Node& node) {
+void Executor::removeNode(const Node& node) {
+  Lock l(node_mu_);
+  auto id = node.id();
+  if (nodes_.find(id) == nodes_.end()) return;
+  RNode* w = nodes_[id].node;
+  for (const NodeID& gid : groupIDs()) {
+    nodes_[gid].removeSubNode(w);
+  }
+  nodes_.erase(id);
+}
+
+void Executor::addNode(const Node& node) {
   Lock l(node_mu_);
   if (node.id() == my_node_.id()) {
     my_node_ = node;
@@ -138,11 +143,10 @@ void Executor::add(const Node& node) {
   // }
 }
 
-string Executor::lastRecvReply() {
-  CHECK(!active_msg_->task.request());
-  CHECK_EQ(active_msg_->task.type(), Task::REPLY);
-  return active_msg_->task.msg();
-}
+// string Executor::lastRecvReply() {
+//   CHECK(!active_msg_->task.request());
+//   return active_msg_->task.msg();
+// }
 
 // a simple implementation of the DAG execution engine.
 void Executor::run() {
@@ -206,11 +210,7 @@ void Executor::run() {
     // mark it as been started in the task tracker
     if (req) sender->incoming_task_.start(t);
     // call user program to process this message if necessary
-    if (active_msg_->task.type() == Task::REPLY) {
-        CHECK(!req) << "reply message should with request == false";
-    } else {
-      obj_.process(active_msg_);
-    }
+    obj_.process(active_msg_);
     if (req) {
       // if this message is finished, then mark it in the task tracker,
       // otherwise, it is the user program's job to mark it.
@@ -296,35 +296,10 @@ void Executor::NodeInfo::removeSubNode(RNode* s) {
     if (sub_nodes[i] == s) {
       sub_nodes.erase(sub_nodes.begin() + i);
       key_ranges.erase(key_ranges.begin() + i);
+      break;
     }
   }
 }
 
-// NodeList Executor::nodes() {
-//   NodeList ret;
-//   for (const auto& n : nodes_) {
-//     auto d = n.second->node_;
-//     if (d.role() != Node::GROUP) ret.push_back(d);
-//   }
-//   return ret;
-// }
-
-// NodeList Executor::workers() {
-//   NodeList ret;
-//   for (const auto& n : nodes_) {
-//     auto d = n.second->node_;
-//     if (d.role() == Node::WORKER) ret.push_back(d);
-//   }
-//   return ret;
-// }
-
-// NodeList Executor::servers() {
-//   NodeList ret;
-//   for (const auto& n : nodes_) {
-//     auto d = n.second->node_;
-//     if (d.role() == Node::SERVER) ret.push_back(d);
-//   }
-//   return ret;
-// }
 
 } // namespace PS

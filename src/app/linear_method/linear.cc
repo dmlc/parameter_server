@@ -1,3 +1,4 @@
+#include "ps.h"
 #include "app/linear_method/linear.h"
 #include "app/linear_method/async_sgd.h"
 #include "app/linear_method/darlin.h"
@@ -6,7 +7,8 @@ namespace PS {
 namespace LM {
 
 App* createApp(const string& name, const Config& conf) {
-  auto my_role = Postoffice::instance().myNode().role();
+  // auto my_role = Postoffice::instance().myNode().role();
+  auto my_role = MyNode().role();
   App* app = nullptr;
   if (conf.has_darlin()) {
     if (my_role == Node::SCHEDULER) {
@@ -29,7 +31,7 @@ App* createApp(const string& name, const Config& conf) {
     app =  new ModelEvaluation(name, conf);
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
-             << " at " << Postoffice::instance().myNode().ShortDebugString();
+             << " at " << MyNode().ShortDebugString();
   return app;
 }
 

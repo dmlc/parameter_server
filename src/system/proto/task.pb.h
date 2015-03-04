@@ -42,20 +42,15 @@ void protobuf_AssignDesc_system_2fproto_2ftask_2eproto();
 void protobuf_ShutdownFile_system_2fproto_2ftask_2eproto();
 
 class Task;
-class ManageNode;
-class ManageApp;
+class Control;
 
 enum Task_Type {
-  Task_Type_TERMINATE = 1,
-  Task_Type_TERMINATE_CONFIRM = 2,
-  Task_Type_REPLY = 3,
-  Task_Type_MANAGE = 4,
-  Task_Type_CALL_CUSTOMER = 5,
-  Task_Type_HEARTBEATING = 6
+  Task_Type_CALL_CUSTOMER = 1,
+  Task_Type_CONTROL = 2
 };
 bool Task_Type_IsValid(int value);
-const Task_Type Task_Type_Type_MIN = Task_Type_TERMINATE;
-const Task_Type Task_Type_Type_MAX = Task_Type_HEARTBEATING;
+const Task_Type Task_Type_Type_MIN = Task_Type_CALL_CUSTOMER;
+const Task_Type Task_Type_Type_MAX = Task_Type_CONTROL;
 const int Task_Type_Type_ARRAYSIZE = Task_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Task_Type_descriptor();
@@ -68,49 +63,31 @@ inline bool Task_Type_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<Task_Type>(
     Task_Type_descriptor(), name, value);
 }
-enum ManageNode_Command {
-  ManageNode_Command_CONNECT = 1,
-  ManageNode_Command_ADD = 2,
-  ManageNode_Command_UPDATE = 3,
-  ManageNode_Command_REPLACE = 4,
-  ManageNode_Command_REMOVE = 5
+enum Control_Command {
+  Control_Command_CONNECT = 1,
+  Control_Command_STOP = 6,
+  Control_Command_HEARTBEAT = 9,
+  Control_Command_ADD = 2,
+  Control_Command_UPDATE = 3,
+  Control_Command_REPLACE = 4,
+  Control_Command_REMOVE = 5,
+  Control_Command_TERMINATE = 7,
+  Control_Command_CREATE_APP = 8
 };
-bool ManageNode_Command_IsValid(int value);
-const ManageNode_Command ManageNode_Command_Command_MIN = ManageNode_Command_CONNECT;
-const ManageNode_Command ManageNode_Command_Command_MAX = ManageNode_Command_REMOVE;
-const int ManageNode_Command_Command_ARRAYSIZE = ManageNode_Command_Command_MAX + 1;
+bool Control_Command_IsValid(int value);
+const Control_Command Control_Command_Command_MIN = Control_Command_CONNECT;
+const Control_Command Control_Command_Command_MAX = Control_Command_HEARTBEAT;
+const int Control_Command_Command_ARRAYSIZE = Control_Command_Command_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* ManageNode_Command_descriptor();
-inline const ::std::string& ManageNode_Command_Name(ManageNode_Command value) {
+const ::google::protobuf::EnumDescriptor* Control_Command_descriptor();
+inline const ::std::string& Control_Command_Name(Control_Command value) {
   return ::google::protobuf::internal::NameOfEnum(
-    ManageNode_Command_descriptor(), value);
+    Control_Command_descriptor(), value);
 }
-inline bool ManageNode_Command_Parse(
-    const ::std::string& name, ManageNode_Command* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<ManageNode_Command>(
-    ManageNode_Command_descriptor(), name, value);
-}
-enum ManageApp_Command {
-  ManageApp_Command_ADD = 1,
-  ManageApp_Command_REMOVE = 2,
-  ManageApp_Command_INIT = 4,
-  ManageApp_Command_RUN = 3,
-  ManageApp_Command_DONE = 5
-};
-bool ManageApp_Command_IsValid(int value);
-const ManageApp_Command ManageApp_Command_Command_MIN = ManageApp_Command_ADD;
-const ManageApp_Command ManageApp_Command_Command_MAX = ManageApp_Command_DONE;
-const int ManageApp_Command_Command_ARRAYSIZE = ManageApp_Command_Command_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* ManageApp_Command_descriptor();
-inline const ::std::string& ManageApp_Command_Name(ManageApp_Command value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    ManageApp_Command_descriptor(), value);
-}
-inline bool ManageApp_Command_Parse(
-    const ::std::string& name, ManageApp_Command* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<ManageApp_Command>(
-    ManageApp_Command_descriptor(), name, value);
+inline bool Control_Command_Parse(
+    const ::std::string& name, Control_Command* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Control_Command>(
+    Control_Command_descriptor(), name, value);
 }
 enum DataType {
   OTHER = 0,
@@ -196,12 +173,8 @@ class Task : public ::google::protobuf::Message {
   // nested types ----------------------------------------------------
 
   typedef Task_Type Type;
-  static const Type TERMINATE = Task_Type_TERMINATE;
-  static const Type TERMINATE_CONFIRM = Task_Type_TERMINATE_CONFIRM;
-  static const Type REPLY = Task_Type_REPLY;
-  static const Type MANAGE = Task_Type_MANAGE;
   static const Type CALL_CUSTOMER = Task_Type_CALL_CUSTOMER;
-  static const Type HEARTBEATING = Task_Type_HEARTBEATING;
+  static const Type CONTROL = Task_Type_CONTROL;
   static inline bool Type_IsValid(int value) {
     return Task_Type_IsValid(value);
   }
@@ -346,23 +319,14 @@ class Task : public ::google::protobuf::Message {
   inline ::std::string* release_msg();
   inline void set_allocated_msg(::std::string* msg);
 
-  // optional .PS.ManageNode mng_node = 18;
-  inline bool has_mng_node() const;
-  inline void clear_mng_node();
-  static const int kMngNodeFieldNumber = 18;
-  inline const ::PS::ManageNode& mng_node() const;
-  inline ::PS::ManageNode* mutable_mng_node();
-  inline ::PS::ManageNode* release_mng_node();
-  inline void set_allocated_mng_node(::PS::ManageNode* mng_node);
-
-  // optional .PS.ManageApp mng_app = 19;
-  inline bool has_mng_app() const;
-  inline void clear_mng_app();
-  static const int kMngAppFieldNumber = 19;
-  inline const ::PS::ManageApp& mng_app() const;
-  inline ::PS::ManageApp* mutable_mng_app();
-  inline ::PS::ManageApp* release_mng_app();
-  inline void set_allocated_mng_app(::PS::ManageApp* mng_app);
+  // optional .PS.Control control = 18;
+  inline bool has_control() const;
+  inline void clear_control();
+  static const int kControlFieldNumber = 18;
+  inline const ::PS::Control& control() const;
+  inline ::PS::Control* mutable_control();
+  inline ::PS::Control* release_control();
+  inline void set_allocated_control(::PS::Control* control);
 
   // optional .PS.CallSharedPara shared_para = 20;
   inline bool has_shared_para() const;
@@ -414,10 +378,8 @@ class Task : public ::google::protobuf::Message {
   inline void clear_has_key_type();
   inline void set_has_msg();
   inline void clear_has_msg();
-  inline void set_has_mng_node();
-  inline void clear_has_mng_node();
-  inline void set_has_mng_app();
-  inline void clear_has_mng_app();
+  inline void set_has_control();
+  inline void clear_has_control();
   inline void set_has_shared_para();
   inline void clear_has_shared_para();
   inline void set_has_sgd();
@@ -441,15 +403,14 @@ class Task : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedField<int> value_type_;
   ::google::protobuf::RepeatedPtrField< ::PS::FilterConfig > filter_;
   ::std::string* msg_;
-  ::PS::ManageNode* mng_node_;
-  ::PS::ManageApp* mng_app_;
+  ::PS::Control* control_;
   ::PS::CallSharedPara* shared_para_;
   ::PS::SGDCall* sgd_;
   ::PS::BCDCall* bcd_;
   int key_type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(17 + 31) / 32];
 
   friend void  protobuf_AddDesc_system_2fproto_2ftask_2eproto();
   friend void protobuf_AssignDesc_system_2fproto_2ftask_2eproto();
@@ -460,14 +421,14 @@ class Task : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class ManageNode : public ::google::protobuf::Message {
+class Control : public ::google::protobuf::Message {
  public:
-  ManageNode();
-  virtual ~ManageNode();
+  Control();
+  virtual ~Control();
 
-  ManageNode(const ManageNode& from);
+  Control(const Control& from);
 
-  inline ManageNode& operator=(const ManageNode& from) {
+  inline Control& operator=(const Control& from) {
     CopyFrom(from);
     return *this;
   }
@@ -481,17 +442,17 @@ class ManageNode : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const ManageNode& default_instance();
+  static const Control& default_instance();
 
-  void Swap(ManageNode* other);
+  void Swap(Control* other);
 
   // implements Message ----------------------------------------------
 
-  ManageNode* New() const;
+  Control* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const ManageNode& from);
-  void MergeFrom(const ManageNode& from);
+  void CopyFrom(const Control& from);
+  void MergeFrom(const Control& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -512,41 +473,45 @@ class ManageNode : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef ManageNode_Command Command;
-  static const Command CONNECT = ManageNode_Command_CONNECT;
-  static const Command ADD = ManageNode_Command_ADD;
-  static const Command UPDATE = ManageNode_Command_UPDATE;
-  static const Command REPLACE = ManageNode_Command_REPLACE;
-  static const Command REMOVE = ManageNode_Command_REMOVE;
+  typedef Control_Command Command;
+  static const Command CONNECT = Control_Command_CONNECT;
+  static const Command STOP = Control_Command_STOP;
+  static const Command HEARTBEAT = Control_Command_HEARTBEAT;
+  static const Command ADD = Control_Command_ADD;
+  static const Command UPDATE = Control_Command_UPDATE;
+  static const Command REPLACE = Control_Command_REPLACE;
+  static const Command REMOVE = Control_Command_REMOVE;
+  static const Command TERMINATE = Control_Command_TERMINATE;
+  static const Command CREATE_APP = Control_Command_CREATE_APP;
   static inline bool Command_IsValid(int value) {
-    return ManageNode_Command_IsValid(value);
+    return Control_Command_IsValid(value);
   }
   static const Command Command_MIN =
-    ManageNode_Command_Command_MIN;
+    Control_Command_Command_MIN;
   static const Command Command_MAX =
-    ManageNode_Command_Command_MAX;
+    Control_Command_Command_MAX;
   static const int Command_ARRAYSIZE =
-    ManageNode_Command_Command_ARRAYSIZE;
+    Control_Command_Command_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor*
   Command_descriptor() {
-    return ManageNode_Command_descriptor();
+    return Control_Command_descriptor();
   }
   static inline const ::std::string& Command_Name(Command value) {
-    return ManageNode_Command_Name(value);
+    return Control_Command_Name(value);
   }
   static inline bool Command_Parse(const ::std::string& name,
       Command* value) {
-    return ManageNode_Command_Parse(name, value);
+    return Control_Command_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
 
-  // required .PS.ManageNode.Command cmd = 1;
+  // required .PS.Control.Command cmd = 1;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 1;
-  inline ::PS::ManageNode_Command cmd() const;
-  inline void set_cmd(::PS::ManageNode_Command value);
+  inline ::PS::Control_Command cmd() const;
+  inline void set_cmd(::PS::Control_Command value);
 
   // repeated .PS.Node node = 2;
   inline int node_size() const;
@@ -560,149 +525,40 @@ class ManageNode : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
       mutable_node();
 
-  // @@protoc_insertion_point(class_scope:PS.ManageNode)
+  // optional string app_conf = 3;
+  inline bool has_app_conf() const;
+  inline void clear_app_conf();
+  static const int kAppConfFieldNumber = 3;
+  inline const ::std::string& app_conf() const;
+  inline void set_app_conf(const ::std::string& value);
+  inline void set_app_conf(const char* value);
+  inline void set_app_conf(const char* value, size_t size);
+  inline ::std::string* mutable_app_conf();
+  inline ::std::string* release_app_conf();
+  inline void set_allocated_app_conf(::std::string* app_conf);
+
+  // @@protoc_insertion_point(class_scope:PS.Control)
  private:
   inline void set_has_cmd();
   inline void clear_has_cmd();
+  inline void set_has_app_conf();
+  inline void clear_has_app_conf();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::RepeatedPtrField< ::PS::Node > node_;
+  ::std::string* app_conf_;
   int cmd_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
 
   friend void  protobuf_AddDesc_system_2fproto_2ftask_2eproto();
   friend void protobuf_AssignDesc_system_2fproto_2ftask_2eproto();
   friend void protobuf_ShutdownFile_system_2fproto_2ftask_2eproto();
 
   void InitAsDefaultInstance();
-  static ManageNode* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ManageApp : public ::google::protobuf::Message {
- public:
-  ManageApp();
-  virtual ~ManageApp();
-
-  ManageApp(const ManageApp& from);
-
-  inline ManageApp& operator=(const ManageApp& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const ManageApp& default_instance();
-
-  void Swap(ManageApp* other);
-
-  // implements Message ----------------------------------------------
-
-  ManageApp* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const ManageApp& from);
-  void MergeFrom(const ManageApp& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef ManageApp_Command Command;
-  static const Command ADD = ManageApp_Command_ADD;
-  static const Command REMOVE = ManageApp_Command_REMOVE;
-  static const Command INIT = ManageApp_Command_INIT;
-  static const Command RUN = ManageApp_Command_RUN;
-  static const Command DONE = ManageApp_Command_DONE;
-  static inline bool Command_IsValid(int value) {
-    return ManageApp_Command_IsValid(value);
-  }
-  static const Command Command_MIN =
-    ManageApp_Command_Command_MIN;
-  static const Command Command_MAX =
-    ManageApp_Command_Command_MAX;
-  static const int Command_ARRAYSIZE =
-    ManageApp_Command_Command_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Command_descriptor() {
-    return ManageApp_Command_descriptor();
-  }
-  static inline const ::std::string& Command_Name(Command value) {
-    return ManageApp_Command_Name(value);
-  }
-  static inline bool Command_Parse(const ::std::string& name,
-      Command* value) {
-    return ManageApp_Command_Parse(name, value);
-  }
-
-  // accessors -------------------------------------------------------
-
-  // required .PS.ManageApp.Command cmd = 1;
-  inline bool has_cmd() const;
-  inline void clear_cmd();
-  static const int kCmdFieldNumber = 1;
-  inline ::PS::ManageApp_Command cmd() const;
-  inline void set_cmd(::PS::ManageApp_Command value);
-
-  // optional string conf = 2;
-  inline bool has_conf() const;
-  inline void clear_conf();
-  static const int kConfFieldNumber = 2;
-  inline const ::std::string& conf() const;
-  inline void set_conf(const ::std::string& value);
-  inline void set_conf(const char* value);
-  inline void set_conf(const char* value, size_t size);
-  inline ::std::string* mutable_conf();
-  inline ::std::string* release_conf();
-  inline void set_allocated_conf(::std::string* conf);
-
-  // @@protoc_insertion_point(class_scope:PS.ManageApp)
- private:
-  inline void set_has_cmd();
-  inline void clear_has_cmd();
-  inline void set_has_conf();
-  inline void clear_has_conf();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* conf_;
-  int cmd_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_system_2fproto_2ftask_2eproto();
-  friend void protobuf_AssignDesc_system_2fproto_2ftask_2eproto();
-  friend void protobuf_ShutdownFile_system_2fproto_2ftask_2eproto();
-
-  void InitAsDefaultInstance();
-  static ManageApp* default_instance_;
+  static Control* default_instance_;
 };
 // ===================================================================
 
@@ -722,7 +578,7 @@ inline void Task::clear_has_type() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void Task::clear_type() {
-  type_ = 5;
+  type_ = 1;
   clear_has_type();
 }
 inline ::PS::Task_Type Task::type() const {
@@ -1170,91 +1026,53 @@ inline void Task::set_allocated_msg(::std::string* msg) {
   }
 }
 
-// optional .PS.ManageNode mng_node = 18;
-inline bool Task::has_mng_node() const {
+// optional .PS.Control control = 18;
+inline bool Task::has_control() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
-inline void Task::set_has_mng_node() {
+inline void Task::set_has_control() {
   _has_bits_[0] |= 0x00002000u;
 }
-inline void Task::clear_has_mng_node() {
+inline void Task::clear_has_control() {
   _has_bits_[0] &= ~0x00002000u;
 }
-inline void Task::clear_mng_node() {
-  if (mng_node_ != NULL) mng_node_->::PS::ManageNode::Clear();
-  clear_has_mng_node();
+inline void Task::clear_control() {
+  if (control_ != NULL) control_->::PS::Control::Clear();
+  clear_has_control();
 }
-inline const ::PS::ManageNode& Task::mng_node() const {
-  return mng_node_ != NULL ? *mng_node_ : *default_instance_->mng_node_;
+inline const ::PS::Control& Task::control() const {
+  return control_ != NULL ? *control_ : *default_instance_->control_;
 }
-inline ::PS::ManageNode* Task::mutable_mng_node() {
-  set_has_mng_node();
-  if (mng_node_ == NULL) mng_node_ = new ::PS::ManageNode;
-  return mng_node_;
+inline ::PS::Control* Task::mutable_control() {
+  set_has_control();
+  if (control_ == NULL) control_ = new ::PS::Control;
+  return control_;
 }
-inline ::PS::ManageNode* Task::release_mng_node() {
-  clear_has_mng_node();
-  ::PS::ManageNode* temp = mng_node_;
-  mng_node_ = NULL;
+inline ::PS::Control* Task::release_control() {
+  clear_has_control();
+  ::PS::Control* temp = control_;
+  control_ = NULL;
   return temp;
 }
-inline void Task::set_allocated_mng_node(::PS::ManageNode* mng_node) {
-  delete mng_node_;
-  mng_node_ = mng_node;
-  if (mng_node) {
-    set_has_mng_node();
+inline void Task::set_allocated_control(::PS::Control* control) {
+  delete control_;
+  control_ = control;
+  if (control) {
+    set_has_control();
   } else {
-    clear_has_mng_node();
-  }
-}
-
-// optional .PS.ManageApp mng_app = 19;
-inline bool Task::has_mng_app() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
-}
-inline void Task::set_has_mng_app() {
-  _has_bits_[0] |= 0x00004000u;
-}
-inline void Task::clear_has_mng_app() {
-  _has_bits_[0] &= ~0x00004000u;
-}
-inline void Task::clear_mng_app() {
-  if (mng_app_ != NULL) mng_app_->::PS::ManageApp::Clear();
-  clear_has_mng_app();
-}
-inline const ::PS::ManageApp& Task::mng_app() const {
-  return mng_app_ != NULL ? *mng_app_ : *default_instance_->mng_app_;
-}
-inline ::PS::ManageApp* Task::mutable_mng_app() {
-  set_has_mng_app();
-  if (mng_app_ == NULL) mng_app_ = new ::PS::ManageApp;
-  return mng_app_;
-}
-inline ::PS::ManageApp* Task::release_mng_app() {
-  clear_has_mng_app();
-  ::PS::ManageApp* temp = mng_app_;
-  mng_app_ = NULL;
-  return temp;
-}
-inline void Task::set_allocated_mng_app(::PS::ManageApp* mng_app) {
-  delete mng_app_;
-  mng_app_ = mng_app;
-  if (mng_app) {
-    set_has_mng_app();
-  } else {
-    clear_has_mng_app();
+    clear_has_control();
   }
 }
 
 // optional .PS.CallSharedPara shared_para = 20;
 inline bool Task::has_shared_para() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Task::set_has_shared_para() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Task::clear_has_shared_para() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Task::clear_shared_para() {
   if (shared_para_ != NULL) shared_para_->::PS::CallSharedPara::Clear();
@@ -1286,13 +1104,13 @@ inline void Task::set_allocated_shared_para(::PS::CallSharedPara* shared_para) {
 
 // optional .PS.SGDCall sgd = 21;
 inline bool Task::has_sgd() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Task::set_has_sgd() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Task::clear_has_sgd() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Task::clear_sgd() {
   if (sgd_ != NULL) sgd_->::PS::SGDCall::Clear();
@@ -1324,13 +1142,13 @@ inline void Task::set_allocated_sgd(::PS::SGDCall* sgd) {
 
 // optional .PS.BCDCall bcd = 22;
 inline bool Task::has_bcd() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void Task::set_has_bcd() {
-  _has_bits_[0] |= 0x00020000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void Task::clear_has_bcd() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Task::clear_bcd() {
   if (bcd_ != NULL) bcd_->::PS::BCDCall::Clear();
@@ -1362,150 +1180,123 @@ inline void Task::set_allocated_bcd(::PS::BCDCall* bcd) {
 
 // -------------------------------------------------------------------
 
-// ManageNode
+// Control
 
-// required .PS.ManageNode.Command cmd = 1;
-inline bool ManageNode::has_cmd() const {
+// required .PS.Control.Command cmd = 1;
+inline bool Control::has_cmd() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void ManageNode::set_has_cmd() {
+inline void Control::set_has_cmd() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void ManageNode::clear_has_cmd() {
+inline void Control::clear_has_cmd() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void ManageNode::clear_cmd() {
+inline void Control::clear_cmd() {
   cmd_ = 1;
   clear_has_cmd();
 }
-inline ::PS::ManageNode_Command ManageNode::cmd() const {
-  return static_cast< ::PS::ManageNode_Command >(cmd_);
+inline ::PS::Control_Command Control::cmd() const {
+  return static_cast< ::PS::Control_Command >(cmd_);
 }
-inline void ManageNode::set_cmd(::PS::ManageNode_Command value) {
-  assert(::PS::ManageNode_Command_IsValid(value));
+inline void Control::set_cmd(::PS::Control_Command value) {
+  assert(::PS::Control_Command_IsValid(value));
   set_has_cmd();
   cmd_ = value;
 }
 
 // repeated .PS.Node node = 2;
-inline int ManageNode::node_size() const {
+inline int Control::node_size() const {
   return node_.size();
 }
-inline void ManageNode::clear_node() {
+inline void Control::clear_node() {
   node_.Clear();
 }
-inline const ::PS::Node& ManageNode::node(int index) const {
+inline const ::PS::Node& Control::node(int index) const {
   return node_.Get(index);
 }
-inline ::PS::Node* ManageNode::mutable_node(int index) {
+inline ::PS::Node* Control::mutable_node(int index) {
   return node_.Mutable(index);
 }
-inline ::PS::Node* ManageNode::add_node() {
+inline ::PS::Node* Control::add_node() {
   return node_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::PS::Node >&
-ManageNode::node() const {
+Control::node() const {
   return node_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::PS::Node >*
-ManageNode::mutable_node() {
+Control::mutable_node() {
   return &node_;
 }
 
-// -------------------------------------------------------------------
-
-// ManageApp
-
-// required .PS.ManageApp.Command cmd = 1;
-inline bool ManageApp::has_cmd() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
+// optional string app_conf = 3;
+inline bool Control::has_app_conf() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void ManageApp::set_has_cmd() {
-  _has_bits_[0] |= 0x00000001u;
+inline void Control::set_has_app_conf() {
+  _has_bits_[0] |= 0x00000004u;
 }
-inline void ManageApp::clear_has_cmd() {
-  _has_bits_[0] &= ~0x00000001u;
+inline void Control::clear_has_app_conf() {
+  _has_bits_[0] &= ~0x00000004u;
 }
-inline void ManageApp::clear_cmd() {
-  cmd_ = 1;
-  clear_has_cmd();
-}
-inline ::PS::ManageApp_Command ManageApp::cmd() const {
-  return static_cast< ::PS::ManageApp_Command >(cmd_);
-}
-inline void ManageApp::set_cmd(::PS::ManageApp_Command value) {
-  assert(::PS::ManageApp_Command_IsValid(value));
-  set_has_cmd();
-  cmd_ = value;
-}
-
-// optional string conf = 2;
-inline bool ManageApp::has_conf() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ManageApp::set_has_conf() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ManageApp::clear_has_conf() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ManageApp::clear_conf() {
-  if (conf_ != &::google::protobuf::internal::kEmptyString) {
-    conf_->clear();
+inline void Control::clear_app_conf() {
+  if (app_conf_ != &::google::protobuf::internal::kEmptyString) {
+    app_conf_->clear();
   }
-  clear_has_conf();
+  clear_has_app_conf();
 }
-inline const ::std::string& ManageApp::conf() const {
-  return *conf_;
+inline const ::std::string& Control::app_conf() const {
+  return *app_conf_;
 }
-inline void ManageApp::set_conf(const ::std::string& value) {
-  set_has_conf();
-  if (conf_ == &::google::protobuf::internal::kEmptyString) {
-    conf_ = new ::std::string;
+inline void Control::set_app_conf(const ::std::string& value) {
+  set_has_app_conf();
+  if (app_conf_ == &::google::protobuf::internal::kEmptyString) {
+    app_conf_ = new ::std::string;
   }
-  conf_->assign(value);
+  app_conf_->assign(value);
 }
-inline void ManageApp::set_conf(const char* value) {
-  set_has_conf();
-  if (conf_ == &::google::protobuf::internal::kEmptyString) {
-    conf_ = new ::std::string;
+inline void Control::set_app_conf(const char* value) {
+  set_has_app_conf();
+  if (app_conf_ == &::google::protobuf::internal::kEmptyString) {
+    app_conf_ = new ::std::string;
   }
-  conf_->assign(value);
+  app_conf_->assign(value);
 }
-inline void ManageApp::set_conf(const char* value, size_t size) {
-  set_has_conf();
-  if (conf_ == &::google::protobuf::internal::kEmptyString) {
-    conf_ = new ::std::string;
+inline void Control::set_app_conf(const char* value, size_t size) {
+  set_has_app_conf();
+  if (app_conf_ == &::google::protobuf::internal::kEmptyString) {
+    app_conf_ = new ::std::string;
   }
-  conf_->assign(reinterpret_cast<const char*>(value), size);
+  app_conf_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* ManageApp::mutable_conf() {
-  set_has_conf();
-  if (conf_ == &::google::protobuf::internal::kEmptyString) {
-    conf_ = new ::std::string;
+inline ::std::string* Control::mutable_app_conf() {
+  set_has_app_conf();
+  if (app_conf_ == &::google::protobuf::internal::kEmptyString) {
+    app_conf_ = new ::std::string;
   }
-  return conf_;
+  return app_conf_;
 }
-inline ::std::string* ManageApp::release_conf() {
-  clear_has_conf();
-  if (conf_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* Control::release_app_conf() {
+  clear_has_app_conf();
+  if (app_conf_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = conf_;
-    conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = app_conf_;
+    app_conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void ManageApp::set_allocated_conf(::std::string* conf) {
-  if (conf_ != &::google::protobuf::internal::kEmptyString) {
-    delete conf_;
+inline void Control::set_allocated_app_conf(::std::string* app_conf) {
+  if (app_conf_ != &::google::protobuf::internal::kEmptyString) {
+    delete app_conf_;
   }
-  if (conf) {
-    set_has_conf();
-    conf_ = conf;
+  if (app_conf) {
+    set_has_app_conf();
+    app_conf_ = app_conf;
   } else {
-    clear_has_conf();
-    conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_app_conf();
+    app_conf_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
@@ -1523,12 +1314,8 @@ inline const EnumDescriptor* GetEnumDescriptor< ::PS::Task_Type>() {
   return ::PS::Task_Type_descriptor();
 }
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageNode_Command>() {
-  return ::PS::ManageNode_Command_descriptor();
-}
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::PS::ManageApp_Command>() {
-  return ::PS::ManageApp_Command_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::PS::Control_Command>() {
+  return ::PS::Control_Command_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PS::DataType>() {

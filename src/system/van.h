@@ -3,18 +3,17 @@
 #include "util/status.h"
 #include "system/proto/node.pb.h"
 #include "system/message.h"
-
 namespace PS {
 
-DECLARE_string(my_node);
 // Van sends (receives) packages to (from) a node
 // The current implementation uses ZeroMQ
+// TODO use VLOG
 class Van {
  public:
-  Van() : context_(nullptr), receiver_(nullptr) {}
-  ~Van() { }
+  Van() { }
+  ~Van();
+
   void init();
-  void destroy();
 
   void disconnect(const Node&  node);
   Status connect(const Node&  node);
@@ -29,29 +28,25 @@ class Van {
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };
 
+ private:
+  // bind to my port
+  void bind();
   // utility functions for node
   static Node parseNode(const string& config) {
     Node node; CHECK(TextFormat::ParseFromString(config, &node));
-    if (!node.has_id()) node.set_id(id(address(node)));
+    if (!node.has_id()) node.set_id(address(node));
     return node;
   }
-
+  // helper
   static std::string address(const Node& node) {
     return node.hostname() + ":" + std::to_string(node.port());
   }
-  static const NodeID id(const std::string& name) {
-    return name;
-  }
-
   // print statistic info
   void statistic();
+  Node assembleMyNode();
 
- private:
-  DISALLOW_COPY_AND_ASSIGN(Van);
-  // bind to my port
-  void bind();
-  void *context_;
-  void *receiver_;
+  void *context_ = nullptr;
+  void *receiver_ = nullptr;
   Node my_node_;
   Node scheduler_;
   std::mutex mu_;
@@ -64,10 +59,8 @@ class Van {
   size_t received_from_others_ = 0;
 
   std::ofstream debug_out_;
-//   #ifndef debug_out_
-// #define debug_out_ std::cerr
-//   #endif
-  Node assembleMyNode();
+
+  DISALLOW_COPY_AND_ASSIGN(Van);
 };
 
 } // namespace PS

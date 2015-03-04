@@ -3,12 +3,10 @@
 #include <zmq.h>
 #include "util/shared_array_inl.h"
 #include "util/local_machine.h"
-
 namespace PS {
 
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
-DEFINE_string(server_master, "", "the master of servers");
 DEFINE_bool(print_van, false, "");
 DEFINE_int32(bind_to, 0, "binding port");
 DEFINE_int32(my_rank, -1, "my rank among MPI peers");
@@ -17,8 +15,14 @@ DEFINE_string(interface, "", "network interface");
 DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
 
-void Van::init() {
+Van::~Van() {
+  statistic();
+  for (auto& it : senders_) zmq_close (it.second);
+  zmq_close (receiver_);
+  zmq_ctx_destroy (context_);
+}
 
+void Van::init() {
   scheduler_ = parseNode(FLAGS_scheduler);
   if (FLAGS_my_rank < 0) {
     my_node_ = parseNode(FLAGS_my_node);
@@ -32,23 +36,17 @@ void Van::init() {
   }
 
   context_ = zmq_ctx_new();
-  // TODO the following does not work...
-  // zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 1000000);
-  // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
-  // LL << "ZMQ_MAX_SOCKETS: " << zmq_ctx_get(context_, ZMQ_MAX_SOCKETS);
-
   CHECK(context_ != NULL) << "create 0mq context failed";
+
+  // one need to "sudo ulimit -n 65536" or edit /etc/security/limits.conf
+  zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 65536);
+  // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
+
   bind();
   connect(my_node_);
   connect(scheduler_);
-
 }
 
-void Van::destroy() {
-  for (auto& it : senders_) zmq_close (it.second);
-  zmq_close (receiver_);
-  zmq_ctx_destroy (context_);
-}
 
 void Van::bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
@@ -57,11 +55,9 @@ void Van::bind() {
   string addr = "tcp://*:";
   if (FLAGS_bind_to) {
     addr += std::to_string(FLAGS_bind_to);
-  }
-  else {
+  } else {
     CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
     addr += std::to_string(my_node_.port());
-    // string addr = "tcp://" + address(my_node_);
   }
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
@@ -189,7 +185,7 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
     data_size += size;
     if (i == 0) {
       // identify
-      sender = id(std::string(buf, size));
+      sender = std::string(buf, size);
       msg->sender = sender;
       msg->recver = my_node_.id();
     } else if (i == 1) {
@@ -223,13 +219,13 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
 }
 
 void Van::statistic() {
-  if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
+  // if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
   auto gb = [](size_t x) { return  x / 1e9; };
-  LI << my_node_.id()
-     << " sent " << gb(sent_to_local_ + sent_to_others_)
-     << " (local " << gb(sent_to_local_) << ") Gbyte,"
-     << " received " << gb(received_from_local_ + received_from_others_)
-     << " (local " << gb(received_from_local_) << ") Gbyte";
+  LOG(INFO) << my_node_.id()
+            << " sent " << gb(sent_to_local_ + sent_to_others_)
+            << " (local " << gb(sent_to_local_) << ") Gbyte,"
+            << " received " << gb(received_from_local_ + received_from_others_)
+            << " (local " << gb(received_from_local_) << ") Gbyte";
 }
 
 Node Van::assembleMyNode() {
