@@ -31,8 +31,9 @@ sys_srcs	= $(wildcard $(patsubst %, %/*.cc, $(sys_dir)))
 sys_protos	= $(wildcard $(patsubst %, %/proto/*.proto, $(sys_dir)))
 sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
 			  $(patsubst src/%.cc, build/%.o, $(sys_srcs))
-build/libps.a: $(sys_objs)
-	ar crv $@ $?
+
+build/libps.a: $(patsubst %.proto, %.pb.h, $(sys_protos)) $(sys_objs)
+	ar crv $@ $(filter %.o, $?)
 
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
