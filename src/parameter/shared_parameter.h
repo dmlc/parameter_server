@@ -7,6 +7,9 @@ namespace PS {
 template <typename K> class SharedParameter;
 template <typename K> using SharedParameterPtr = std::shared_ptr<SharedParameter<K>>;
 
+
+DECLARE_int32(num_workers);
+
 // the base class of shared parameters
 template <typename K>
 class SharedParameter : public Customer {

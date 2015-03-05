@@ -6,14 +6,8 @@
 #include "system/assigner.h"
 namespace PS {
 
-DECLARE_int32(num_servers);
-DECLARE_int32(num_workers);
-DECLARE_int32(num_replicas);
-
 class App;
 class Customer;
-
-// TODO
 
 class Manager {
  public:

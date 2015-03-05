@@ -1,14 +1,11 @@
-/data
+example/linear/data/*
 /build
-/lib
-/bin
 /third_party
 /output
 /cache
 /log
-*.d
-*.o
 *.pb.cc
 *.pb.h
 .*
 /script/van*
+config.mk

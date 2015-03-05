@@ -23,7 +23,7 @@ clean:
 	rm -rf build
 
 ps: $(PS_LIB) $(PS_MAIN)
-app: build/ps
+app: build/linear
 
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
@@ -41,7 +41,7 @@ build/libpsmain.a: build/ps_main.o
 
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/proto/linear.pb.o linear_method/linear.o )
 
-build/ps: $(app_objs)  build/app/main/main.o $(PS_LIB)
+build/linear: $(app_objs)  build/app/main/main.o $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 build/%.o: src/%.cc
