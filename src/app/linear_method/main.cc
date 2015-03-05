@@ -1,13 +1,19 @@
+#include "google/protobuf/text_format.h"
 #include "ps.h"
 #include "app/linear_method/linear.h"
 #include "app/linear_method/async_sgd.h"
 #include "app/linear_method/darlin.h"
 #include "app/linear_method/model_evaluation.h"
-namespace PS {
-namespace LM {
 
-App* createApp(const string& name, const Config& conf) {
-  // auto my_role = Postoffice::instance().myNode().role();
+namespace PS {
+App* App::create(const string& name, const string& conf_str) {
+  using namespace LM;
+  // parse config
+  Config conf;
+  CHECK(google::protobuf::TextFormat::ParseFromString(conf_str, &conf))
+      << " failed to parse conf: " << conf.ShortDebugString();
+
+  // create app
   auto my_role = MyNode().role();
   App* app = nullptr;
   if (conf.has_darlin()) {
@@ -34,6 +40,10 @@ App* createApp(const string& name, const Config& conf) {
              << " at " << MyNode().ShortDebugString();
   return app;
 }
-
-} // namespace LM
 } // namespace PS
+
+int main(int argc, char *argv[]) {
+  PS::Postoffice::instance().run(&argc, &argv);
+  PS::Postoffice::instance().stop();
+  return 0;
+}

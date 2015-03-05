@@ -42,9 +42,7 @@ build/libpsmain.a: build/ps_main.o
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/proto/linear.pb.o linear_method/linear.o )
-
-build/linear: $(app_objs)  build/app/main/main.o $(PS_LIB)
+build/linear: $(addprefix build/app/linear_method/, proto/linear.pb.o main.o) $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 # general rules
