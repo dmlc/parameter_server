@@ -7,7 +7,7 @@ namespace PS {
 
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
-DEFINE_bool(print_van, false, "");
+// DEFINE_bool(print_van, false, "");
 DEFINE_int32(bind_to, 0, "binding port");
 DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
@@ -30,10 +30,6 @@ void Van::init() {
     my_node_ = assembleMyNode();
   }
 
-  if (FLAGS_print_van) {
-    debug_out_.open("van_"+my_node_.id());
-    // LI << "I am [" << my_node_.ShortDebugString() << "]; pid:" << getpid();
-  }
 
   context_ = zmq_ctx_new();
   CHECK(context_ != NULL) << "create 0mq context failed";
@@ -62,9 +58,8 @@ void Van::bind() {
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-  if (FLAGS_print_van) {
-    debug_out_ << my_node_.id() << ": binds address " << addr << std::endl;
-  }
+  VLOG(2) << my_node_.id() << ": binds address " << addr;
+
 }
 
 void Van::disconnect(const Node& node) {
@@ -101,10 +96,7 @@ Status Van::connect(const Node& node) {
   senders_[id] = sender;
   hostnames_[id] = node.hostname();
 
-  if (FLAGS_print_van) {
-    debug_out_ << my_node_.id() << ": connect to " << id
-               << " [" << addr << "]" << std::endl;
-  }
+  VLOG(2) << my_node_.id() << ": connect to " << id << " [" << addr << "]";
   return Status::OK();
 }
 
@@ -159,9 +151,7 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
   } else {
     sent_to_others_ += data_size;
   }
-  if (FLAGS_print_van) {
-    debug_out_ << "|>>>   " << msg->shortDebugString()<< std::endl;
-  }
+  VLOG(2) << ">>>   " << msg->shortDebugString();
   return Status::OK();
 }
 
@@ -212,9 +202,7 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   } else {
     received_from_others_ += data_size;
   }
-  if (FLAGS_print_van) {
-    debug_out_ << "|<<<   " << msg->shortDebugString() << std::endl;
-  }
+  VLOG(2) << "|<<<   " << msg->shortDebugString();
   return Status::OK();;
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+#include "ps.h"
 #include "learner/sgd.h"
 #include "util/evaluation.h"
 #include "parameter/kv_vector.h"
@@ -22,6 +23,9 @@ class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
   virtual ~AsyncSGDScheduler() { }
 
   virtual void run() {
+    WaitServersReady();
+    WaitWorkersReady();
+
     updateModel(conf_.training_data(), conf_.async_sgd().report_interval());
     saveModel();
   }
@@ -123,8 +127,6 @@ struct FTRLEntry {
   }
 };
 
-
-
 template <typename V>
 class AsyncSGDServer : public ISGDCompNode, public LinearMethod {
 public:
@@ -139,13 +141,7 @@ public:
         model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
       }
     }
-  }
 
-  virtual ~AsyncSGDServer() {
-    delete model_;
-  }
-
-  void init() {
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     state.reporter = &(this->reporter_);
     CHECK_NOTNULL(model_)->setState(state);
@@ -156,6 +152,9 @@ public:
         conf_.async_sgd().countmin_k());
   }
 
+  virtual ~AsyncSGDServer() {
+    delete model_;
+  }
 
   void saveModel() {
     auto output = conf_.model_output();
@@ -195,6 +194,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
   }
 
   void updateModel(const SGDCall& call) {
+    WaitServersReady();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
 

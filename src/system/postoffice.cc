@@ -27,10 +27,11 @@ void Postoffice::run(int* argc, char*** argv) {
   google::InitGoogleLogging((*argv)[0]);
   google::ParseCommandLineFlags(argc, argv, true);
 
+  manager_.init((*argv)[0]);
+
   if (FLAGS_report_interval > 0) {
     perf_monitor_.init(FLAGS_interface, manager_.van().myNode().hostname());
   }
-  manager_.init();
 
   // start the I/O threads
   recv_thread_ =

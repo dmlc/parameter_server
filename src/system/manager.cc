@@ -1,4 +1,5 @@
 #include "system/manager.h"
+#include <libgen.h>
 #include "system/postoffice.h"
 #include "system/app.h"
 namespace PS {
@@ -16,6 +17,10 @@ DECLARE_int32(report_interval);
 
 DEFINE_bool(verbose, false, "");
 
+// namespace google {
+// DECLARE_string(log_dir);
+// } // namespace google
+
 Manager::Manager() {
   node_assigner_ = new NodeAssigner(FLAGS_num_workers);
 }
@@ -28,8 +33,21 @@ Manager::~Manager() {
   }
 }
 
-void Manager::init() {
+void Manager::init(char* argv0) {
   van_.init();
+
+  // change the hostname in default log filename to node id
+  string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
+                   + "." + van_.myNode().id() + ".log.";
+  google::SetLogDestination(google::INFO, (logfile+"INFO.").c_str());
+  google::SetLogDestination(google::WARNING, (logfile+"WARNING.").c_str());
+  google::SetLogDestination(google::ERROR, (logfile+"ERROR.").c_str());
+  google::SetLogDestination(google::FATAL, (logfile+"FATAL.").c_str());
+  google::SetLogSymlink(google::INFO, "");
+  google::SetLogSymlink(google::WARNING, "");
+  google::SetLogSymlink(google::ERROR, "");
+  google::SetLogSymlink(google::FATAL, "");
+
   if (isScheduler()) {
     // create the app
     if (!FLAGS_app_file.empty()) {
@@ -78,59 +96,33 @@ void Manager::stop() {
 bool Manager::process(const MessagePtr& msg) {
   const Task& tk = msg->task;
   CHECK_EQ(tk.type(), Task::CONTROL);
+  if (!tk.request()) return true;
+
   CHECK(tk.has_control());
   const auto& ctrl = tk.control();
+  switch (ctrl.cmd()) {
+    case Control::CONNECT: {  // a node => scheduler
+      // create the app in sender
+      CHECK(isScheduler());
+      CHECK_EQ(ctrl.node_size(), 1);
+      Node sender = ctrl.node(0);
+      Task app = newControlTask(Control::CREATE_APP, app_->name());
+      app.mutable_control()->set_app_conf(app_conf_);
+      sendTask(sender, app);
 
-  if (tk.request()) {
-    switch (ctrl.cmd()) {
-      case Control::CONNECT: {  // a node => scheduler
-        // create the app in sender
-        CHECK(isScheduler());
-        CHECK_EQ(ctrl.node_size(), 1);
-        Node sender = ctrl.node(0);
-        Task app = newControlTask(Control::CREATE_APP, app_->name());
-        app.mutable_control()->set_app_conf(app_conf_);
-        sendTask(sender, app);
-
-        // only connect this sender, but do not add it to system at this moment
-        van_.connect(sender);
-        // save the sender info
-        new_nodes_[sender.id()] = sender;
-        break;
-      }
-      case Control::CREATE_APP: {  // scheduler => a node
-        createApp(tk.customer(), ctrl.app_conf());
-        break;
-      }
-      case Control::HEARTBEAT: {  // a node => scheduler
-        // TODO
-        break;
-      }
-      case Control::ADD:
-      case Control::UPDATE: {  // scheduler => a node
-        for (int i = 0; i < ctrl.node_size(); ++i) {
-          addNode(ctrl.node(i));
-        }
-        break;
-      }
-      case Control::REPLACE: {
-        break;
-      }
-      case Control::REMOVE: {
-        break;
-      }
-      case Control::STOP: {  // a node => scheduler
-        -- num_active_nodes_;
-      }
-      case Control::TERMINATE: {  // scheduler => a node
-        done_ = true;
-        return false;
-      }
+      // only connect this sender, but do not add it to system at this moment
+      van_.connect(sender);
+      // save the sender info
+      new_nodes_[sender.id()] = sender;
+      break;
     }
-    // reply a message
-    Postoffice::instance().reply(msg->sender, msg->task);
-  } else {
-    if (ctrl.cmd() == Control::CREATE_APP) { // node => scheduler
+    case Control::CREATE_APP: {  // scheduler => a node
+      createApp(tk.customer(), ctrl.app_conf());
+      Task suss = newControlTask(Control::CREATE_APP_SUCCESS, app_->name());
+      sendTask(msg->sender, suss);
+      break;
+    }
+    case Control::CREATE_APP_SUCCESS: { // node => scheduler
       // add the sender into system
       CHECK(isScheduler());
       auto it = new_nodes_.find(msg->sender);
@@ -156,8 +148,35 @@ bool Manager::process(const MessagePtr& msg) {
         *add_node.mutable_control()->add_node() = sender;
         sendTask(it.second, add_new_node);
       }
+      break;
+    }
+    case Control::HEARTBEAT: {  // a node => scheduler
+      // TODO
+      break;
+    }
+    case Control::ADD:
+    case Control::UPDATE: {  // scheduler => a node
+      for (int i = 0; i < ctrl.node_size(); ++i) {
+        addNode(ctrl.node(i));
+      }
+      break;
+    }
+    case Control::REPLACE: {
+      break;
+    }
+    case Control::REMOVE: {
+      break;
+    }
+    case Control::STOP: {  // a node => scheduler
+      -- num_active_nodes_;
+    }
+    case Control::TERMINATE: {  // scheduler => a node
+      done_ = true;
+      return false;
     }
   }
+  // reply a message
+  Postoffice::instance().reply(msg->sender, msg->task);
   return true;
 }
 
@@ -208,9 +227,9 @@ Task Manager::newControlTask(Control::Command cmd, const string& customer_id) {
   return task;
 }
 
-void Manager::sendTask(const Node& recver, const Task& task) {
+void Manager::sendTask(const NodeID& recver, const Task& task) {
   MessagePtr msg(new Message(task));
-  msg->recver = recver.id();
+  msg->recver = recver;
   Postoffice::instance().queue(msg);
 }
 

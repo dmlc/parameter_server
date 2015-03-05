@@ -59,6 +59,7 @@ message Control {
     REMOVE = 5;
     TERMINATE = 7;
     CREATE_APP = 8;
+    CREATE_APP_SUCCESS = 10;
   }
   required Command cmd = 1;
   repeated Node node = 2;

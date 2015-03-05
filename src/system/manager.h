@@ -14,7 +14,7 @@ class Manager {
   Manager();
   ~Manager();
 
-  void init();
+  void init(char* argv0);
   void run();
   void stop();
   bool process(const MessagePtr& msg);
@@ -39,7 +39,10 @@ class Manager {
   DISALLOW_COPY_AND_ASSIGN(Manager);
   bool isScheduler() { return van_.myNode().role() == Node::SCHEDULER; }
   Task newControlTask(Control::Command cmd, const string& customer_id = "");
-  void sendTask(const Node& recver, const Task& task);
+  void sendTask(const NodeID& recver, const Task& task);
+  void sendTask(const Node& recver, const Task& task) {
+    sendTask(recver.id(), task);
+  }
   void createApp(const string& name, const string& conf);
 
   App* app_ = nullptr;

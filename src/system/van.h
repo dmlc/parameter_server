@@ -7,7 +7,6 @@ namespace PS {
 
 // Van sends (receives) packages to (from) a node
 // The current implementation uses ZeroMQ
-// TODO use VLOG
 class Van {
  public:
   Van() { }
@@ -49,7 +48,6 @@ class Van {
   void *receiver_ = nullptr;
   Node my_node_;
   Node scheduler_;
-  std::mutex mu_;
   std::unordered_map<NodeID, void *> senders_;
   std::unordered_map<NodeID, string> hostnames_;
 
@@ -57,8 +55,6 @@ class Van {
   size_t sent_to_others_ = 0;
   size_t received_from_local_ = 0;
   size_t received_from_others_ = 0;
-
-  std::ofstream debug_out_;
 
   DISALLOW_COPY_AND_ASSIGN(Van);
 };
