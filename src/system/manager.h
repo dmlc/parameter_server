@@ -28,6 +28,9 @@ class Manager {
   void addCustomer(Customer* obj);
   void removeCustomer(const string& name);
 
+  void waitServersReady();
+  void waitWorkersReady();
+
   int numWorkers() { return num_workers_; }
   int numServers() { return num_servers_; }
   Van& van() { return van_; }

@@ -25,25 +25,28 @@ clean:
 ps: $(PS_LIB) $(PS_MAIN)
 app: build/linear
 
-build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
-sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
-			  $(wildcard src/system/*.cc) $(wildcard src/filter/*.cc)
-sys_protos	= $(wildcard src/*/proto/*.proto)
+# PS system
+sys_dir		= $(addprefix src/, util data system filter learner parameter)
+sys_srcs	= $(wildcard $(patsubst %, %/*.cc, $(sys_dir)))
+sys_protos	= $(wildcard $(patsubst %, %/proto/*.proto, $(sys_dir)))
 sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
-		      $(patsubst src/%.cc, build/%.o, $(sys_srcs))
+			  $(patsubst src/%.cc, build/%.o, $(sys_srcs))
 build/libps.a: $(sys_objs)
 	ar crv $@ $?
 
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
 
+# PS applications
+build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/proto/linear.pb.o linear_method/linear.o )
 
 build/linear: $(app_objs)  build/app/main/main.o $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
+# general rules
 build/%.o: src/%.cc
 	@mkdir -p $(@D)
 	$(CC) $(INCPATH) -std=c++0x -MM -MT build/$*.o $< >build/$*.d

@@ -238,5 +238,11 @@ void Manager::removeCustomer(const string& name) {
   customers_.erase(it);
 }
 
+void Manager::waitServersReady() {
+  while (num_servers_ < FLAGS_num_servers) usleep(500);
+}
+void Manager::waitWorkersReady() {
+  while (num_workers_ < FLAGS_num_workers) usleep(500);
+}
 
 } // namespace PS
