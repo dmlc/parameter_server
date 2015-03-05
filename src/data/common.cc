@@ -16,6 +16,14 @@ DataConfig ithFile(const DataConfig& conf, int i, const string& suffix) {
   return f;
 }
 
+DataConfig appendFiles(const DataConfig& A, const DataConfig& B) {
+  DataConfig ret = A;
+  for (int i = 0; i < B.file_size(); ++i) {
+    ret.add_file(B.file(i));
+  }
+  return ret;
+}
+
 MatrixInfo readMatrixInfo(
     const ExampleInfo& info, int slot_id, int sizeof_idx, int sizeof_val) {
   MatrixInfo f;
