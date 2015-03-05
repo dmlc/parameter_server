@@ -39,9 +39,9 @@ build/libps.a: $(sys_objs)
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
 
-app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
+app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/proto/linear.pb.o linear_method/linear.o )
 
-build/ps:  build/app/main/main.o $(app_objs) $(PS_LIB)
+build/ps: $(app_objs)  build/app/main/main.o $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 build/%.o: src/%.cc

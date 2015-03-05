@@ -3,7 +3,7 @@
 #include "system/proto/node.pb.h"
 #include "system/proto/task.pb.h"
 #include "system/van.h"
-
+#include "system/assigner.h"
 namespace PS {
 
 DECLARE_int32(num_servers);

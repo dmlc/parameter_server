@@ -1,4 +1,5 @@
 #include "util/common.h"
+#include "system/proto/node.pb.h"
 namespace PS {
 
 // assign *node* with proper rank_id, key_range, etc..

@@ -9,5 +9,6 @@
 *.d
 *.o
 *.pb.cc
+*.pb.h
 .*
 /script/van*

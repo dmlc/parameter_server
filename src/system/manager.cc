@@ -1,7 +1,6 @@
 #include "system/manager.h"
 #include "system/postoffice.h"
 #include "system/app.h"
-#include "system/assigner.h"
 namespace PS {
 
 DEFINE_int32(num_servers, 0, "number of servers");
