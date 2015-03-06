@@ -25,8 +25,9 @@ void DataAssigner::set(const DataConfig& data, int num) {
 }
 
 bool DataAssigner::next(DataConfig *data) {
+  if (cur_i >= parts_.size()) return false;
   *data = parts_[cur_i ++];
-  return cur_i == parts_.size();
+  return true;
 }
 
 } // namespace PS

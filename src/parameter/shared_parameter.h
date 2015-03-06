@@ -60,7 +60,6 @@ class SharedParameter : public Customer {
   }
   static CallSharedPara get(const MessagePtr& msg) {
     CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
-    CHECK(msg->task.has_shared_para());
     return msg->task.shared_para();
   }
  protected:

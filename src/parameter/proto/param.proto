@@ -1,5 +1,5 @@
 package PS;
-// import "proto/common.proto";
+
 enum Operator {
   PLUS = 0;
   MINUS = 1;
@@ -44,7 +44,7 @@ message CallSharedPara {
     PUSH = 1;
     PULL = 2;
   }
-  required Command cmd = 1;
+  required Command cmd = 1 [default = PUSH];
   optional Operator op = 2;
 
   optional TailKeyFilter tail_filter = 3;
