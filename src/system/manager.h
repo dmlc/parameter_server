@@ -51,6 +51,9 @@ class Manager {
 
   std::map<NodeID, Node> nodes_;
   std::map<NodeID, Node> new_nodes_;
+  int num_workers_ = 0;
+  int num_servers_ = 0;
+  int num_active_nodes_ = 0;
 
   bool done_ = false;
 
@@ -59,10 +62,8 @@ class Manager {
   std::map<string, std::pair<Customer*, bool>> customers_;
 
   Van van_;
-  int num_workers_ = 0;
-  int num_servers_ = 0;
 
-  int num_active_nodes_ = 0;
+  int time_ = 0;
 };
 
 } // namespace PS

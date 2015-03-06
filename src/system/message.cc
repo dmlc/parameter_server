@@ -27,24 +27,26 @@ FilterConfig* Message::addFilter(FilterConfig::Type type) {
 
 std::string Message::shortDebugString() const {
   std::stringstream ss;
-  if (task.request()) ss << "REQ"; else ss << "RLY";
-  ss << " T=" << task.time() << " ";
-  for (int i = 0; i < task.wait_time_size(); ++i) {
-    if (i == 0) ss << "(wait";
-    ss << " " << task.wait_time(i);
-    if (i == task.wait_time_size() - 1) ss << ") ";
-  }
-  ss << sender << "=>" << recver << " ";
+  // if (task.request()) ss << "REQ"; else ss << "RLY";
+  // ss << " T=" << task.time() << " ";
+  // for (int i = 0; i < task.wait_time_size(); ++i) {
+  //   if (i == 0) ss << "(wait";
+  //   ss << " " << task.wait_time(i);
+  //   if (i == task.wait_time_size() - 1) ss << ") ";
+  // }
+  // ss << sender << "=>" << recver << " ";
+  // ss << (sender.empty() ? "I" : sender) << " --> " << recver << " ";
   if (!original_recver.empty()) ss << "(" << original_recver << ") ";
-  ss << "key [";
-  if (key.size() > 0) ss << key.size();
-  ss << "] value [";
-  for (int i = 0; i < value.size(); ++i) {
-    ss << value[i].size();
-    if (i < value.size() - 1) ss << ",";
+  if (key.size()) ss << "key [" << key.size() << "] ";
+  if (value.size()) {
+    ss << "value [";
+    for (int i = 0; i < value.size(); ++i) {
+      ss << value[i].size();
+      if (i < value.size() - 1) ss << ",";
+    }
+    ss << "] ";
   }
-  auto t = task; t.clear_msg();
-  ss << "]\n" << t.ShortDebugString();
+  auto t = task; t.clear_msg(); ss << t.ShortDebugString();
   return ss.str();
 }
 

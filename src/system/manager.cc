@@ -17,13 +17,7 @@ DECLARE_int32(report_interval);
 
 DEFINE_bool(verbose, false, "");
 
-// namespace google {
-// DECLARE_string(log_dir);
-// } // namespace google
-
-Manager::Manager() {
-  node_assigner_ = new NodeAssigner(FLAGS_num_workers);
-}
+Manager::Manager() {}
 
 Manager::~Manager() {
   delete node_assigner_;
@@ -34,19 +28,8 @@ Manager::~Manager() {
 }
 
 void Manager::init(char* argv0) {
-  van_.init();
-
-  // change the hostname in default log filename to node id
-  string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
-                   + "." + van_.myNode().id() + ".log.";
-  google::SetLogDestination(google::INFO, (logfile+"INFO.").c_str());
-  google::SetLogDestination(google::WARNING, (logfile+"WARNING.").c_str());
-  google::SetLogDestination(google::ERROR, (logfile+"ERROR.").c_str());
-  google::SetLogDestination(google::FATAL, (logfile+"FATAL.").c_str());
-  google::SetLogSymlink(google::INFO, "");
-  google::SetLogSymlink(google::WARNING, "");
-  google::SetLogSymlink(google::ERROR, "");
-  google::SetLogSymlink(google::FATAL, "");
+  van_.init(argv0);
+  node_assigner_ = new NodeAssigner(FLAGS_num_servers);
 
   if (isScheduler()) {
     // create the app
@@ -102,16 +85,17 @@ bool Manager::process(const MessagePtr& msg) {
   const auto& ctrl = tk.control();
   switch (ctrl.cmd()) {
     case Control::CONNECT: {  // a node => scheduler
-      // create the app in sender
       CHECK(isScheduler());
       CHECK_EQ(ctrl.node_size(), 1);
       Node sender = ctrl.node(0);
+      // only connect this sender, but do not add it to system at this moment
+      van_.connect(sender);
+
+      // create the app in sender
       Task app = newControlTask(Control::CREATE_APP, app_->name());
       app.mutable_control()->set_app_conf(app_conf_);
       sendTask(sender, app);
 
-      // only connect this sender, but do not add it to system at this moment
-      van_.connect(sender);
       // save the sender info
       new_nodes_[sender.id()] = sender;
       break;
@@ -145,7 +129,7 @@ bool Manager::process(const MessagePtr& msg) {
           continue;
         }
         Task add_new_node = newControlTask(Control::ADD);
-        *add_node.mutable_control()->add_node() = sender;
+        *add_new_node.mutable_control()->add_node() = sender;
         sendTask(it.second, add_new_node);
       }
       break;
@@ -169,6 +153,7 @@ bool Manager::process(const MessagePtr& msg) {
     }
     case Control::STOP: {  // a node => scheduler
       -- num_active_nodes_;
+      break;
     }
     case Control::TERMINATE: {  // scheduler => a node
       done_ = true;
@@ -183,7 +168,7 @@ bool Manager::process(const MessagePtr& msg) {
 void Manager::addNode(const Node& node) {
   // add to system
   if (nodes_.find(node.id()) == nodes_.end()) {
-    CHECK(van_.connect(node).ok());
+    CHECK(van_.connect(node));
     if (node.role() == Node::WORKER) ++ num_workers_;
     if (node.role() == Node::SERVER) ++ num_servers_;
     ++ num_active_nodes_;
@@ -222,6 +207,8 @@ Task Manager::newControlTask(Control::Command cmd, const string& customer_id) {
   Task task;
   task.set_type(Task::CONTROL);
   task.set_request(true);
+  task.set_time(isScheduler() ? time_ * 2 : time_ * 2 + 1);
+  ++ time_;
   if (customer_id.size()) task.set_customer(customer_id);
   task.mutable_control()->set_cmd(cmd);
   return task;
@@ -258,10 +245,14 @@ void Manager::removeCustomer(const string& name) {
 }
 
 void Manager::waitServersReady() {
-  while (num_servers_ < FLAGS_num_servers) usleep(500);
+  while (num_servers_ < FLAGS_num_servers) {
+    usleep(500);
+  }
 }
 void Manager::waitWorkersReady() {
-  while (num_workers_ < FLAGS_num_workers) usleep(500);
+  while (num_workers_ < FLAGS_num_workers) {
+    usleep(500);
+  }
 }
 
 } // namespace PS

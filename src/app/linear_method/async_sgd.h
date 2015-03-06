@@ -24,8 +24,12 @@ class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
 
   virtual void run() {
     WaitServersReady();
-    WaitWorkersReady();
+    LOG(INFO) << "Scheduler connected " << sys_.manager().numServers() << " servers";
 
+    WaitWorkersReady();
+    LOG(INFO) << "Scheduler connected " << sys_.manager().numWorkers() << " workers";
+
+    // set sgd.num_data_pass()
     updateModel(conf_.training_data(), conf_.async_sgd().report_interval());
     saveModel();
   }
@@ -197,22 +201,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     WaitServersReady();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
-
-    // random shuffle the file order
-    int n = std::max(sgd.num_data_pass(), 1);
-    int m = call.data().file_size();
-    std::vector<int> idx(m);
-    for (int i = 0; i < m; ++i) idx[i] = i;
-
-    DataConfig data = call.data();
-    data.clear_file();
-    for (int i = 0; i < n; ++i) {
-      std::random_shuffle(idx.begin(), idx.end());
-      for (int j = 0; j < m; ++j) {
-        data.add_file(call.data().file(idx[j]));
-      }
-    }
-    reader.setReader(data, sgd.minibatch(), sgd.data_buf());
+    reader.setReader(call.data(), sgd.minibatch(), sgd.data_buf());
     reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
     reader.start();
 
@@ -235,7 +224,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       ++ id;
     }
 
-    while (processed_batch_ < id) { usleep(100); }
+    while (processed_batch_ < id) { usleep(500); }
   }
 
   void computeGradient(int id) {

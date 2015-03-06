@@ -81,10 +81,7 @@ void Postoffice::send() {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;
     size_t send_bytes = 0;
-    Status stat = manager_.van().send(msg, &send_bytes);
-    LOG_IF(INFO, !stat.ok())
-        << "failed to send message to " << msg->sender << ". error: "
-        << stat.ToString() << ". msg: " << *msg;
+    manager_.van().send(msg, &send_bytes);
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseOutBytes(send_bytes);
     }
@@ -96,8 +93,7 @@ void Postoffice::recv() {
     // receive a message
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
-    Status stat = manager_.van().recv(msg, &recv_bytes);
-    CHECK(stat.ok()) << "failed to recv a message. " << stat.ToString();
+    CHECK(manager_.van().recv(msg, &recv_bytes));
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseInBytes(recv_bytes);
     }

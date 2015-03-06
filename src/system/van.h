@@ -1,6 +1,5 @@
 #pragma once
 #include "util/common.h"
-#include "util/status.h"
 #include "system/proto/node.pb.h"
 #include "system/message.h"
 namespace PS {
@@ -12,17 +11,17 @@ class Van {
   Van() { }
   ~Van();
 
-  void init();
+  void init(char*);
 
   void disconnect(const Node&  node);
-  Status connect(const Node&  node);
+  bool connect(const Node&  node);
 
   // check whether I could connect to a specified node
   bool connected(const Node& node);
 
   // Status send(const MessagePtr& msg);
-  Status send(const MessagePtr& msg, size_t* send_bytes);
-  Status recv(const MessagePtr& msg, size_t* recv_bytes);
+  bool send(const MessagePtr& msg, size_t* send_bytes);
+  bool recv(const MessagePtr& msg, size_t* recv_bytes);
 
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };

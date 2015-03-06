@@ -22,7 +22,7 @@ Van::~Van() {
   zmq_ctx_destroy (context_);
 }
 
-void Van::init() {
+void Van::init(char* argv0) {
   scheduler_ = parseNode(FLAGS_scheduler);
   if (FLAGS_my_rank < 0) {
     my_node_ = parseNode(FLAGS_my_node);
@@ -30,6 +30,18 @@ void Van::init() {
     my_node_ = assembleMyNode();
   }
 
+  // change the hostname in default log filename to node id
+  string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
+                   + "." + my_node_.id() + ".log.";
+  google::SetLogDestination(google::INFO, (logfile+"INFO.").c_str());
+  google::SetLogDestination(google::WARNING, (logfile+"WARNING.").c_str());
+  google::SetLogDestination(google::ERROR, (logfile+"ERROR.").c_str());
+  google::SetLogDestination(google::FATAL, (logfile+"FATAL.").c_str());
+  google::SetLogSymlink(google::INFO, "");
+  google::SetLogSymlink(google::WARNING, "");
+  google::SetLogSymlink(google::ERROR, "");
+  google::SetLogSymlink(google::FATAL, "");
+  FLAGS_logbuflevel = -1;
 
   context_ = zmq_ctx_new();
   CHECK(context_ != NULL) << "create 0mq context failed";
@@ -58,8 +70,7 @@ void Van::bind() {
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-  VLOG(2) << my_node_.id() << ": binds address " << addr;
-
+  VLOG(2) << "BIND address " << addr;
 }
 
 void Van::disconnect(const Node& node) {
@@ -69,15 +80,17 @@ void Van::disconnect(const Node& node) {
     zmq_close (senders_[id]);
   }
   senders_.erase(id);
+  VLOG(2) << "DISCONNECT from " << node.id();
 }
 
-Status Van::connect(const Node& node) {
+bool Van::connect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
   if (senders_.find(id) != senders_.end()) {
-    return Status::OK();
+    VLOG(2) << "already connected to " << id;
+    return true;
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);
   CHECK(sender != NULL) << zmq_strerror(errno);
@@ -90,30 +103,37 @@ Status Van::connect(const Node& node) {
 
   // connect
   string addr = "tcp://" + address(node);
-  if (zmq_connect(sender, addr.c_str()) != 0)
-    return Status:: NetError(
-        "connect to " + addr + " failed: " + zmq_strerror(errno));
+  if (zmq_connect(sender, addr.c_str()) != 0) {
+    LOG(WARNING) << "connect to " + addr + " failed: " + zmq_strerror(errno);
+    return false;
+  }
+
   senders_[id] = sender;
   hostnames_[id] = node.hostname();
 
-  VLOG(2) << my_node_.id() << ": connect to " << id << " [" << addr << "]";
-  return Status::OK();
+  VLOG(2) << "CONNECT to " << id << " [" << addr << "]";
+  return true;
 }
 
 // TODO use zmq_msg_t to allow zero_copy send
 // btw, it is not thread safe
-Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
-
+bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   // find the socket
   NodeID id = msg->recver;
   auto it = senders_.find(id);
-  if (it == senders_.end())
-    return Status::NotFound("there is no socket to node " + (id));
+  if (it == senders_.end()) {
+    LOG(WARNING) << "there is no socket to node " + id;
+    return false;
+  }
   void *socket = it->second;
 
   // double check
   bool has_key = !msg->key.empty();
-  msg->task.set_has_key(has_key);
+  if (has_key) {
+    msg->task.set_has_key(has_key);
+  } else {
+    msg->task.clear_has_key();
+  }
   int n = has_key + msg->value.size();
 
   // send task
@@ -126,8 +146,9 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
   while (true) {
     if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
     if (errno == EINTR) continue;  // may be interupted by google profiler
-    return Status::NetError(
-        "failed to send mailer to node " + (id) + zmq_strerror(errno));
+    LOG(WARNING) << "failed to send message to node [" << id
+                 << "] errno: " << zmq_strerror(errno);
+    return false;
   }
   data_size += str.size();
 
@@ -138,8 +159,9 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
     while (true) {
       if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
       if (errno == EINTR) continue;  // may be interupted by google profiler
-      return Status::NetError(
-          "failed to send mailer to node " + (id) + zmq_strerror(errno));
+      LOG(WARNING) << "failed to send message to node [" << id
+                   << "] errno: " << zmq_strerror(errno);
+      return false;
     }
     data_size += raw.size();
   }
@@ -151,12 +173,12 @@ Status Van::send(const MessagePtr& msg, size_t* send_bytes) {
   } else {
     sent_to_others_ += data_size;
   }
-  VLOG(2) << ">>>   " << msg->shortDebugString();
-  return Status::OK();
+  VLOG(2) << "TO " << msg->recver << " " << msg->shortDebugString();
+  return true;
 }
 
 // TODO Zero copy
-Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
+bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clearData();
   NodeID sender;
@@ -166,9 +188,10 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
     while (true) {
       if (zmq_msg_recv(&zmsg, receiver_, 0) != -1) break;
       if (errno == EINTR) continue;  // may be interupted by google profiler
-      return Status::NetError(
-          "recv message failed: " + std::string(zmq_strerror(errno)));
-    }
+      LOG(WARNING) << "failed to receive message. errno: "
+                   << zmq_strerror(errno);
+      return false;
+   }
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
@@ -202,8 +225,8 @@ Status Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   } else {
     received_from_others_ += data_size;
   }
-  VLOG(2) << "|<<<   " << msg->shortDebugString();
-  return Status::OK();;
+  VLOG(2) << "FROM: " << msg->sender << " " << msg->shortDebugString();
+  return true;
 }
 
 void Van::statistic() {
