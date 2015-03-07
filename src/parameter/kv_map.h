@@ -4,8 +4,7 @@ namespace PS {
 template <typename K, typename V>
 class KVMap : public SharedParameter<K> {
  public:
-  KVMap(const string& my_name, const string& parent_name = FLAGS_app_name) :
-      SharedParameter<K>(my_name, parent_name) { }
+  KVMap(int id = NextCustomerID()) : SharedParameter<K>(id) { }
   virtual ~KVMap() { }
 
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& sep) {

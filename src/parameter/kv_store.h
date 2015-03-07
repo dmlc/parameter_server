@@ -5,8 +5,7 @@ namespace PS {
 template <typename K, typename S>
 class KVState : public SharedParameter<K> {
  public:
-  KVState(const string& my_name, const string& parent_name) :
-      SharedParameter<K>(my_name, parent_name) { }
+  KVState(int id) : SharedParameter<K>(id) { }
   virtual ~KVState() {}
 
   void setState(const S& s) { state_ = s; }
@@ -27,8 +26,7 @@ class KVState : public SharedParameter<K> {
 template <typename K, typename V, typename E, typename S>
 class KVStore : public KVState<K, S> {
  public:
-  KVStore(const string& my_name, const string& parent_name) :
-      KVState<K, S>(my_name, parent_name) { }
+  KVStore(int id = NextCustomerID()) : KVState<K, S>(id) { }
   virtual ~KVStore() { this->exec_.stop(); }
 
   using KVState<K, S>::state_;

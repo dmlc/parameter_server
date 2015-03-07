@@ -78,6 +78,7 @@ class RNode {
 
   // request messages that have been sent but not received replies yet
   std::unordered_map<int, MessagePtr> pending_msgs_;
+
   std::unordered_map<int, Message::Callback> msg_receive_handle_;
   std::unordered_map<int, Message::Callback> msg_finish_handle_;
 

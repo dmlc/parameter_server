@@ -8,15 +8,13 @@ import "learner/proto/sgd.proto";
 import "learner/proto/bcd.proto";
 
 message Task {
-  enum Type {
-    CALL_CUSTOMER = 1;
-    CONTROL = 2;
-  }
-  optional Type type = 1 [default = CALL_CUSTOMER];
+  // true: this is a system control message
+  // false: this is a customer message, and customer_id should be set
+  optional bool control = 1 [default = false];
   // whether request or reply message
   optional bool request = 2 [default = false];
-  // the customer name
-  optional string customer = 4;
+  // the unique id of a customer
+  optional int32 customer_id = 3;
 
   // time
   optional int32 time = 5;
@@ -28,7 +26,6 @@ message Task {
   optional int32 key_channel = 8;
   // indiciate whether or not has the key list
   optional bool has_key = 9 [default = false];
-  optional string key_channel_str = 10;  // deprecated
 
   optional DataType key_type = 13;
   repeated DataType value_type = 14;
@@ -36,7 +33,7 @@ message Task {
   repeated FilterConfig filter = 12;
 
   optional bytes msg = 17;
-  optional Control control = 18;
+  optional Control ctrl = 18;
 
   // parameters
   optional CallSharedPara shared_para = 20;
@@ -48,24 +45,22 @@ message Task {
 
 message Control {
   enum Command {
-    // a node => scheduler
-    CONNECT = 1;
-    STOP = 6;
-    HEARTBEAT = 9;
+    // a node => the scheduler
+    REQUEST_APP = 1;
+    REGISTER_NODE = 2;
+    REPORT_PERF = 3;
+    READY_TO_EXIT = 4;
+
     // the scheduler => a node
-    ADD = 2;
-    UPDATE = 3;
-    REPLACE = 4;
-    REMOVE = 5;
-    TERMINATE = 7;
-    CREATE_APP = 8;
-    CREATE_APP_SUCCESS = 10;
+    ADD_NODE = 10;
+    UPDATE_NODE = 11;
+    REPLACE_NODE = 12;
+    REMOVE_NODE = 13;
+    EXIT = 14;
   }
   required Command cmd = 1;
   repeated Node node = 2;
-  optional string app_conf = 3;
 }
-
 
 enum DataType {
   OTHER = 0;
@@ -81,35 +76,3 @@ enum DataType {
   DOUBLE = 10;
   CHAR = 11;
 }
-
-// message ManageApp {
-//   enum Command {
-//     ADD = 1;
-//     REMOVE = 2;
-//     INIT = 4;
-//     RUN = 3;
-//     DONE = 5;
-//   }
-//   required Command cmd = 1;
-//   optional string conf = 2;
-// }
-
-// optional CallSketch sketch = 302;
-// message CallSketch {
-//   enum Command {
-//     PREPARE_DATA = 1;
-//     INSERT_DATA = 2;
-//     EVAL_PROGRESS = 3;
-//     QUERY_DATA = 4;
-//     RECOVER = 5;
-//   }
-//   required Command cmd = 1;
-//   optional PbRange key = 2;
-// }
-
-// message SketchResponse {
-//   optional string nodeid = 1;
-//   optional double process_time = 2;
-//   optional uint32 payload = 3;
-//   optional uint32 key = 4;
-// }

@@ -1,15 +1,14 @@
 #include "system/customer.h"
+#include "ps.h"
 namespace PS {
 
-Customer::Customer(const string& my_name)
-    : name_(my_name), sys_(Postoffice::instance()), exec_(*this) {
-  CHECK(!name_.empty()) << "a customer must have a valid name";
-  // register myself to system
+Customer::Customer(int id)
+    : id_(id), sys_(Postoffice::instance()), exec_(*this) {
   sys_.manager().addCustomer(this);
 }
 
 Customer::~Customer() {
-  sys_.manager().removeCustomer(name_);
+  sys_.manager().removeCustomer(id_);
 }
 
 MessagePtrList Customer::slice(const MessagePtr& msg, const KeyRangeList& krs) {
@@ -22,4 +21,6 @@ MessagePtrList Customer::slice(const MessagePtr& msg, const KeyRangeList& krs) {
   return ret;
 }
 
+
+App::App() : Customer(NextCustomerID()) { }
 } // namespace PS

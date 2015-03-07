@@ -25,8 +25,8 @@ class DarlinCommon {
 
 class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
  public:
-  DarlinScheduler(const string& name, const Config& conf)
-      : BCDScheduler(name, conf.darlin()), LinearMethod(conf) { }
+  DarlinScheduler(const Config& conf)
+      : BCDScheduler(conf.darlin()), LinearMethod(conf) { }
   virtual ~DarlinScheduler() { }
 
   virtual void run() {
@@ -159,8 +159,8 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
 
 class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
  public:
-  DarlinServer(const string& name, const Config& conf)
-                  : BCDServer<Real>(name, conf.darlin()), LinearMethod(conf) { }
+  DarlinServer(const Config& conf)
+      : BCDServer<Real>(conf.darlin()), LinearMethod(conf) { }
   virtual ~DarlinServer() { }
 
  protected:
@@ -274,8 +274,8 @@ class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
 
 class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
  public:
-  DarlinWorker(const string& name, const Config& conf)
-      : BCDWorker<Real>(name, conf.darlin()), LinearMethod(conf) { }
+  DarlinWorker(const Config& conf)
+      : BCDWorker<Real>(conf.darlin()), LinearMethod(conf) { }
   virtual ~DarlinWorker() { }
  protected:
 

@@ -1,6 +1,5 @@
 #include "system/postoffice.h"
 #include "system/customer.h"
-#include "system/app.h"
 #include "util/file.h"
 // #include <omp.h>
 
@@ -47,10 +46,10 @@ void Postoffice::reply(
     const NodeID& recver, const Task& task, const string& reply_str) {
   if (!task.request()) return;
   Task reply_task;
-  reply_task.set_customer(task.customer());
+  reply_task.set_customer_id(task.customer_id());
   reply_task.set_request(false);
   reply_task.set_time(task.time());
-  reply_task.set_type(task.type());
+  reply_task.set_control(task.control());
   if (!reply_str.empty()) reply_task.set_msg(reply_str);
   MessagePtr reply_msg(new Message(reply_task));
   reply_msg->recver = recver;
@@ -63,14 +62,14 @@ void Postoffice::queue(const MessagePtr& msg) {
   } else {
     // do not send, fake a reply mesage
     Task reply_task;
-    reply_task.set_customer(msg->task.customer());
+    reply_task.set_customer_id(msg->task.customer_id());
     reply_task.set_request(false);
-    reply_task.set_type(msg->task.type());
+    reply_task.set_control(msg->task.control());
     reply_task.set_time(msg->task.time());
     MessagePtr reply_msg(new Message(reply_task));
     reply_msg->sender = msg->recver;
     reply_msg->recver = msg->sender;
-    manager_.customer(msg->task.customer())->exec().accept(reply_msg);
+    manager_.customer(msg->task.customer_id())->exec().accept(reply_msg);
   }
 }
 
@@ -85,6 +84,7 @@ void Postoffice::send() {
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseOutBytes(send_bytes);
     }
+    manager_.addPendingMsg(msg);
   }
 }
 
@@ -97,16 +97,14 @@ void Postoffice::recv() {
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseInBytes(recv_bytes);
     }
+    manager_.removePendingMsg(msg);
 
     // process this message
-    auto task_type = msg->task.type();
-    if (task_type == Task::CALL_CUSTOMER) {
-      const auto& id = msg->task.customer();
-      Customer* obj = manager_.customer(id);
-      CHECK(obj) << "customer [" << id << "] doesn't exist";
-      obj->exec().accept(msg);
-    } else if (task_type == Task::CONTROL) {
+    if (msg->task.control()) {
       if (!manager_.process(msg)) break;
+    } else {
+      int id = msg->task.customer_id();
+      manager_.customer(id)->exec().accept(msg);
     }
   }
 }

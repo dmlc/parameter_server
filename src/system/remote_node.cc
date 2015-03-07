@@ -95,7 +95,7 @@ int RNode::submit(MessagePtrList& msgs) {
   for (auto& msg : msgs) {
     auto& task = msg->task;
     task.set_request(true);
-    task.set_customer(exec_.obj().name());
+    task.set_customer_id(exec_.obj().id());
     task.set_time(t);
     msg->original_recver = id();
     msg->sender = exec_.myNode().id();

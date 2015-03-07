@@ -6,7 +6,7 @@
 #include "app/linear_method/model_evaluation.h"
 
 namespace PS {
-App* App::create(const string& name, const string& conf_str) {
+App* App::create(const string& conf_str) {
   using namespace LM;
   // parse config
   Config conf;
@@ -18,23 +18,23 @@ App* App::create(const string& name, const string& conf_str) {
   App* app = nullptr;
   if (conf.has_darlin()) {
     if (my_role == Node::SCHEDULER) {
-      app = new DarlinScheduler(name, conf);
+      app = new DarlinScheduler(conf);
     } else if (my_role == Node::WORKER) {
-      app = new DarlinWorker(name, conf);
+      app = new DarlinWorker(conf);
     } else if (my_role == Node::SERVER) {
-      app = new DarlinServer(name, conf);
+      app = new DarlinServer(conf);
     }
   } else if (conf.has_async_sgd()) {
     typedef float Real;
     if (my_role == Node::SCHEDULER) {
-      app = new AsyncSGDScheduler(name, conf);
+      app = new AsyncSGDScheduler(conf);
     } else if (my_role == Node::WORKER) {
-      app = new AsyncSGDWorker<Real>(name, conf);
+      app = new AsyncSGDWorker<Real>(conf);
     } else if (my_role == Node::SERVER) {
-      app = new AsyncSGDServer<Real>(name, conf);
+      app = new AsyncSGDServer<Real>(conf);
     }
   } else if (conf.has_validation_data()) {
-    app =  new ModelEvaluation(name, conf);
+    app =  new ModelEvaluation(conf);
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
              << " at " << MyNode().ShortDebugString();

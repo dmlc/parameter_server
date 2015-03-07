@@ -5,15 +5,14 @@
 #include "system/executor.h"
 namespace PS{
 
-DECLARE_string(app_name);
-class Postmaster;
-
 // An object shared across multiple nodes.
 class Customer {
  public:
-  // A customer must have an unique name in order to communicate with the
-  // customer with the same name but at a different machine.
-  Customer(const string& my_name);
+  // A customer must have an unique id so that the remote node can find the
+  // correct customer by using this id.
+  Customer(int id);
+  // System will automatically assign an id to this customer.
+  Customer();
   virtual ~Customer();
 
   // process a message received from a remote node. It will be called by
@@ -25,32 +24,33 @@ class Customer {
   // ordered such that krs[i-1].end == krs[i].begin.
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs);
 
-  // accessor
-  const string& name() const { return name_; }
-
-  // query about my node
-  NodeID myNodeID() { return exec_.myNode().id(); }
-  int myRank() { return exec_.myNode().rank(); }
-  bool isWorker() { return exec_.myNode().role() == Node::WORKER; }
-  bool isServer() { return exec_.myNode().role() == Node::SERVER; }
-  bool isScheduler() { return exec_.myNode().role() == Node::SCHEDULER; }
-
-  // the unique scheduler id
-  NodeID schedulerID() { return sys_.manager().van().scheduler().id(); }
   // return the remote_note by its name
-  RNode* port(const NodeID& k) {
-    return CHECK_NOTNULL(exec_.rnode(k));
-  }
+  RNode* port(const NodeID& k) { return CHECK_NOTNULL(exec_.rnode(k)); }
 
-  // return the executor
+  // accessors
   Executor& exec() { return exec_; }
+  int id() const { return id_; }
 
  protected:
-  string name_;
+  int id_;
   Postoffice& sys_;
   Executor exec_;
  private:
   DISALLOW_COPY_AND_ASSIGN(Customer);
 };
+
+// The base class of an application.
+class App : public Customer {
+ public:
+  App();
+  virtual ~App() { }
+
+  // the factory functionn
+  static App* create(const std::string& conf);
+
+  // run() is executed by the main thread immediately after this app has ben created.
+  virtual void run() { }
+};
+
 
 } // namespace PS

@@ -9,17 +9,11 @@
 namespace PS {
 namespace LM {
 
-// // project value into [-bound, bound]
-// template <typename V>
-// V project(V value, V bound) {
-//   return (value > bound ? bound : (value < - bound ? - bound : value));
-// }
-
 // async sgd. support various loss functions and regularizers
 class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
  public:
-  AsyncSGDScheduler(const string& name, const Config& conf)
-      : ISGDScheduler(name), LinearMethod(conf) { }
+  AsyncSGDScheduler(const Config& conf)
+      : ISGDScheduler(), LinearMethod(conf) { }
   virtual ~AsyncSGDScheduler() { }
 
   virtual void run() {
@@ -137,15 +131,15 @@ struct FTRLEntry {
 template <typename V>
 class AsyncSGDServer : public ISGDCompNode, public LinearMethod {
 public:
-  AsyncSGDServer(const string& name, const Config& conf)
-      : ISGDCompNode(name), LinearMethod(conf) {
+  AsyncSGDServer(const Config& conf)
+      : ISGDCompNode(), LinearMethod(conf) {
     if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
-      model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>(name+"_model", name);
+      model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>();
     } else {
       if (conf_.async_sgd().ada_grad()) {
-        model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>();
       } else {
-        model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>(name+"_model", name);
+        model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>();
       }
     }
 
@@ -167,9 +161,9 @@ public:
     auto output = conf_.model_output();
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
-      std::string file = output.file(0) + "_" + myNodeID();
+      std::string file = output.file(0) + "_" + MyNodeID();
       CHECK_NOTNULL(model_)->writeToFile(file);
-      LI << myNodeID() << " written the model to " << file;
+      LI << MyNodeID() << " written the model to " << file;
     }
   }
 
@@ -186,9 +180,8 @@ public:
 template <typename V>
 class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
  public:
-  AsyncSGDWorker(const string& name, const Config& conf)
-      : ISGDCompNode(name), LinearMethod(conf), model_(name+"_model", name),
-        processed_batch_(0) {
+  AsyncSGDWorker(const Config& conf)
+      : ISGDCompNode(), LinearMethod(conf), processed_batch_(0) {
     loss_ = createLoss<V>(conf_.loss());
   }
   virtual ~AsyncSGDWorker() { }
@@ -301,18 +294,26 @@ private:
 } // namespace LM
 } // namespace PS
 
-    // V n1 = 0, n2 = 0;
-    // // add noise to gradient
-    // V std = (V)conf_.async_sgd().noise_std();
-    // if (std > 0) {
-    //   std::default_random_engine generator;
-    //   std::normal_distribution<V> distribution(0, std);
-    //   for (auto& g : grad) {
-    //     n1 += g * g;
-    //     V s =  distribution(generator);
-    //     n2 += s * s;
-    //     g += s;
-    //   }
-    //   LL << sqrt(n1) << " " << sqrt(n2);
-    // }
-    // // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
+
+// // project value into [-bound, bound]
+// template <typename V>
+// V project(V value, V bound) {
+//   return (value > bound ? bound : (value < - bound ? - bound : value));
+// }
+
+
+// V n1 = 0, n2 = 0;
+// // add noise to gradient
+// V std = (V)conf_.async_sgd().noise_std();
+// if (std > 0) {
+//   std::default_random_engine generator;
+//   std::normal_distribution<V> distribution(0, std);
+//   for (auto& g : grad) {
+//     n1 += g * g;
+//     V s =  distribution(generator);
+//     n2 += s * s;
+//     g += s;
+//   }
+//   LL << sqrt(n1) << " " << sqrt(n2);
+// }
+// // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;

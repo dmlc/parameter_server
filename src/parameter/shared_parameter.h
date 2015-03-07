@@ -1,11 +1,8 @@
 #pragma once
-#include "system/customer.h"
+#include "ps.h"
 #include "parameter/proto/param.pb.h"
 #include "parameter/frequency_filter.h"
 namespace PS {
-
-template <typename K> class SharedParameter;
-template <typename K> using SharedParameterPtr = std::shared_ptr<SharedParameter<K>>;
 
 
 DECLARE_int32(num_workers);
@@ -14,8 +11,9 @@ DECLARE_int32(num_workers);
 template <typename K>
 class SharedParameter : public Customer {
  public:
-  SharedParameter(const string& my_name, const string& parent_name)
-      : Customer(my_name) { }
+  SharedParameter(int id = NextCustomerID()) : Customer(id) { }
+  virtual ~SharedParameter() { }
+
   // convenient wrappers of functions in remote_node.h
   int sync(MessagePtr msg) {
     CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
@@ -30,6 +28,7 @@ class SharedParameter : public Customer {
     set(msg)->set_cmd(CallSharedPara::PULL);
     return sync(msg);
   }
+
   void waitInMsg(const NodeID& node, int time) {
     port(node)->waitIncomingTask(time);
   }
@@ -55,11 +54,10 @@ class SharedParameter : public Customer {
   void process(const MessagePtr& msg);
 
   static CallSharedPara* set(MessagePtr msg) {
-    msg->task.set_type(Task::CALL_CUSTOMER);
     return msg->task.mutable_shared_para();
   }
   static CallSharedPara get(const MessagePtr& msg) {
-    CHECK_EQ(msg->task.type(), Task::CALL_CUSTOMER);
+    CHECK(!msg->task.control());
     return msg->task.shared_para();
   }
  protected:
@@ -81,7 +79,7 @@ class SharedParameter : public Customer {
   void recover(Range<K> range);
 
   Range<K> myKeyRange() {
-    return keyRange(Customer::myNodeID());
+    return keyRange(MyNodeID());
   }
   // query the key range of a node
   Range<K> keyRange(const NodeID& id) {
@@ -165,7 +163,6 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
 
 #define USING_SHARED_PARAMETER                  \
   using Customer::port;                         \
-  using Customer::myNodeID;                     \
   using SharedParameter<K>::get;                \
   using SharedParameter<K>::set;                \
   using SharedParameter<K>::myKeyRange;         \

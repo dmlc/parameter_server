@@ -116,8 +116,6 @@ bool Van::connect(const Node& node) {
   return true;
 }
 
-// TODO use zmq_msg_t to allow zero_copy send
-// btw, it is not thread safe
 bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   // find the socket
   NodeID id = msg->recver;
@@ -178,7 +176,6 @@ bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   return true;
 }
 
-// TODO Zero copy
 bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clearData();

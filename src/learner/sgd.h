@@ -1,8 +1,8 @@
 #pragma once
+#include "ps.h"
 #include "util/producer_consumer.h"
 #include "learner/proto/sgd.pb.h"
 #include "system/monitor.h"
-#include "system/app.h"
 #include "system/assigner.h"
 #include "data/stream_reader.h"
 #include "util/localizer.h"
@@ -12,8 +12,7 @@ namespace PS {
 // interface for stochastic gradient descent solver
 class ISGDScheduler : public App {
  public:
-  ISGDScheduler(const string& name)
-      : App(name), monitor_(this) { }
+  ISGDScheduler() : App() { }
   virtual ~ISGDScheduler() { }
 
  protected:
@@ -99,8 +98,7 @@ class ISGDScheduler : public App {
 
 class ISGDCompNode : public App {
  public:
-  ISGDCompNode(const string& name)
-      : App(name), reporter_(schedulerID(), this) { }
+  ISGDCompNode() : App(), reporter_(SchedulerID()) { }
   virtual ~ISGDCompNode() { }
 
  protected:

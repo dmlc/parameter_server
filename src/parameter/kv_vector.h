@@ -4,19 +4,17 @@
 #include "util/parallel_ordered_match.h"
 namespace PS {
 
-template<typename K, typename V> class KVVector;
-template<typename K, typename V> using KVVectorPtr = std::shared_ptr<KVVector<K,V>>;
-
 // key-value vector, the (global) keys are sorted and unique. Both keys and
 // values are stored in arrays.
 template <typename K, typename V>
 class KVVector : public SharedParameter<K> {
  public:
-  KVVector(const string& my_name, const string& parent_name = FLAGS_app_name, int k = 1) :
-      SharedParameter<K>(my_name, parent_name), val_entry_size_(k) { }
+  KVVector(int id = NextCustomerID(), int k = 1) :
+      SharedParameter<K>(id), val_entry_size_(k) { }
+  virtual ~KVVector() { }
+
   // KVVector() : val_entry_size_(1) { }
   // KVVector(int k) : val_entry_size_(k) { }
-  virtual ~KVVector() { }
 
   SArray<K>& key(int channel = 0) { Lock l(mu_); return key_[channel]; }
   SArray<V>& value(int channel = 0) { Lock l(mu_); return val_[channel]; }

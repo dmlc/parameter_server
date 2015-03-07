@@ -3,8 +3,6 @@
 #include <thread>
 namespace PS {
 
-DECLARE_bool(verbose);
-
 Executor::Executor(Customer& obj) : obj_(obj) {
   my_node_ = Postoffice::instance().manager().van().myNode();
   // insert virtual group nodes
@@ -152,10 +150,8 @@ void Executor::addNode(const Node& node) {
 void Executor::run() {
   while (!done_) {
     bool process = false;
-    if (FLAGS_verbose) {
-      LI << obj_.name() << " before entering task loop; recved_msgs_. size [" <<
+    VLOG(2) << obj_.id() << " before entering task loop; recved_msgs_. size [" <<
         recved_msgs_.size() << "]";
-    }
     {
       std::unique_lock<std::mutex> lk(recved_msg_mu_);
       // pickup a message with dependency satisfied
@@ -163,8 +159,8 @@ void Executor::run() {
         auto& msg = *it;
         auto sender = rnode(msg->sender);
         if (!sender) {
-          LL << my_node_.id() << ": " << msg->sender
-             << " does not exist, ignore\n" << msg->debugString();
+          LOG(WARNING) << my_node_.id() << ": " << msg->sender
+                       << " does not exist, ignore\n" << msg->debugString();
           recved_msgs_.erase(it);
           break;
         }
@@ -185,19 +181,15 @@ void Executor::run() {
         if (process) {
           active_msg_ = msg;
           recved_msgs_.erase(it);
-          if (FLAGS_verbose) {
-            LI << obj_.name() << " picked up an active_msg_ from recved_msgs_. " <<
+          VLOG(2) << obj_.id() << " picked up an active_msg_ from recved_msgs_. " <<
               "remaining size [" << recved_msgs_.size() << "]; msg [" <<
               active_msg_->shortDebugString() << "]";
-          }
           break;
         }
       }
       if (!process) {
-        if (FLAGS_verbose) {
-          LI << obj_.name() << " picked nothing from recved_msgs_. size [" <<
+        VLOG(2) << obj_.id() << " picked nothing from recved_msgs_. size [" <<
             recved_msgs_.size() << "] waiting Executor::accept";
-        }
         dag_cond_.wait(lk);
         continue;
       }
@@ -247,10 +239,8 @@ void Executor::run() {
       auto o_recver = rnode(original_recver_id);
       CHECK(o_recver) << "no such node: " << original_recver_id;
       if (o_recver->tryWaitOutgoingTask(t)) {
-        if (FLAGS_verbose) {
-          LI << "Task [" << t << "] completed. msg [" <<
+        VLOG(2) << "Task [" << t << "] completed. msg [" <<
             active_msg_->shortDebugString() << "]";
-        }
         Message::Callback h;
         {
           Lock lk(o_recver->mu_);
@@ -258,9 +248,9 @@ void Executor::run() {
           if (a != o_recver->msg_finish_handle_.end()) h = a->second;
         }
         if (h) h();
-      } else if (FLAGS_verbose) {
-        LI << "Task [" << t << "] still running. msg [" <<
-          active_msg_->shortDebugString() << "]";
+      } else {
+        VLOG(2) << "Task [" << t << "] still running. msg [" <<
+            active_msg_->shortDebugString() << "]";
       }
     }
   }

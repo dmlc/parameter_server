@@ -19,7 +19,6 @@ class Van {
   // check whether I could connect to a specified node
   bool connected(const Node& node);
 
-  // Status send(const MessagePtr& msg);
   bool send(const MessagePtr& msg, size_t* send_bytes);
   bool recv(const MessagePtr& msg, size_t* recv_bytes);
 
@@ -29,13 +28,12 @@ class Van {
  private:
   // bind to my port
   void bind();
-  // utility functions for node
+
   static Node parseNode(const string& config) {
     Node node; CHECK(TextFormat::ParseFromString(config, &node));
     if (!node.has_id()) node.set_id(address(node));
     return node;
   }
-  // helper
   static std::string address(const Node& node) {
     return node.hostname() + ":" + std::to_string(node.port());
   }

@@ -1,15 +1,11 @@
 #pragma once
-#include "system/app.h"
+#include "ps.h"
 namespace PS {
 
 template <typename Progress>
 class MonitorMaster : public Customer {
  public:
-  MonitorMaster(const string& my_name, const string& parent_name)
-      : Customer(my_name) {
-  }
-  MonitorMaster(Customer* parent)
-      : MonitorMaster(parent->name()+"monitor", parent->name()) { }
+  MonitorMaster(int id = NextCustomerID()) : Customer(id) {}
 
   typedef std::unordered_map<NodeID, Progress> AllProgress;
   typedef std::function<void(double time, AllProgress*)> Printer;
@@ -55,20 +51,13 @@ class MonitorMaster : public Customer {
 template <typename Progress>
 class MonitorSlaver : public Customer {
  public:
-  MonitorSlaver(const NodeID& master,
-                const string& my_name,
-                const string& parent_name)
-      : Customer(my_name), master_(master) { }
-  MonitorSlaver(const NodeID& master, Customer* parent)
-      : MonitorSlaver(master, parent->name()+"monitor", parent->name()) { }
-
+  MonitorSlaver(const NodeID& master, int id = NextCustomerID())
+      : Customer(id), master_(master) { }
   virtual ~MonitorSlaver() { }
 
   void report(const Progress& prog) {
     string str; CHECK(prog.SerializeToString(&str));
-    Task report;
-    report.set_type(Task::CALL_CUSTOMER);
-    report.set_msg(str);
+    Task report; report.set_msg(str);
     auto master = port(master_);
     if (master) master->submit(report);
   }

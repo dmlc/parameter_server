@@ -24,8 +24,8 @@ class BCDCommon {
 
 class BCDScheduler : public App, public BCDCommon {
  public:
-  BCDScheduler(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf) { }
+  BCDScheduler(const BCDConfig& conf)
+      : App(), BCDCommon(conf) { }
   virtual ~BCDScheduler() { }
 
   void loadTrainingData(const DataConfig& train) {
@@ -194,8 +194,8 @@ class BCDScheduler : public App, public BCDCommon {
 template <typename V>
 class BCDServer : public App, public BCDCommon {
  public:
-  BCDServer(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf), model_(name+"_model", name) { }
+  BCDServer(const BCDConfig& conf)
+      : App(), BCDCommon(conf) { }
   virtual ~BCDServer() { }
 
   void process(const MessagePtr& msg) {
@@ -253,7 +253,7 @@ class BCDServer : public App, public BCDCommon {
 
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
-      std::string file = output.file(0) + "_" + myNodeID();
+      std::string file = output.file(0) + "_" + MyNodeID();
       if (!dirExists(getPath(file))) {
         createDir(getPath(file));
       }
@@ -268,7 +268,7 @@ class BCDServer : public App, public BCDCommon {
           if (v != 0 && !(v != v)) out << key[i] << "\t" << v << "\n";
         }
       }
-      LI << myNodeID() << " written the model to " << file;
+      LI << MyNodeID() << " written the model to " << file;
     }
   }
   KVBufferedVector<Key, V> model_;
@@ -277,8 +277,8 @@ class BCDServer : public App, public BCDCommon {
 template <typename V>
 class BCDWorker : public App, public BCDCommon {
  public:
-  BCDWorker(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf), model_(name+"_model", name) { }
+  BCDWorker(const BCDConfig& conf)
+      : App(), BCDCommon(conf) { }
   virtual ~BCDWorker() { }
 
   void process(const MessagePtr& msg) {

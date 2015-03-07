@@ -25,6 +25,12 @@ FilterConfig* Message::addFilter(FilterConfig::Type type) {
   return ptr;
 }
 
+size_t Message::memSize() {
+  size_t nbytes = task.SpaceUsed() + key.memSize();
+  for (const auto& v : value) nbytes += v.memSize();
+  return nbytes;
+}
+
 std::string Message::shortDebugString() const {
   std::stringstream ss;
   // if (task.request()) ss << "REQ"; else ss << "RLY";

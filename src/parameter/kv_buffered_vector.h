@@ -2,17 +2,13 @@
 #include "Eigen/Dense"
 #include "parameter/kv_vector.h"
 namespace PS {
-template<typename K, typename V> class KVBufferedVector;
-template<typename K, typename V>
-using KVBufferedVectorPtr = std::shared_ptr<KVBufferedVector<K,V>>;
 
 // similar to KVVector, but the received data is not write into value directly,
 // instead, it is stored in a buffer, and can be read by _received(time)_
 template <typename K, typename V>
 class KVBufferedVector : public KVVector<K, V> {
  public:
-  KVBufferedVector(const string& my_name, const string& parent_name) :
-      KVVector<K, V>(my_name, parent_name) { }
+  KVBufferedVector(int id = NextCustomerID()) : KVVector<K, V>(id) { }
 
   // return the mareged data received at time t, then *delete* it. If no
   // message, or empty messages are received at time t, then call received(t)
@@ -30,7 +26,7 @@ template <typename K, typename V> typename KVBufferedVector<K,V>::MergedData
 KVBufferedVector<K,V>::received(int t) {
   Lock l(this->mu_);
   auto it = recved_val_.find(t);
-  CHECK(it != recved_val_.end()) << this->myNodeID()
+  CHECK(it != recved_val_.end()) << MyNodeID()
                                  << " hasn't received data at time " << t;
   auto ret = it->second;
   recved_val_.erase(it);

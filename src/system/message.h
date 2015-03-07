@@ -30,13 +30,14 @@ struct Message {
   SArray<char> key;
   std::vector<SArray<char> > value;
 
-  // functions manipulate task, key and values.
   FilterConfig* addFilter(FilterConfig::Type type);
-  // return task.has_key();
+
+  // keys
   bool hasKey() const { return !key.empty(); }
   template <typename T> void setKey(const SArray<T>& key);
   void clearKey() { task.clear_has_key(); key.clear(); }
 
+  // values
   template <typename T> void addValue(const SArray<T>& value);
 
   template <typename T> void addValue(const SArrayList<T>& value) {
@@ -48,7 +49,10 @@ struct Message {
   void clearValue() { task.clear_value_type(); value.clear(); }
   void clearData() { clearKey(); clearValue(); }
 
-  // more control signals, which are only used by local process
+  size_t memSize();
+
+  // more control signals, which are stayed at local, namely will not send to
+  // other machines
 
   // sender node id
   NodeID sender;
@@ -80,7 +84,6 @@ struct Message {
   // node is a node group, then it means replies from all nodes in this group
   // have been received.
   Callback fin_handle;
-
 
   // debug
   std::string shortDebugString() const;

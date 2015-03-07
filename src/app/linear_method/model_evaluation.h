@@ -1,5 +1,5 @@
 #pragma once
-#include "system/app.h"
+#include "system/customer.h"
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
 #include "app/linear_method/linear.h"
@@ -8,8 +8,7 @@ namespace LM {
 
 class ModelEvaluation : public App, public LinearMethod {
  public:
-  ModelEvaluation(const string& name, const Config& conf)
-      : App(name), LinearMethod(conf) { }
+  ModelEvaluation(const Config& conf) : App(), LinearMethod(conf) { }
   virtual ~ModelEvaluation() { }
   void run();
  private:
@@ -17,7 +16,7 @@ class ModelEvaluation : public App, public LinearMethod {
 };
 
 void ModelEvaluation::run() {
-  if (!isScheduler()) return;
+  if (!IsScheduler()) return;
   // load model
   std::unordered_map<Key, Real> weight;
   auto model = searchFiles(conf_.model_input());
