@@ -37,7 +37,7 @@ message DataConfig {
   // only valid for the binary format
   optional PbRange range = 4;
   // duplicate the file several times
-  optional int32 duplication = 10 [default = 1];
+  optional int32 replica = 10 [default = 1];
 }
 
 message HDFSConfig {

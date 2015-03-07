@@ -30,6 +30,7 @@ void Van::init(char* argv0) {
     my_node_ = assembleMyNode();
   }
 
+  if (FLAGS_log_dir.empty()) FLAGS_log_dir = "/tmp";
   // change the hostname in default log filename to node id
   string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
                    + "." + my_node_.id() + ".log.";
@@ -70,7 +71,7 @@ void Van::bind() {
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
-  VLOG(2) << "BIND address " << addr;
+  VLOG(1) << "BIND address " << addr;
 }
 
 void Van::disconnect(const Node& node) {
@@ -80,7 +81,7 @@ void Van::disconnect(const Node& node) {
     zmq_close (senders_[id]);
   }
   senders_.erase(id);
-  VLOG(2) << "DISCONNECT from " << node.id();
+  VLOG(1) << "DISCONNECT from " << node.id();
 }
 
 bool Van::connect(const Node& node) {
@@ -89,7 +90,7 @@ bool Van::connect(const Node& node) {
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
   if (senders_.find(id) != senders_.end()) {
-    VLOG(2) << "already connected to " << id;
+    VLOG(1) << "already connected to " << id;
     return true;
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);
@@ -111,7 +112,7 @@ bool Van::connect(const Node& node) {
   senders_[id] = sender;
   hostnames_[id] = node.hostname();
 
-  VLOG(2) << "CONNECT to " << id << " [" << addr << "]";
+  VLOG(1) << "CONNECT to " << id << " [" << addr << "]";
   return true;
 }
 
@@ -173,7 +174,7 @@ bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   } else {
     sent_to_others_ += data_size;
   }
-  VLOG(2) << "TO " << msg->recver << " " << msg->shortDebugString();
+  VLOG(1) << "TO " << msg->recver << " " << msg->shortDebugString();
   return true;
 }
 
@@ -225,7 +226,7 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   } else {
     received_from_others_ += data_size;
   }
-  VLOG(2) << "FROM: " << msg->sender << " " << msg->shortDebugString();
+  VLOG(1) << "FROM: " << msg->sender << " " << msg->shortDebugString();
   return true;
 }
 

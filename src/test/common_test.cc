@@ -2,20 +2,35 @@
 #include "util/common.h"
 
 using namespace PS;
-TEST(Common, NumberOfSetBits) {
-  EXPECT_EQ(NumberOfSetBits(0), 0);
-  EXPECT_EQ(NumberOfSetBits(1), 1);
-  EXPECT_EQ(NumberOfSetBits(2), 1);
-  EXPECT_EQ(NumberOfSetBits(3), 2);
-  EXPECT_EQ(NumberOfSetBits(4), 1);
-  EXPECT_EQ(NumberOfSetBits(5), 2);
-  EXPECT_EQ(NumberOfSetBits(6), 2);
-  EXPECT_EQ(NumberOfSetBits(8), 1);
-  EXPECT_EQ(NumberOfSetBits(9), 2);
-  EXPECT_EQ(NumberOfSetBits(16), 1);
-  EXPECT_EQ(NumberOfSetBits(kint32min), 1);
-  EXPECT_EQ(NumberOfSetBits(kint32max), 31);
-}
+
+// TEST(Common, xxx) {
+//   int a = 192;
+//   string b = "string";
+//   NOTICE("%d %s", a, b.data());
+// }
+
+// // http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
+// inline int32 NumberOfSetBits(int32 i) {
+//     i = i - ((i >> 1) & 0x55555555);
+//     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+//     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+// }
+
+// using namespace PS;
+// TEST(Common, NumberOfSetBits) {
+//   EXPECT_EQ(NumberOfSetBits(0), 0);
+//   EXPECT_EQ(NumberOfSetBits(1), 1);
+//   EXPECT_EQ(NumberOfSetBits(2), 1);
+//   EXPECT_EQ(NumberOfSetBits(3), 2);
+//   EXPECT_EQ(NumberOfSetBits(4), 1);
+//   EXPECT_EQ(NumberOfSetBits(5), 2);
+//   EXPECT_EQ(NumberOfSetBits(6), 2);
+//   EXPECT_EQ(NumberOfSetBits(8), 1);
+//   EXPECT_EQ(NumberOfSetBits(9), 2);
+//   EXPECT_EQ(NumberOfSetBits(16), 1);
+//   EXPECT_EQ(NumberOfSetBits(kint32min), 1);
+//   EXPECT_EQ(NumberOfSetBits(kint32max), 31);
+// }
 
 // TEST(COMMON, STRFY) {
 //   ASSERT_EQ("", strfy(""));

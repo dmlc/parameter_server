@@ -24,6 +24,8 @@ class ISGDScheduler : public App {
   }
 
   void updateModel(const DataConfig& data, int report_interval) {
+    LOG(INFO) << "update model: " << data.ShortDebugString();
+
     // init monitor
     using namespace std::placeholders;
     monitor_.setMerger(std::bind(&ISGDScheduler::mergeProgress, this, _1, _2));
@@ -43,6 +45,8 @@ class ISGDScheduler : public App {
       tasks.push_back(task);
     }
     port(kWorkerGroup)->submitAndWait(tasks);
+
+    LOG(INFO) << "finished";
   }
 
   virtual void showProgress(
@@ -69,17 +73,17 @@ class ISGDScheduler : public App {
     progress->clear();
     num_ex_processed_ += num_ex;
     if (show_prog_head_) {
-      fprintf(stderr, " sec  examples    loss      auc   accuracy   |w|_0  updt ratio\n");
+      NOTICE(" sec  examples    loss      auc   accuracy   |w|_0  updt ratio");
       show_prog_head_ = false;
     }
-    fprintf(stderr, "%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e\n",
-            (int)time,
-            (double)num_ex_processed_ ,
-            objv.sum()/(double)num_ex,
-            auc.mean(),
-            acc.mean(),
-            (double)nnz_w,
-            sqrt(delta_sum) / sqrt(weight_sum));
+    NOTICE("%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e",
+          (int)time,
+          (double)num_ex_processed_ ,
+          objv.sum()/(double)num_ex,
+          auc.mean(),
+          acc.mean(),
+          (double)nnz_w,
+          sqrt(delta_sum) / sqrt(weight_sum));
   }
 
   virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst) {

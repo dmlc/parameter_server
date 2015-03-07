@@ -1,5 +1,8 @@
 TESTFLAGS= -lgtest_main -lgtest $(LDFLAGS)
 
+build/common_test: src/test/common_test.cc src/util/common.h
+	$(CC) $(CFLAGS) $< $(TESTFLAGS) -o $@
+
 build/bitmap_test: src/test/bitmap_test.cc src/util/bitmap.h
 	$(CC) $(CFLAGS) $< $(TESTFLAGS) -o $@
 

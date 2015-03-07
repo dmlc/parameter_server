@@ -1,5 +1,4 @@
 #include "system/manager.h"
-#include <libgen.h>
 #include "system/postoffice.h"
 #include "system/app.h"
 namespace PS {
@@ -32,6 +31,9 @@ void Manager::init(char* argv0) {
   node_assigner_ = new NodeAssigner(FLAGS_num_servers);
 
   if (isScheduler()) {
+    NOTICE("staring system... info are logged in %s/%s.log.*",
+           FLAGS_log_dir.c_str(), basename(argv0));
+
     // create the app
     if (!FLAGS_app_file.empty()) {
       CHECK(readFileToString(FLAGS_app_file, &app_conf_))
@@ -57,8 +59,8 @@ void Manager::run() {
 
 void Manager::stop() {
   if (isScheduler()) {
-    // wait all machines are done
-    while (num_active_nodes_ > 0) usleep(500);
+    // wait all other nodes are done
+    while (num_active_nodes_ > 1) usleep(500);
     // broadcast the terminate signal
     for (const auto& it : nodes_) {
       Task task = newControlTask(Control::TERMINATE);

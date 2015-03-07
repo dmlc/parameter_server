@@ -118,3 +118,13 @@ class ResUsage {
 };
 
 } // namespace PS
+
+// struct timeval tv; gettimeofday(&tv, NULL);
+// time_t ts = (time_t)(tv.tv_sec);
+// struct ::tm tm_time; localtime_r(&ts, &tm_time);
+// std::cout << setw(2) << 1+tm_time_.tm_mon
+//           << setw(2) << tm_time_.tm_mday << ' '
+//           << setw(2) << tm_time_.tm_hour << ':'
+//           << setw(2) << tm_time_.tm_min  << ':'
+//           << setw(2) << tm_time_.tm_sec  << "."
+//           << setw(6) << tv.tv_usecs

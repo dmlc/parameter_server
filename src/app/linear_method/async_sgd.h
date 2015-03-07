@@ -23,13 +23,16 @@ class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
   virtual ~AsyncSGDScheduler() { }
 
   virtual void run() {
+
     WaitServersReady();
     LOG(INFO) << "Scheduler connected " << sys_.manager().numServers() << " servers";
 
     WaitWorkersReady();
     LOG(INFO) << "Scheduler connected " << sys_.manager().numWorkers() << " workers";
 
-    // set sgd.num_data_pass()
+    auto data = conf_.mutable_training_data();
+    data->set_replica(conf_.async_sgd().num_data_pass());
+    data->set_shuffle(true);
     updateModel(conf_.training_data(), conf_.async_sgd().report_interval());
     saveModel();
   }
@@ -199,6 +202,8 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
 
   void updateModel(const SGDCall& call) {
     WaitServersReady();
+
+    LOG(INFO) << "update model: " << call.data().ShortDebugString();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
     reader.setReader(call.data(), sgd.minibatch(), sgd.data_buf());
@@ -212,6 +217,8 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       auto& data = data_[id];
       mu_.unlock();
       if (!reader.read(data.first, data.second, key)) break;
+      VLOG(1) << "load minibatch " << id << ", X: "
+              << data.second->rows() << "-by-" << data.second->cols();
 
       // pull the weight
       MessagePtr msg(new Message(kServerGroup));
@@ -225,6 +232,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     }
 
     while (processed_batch_ < id) { usleep(500); }
+    LOG(INFO) << "finished update";
   }
 
   void computeGradient(int id) {
@@ -234,7 +242,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     data_.erase(id);
     mu_.unlock();
     CHECK_EQ(X->rows(), Y->rows());
-
+    VLOG(1) << "compute gradient for minibatch " << id;
     // evaluate
     SArray<V> Xw(Y->rows());
     auto w = model_.value(id);
@@ -281,6 +289,7 @@ private:
   KVVector<Key, V> model_;
   LossPtr<V> loss_;
 
+  // minibatch_id, Y, X
   std::unordered_map<int, std::pair<MatrixPtr<V>, MatrixPtr<V>>> data_;
 
   std::mutex mu_;

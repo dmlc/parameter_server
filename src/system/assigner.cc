@@ -5,13 +5,13 @@ namespace PS {
 void DataAssigner::set(const DataConfig& data, int num) {
   // search all files
   CHECK_GT(num, 0);
-  CHECK_GT(data.duplication(), 0);
+  CHECK_GT(data.replica(), 0);
   DataConfig files = searchFiles(data);
   VLOG(1) << "find " << files.file_size() << "files: " << files.ShortDebugString();
 
   // divide them
   parts_.resize(num);
-  for (int r = 0; r < data.duplication(); ++r) {
+  for (int r = 0; r < data.replica(); ++r) {
     if (data.shuffle()) files = shuffleFiles(files);
     auto pts = divideFiles(files, num);
     if (r == 0) {
