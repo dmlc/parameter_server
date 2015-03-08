@@ -22,6 +22,9 @@ class Van {
   bool send(const MessagePtr& msg, size_t* send_bytes);
   bool recv(const MessagePtr& msg, size_t* recv_bytes);
 
+  // monitor the liveness of all other nodes. only avaiable for the scheduler
+  void monitor();
+
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };
 
@@ -37,23 +40,31 @@ class Van {
   static std::string address(const Node& node) {
     return node.hostname() + ":" + std::to_string(node.port());
   }
-  // print statistic info
-  void statistic();
   Node assembleMyNode();
+  bool isScheduler() { return my_node_.role() == Node::SCHEDULER; }
+  bool getMonitorEvent(void *monitor, int *event, int *value);
 
   void *context_ = nullptr;
   void *receiver_ = nullptr;
   Node my_node_;
   Node scheduler_;
   std::unordered_map<NodeID, void *> senders_;
-  std::unordered_map<NodeID, string> hostnames_;
 
+  DISALLOW_COPY_AND_ASSIGN(Van);
+
+  // TODO move to postoffice::perf_monitor_
+  // print statistic info
+  void statistic();
+  std::unordered_map<NodeID, string> hostnames_;
   size_t sent_to_local_ = 0;
   size_t sent_to_others_ = 0;
   size_t received_from_local_ = 0;
   size_t received_from_others_ = 0;
 
-  DISALLOW_COPY_AND_ASSIGN(Van);
+  // for the scheduler monitor the liveness of others
+  std::unordered_map<int, NodeID> fd_to_nodeid_;
+  std::mutex fd_to_nodeid_mu_;
+  std::thread* monitor_thread_;
 };
 
 } // namespace PS

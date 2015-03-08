@@ -92,6 +92,7 @@ class Manager {
 
   int time_ = 0;
 
+
   DISALLOW_COPY_AND_ASSIGN(Manager);
 };
 

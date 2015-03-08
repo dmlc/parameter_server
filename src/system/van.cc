@@ -15,6 +15,7 @@ DEFINE_string(interface, "", "network interface");
 DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
 
+
 Van::~Van() {
   statistic();
   for (auto& it : senders_) zmq_close(it.second);
@@ -30,6 +31,8 @@ void Van::init(char* argv0) {
     my_node_ = assembleMyNode();
   }
 
+  // the earliest time I can get my_node_.id(), so put the log setup here
+  // before logging anything
   if (FLAGS_log_dir.empty()) FLAGS_log_dir = "/tmp";
   // change the hostname in default log filename to node id
   string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
@@ -61,6 +64,12 @@ void Van::bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
   CHECK(receiver_ != NULL)
       << "create receiver socket failed: " << zmq_strerror(errno);
+  if (isScheduler()) {
+    CHECK_EQ(zmq_socket_monitor(receiver_, "inproc://monitor", ZMQ_EVENT_ALL), 0);
+
+    monitor_thread_ = new std::thread(&Van::monitor, this);
+    monitor_thread_->detach();
+  }
   string addr = "tcp://*:";
   if (FLAGS_bind_to) {
     addr += std::to_string(FLAGS_bind_to);
@@ -203,6 +212,20 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
       CHECK(msg->task.ParseFromString(std::string(buf, size)))
           << "parse string from " << sender << " I'm " << my_node_.id() << " "
           << size;
+      if (isScheduler() && msg->task.control() &&
+          msg->task.ctrl().cmd() == Control::REQUEST_APP) {
+        // it is the first time the scheduler receive message from the
+        // sender. store the file desciptor of the sender for the monitor
+        char val[300]; size_t val_len = sender.size();
+        CHECK_LT(val_len, 300);
+        memcpy(val, sender.data(), val_len);
+        CHECK(!zmq_getsockopt(receiver_,  ZMQ_IDENTITY_FD, val, &val_len))
+            << "failed to get the file descriptor of " << sender;
+        CHECK_EQ(val_len, 4);
+        int fd = *((int*)val);
+        Lock l(fd_to_nodeid_mu_);
+        fd_to_nodeid_[fd] = sender;
+      }
     } else {
       // data
       SArray<char> data; data.copyFrom(buf, size);
@@ -280,5 +303,46 @@ bool Van::connected(const Node& node) {
   return it != senders_.end();
 }
 
+bool Van::getMonitorEvent(void *monitor, int *event, int *value) {
+ // First frame in message contains event number and value
+ zmq_msg_t msg;
+ zmq_msg_init(&msg);
+
+ if (zmq_msg_recv(&msg, monitor, 0) == -1) return false; // Interrupted, presumably
+
+ uint8_t *data = (uint8_t *)zmq_msg_data (&msg);
+ if (event) *event = *(uint16_t *)(data);
+ if (value) *value = *(uint32_t *)(data + 2);
+ return true;
+}
+
+void Van::monitor() {
+  LOG(INFO) << "starting monitor...";
+  void *s = CHECK_NOTNULL(zmq_socket (context_, ZMQ_PAIR));
+  CHECK(!zmq_connect (s, "inproc://monitor"));
+  while (true) {
+    int event, value;
+    if (!getMonitorEvent(s, &event, &value)) {
+      if (errno == EINTR) continue;  // may be interupted by google profiler
+      break;
+    }
+
+    if (event == ZMQ_EVENT_ACCEPTED) {
+      LL << "accepted socket descriptor " <<  value;
+    }
+
+    if (event == ZMQ_EVENT_DISCONNECTED) {
+      Lock l(fd_to_nodeid_mu_);
+      if (fd_to_nodeid_.find(value) == fd_to_nodeid_.end()) {
+        LOG(WARNING) << "cannot find the node id for FD = " << value;
+        continue;
+      }
+      NodeID node = fd_to_nodeid_[value];
+      LL << node << " is disconnected";
+    }
+  }
+  zmq_close (s);
+  LOG(INFO) << "monitor stopped.";
+}
 
 } // namespace PS
