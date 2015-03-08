@@ -24,10 +24,10 @@ class Manager {
   void removeNode(const Node& node);
 
   // manage customer
-  Customer* customer(int id) { CHECK(false); }  // should check
-  void addCustomer(Customer* obj) { }
-  void removeCustomer(int id) { }
-  int nextCustomerID() { return 0; }
+  Customer* customer(int id) { return customer_manager_.get(id); }
+  void addCustomer(Customer* obj) { customer_manager_.add(obj); }
+  void removeCustomer(int id) { customer_manager_.remove(id); }
+  int nextCustomerID() { return customer_manager_.nextID(); }
 
   // workers and servers
   void waitServersReady();
@@ -73,10 +73,20 @@ class Manager {
   NodeManager node_manager_;
 
   class CustomerManager {
+   public:
+    CustomerManager() { }
+    ~CustomerManager();
+    void add(Customer* obj);
+    void remove(int id);
+    Customer* get(int id);
+    int nextID();
+    void addNode(const Node& node);
+    void removeNode(const Node& node);
+   private:
+    // format: <id, <obj_ptr, is_deletable>>
+    std::map<int, std::pair<Customer*, bool>> customers_;
   };
   CustomerManager customer_manager_;
-
-  std::map<int, std::pair<Customer*, bool>> customers_;
 
   Van van_;
 

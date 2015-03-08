@@ -20,9 +20,6 @@ Manager::Manager() {}
 Manager::~Manager() {
   delete node_assigner_;
   delete app_;
-  for (auto& it : customers_) {
-    if (it.second.second) delete it.second.first;
-  }
 }
 
 void Manager::init(char* argv0) {
@@ -46,6 +43,7 @@ void Manager::init(char* argv0) {
   } else {
     // request the app config from the scheduler
     Task task = newControlTask(Control::REQUEST_APP);
+    *task.mutable_ctrl()->add_node() = van_.myNode();
     sendTask(van_.scheduler(), task);
   }
 }
@@ -82,12 +80,16 @@ void Manager::stop() {
 bool Manager::process(const MessagePtr& msg) {
   const Task& task = msg->task;
   CHECK(task.control());
-  const auto& ctrl = task.ctrl();
 
   if (task.request()) {
+    CHECK(task.has_ctrl());
+    const auto& ctrl = task.ctrl();
     switch (ctrl.cmd()) {
       case Control::REQUEST_APP: {
         CHECK(isScheduler());
+        // need to connect to this node before sending reply message
+        CHECK_EQ(ctrl.node_size(), 1);
+        CHECK(van_.connect(ctrl.node(0)));
         Task reply = task;
         reply.set_request(false);
         reply.set_msg(app_conf_);
@@ -135,10 +137,13 @@ bool Manager::process(const MessagePtr& msg) {
     }
     if (!msg->replied) Postoffice::instance().reply(msg->sender, msg->task);
   } else {
-    if (ctrl.cmd() == Control::REQUEST_APP) {
+    if (!task.has_ctrl()) return true;
+    if (task.ctrl().cmd() == Control::REQUEST_APP) {
+      CHECK(task.has_msg());
       createApp(task.msg());
       // app is created, now we can ask the scheduler to broadcast this node to others
       Task task = newControlTask(Control::REGISTER_NODE);
+      *task.mutable_ctrl()->add_node() = van_.myNode();
       sendTask(van_.scheduler(), task);
     }
   }
@@ -148,7 +153,10 @@ bool Manager::process(const MessagePtr& msg) {
 void Manager::addNode(const Node& node) {
   // add to system
   if (nodes_.find(node.id()) == nodes_.end()) {
-    CHECK(van_.connect(node));
+    if (!isScheduler()) {
+      // the scheduler has already connect this node when processing REQUEST_APP
+      CHECK(van_.connect(node));
+    }
     if (node.role() == Node::WORKER) ++ num_workers_;
     if (node.role() == Node::SERVER) ++ num_servers_;
     ++ num_active_nodes_;
@@ -156,27 +164,25 @@ void Manager::addNode(const Node& node) {
   nodes_[node.id()] = node;
 
   // add to app
-  for (auto& it : customers_) {
-    it.second.first->exec().addNode(node);
-  }
+  customer_manager_.addNode(node);
 
-  if (isScheduler()) {
-    // // send all existing nodes info to sender
-    // Task add_node = newControlTask(Control::ADD);
-    // for (const auto& it : nodes_) {
-    //   *add_node.mutable_control()->add_node() = it.second;
-    // }
-    // sendTask(sender, add_node);
+  if (isScheduler() && node.id() != van_.myNode().id()) {
+    // send all existing nodes info to sender
+    Task add_node = newControlTask(Control::ADD_NODE);
+    for (const auto& it : nodes_) {
+      *add_node.mutable_ctrl()->add_node() = it.second;
+    }
+    sendTask(node, add_node);
 
-    // // broadcast this new sender info
-    // for (const auto& it : nodes_) {
-    //   if (it.first == van_.myNode().id() || it.first == sender.id()) {
-    //     continue;
-    //   }
-    //   Task add_new_node = newControlTask(Control::ADD);
-    //   *add_new_node.mutable_control()->add_node() = sender;
-    //   sendTask(it.second, add_new_node);
-    // }
+    // broadcast this new sender info
+    for (const auto& it : nodes_) {
+      if (it.first == van_.myNode().id() || it.first == node.id()) {
+        continue;
+      }
+      Task add_new_node = newControlTask(Control::ADD_NODE);
+      *add_new_node.mutable_ctrl()->add_node() = node;
+      sendTask(it.second, add_new_node);
+    }
   }
 
   LOG(INFO) << "add node: " << node.ShortDebugString();
@@ -185,11 +191,7 @@ void Manager::addNode(const Node& node) {
 
 void Manager::removeNode(const Node& node) {
   // TODO use *replace* for server
-  if (node.role() == Node::WORKER) {
-    for (auto& it : customers_) {
-      it.second.first->exec().removeNode(node);
-    }
-  }
+  customer_manager_.removeNode(node);
 
   van_.disconnect(node);
   if (nodes_.find(node.id()) != nodes_.end()) {
@@ -201,6 +203,7 @@ void Manager::removeNode(const Node& node) {
 
   LOG(INFO) << "remove node: " << node.ShortDebugString();
 }
+
 
 Task Manager::newControlTask(Control::Command cmd) {
   Task task;
@@ -225,24 +228,6 @@ void Manager::createApp(const string& conf) {
   app_promise_.set_value();
 }
 
-// customers
-// void Manager::addCustomer(Customer* customer) {
-//   CHECK_EQ(customers_.count(customer->name()), 0) << customer->name();
-//   customers_[customer->name()] = std::make_pair(customer, false);
-// }
-
-// Customer* Manager::customer(const string& name) {
-//   auto it = customers_.find(name);
-//   if (it == customers_.end()) return nullptr;
-//   return it->second.first;
-// }
-
-// void Manager::removeCustomer(const string& name) {
-//   auto it = customers_.find(name);
-//   if (it == customers_.end()) return;
-//   customers_.erase(it);
-// }
-
 void Manager::waitServersReady() {
   while (num_servers_ < FLAGS_num_servers) {
     usleep(500);
@@ -251,6 +236,48 @@ void Manager::waitServersReady() {
 void Manager::waitWorkersReady() {
   while (num_workers_ < FLAGS_num_workers) {
     usleep(500);
+  }
+}
+
+// CustomerManager
+Manager::CustomerManager::~CustomerManager() {
+  for (auto& it : customers_) {
+    if (it.second.second) delete it.second.first;
+  }
+}
+
+void Manager::CustomerManager::add(Customer* obj) {
+  CHECK_EQ(customers_.count(obj->id()), 0)
+      << obj->id() << " already exists";
+  customers_[obj->id()] = std::make_pair(obj, false);
+}
+
+void Manager::CustomerManager::remove(int id) {
+  auto it = customers_.find(id);
+  if (it != customers_.end()) customers_.erase(it);
+}
+
+Customer* Manager::CustomerManager::get(int id) {
+  auto it = customers_.find(id);
+  if (it == customers_.end()) CHECK(false) << id << " does not exist";
+  return it->second.first;
+}
+
+int Manager::CustomerManager::nextID() {
+  int id = 0;
+  for (const auto& it : customers_) id = std::max(id, it.second.first->id()+1);
+  return id;
+}
+
+void Manager::CustomerManager::addNode(const Node& node) {
+  for (auto& it : customers_) {
+    it.second.first->exec().addNode(node);
+  }
+}
+
+void Manager::CustomerManager::removeNode(const Node& node) {
+  for (auto& it : customers_) {
+    it.second.first->exec().removeNode(node);
   }
 }
 

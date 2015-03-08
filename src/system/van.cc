@@ -17,9 +17,9 @@ DECLARE_int32(num_servers);
 
 Van::~Van() {
   statistic();
-  for (auto& it : senders_) zmq_close (it.second);
-  zmq_close (receiver_);
-  zmq_ctx_destroy (context_);
+  for (auto& it : senders_) zmq_close(it.second);
+  zmq_close(receiver_);
+  zmq_ctx_destroy(context_);
 }
 
 void Van::init(char* argv0) {
@@ -52,7 +52,7 @@ void Van::init(char* argv0) {
   // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
 
   bind();
-  connect(my_node_);
+  // connect(my_node_);
   connect(scheduler_);
 }
 
@@ -90,7 +90,6 @@ bool Van::connect(const Node& node) {
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
   if (senders_.find(id) != senders_.end()) {
-    VLOG(1) << "already connected to " << id;
     return true;
   }
   void *sender = zmq_socket(context_, ZMQ_DEALER);

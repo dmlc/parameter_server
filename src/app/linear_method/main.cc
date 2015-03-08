@@ -34,7 +34,7 @@ App* App::create(const string& conf_str) {
       app = new AsyncSGDServer<Real>(conf);
     }
   } else if (conf.has_validation_data()) {
-    app =  new ModelEvaluation(conf);
+    app = new ModelEvaluation(conf);
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
              << " at " << MyNode().ShortDebugString();
