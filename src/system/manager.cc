@@ -189,21 +189,39 @@ void Manager::addNode(const Node& node) {
 }
 
 
-void Manager::removeNode(const Node& node) {
+void Manager::removeNode(const NodeID& node_id) {
   // TODO use *replace* for server
-  customer_manager_.removeNode(node);
+  // customer_manager_.removeNode(node);
 
-  van_.disconnect(node);
-  if (nodes_.find(node.id()) != nodes_.end()) {
-    if (node.role() == Node::WORKER) -- num_workers_;
-    if (node.role() == Node::SERVER) -- num_servers_;
-    nodes_.erase(node.id());
-    -- num_active_nodes_;
-  }
+  // van_.disconnect(node);
+  // if (nodes_.find(node.id()) != nodes_.end()) {
+  //   if (node.role() == Node::WORKER) -- num_workers_;
+  //   if (node.role() == Node::SERVER) -- num_servers_;
+  //   nodes_.erase(node.id());
+  //   -- num_active_nodes_;
+  // }
 
-  LOG(INFO) << "remove node: " << node.ShortDebugString();
+  // LOG(INFO) << "remove node: " << node.ShortDebugString();
 }
 
+void Manager::nodeDisconnected(const NodeID node_id) {
+  if (isScheduler()) {
+    // broadcast the dead node info
+    LOG(INFO) << node_id << " is disconnected";
+  } else {
+    // sleep a while, in case this node is already in terminating
+    for (int i = 0; i < 1000; ++i) {
+      usleep(1000);
+      if (done_) return;
+    }
+    LOG(ERROR) << "ooops, the scheduler is died, killing myself ["
+               << van_.myNode().id() << "]";
+    // exit(-1);
+    // The following approach is not so great
+    Task task = newControlTask(Control::EXIT);
+    sendTask(van_.myNode(), task);
+  }
+}
 
 Task Manager::newControlTask(Control::Command cmd) {
   Task task;
@@ -254,7 +272,9 @@ void Manager::CustomerManager::add(Customer* obj) {
 
 void Manager::CustomerManager::remove(int id) {
   auto it = customers_.find(id);
-  if (it != customers_.end()) customers_.erase(it);
+  // only assign it to NULL, because the call chain could be:
+  // ~CustomerManager() -> ~Customer() -> remove(int id)
+  if (it != customers_.end()) it->second.first = NULL;
 }
 
 Customer* Manager::CustomerManager::get(int id) {

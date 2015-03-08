@@ -11,8 +11,6 @@ class Customer {
   // A customer must have an unique id so that the remote node can find the
   // correct customer by using this id.
   Customer(int id);
-  // System will automatically assign an id to this customer.
-  Customer();
   virtual ~Customer();
 
   // process a message received from a remote node. It will be called by
@@ -25,7 +23,7 @@ class Customer {
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs);
 
   // return the remote_note by its name
-  RNode* port(const NodeID& k) { return CHECK_NOTNULL(exec_.rnode(k)); }
+  RNode* port(const NodeID& k);
 
   // accessors
   Executor& exec() { return exec_; }

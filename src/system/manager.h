@@ -21,7 +21,8 @@ class Manager {
 
   // manage nodes
   void addNode(const Node& node);
-  void removeNode(const Node& node);
+  void removeNode(const NodeID& node_id);
+  void nodeDisconnected(const NodeID node_id);
 
   // manage customer
   Customer* customer(int id) { return customer_manager_.get(id); }
@@ -43,6 +44,7 @@ class Manager {
   // accessors
   Van& van() { return van_; }
   App* app() { return app_; }
+  bool done() { return done_; }
 
  private:
   bool isScheduler() { return van_.myNode().role() == Node::SCHEDULER; }

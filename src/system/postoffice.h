@@ -29,7 +29,6 @@ class Postoffice {
 
   Manager& manager() { return manager_; }
   HeartbeatInfo& pm() { return perf_monitor_; }
-
  private:
   Postoffice();
   void send();

@@ -16,33 +16,23 @@ class Van {
   void disconnect(const Node&  node);
   bool connect(const Node&  node);
 
-  // check whether I could connect to a specified node
-  bool connected(const Node& node);
-
   bool send(const MessagePtr& msg, size_t* send_bytes);
   bool recv(const MessagePtr& msg, size_t* recv_bytes);
 
-  // monitor the liveness of all other nodes. only avaiable for the scheduler
-  void monitor();
-
   Node& myNode() { return my_node_; }
   Node& scheduler() { return scheduler_; };
-
  private:
   // bind to my port
   void bind();
 
-  static Node parseNode(const string& config) {
-    Node node; CHECK(TextFormat::ParseFromString(config, &node));
-    if (!node.has_id()) node.set_id(address(node));
-    return node;
-  }
-  static std::string address(const Node& node) {
-    return node.hostname() + ":" + std::to_string(node.port());
-  }
+  Node parseNode(const string& node_str);
+
   Node assembleMyNode();
   bool isScheduler() { return my_node_.role() == Node::SCHEDULER; }
   bool getMonitorEvent(void *monitor, int *event, int *value);
+  // scheduler: monitor the liveness of all other nodes
+  // other nodes: monitor the liveness of the scheduler
+  void monitor();
 
   void *context_ = nullptr;
   void *receiver_ = nullptr;
@@ -61,7 +51,7 @@ class Van {
   size_t received_from_local_ = 0;
   size_t received_from_others_ = 0;
 
-  // for the scheduler monitor the liveness of others
+  // for monitor
   std::unordered_map<int, NodeID> fd_to_nodeid_;
   std::mutex fd_to_nodeid_mu_;
   std::thread* monitor_thread_;

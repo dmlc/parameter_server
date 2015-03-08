@@ -21,6 +21,10 @@ MessagePtrList Customer::slice(const MessagePtr& msg, const KeyRangeList& krs) {
   return ret;
 }
 
+RNode* Customer::port(const NodeID& k) {
+  if (sys_.manager().done()) exit(0);
+  return CHECK_NOTNULL(exec_.rnode(k));
+}
 
 App::App() : Customer(NextCustomerID()) { }
 } // namespace PS

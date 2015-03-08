@@ -3,6 +3,8 @@
 #include <zmq.h>
 #include "util/shared_array_inl.h"
 #include "util/local_machine.h"
+#include "system/manager.h"
+#include "system/postoffice.h"
 namespace PS {
 
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
@@ -57,6 +59,16 @@ void Van::init(char* argv0) {
   bind();
   // connect(my_node_);
   connect(scheduler_);
+
+  // setup monitor
+  if (isScheduler()) {
+    CHECK(!zmq_socket_monitor(receiver_, "inproc://monitor", ZMQ_EVENT_ALL));
+  } else {
+    CHECK(!zmq_socket_monitor(
+        senders_[scheduler_.id()], "inproc://monitor", ZMQ_EVENT_ALL));
+  }
+  monitor_thread_ = new std::thread(&Van::monitor, this);
+  monitor_thread_->detach();
 }
 
 
@@ -64,12 +76,6 @@ void Van::bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
   CHECK(receiver_ != NULL)
       << "create receiver socket failed: " << zmq_strerror(errno);
-  if (isScheduler()) {
-    CHECK_EQ(zmq_socket_monitor(receiver_, "inproc://monitor", ZMQ_EVENT_ALL), 0);
-
-    monitor_thread_ = new std::thread(&Van::monitor, this);
-    monitor_thread_->detach();
-  }
   string addr = "tcp://*:";
   if (FLAGS_bind_to) {
     addr += std::to_string(FLAGS_bind_to);
@@ -111,7 +117,7 @@ bool Van::connect(const Node& node) {
   // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
   // connect
-  string addr = "tcp://" + address(node);
+  string addr = "tcp://" + node.hostname() + ":" + std::to_string(node.port());
   if (zmq_connect(sender, addr.c_str()) != 0) {
     LOG(WARNING) << "connect to " + addr + " failed: " + zmq_strerror(errno);
     return false;
@@ -223,6 +229,7 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
             << "failed to get the file descriptor of " << sender;
         CHECK_EQ(val_len, 4);
         int fd = *((int*)val);
+        VLOG(1) << "node [" << sender << "] is on file descriptor " << fd;
         Lock l(fd_to_nodeid_mu_);
         fd_to_nodeid_[fd] = sender;
       }
@@ -257,6 +264,14 @@ void Van::statistic() {
             << " (local " << gb(sent_to_local_) << ") Gbyte,"
             << " received " << gb(received_from_local_ + received_from_others_)
             << " (local " << gb(received_from_local_) << ") Gbyte";
+}
+
+Node Van::parseNode(const string& node_str) {
+  Node node; CHECK(TextFormat::ParseFromString(node_str, &node));
+  if (!node.has_id()) {
+    node.set_id(node.hostname() + ":" + std::to_string(node.port()));
+  }
+  return node;
 }
 
 Node Van::assembleMyNode() {
@@ -298,51 +313,51 @@ Node Van::assembleMyNode() {
   return ret_node;
 }
 
-bool Van::connected(const Node& node) {
-  auto it = senders_.find(node.id());
-  return it != senders_.end();
-}
-
 bool Van::getMonitorEvent(void *monitor, int *event, int *value) {
- // First frame in message contains event number and value
- zmq_msg_t msg;
- zmq_msg_init(&msg);
-
- if (zmq_msg_recv(&msg, monitor, 0) == -1) return false; // Interrupted, presumably
-
- uint8_t *data = (uint8_t *)zmq_msg_data (&msg);
- if (event) *event = *(uint16_t *)(data);
- if (value) *value = *(uint32_t *)(data + 2);
- return true;
+  // First frame in message contains event number and value
+  return true;
 }
 
 void Van::monitor() {
-  LOG(INFO) << "starting monitor...";
+  VLOG(1) << "starting monitor...";
   void *s = CHECK_NOTNULL(zmq_socket (context_, ZMQ_PAIR));
   CHECK(!zmq_connect (s, "inproc://monitor"));
   while (true) {
-    int event, value;
-    if (!getMonitorEvent(s, &event, &value)) {
+    zmq_msg_t msg;
+    zmq_msg_init(&msg);
+    if (zmq_msg_recv(&msg, s, 0) == -1) {
       if (errno == EINTR) continue;  // may be interupted by google profiler
       break;
     }
-
-    if (event == ZMQ_EVENT_ACCEPTED) {
-      LL << "accepted socket descriptor " <<  value;
-    }
+    uint8_t *data = (uint8_t *)zmq_msg_data (&msg);
+    int event = *(uint16_t *)(data);
+    int value = *(uint32_t *)(data + 2);
 
     if (event == ZMQ_EVENT_DISCONNECTED) {
-      Lock l(fd_to_nodeid_mu_);
-      if (fd_to_nodeid_.find(value) == fd_to_nodeid_.end()) {
-        LOG(WARNING) << "cannot find the node id for FD = " << value;
-        continue;
+      auto& manager = Postoffice::instance().manager();
+      if (isScheduler()) {
+        Lock l(fd_to_nodeid_mu_);
+        if (fd_to_nodeid_.find(value) == fd_to_nodeid_.end()) {
+          LOG(WARNING) << "cannot find the node id for FD = " << value;
+          continue;
+        }
+        manager.nodeDisconnected(fd_to_nodeid_[value]);
+      } else {
+        manager.nodeDisconnected(scheduler_.id());
       }
-      NodeID node = fd_to_nodeid_[value];
-      LL << node << " is disconnected";
     }
+    if (event == ZMQ_EVENT_MONITOR_STOPPED) break;
   }
   zmq_close (s);
-  LOG(INFO) << "monitor stopped.";
+  VLOG(1) << "monitor stopped.";
 }
 
 } // namespace PS
+
+  // check whether I could connect to a specified node
+  // bool connected(const Node& node);
+
+// bool Van::connected(const Node& node) {
+//   auto it = senders_.find(node.id());
+//   return it != senders_.end();
+// }
