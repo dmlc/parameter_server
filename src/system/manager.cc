@@ -214,12 +214,9 @@ void Manager::nodeDisconnected(const NodeID node_id) {
       usleep(1000);
       if (done_) return;
     }
-    LOG(ERROR) << "ooops, the scheduler is died, killing myself ["
-               << van_.myNode().id() << "]";
-    // exit(-1);
-    // The following approach is not so great
-    Task task = newControlTask(Control::EXIT);
-    sendTask(van_.myNode(), task);
+    LOG(ERROR) << van_.myNode().id() << ": the scheduler is died, killing myself";
+    string kill = "kill -9 " + std::to_string(getpid());
+    system(kill.c_str());
   }
 }
 

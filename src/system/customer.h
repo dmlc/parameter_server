@@ -23,7 +23,8 @@ class Customer {
   virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs);
 
   // return the remote_note by its name
-  RNode* port(const NodeID& k);
+  RNode* port(const NodeID& k) { return CHECK_NOTNULL(exec_.rnode(k)); }
+
 
   // accessors
   Executor& exec() { return exec_; }

@@ -44,7 +44,7 @@ class Manager {
   // accessors
   Van& van() { return van_; }
   App* app() { return app_; }
-  bool done() { return done_; }
+  // bool done() { return done_; }
 
  private:
   bool isScheduler() { return van_.myNode().role() == Node::SCHEDULER; }
