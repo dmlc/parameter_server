@@ -2,16 +2,14 @@
 #include "data/common.h"
 namespace PS {
 
-
 void WorkloadPool::set(const Workload& load) {
+  VLOG(1) << "init workload " << load.ShortDebugString();
   Lock l(mu_);
   CHECK_GT(load.replica(), 0);
   DataConfig files = searchFiles(load.data());
-  VLOG(1) << "find " << files.file_size() << "files: " << files.ShortDebugString();
+  VLOG(1) << "find " << files.file_size() << " files: " << files.ShortDebugString();
 
-  // divide them
-  loads_.reserve(files.file_size() * load.replica());
-
+  loads_.resize(files.file_size() * load.replica());
   int k = 0;
   for (int r = 0; r < load.replica(); ++r) {
     if (load.shuffle()) files = shuffleFiles(files);
@@ -22,6 +20,7 @@ void WorkloadPool::set(const Workload& load) {
       loads_[k++] = info;
     }
   }
+  CHECK_EQ(k, loads_.size());
 }
 
 
@@ -32,6 +31,7 @@ bool WorkloadPool::assign(const NodeID& node_id, Workload* load) {
       *load = info.load;
       info.node = node_id;
       info.assigned = true;
+      VLOG(1) << "assign to [" << node_id << "] " << load->ShortDebugString();
       return true;
     }
   }
@@ -43,8 +43,9 @@ void WorkloadPool::restore(const NodeID& node_id) {
   Lock l(mu_);
   for (auto& info : loads_) {
     if (info.assigned && !info.finished && info.node == node_id) {
-      info.node.clear();
+      // info.node = "";
       info.assigned = false;
+      VLOG(1) << "restore workload " << info.load.id() << " from " << node_id;
     }
   }
 }
@@ -55,6 +56,7 @@ void WorkloadPool::finish(int id) {
   CHECK_GE(id, 0); CHECK_LT(id, loads_.size());
   loads_[id].finished = true;
   ++ num_finished_;
+  VLOG(1) << "workload " << id << " is finished";
 }
 
 
@@ -69,6 +71,7 @@ void WorkloadPool::waitUtilDone() {
       usleep(1000);
     }
   }
+  VLOG(1) << "all workloads are done";
 }
 
 } // namespace PS

@@ -22,7 +22,13 @@ class Manager {
   // manage nodes
   void addNode(const Node& node);
   void removeNode(const NodeID& node_id);
+  // detect that *node_id* is disconnected
   void nodeDisconnected(const NodeID node_id);
+  // add a function handler which will be called in *nodeDisconnected*
+  typedef std::function<void(const NodeID&)> NodeFailureHandler;
+  void addNodeFailureHandler(NodeFailureHandler handler) {
+    node_failure_handlers_.push_back(handler);
+  }
 
   // manage customer
   Customer* customer(int id);
@@ -64,6 +70,7 @@ class Manager {
   int num_workers_ = 0;
   int num_servers_ = 0;
   int num_active_nodes_ = 0;
+  std::vector<NodeFailureHandler> node_failure_handlers_;
 
   // only available at the scheduler node
   NodeAssigner* node_assigner_ = nullptr;

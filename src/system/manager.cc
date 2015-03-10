@@ -190,7 +190,7 @@ void Manager::addNode(const Node& node) {
     }
   }
 
-  LOG(INFO) << "add node: " << node.ShortDebugString();
+  VLOG(1) << "add node: " << node.ShortDebugString();
 }
 
 
@@ -215,9 +215,14 @@ void Manager::removeNode(const NodeID& node_id) {
 }
 
 void Manager::nodeDisconnected(const NodeID node_id) {
+  // call handlers
+  for (const auto& h : node_failure_handlers_) h(node_id);
+
   if (isScheduler()) {
-    // broadcast the dead node info
     LOG(INFO) << node_id << " is disconnected";
+
+    // broadcast the dead node info
+    // TODO
   } else {
     // sleep a while, in case this node is already in terminating
     for (int i = 0; i < 1000; ++i) {

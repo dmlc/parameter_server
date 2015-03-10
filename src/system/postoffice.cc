@@ -43,7 +43,7 @@ void Postoffice::run(int* argc, char*** argv) {
 
 void Postoffice::reply(const MessagePtr& msg, Task reply) {
   const Task& task = msg->task;
-  if (task.request()) return;
+  if (!task.request()) return;
   reply.set_request(false);
   reply.set_control(task.control());
   reply.set_time(task.time());
