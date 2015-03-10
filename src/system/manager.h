@@ -80,6 +80,7 @@ class Manager {
   std::map<int, std::pair<Customer*, bool>> customers_;
 
   bool done_ = false;
+  bool in_exit_ = false;
   int time_ = 0;
 
   Van van_;

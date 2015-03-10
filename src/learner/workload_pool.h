@@ -29,9 +29,9 @@ class WorkloadPool {
  protected:
   struct WorkloadInfo {
     NodeID node;
+    Workload load;
     bool assigned = false;
     bool finished = false;
-    Workload load;
   };
   std::vector<WorkloadInfo> loads_;
   int num_finished_ = 0;

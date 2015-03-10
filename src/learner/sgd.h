@@ -16,7 +16,7 @@ namespace PS {
 class ISGDScheduler : public App {
  public:
   ISGDScheduler() : App() { }
-  virtual ~ISGDScheduler() { delete workload_pool_; }
+  virtual ~ISGDScheduler();
   virtual void process(const MessagePtr& msg);
   virtual void run();
 

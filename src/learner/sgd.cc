@@ -1,6 +1,10 @@
 #include "learner/sgd.h"
 namespace PS {
 
+ISGDScheduler::~ISGDScheduler() {
+  // core dump when delete workload_pool_;
+}
+
 void ISGDScheduler::run() {
   // init monitor
   using namespace std::placeholders;

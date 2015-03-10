@@ -14,6 +14,8 @@ void WorkloadPool::set(const Workload& load) {
   for (int r = 0; r < load.replica(); ++r) {
     if (load.shuffle()) files = shuffleFiles(files);
     for (int i = 0; i < files.file_size(); ++i) {
+      // be careful here, do not use loads_[k] = xxx; it will copy the pointer
+      // of load.data_ rather than the value.
       *loads_[k].load.mutable_data() = ithFile(files, i);
       loads_[k].load.set_id(k);
       ++ k;
@@ -27,7 +29,7 @@ bool WorkloadPool::assign(const NodeID& node_id, Workload* load) {
   Lock l(mu_);
   for (auto& info : loads_) {
     if (!info.assigned) {
-      *load = info.load;
+      load->CopyFrom(info.load);
       info.node = node_id;
       info.assigned = true;
       VLOG(1) << "assign to [" << node_id << "] " << load->ShortDebugString();
@@ -42,9 +44,8 @@ void WorkloadPool::restore(const NodeID& node_id) {
   Lock l(mu_);
   for (auto& info : loads_) {
     if (info.assigned && !info.finished && info.node == node_id) {
-      // info.node = "";
       info.assigned = false;
-      VLOG(1) << "restore workload " << info.load.id() << " from " << node_id;
+      LOG(INFO) << "restore workload " << info.load.id() << " from " << node_id;
     }
   }
 }

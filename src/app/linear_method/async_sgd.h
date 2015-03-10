@@ -205,8 +205,8 @@ class AsyncSGDWorker : public ISGDCompNode {
 
  private:
   void updateModel(const Workload& load) {
-    LOG(INFO) << "accept workload " << load.id() << ". data: "
-              << load.data().ShortDebugString();
+    LOG(INFO) << MyNodeID() << ": accept workload " << load.id();
+    VLOG(1) << "workload data: " << load.data().ShortDebugString();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
     reader.setReader(load.data(), sgd.minibatch(), sgd.data_buf());
@@ -236,7 +236,7 @@ class AsyncSGDWorker : public ISGDCompNode {
     }
 
     while (processed_batch_ < id) { usleep(500); }
-    LOG(INFO) << "finished workload " << load.id();
+    LOG(INFO) << MyNodeID() << ": finished workload " << load.id();
   }
 
   void computeGradient(int id) {

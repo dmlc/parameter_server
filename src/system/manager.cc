@@ -64,6 +64,7 @@ void Manager::stop() {
     // wait all other nodes are ready for exit
     while (num_active_nodes_ > 1) usleep(500);
     // broadcast the terminate signal
+    in_exit_ = true;
     for (const auto& it : nodes_) {
       Task task = newControlTask(Control::EXIT);
       sendTask(it.second, task);
@@ -195,15 +196,16 @@ void Manager::addNode(const Node& node) {
 
 
 void Manager::removeNode(const NodeID& node_id) {
-  // TODO use *replace* for server
   auto it = nodes_.find(node_id);
   if (it == nodes_.end()) return;
   Node node = it->second;
 
+  // TODO use *replace* for server
+  // TODO remove from customers
   // remove from customers
-  for (auto& it : customers_) {
-    it.second.first->exec().removeNode(node);
-  }
+  // for (auto& it : customers_) {
+  //   it.second.first->exec().removeNode(node);
+  // }
 
   // van_.disconnect(node);
   if (node.role() == Node::WORKER) -- num_workers_;
@@ -211,16 +213,19 @@ void Manager::removeNode(const NodeID& node_id) {
   -- num_active_nodes_;
   nodes_.erase(it);
 
-  LOG(INFO) << "remove node: " << node.ShortDebugString();
+  VLOG(1) << "remove node: " << node.ShortDebugString();
 }
 
 void Manager::nodeDisconnected(const NodeID node_id) {
+  // alreay in shutting down?
+  if (in_exit_) return;
+
   // call handlers
   for (const auto& h : node_failure_handlers_) h(node_id);
 
   if (isScheduler()) {
     LOG(INFO) << node_id << " is disconnected";
-
+    removeNode(node_id);
     // broadcast the dead node info
     // TODO
   } else {
