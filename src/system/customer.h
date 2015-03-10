@@ -25,7 +25,6 @@ class Customer {
   // return the remote_note by its name
   RNode* port(const NodeID& k) { return CHECK_NOTNULL(exec_.rnode(k)); }
 
-
   // accessors
   Executor& exec() { return exec_; }
   int id() const { return id_; }

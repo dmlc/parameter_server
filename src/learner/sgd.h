@@ -7,95 +7,35 @@
 #include "data/stream_reader.h"
 #include "util/localizer.h"
 #include "parameter/frequency_filter.h"
+#include "learner/workload_pool.h"
 namespace PS {
 
 // interface for stochastic gradient descent solver
+
+// the base class of a scheduler node
 class ISGDScheduler : public App {
  public:
   ISGDScheduler() : App() { }
-  virtual ~ISGDScheduler() { }
+  virtual ~ISGDScheduler() { delete workload_pool_; }
+  virtual void process(const MessagePtr& msg);
+  virtual void run();
 
  protected:
-  void saveModel() {
-    Task task;
-    task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
-    port(kServerGroup)->submitAndWait(task);
-  }
-
-  void updateModel(const DataConfig& data, int report_interval) {
-    LOG(INFO) << "update model: " << data.ShortDebugString();
-
-    // init monitor
-    using namespace std::placeholders;
-    monitor_.setMerger(std::bind(&ISGDScheduler::mergeProgress, this, _1, _2));
-    monitor_.setPrinter(
-        report_interval, std::bind(&ISGDScheduler::showProgress, this, _1, _2));
-
-    // ask the workers to commpute the gradients
-    int num_workers = sys_.manager().numWorkers();
-    DataAssigner assigner(data, num_workers);
-
-    std::vector<Task> tasks;
-    DataConfig conf;
-    while (assigner.next(&conf)) {
-      Task task;
-      task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
-      *task.mutable_sgd()->mutable_data() = conf;
-      tasks.push_back(task);
-    }
-    port(kWorkerGroup)->submitAndWait(tasks);
-
-    LOG(INFO) << "finished";
-  }
-
+  // print the progress
   virtual void showProgress(
-      double time, std::unordered_map<NodeID, SGDProgress>* progress) {
-    uint64 num_ex = 0, nnz_w = 0;
-    SArray<double> objv, auc, acc;
-    double weight_sum = 0, delta_sum = 1e-20;
-    for (const auto& it : *progress) {
-      auto& prog = it.second;
-      num_ex += prog.num_examples_processed();
-      nnz_w += prog.nnz();
-      for (int i = 0; i < prog.objective_size(); ++i) {
-        objv.pushBack(prog.objective(i));
-      }
-      for (int i = 0; i < prog.auc_size(); ++i) {
-        auc.pushBack(prog.auc(i));
-      }
-      for (int i = 0; i < prog.accuracy_size(); ++i) {
-        acc.pushBack(prog.accuracy(i));
-      }
-      weight_sum += prog.weight_sum();
-      delta_sum += prog.delta_sum();
-    }
-    progress->clear();
-    num_ex_processed_ += num_ex;
-    if (show_prog_head_) {
-      NOTICE(" sec  examples    loss      auc   accuracy   |w|_0  updt ratio");
-      show_prog_head_ = false;
-    }
-    NOTICE("%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e",
-          (int)time,
-          (double)num_ex_processed_ ,
-          objv.sum()/(double)num_ex,
-          auc.mean(),
-          acc.mean(),
-          (double)nnz_w,
-          sqrt(delta_sum) / sqrt(weight_sum));
-  }
-
-  virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst) {
-    auto old = *dst; *dst = src;
-    // TODO also append objv
-    dst->set_num_examples_processed(
-        dst->num_examples_processed() + old.num_examples_processed());
-  }
+      double time, std::unordered_map<NodeID, SGDProgress>* progress);
+  // merge the progress report from a computation node
+  virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst);
   MonitorMaster<SGDProgress> monitor_;
+
+  WorkloadPool *workload_pool_ = nullptr;
+
+  // display
   size_t num_ex_processed_ = 0;
   bool show_prog_head_ = true;
 };
 
+// the base class of a computation node
 class ISGDCompNode : public App {
  public:
   ISGDCompNode() : App(), reporter_(SchedulerID()) { }
@@ -105,23 +45,28 @@ class ISGDCompNode : public App {
   MonitorSlaver<SGDProgress> reporter_;
 };
 
+// a multithread minibatch reader
 template <typename V>
 class MinibatchReader {
  public:
   MinibatchReader() { }
   ~MinibatchReader() { }
 
+  // read *minibatch_size* examples from file each time
   void setReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
     reader_.init(file);
     minibatch_size_ = minibatch_size;
     data_prefetcher_.setCapacity(data_buf);
   }
 
+  // features whose frequency <= freq is filtered by the countmin sketch with
+  // parameter *n* and *k*
   void setFilter(size_t n, int k, int freq) {
     filter_.resize(n, k);
     key_freq_ = freq;
   }
 
+  // start the reader thread
   void start() {
     data_prefetcher_.startProducer(
         [this](MatrixPtrList<V>* data, size_t* size)->bool {
@@ -133,6 +78,11 @@ class MinibatchReader {
         });
   }
 
+  // read a minibatch
+  // *Y*: the *minibatch_size* x 1 label vector
+  // *X*: the *minibatch_size* x p data matrix, all features are remapped to
+  // continues id starting from 0
+  // *key*: p length array contains the original feature id in the data
   bool read(MatrixPtr<V>& Y, MatrixPtr<V>& X, SArray<Key>& key) {
     MatrixPtrList<V> data;
     if (!data_prefetcher_.pop(&data)) return false;
@@ -149,7 +99,7 @@ class MinibatchReader {
     filter_.insertKeys(uniq_key, key_cnt);
     key = filter_.queryKeys(uniq_key, key_freq_);
 
-    // to local keys
+    // remap keys
     X = localizer.remapIndex(key);
     return true;
   }

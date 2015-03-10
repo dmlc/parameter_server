@@ -8,31 +8,40 @@ import "learner/proto/sgd.proto";
 import "learner/proto/bcd.proto";
 
 message Task {
-  // true: this is a system control message
-  // false: this is a customer message, and customer_id should be set
+  // true: system control task, typically *ctrl* should be set
+  // false: a task for a customer, and *customer_id* should be set
   optional bool control = 1 [default = false];
-  // whether request or reply message
+  // true: a request task
+  // false: the response task to the request task with the same *time*
   optional bool request = 2 [default = false];
   // the unique id of a customer
   optional int32 customer_id = 3;
 
-  // time
+  // the timestamp if this task
   optional int32 time = 5;
+  // the depended tasks of this one. that is, this task is executed only if all
+  // tasks from the same node with time contained in *wait_time* are finished.
+  // only valid if *request*=true
   repeated int32 wait_time = 6;
 
   // the key range of this task
   optional PbRange key_range = 7;
   // namespace of keys
   optional int32 key_channel = 8;
-  // indiciate whether or not has the key list
+  // true: the message sent with this task will contain a list of keys
   optional bool has_key = 9 [default = false];
 
+  // data type
   optional DataType key_type = 13;
   repeated DataType value_type = 14;
 
+  // filters applied to the data
   repeated FilterConfig filter = 12;
 
+  // the place to store a small amount of data
   optional bytes msg = 17;
+
+  // system control signals
   optional Control ctrl = 18;
 
   // parameters

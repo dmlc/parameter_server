@@ -18,6 +18,9 @@ DEFINE_bool(verbose, false, "");
 Manager::Manager() {}
 
 Manager::~Manager() {
+  for (auto& it : customers_) {
+    if (it.second.second) delete it.second.first;
+  }
   delete node_assigner_;
   delete app_;
 }
@@ -164,7 +167,9 @@ void Manager::addNode(const Node& node) {
   nodes_[node.id()] = node;
 
   // add to app
-  customer_manager_.addNode(node);
+  for (auto& it : customers_) {
+    it.second.first->exec().addNode(node);
+  }
 
   if (isScheduler() && node.id() != van_.myNode().id()) {
     // send all existing nodes info to sender
@@ -191,17 +196,22 @@ void Manager::addNode(const Node& node) {
 
 void Manager::removeNode(const NodeID& node_id) {
   // TODO use *replace* for server
-  // customer_manager_.removeNode(node);
+  auto it = nodes_.find(node_id);
+  if (it == nodes_.end()) return;
+  Node node = it->second;
+
+  // remove from customers
+  for (auto& it : customers_) {
+    it.second.first->exec().removeNode(node);
+  }
 
   // van_.disconnect(node);
-  // if (nodes_.find(node.id()) != nodes_.end()) {
-  //   if (node.role() == Node::WORKER) -- num_workers_;
-  //   if (node.role() == Node::SERVER) -- num_servers_;
-  //   nodes_.erase(node.id());
-  //   -- num_active_nodes_;
-  // }
+  if (node.role() == Node::WORKER) -- num_workers_;
+  if (node.role() == Node::SERVER) -- num_servers_;
+  -- num_active_nodes_;
+  nodes_.erase(it);
 
-  // LOG(INFO) << "remove node: " << node.ShortDebugString();
+  LOG(INFO) << "remove node: " << node.ShortDebugString();
 }
 
 void Manager::nodeDisconnected(const NodeID node_id) {
@@ -254,48 +264,29 @@ void Manager::waitWorkersReady() {
   }
 }
 
-// CustomerManager
-Manager::CustomerManager::~CustomerManager() {
-  for (auto& it : customers_) {
-    if (it.second.second) delete it.second.first;
-  }
+// customers
+Customer* Manager::customer(int id) {
+  auto it = customers_.find(id);
+  if (it == customers_.end()) CHECK(false) << id << " does not exist";
+  return it->second.first;
 }
-
-void Manager::CustomerManager::add(Customer* obj) {
+void Manager::addCustomer(Customer* obj) {
   CHECK_EQ(customers_.count(obj->id()), 0)
       << obj->id() << " already exists";
   customers_[obj->id()] = std::make_pair(obj, false);
 }
 
-void Manager::CustomerManager::remove(int id) {
+void Manager::removeCustomer(int id) {
   auto it = customers_.find(id);
   // only assign it to NULL, because the call chain could be:
   // ~CustomerManager() -> ~Customer() -> remove(int id)
   if (it != customers_.end()) it->second.first = NULL;
 }
 
-Customer* Manager::CustomerManager::get(int id) {
-  auto it = customers_.find(id);
-  if (it == customers_.end()) CHECK(false) << id << " does not exist";
-  return it->second.first;
-}
-
-int Manager::CustomerManager::nextID() {
+int Manager::nextCustomerID() {
   int id = 0;
   for (const auto& it : customers_) id = std::max(id, it.second.first->id()+1);
   return id;
-}
-
-void Manager::CustomerManager::addNode(const Node& node) {
-  for (auto& it : customers_) {
-    it.second.first->exec().addNode(node);
-  }
-}
-
-void Manager::CustomerManager::removeNode(const Node& node) {
-  for (auto& it : customers_) {
-    it.second.first->exec().removeNode(node);
-  }
 }
 
 } // namespace PS

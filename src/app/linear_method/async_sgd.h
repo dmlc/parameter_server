@@ -6,30 +6,29 @@
 #include "parameter/kv_vector.h"
 #include "parameter/kv_store.h"
 #include "app/linear_method/learning_rate.h"
+#include "app/linear_method/proto/linear.pb.h"
+#include "app/linear_method/loss.h"
+#include "app/linear_method/penalty.h"
 namespace PS {
 namespace LM {
 
 // async sgd. support various loss functions and regularizers
-class AsyncSGDScheduler : public ISGDScheduler, public LinearMethod {
+
+class AsyncSGDScheduler : public ISGDScheduler {
  public:
   AsyncSGDScheduler(const Config& conf)
-      : ISGDScheduler(), LinearMethod(conf) { }
+      : ISGDScheduler(), conf_(conf) {
+    Workload load;
+    *load.mutable_data() = conf_.training_data();
+    load.mutable_data()->set_ignore_feature_group(true);
+    load.set_replica(conf_.async_sgd().num_data_pass());
+    load.set_shuffle(true);
+    workload_pool_ = new WorkloadPool(load);
+  }
   virtual ~AsyncSGDScheduler() { }
 
-  virtual void run() {
-
-    WaitServersReady();
-    LOG(INFO) << "Scheduler connected " << sys_.manager().numServers() << " servers";
-
-    WaitWorkersReady();
-    LOG(INFO) << "Scheduler connected " << sys_.manager().numWorkers() << " workers";
-
-    auto data = conf_.mutable_training_data();
-    data->set_replica(conf_.async_sgd().num_data_pass());
-    data->set_shuffle(true);
-    updateModel(conf_.training_data(), conf_.async_sgd().report_interval());
-    saveModel();
-  }
+ private:
+  Config conf_;
 };
 
 template <typename V>
@@ -42,14 +41,14 @@ struct SGDState {
   virtual ~SGDState() { }
 
   void update() {
-    if (reporter) {
-      SGDProgress prog;
-      prog.set_nnz(nnz);
-      prog.set_weight_sum(weight_sum); weight_sum = 0;
-      prog.set_delta_sum(delta_sum); delta_sum = 0;
-      reporter->report(prog);
-    }
+    if (!reporter) return;
+    SGDProgress prog;
+    prog.set_nnz(nnz);
+    prog.set_weight_sum(weight_sum); weight_sum = 0;
+    prog.set_delta_sum(delta_sum); delta_sum = 0;
+    reporter->report(prog);
   }
+
   void updateWeight(V new_weight, V old_weight) {
     // LL << new_weight << " " << old_weight;
     if (new_weight == 0 && old_weight != 0) {
@@ -129,10 +128,10 @@ struct FTRLEntry {
 };
 
 template <typename V>
-class AsyncSGDServer : public ISGDCompNode, public LinearMethod {
+class AsyncSGDServer : public ISGDCompNode {
 public:
   AsyncSGDServer(const Config& conf)
-      : ISGDCompNode(), LinearMethod(conf) {
+      : ISGDCompNode(), conf_(conf) {
     if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
       model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>();
     } else {
@@ -146,11 +145,6 @@ public:
     SGDState<V> state(conf_.penalty(), conf_.learning_rate());
     state.reporter = &(this->reporter_);
     CHECK_NOTNULL(model_)->setState(state);
-
-    // tail feature filter
-    model_->setTailFilterSize(
-        0, conf_.async_sgd().countmin_n()/sys_.manager().numServers(),
-        conf_.async_sgd().countmin_k());
   }
 
   virtual ~AsyncSGDServer() {
@@ -168,41 +162,58 @@ public:
   }
 
   virtual void process(const MessagePtr& msg) {
-    auto sgd = msg->task.sgd();
-    if (sgd.cmd() == SGDCall::SAVE_MODEL) {
+    if (msg->task.sgd().cmd() == SGDCall::SAVE_MODEL) {
       saveModel();
     }
   }
  protected:
   KVState<Key, SGDState<V>>* model_ = nullptr;
+  Config conf_;
 };
 
 template <typename V>
-class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
+class AsyncSGDWorker : public ISGDCompNode {
  public:
   AsyncSGDWorker(const Config& conf)
-      : ISGDCompNode(), LinearMethod(conf), processed_batch_(0) {
+      : ISGDCompNode(), conf_(conf) {
     loss_ = createLoss<V>(conf_.loss());
   }
   virtual ~AsyncSGDWorker() { }
 
   virtual void process(const MessagePtr& msg) {
-    auto sgd = msg->task.sgd();
+    const auto& sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
-      updateModel(sgd);
+      // do workload
+      updateModel(sgd.load());
+
+      // reply the scheduler with the finished id
+      Task done;
+      done.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+      done.mutable_sgd()->mutable_load()->add_finished(sgd.load().id());
+      sys_.reply(msg, done);
+      msg->replied = true;
     }
   }
 
-  void updateModel(const SGDCall& call) {
+  virtual void run() {
     WaitServersReady();
 
-    LOG(INFO) << "update model: " << call.data().ShortDebugString();
+    // request workload from the scheduler
+    Task task; task.mutable_sgd()->set_cmd(SGDCall::REQUEST_WORKLOAD);
+    port(SchedulerID())->submit(task);
+  }
+
+ private:
+  void updateModel(const Workload& load) {
+    LOG(INFO) << "accept workload " << load.id() << ". data: "
+              << load.data().ShortDebugString();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
-    reader.setReader(call.data(), sgd.minibatch(), sgd.data_buf());
+    reader.setReader(load.data(), sgd.minibatch(), sgd.data_buf());
     reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
     reader.start();
 
+    processed_batch_ = 0;
     int id = 0;
     SArray<Key> key;
     while (true) {
@@ -225,7 +236,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     }
 
     while (processed_batch_ < id) { usleep(500); }
-    LOG(INFO) << "finished update";
+    LOG(INFO) << "finished workload " << load.id();
   }
 
   void computeGradient(int id) {
@@ -236,6 +247,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     mu_.unlock();
     CHECK_EQ(X->rows(), Y->rows());
     VLOG(1) << "compute gradient for minibatch " << id;
+
     // evaluate
     SArray<V> Xw(Y->rows());
     auto w = model_.value(id);
@@ -269,13 +281,6 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
     model_.clear(id);
 
     ++ processed_batch_;
-
-    // auto we = w.eigenArray();
-    // auto ge = grad.eigenArray();
-    // LL << we.minCoeff() << " " << we.maxCoeff() << " "
-    //    << w.mean() << " " << w.std() << " "
-    //    << ge.minCoeff() << " " << ge.maxCoeff() << " "
-    //    << grad.mean() << " " << grad.std();
   }
 
 private:
@@ -287,13 +292,20 @@ private:
 
   std::mutex mu_;
   std::atomic_int processed_batch_;
-  // std::unordered_map<int, int> push_time_;
+  int workload_id_ = -1;
 
+  Config conf_;
 };
 
 } // namespace LM
 } // namespace PS
 
+// auto we = w.eigenArray();
+// auto ge = grad.eigenArray();
+// LL << we.minCoeff() << " " << we.maxCoeff() << " "
+//    << w.mean() << " " << w.std() << " "
+//    << ge.minCoeff() << " " << ge.maxCoeff() << " "
+//    << grad.mean() << " " << grad.std();
 
 // // project value into [-bound, bound]
 // template <typename V>

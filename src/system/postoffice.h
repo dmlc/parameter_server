@@ -18,17 +18,22 @@ class Postoffice {
   // thread. It is thread safe.
   void queue(const MessagePtr& msg);
 
+  // reply *msg* by *reply*
+  void reply(const MessagePtr& msg, Task reply = Task());
+
+  Manager& manager() { return manager_; }
+  HeartbeatInfo& pm() { return perf_monitor_; }
+
+
+  // deprecated
   // reply *task* from *recver* by *reply_str*. thread-safe
   void reply(const NodeID& recver,
              const Task& task,
              const string& reply_str = string());
-
   // reply *msg* with google protocbuf *proto*. thread-safe
   template <class Proto>
   void replyProtocalMessage(const MessagePtr& msg, const Proto& proto);
 
-  Manager& manager() { return manager_; }
-  HeartbeatInfo& pm() { return perf_monitor_; }
  private:
   Postoffice();
   void send();

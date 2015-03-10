@@ -29,8 +29,10 @@ message DataConfig {
   optional bool ignore_feature_group = 6;
   // the maximal number of files will be assigned to a worker, -1 means no limit
   optional int32 max_num_files_per_worker = 7 [default = -1];
+
   // the maximal number of lines will be read from a file, -1 means no limit
   optional int32 max_num_lines_per_file = 8 [default = -1];
+
   // randomly shuffle the file order
   optional bool shuffle = 9 [default = false];
 

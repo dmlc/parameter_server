@@ -210,8 +210,7 @@ void Executor::run() {
         sender->incoming_task_.finish(t);
         notify();
         // reply an empty ack message if it has not been replied yet
-        if (!active_msg_->replied)
-          sender->sys_.reply(active_msg_->sender, active_msg_->task);
+        if (!active_msg_->replied) sender->sys_.reply(active_msg_);
       }
     } else {
       // run the receiving callback if necessary

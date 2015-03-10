@@ -1,5 +1,6 @@
 package PS;
 import "data/proto/data.proto";
+import "learner/proto/workload.proto";
 
 message SGDProgress {
   repeated double objective = 1;
@@ -13,6 +14,7 @@ message SGDProgress {
 
 message SGDCall {
   enum Command {
+    REQUEST_WORKLOAD = 6;
     UPDATE_MODEL = 1;
     REPORT_PROGRESS = 2;
     SAVE_MODEL = 3;
@@ -20,8 +22,5 @@ message SGDCall {
     COMPUTE_VALIDATION_AUC = 5;
   }
   required Command cmd = 1;
-  optional DataConfig data = 2;
-  optional int32 report_interval = 3 [default = 1];
-  optional int32 data_buf = 4 [default = 1000];  // in mb
-  // optional PbRange key = 3;
+  optional Workload load = 2;
 }
