@@ -49,7 +49,7 @@ void Van::init(char* argv0) {
   google::SetLogSymlink(google::FATAL, "");
   FLAGS_logbuflevel = -1;
 
-  LOG(INFO) << "this is node " << my_node_.ShortDebugString();
+  LOG(INFO) << "I'm [" << my_node_.ShortDebugString() << "]";
 
   context_ = zmq_ctx_new();
   CHECK(context_ != NULL) << "create 0mq context failed";

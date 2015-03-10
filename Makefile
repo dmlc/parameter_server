@@ -21,6 +21,7 @@ PS_MAIN = build/libpsmain.a
 all: ps app
 clean:
 	rm -rf build
+	find . -name "*.pb.[ch]*" -delete
 
 ps: $(PS_LIB) $(PS_MAIN)
 app: build/linear

@@ -14,10 +14,9 @@ void WorkloadPool::set(const Workload& load) {
   for (int r = 0; r < load.replica(); ++r) {
     if (load.shuffle()) files = shuffleFiles(files);
     for (int i = 0; i < files.file_size(); ++i) {
-      WorkloadInfo info;
-      *info.load.mutable_data() = ithFile(files, i);
-      info.load.set_id(k);
-      loads_[k++] = info;
+      *loads_[k].load.mutable_data() = ithFile(files, i);
+      loads_[k].load.set_id(k);
+      ++ k;
     }
   }
   CHECK_EQ(k, loads_.size());
