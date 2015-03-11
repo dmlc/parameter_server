@@ -89,13 +89,13 @@ class Customer {
   // "msg->task" have been satisfied.
   virtual void Process(const MessagePtr& msg) { }
 
-  // Slices a message into multiple parts. It will be called by the system when
-  // submit a task/message into a node group. Assume there are n nodes in this
-  // group, which are sorted according to their key range. "krs" is the list of
-  // the n key ranges.
+  // Slices a message into multiple parts. It will be called in `Submit` when
+  // the receive node is a node group. Assume there are n nodes in this group,
+  // which are sorted according to their key range. "krs" is the list of these n
+  // key ranges.
   //
-  // It should return a list of n messages such as the i-th message is sent to
-  // the i-th node. In default, it copies msg n times.
+  // It must return a list of n messages such as the i-th message is sent to
+  // the i-th node. In default, it copies "msg" n times.
   virtual MessagePtrList Slice(const MessagePtr& msg, const KeyRangeList& krs);
 
 
