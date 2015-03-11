@@ -21,6 +21,7 @@ struct Message {
   Message() { }
   Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
   explicit Message(const Task& tk) : task(tk) { }
+
   void miniCopyFrom(const Message& msg);
 
   // the header of the message, containing all metadata

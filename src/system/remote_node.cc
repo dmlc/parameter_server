@@ -128,6 +128,7 @@ int RNode::submit(MessagePtrList& msgs) {
   return t;
 }
 
+// TODO not thread safe if exec_.remove node
 void RNode::waitOutgoingTask(int time) {
   // if (time <= Message::kInvalidTime) return;
   for (auto& w : exec_.group(id())) {
@@ -164,6 +165,8 @@ void RNode::finishIncomingTask(int time) {
 }
 
 FilterPtr RNode::findFilter(const FilterConfig& conf) {
+  // this lock is necessary, because encodeFileter and decodeFilter could be
+  // called by different threads.
   Lock l(filter_mu_);
   int id = conf.type();
   auto it = filter_.find(id);
