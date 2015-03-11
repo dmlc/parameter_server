@@ -44,7 +44,6 @@ class Executor {
   void addNode(const Node& node);
   void removeNode(const Node& node);
   void replaceNode(const Node& old_node, const Node& new_node);
-  void copyNodesFrom(const Executor& other);
 
   // will be called by postoffice's receiving thread
   // or the thread call wk->submit
@@ -52,8 +51,6 @@ class Executor {
 
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
-
-  // string lastRecvReply();
 
   Customer& obj() { return obj_; }
  private:
@@ -92,7 +89,7 @@ class Executor {
   Node my_node_;
   std::mutex node_mu_;
   bool done_ = false;
-  unique_ptr<std::thread> thread_;
+  std::unique_ptr<std::thread> thread_;
 };
 
 

@@ -115,7 +115,7 @@ template<typename V> class SArray {
     return (empty() ? Range<V>(0,0) : Range<V>(front(), back()+1));
   }
   V* data() const { return data_; }
-  const shared_ptr<void>& pointer() const { return ptr_; }
+  const std::shared_ptr<void>& pointer() const { return ptr_; }
   // number of non-zero entries
   size_t nnz() const;
 
@@ -150,7 +150,7 @@ template<typename V> class SArray {
   }
 
   // convert to a dense matrix, zero-copy
-  shared_ptr<Matrix<V>> matrix(size_t rows = -1, size_t cols = -1);
+  std::shared_ptr<Matrix<V>> matrix(size_t rows = -1, size_t cols = -1);
 
   // Return the compressed array by snappy
   SArray<char> compressTo() const;
@@ -178,7 +178,7 @@ template<typename V> class SArray {
   size_t size_ = 0;
   size_t capacity_ = 0;
   V* data_ = nullptr;
-  shared_ptr<void> ptr_ = shared_ptr<void>(nullptr);
+  std::shared_ptr<void> ptr_ = std::shared_ptr<void>(nullptr);
 
 
 };

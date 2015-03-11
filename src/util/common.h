@@ -25,7 +25,6 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
-#include <tuple>
 #include <set>
 #include <algorithm>
 
@@ -56,29 +55,11 @@ namespace PS {
 typedef uint64 Key;
 static const Key kMaxKey = kuint64max;
 
-typedef std::vector<Key> KeyList;
-
-
 typedef std::lock_guard<std::mutex> Lock;
-
 using std::string;
-typedef std::vector<std::string> StringList;
-
-using std::shared_ptr;
-using std::unique_ptr;
-using std::pair;
-using std::make_pair;
-using std::map;
-using std::tuple;
-using std::make_tuple;
-using std::to_string;
-using std::initializer_list;
-
-using google::protobuf::TextFormat;
 
 #define LL LOG(ERROR)
 #define LI LOG(INFO)
-#define DD DLOG(ERROR)
 
 DECLARE_int32(num_threads);
 

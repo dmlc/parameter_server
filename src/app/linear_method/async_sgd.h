@@ -35,8 +35,8 @@ template <typename V>
 struct SGDState {
   SGDState() { }
   SGDState(const PenaltyConfig& h_conf, const LearningRateConfig& lr_conf) {
-    lr = shared_ptr<LearningRate<V>>(new LearningRate<V>(lr_conf));
-    h = shared_ptr<Penalty<V>>(createPenalty<V>(h_conf));
+    lr = std::shared_ptr<LearningRate<V>>(new LearningRate<V>(lr_conf));
+    h = std::shared_ptr<Penalty<V>>(createPenalty<V>(h_conf));
   }
   virtual ~SGDState() { }
 
@@ -61,8 +61,8 @@ struct SGDState {
     delta_sum += delta * delta;
   }
 
-  shared_ptr<LearningRate<V>> lr;
-  shared_ptr<Penalty<V>> h;
+  std::shared_ptr<LearningRate<V>> lr;
+  std::shared_ptr<Penalty<V>> h;
 
   int iter = 0;
   size_t nnz = 0;

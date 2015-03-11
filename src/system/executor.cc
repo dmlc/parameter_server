@@ -13,7 +13,7 @@ Executor::Executor(Customer& obj) : obj_(obj) {
     addNode(node);
   }
 
-  thread_ = unique_ptr<std::thread>(new std::thread(&Executor::run, this));
+  thread_ = std::unique_ptr<std::thread>(new std::thread(&Executor::run, this));
 }
 
 Executor::~Executor() {
@@ -52,13 +52,6 @@ const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
   auto it = nodes_.find(k);
   CHECK(it != nodes_.end()) << "unkonw node: " << k;
   return it->second.key_ranges;
-}
-
-void Executor::copyNodesFrom(const Executor& other) {
-  for (const auto& n : other.nodes_) {
-    auto d = n.second.node->node_;
-    if (d.role() != Node::GROUP) addNode(d);
-  }
 }
 
 void Executor::replaceNode(const Node& old_node, const Node& new_node) {
@@ -140,11 +133,6 @@ void Executor::addNode(const Node& node) {
   //   }
   // }
 }
-
-// string Executor::lastRecvReply() {
-//   CHECK(!active_msg_->task.request());
-//   return active_msg_->task.msg();
-// }
 
 // a simple implementation of the DAG execution engine.
 void Executor::run() {

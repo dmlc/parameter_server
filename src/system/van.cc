@@ -269,7 +269,8 @@ void Van::statistic() {
 }
 
 Node Van::parseNode(const string& node_str) {
-  Node node; CHECK(TextFormat::ParseFromString(node_str, &node));
+  Node node; CHECK(
+      google::protobuf::TextFormat::ParseFromString(node_str, &node));
   if (!node.has_id()) {
     node.set_id(node.hostname() + ":" + std::to_string(node.port()));
   }
