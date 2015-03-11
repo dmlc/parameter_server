@@ -9,7 +9,7 @@ DEFINE_bool(key_cache, true, "enable caching keys during communication");
 DEFINE_bool(message_compression, true, "");
 
 int RNode::size() {
-  return (role() == Node::GROUP ? exec_.group(id()).size() : 1);
+  return (node_.role() == Node::GROUP ? exec_.group(id()).size() : 1);
 }
 
 int RNode::submit(const MessagePtr& msg) {
@@ -78,7 +78,7 @@ int RNode::submit(MessagePtrList& msgs) {
     if (t > Message::kInvalidTime) {
       time_ = std::max(t, time_);
     } else {
-      if (role() == Node::GROUP) {
+      if (node_.role() == Node::GROUP) {
         for (auto w : exec_.group(id())) {
           // Lock l(w->time_mu_);
           time_ = std::max(w->time_, time_);

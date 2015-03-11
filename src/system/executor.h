@@ -19,7 +19,7 @@ const static NodeID kLiveGroup = "all_lives";
 
 typedef std::vector<Node> NodeList;
 
-// Maintain all remote nodes for a customer. It has its own thread to process
+// Executor maintain all remote nodes for a customer. It has its own thread to process
 // received tasks.
 class Executor {
  public:
@@ -55,12 +55,11 @@ class Executor {
   Customer& obj() { return obj_; }
  private:
   void run();
-
   Customer& obj_;
   // Temporal buffer for received messages
   std::list<MessagePtr> recved_msgs_;
   std::mutex recved_msg_mu_;
-  // the message is going to be processed or is the last one be processed
+  // the message is going to be processed or the last one be processed
   MessagePtr active_msg_;
   std::condition_variable dag_cond_;
 
@@ -75,21 +74,23 @@ class Executor {
     NodeInfo() { };
     ~NodeInfo() { delete node; }
 
+    void clear() { sub_nodes.clear(); key_ranges.clear(); }
     void addSubNode(RNode* s);
     void removeSubNode(RNode* s);
 
     RNode* node = NULL;
-    // sub_nodes = {node} or all nodes in this node group
+    // sub_nodes = {node} or all nodes in this node group. they are ordered
+    // according to the key range
     std::vector<RNode*> sub_nodes;
     std::vector<Range<Key>> key_ranges;
   };
-
   std::unordered_map<NodeID, NodeInfo> nodes_;
 
   Node my_node_;
   std::mutex node_mu_;
+  int num_replicas_ = 0;
   bool done_ = false;
-  std::unique_ptr<std::thread> thread_;
+  std::thread* thread_ = nullptr;
 };
 
 

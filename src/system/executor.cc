@@ -13,7 +13,7 @@ Executor::Executor(Customer& obj) : obj_(obj) {
     addNode(node);
   }
 
-  thread_ = std::unique_ptr<std::thread>(new std::thread(&Executor::run, this));
+  thread_ = new std::thread(&Executor::run, this);
 }
 
 Executor::~Executor() {
@@ -25,7 +25,8 @@ void Executor::stop() {
     done_ = true;
     notify();
     thread_->join();
-    thread_.release();
+    delete thread_;
+    thread_ = nullptr;
   }
 }
 
@@ -71,6 +72,8 @@ void Executor::removeNode(const Node& node) {
 
 void Executor::addNode(const Node& node) {
   Lock l(node_mu_);
+
+  // add *node*
   if (node.id() == my_node_.id()) {
     my_node_ = node;
   }
@@ -90,7 +93,7 @@ void Executor::addNode(const Node& node) {
     nodes_[id].node = w;
   }
 
-
+  // add *node* into group
   auto role = node.role();
   if (role != Node::GROUP) {
     nodes_[id].addSubNode(w);
@@ -105,33 +108,32 @@ void Executor::addNode(const Node& node) {
     nodes_[kCompGroup].addSubNode(w);
   }
 
-  // update replica group and owner group if i'm a server node
-  // TODO
-  // if (my_node_.role() == Node::SERVER) {
-  //   int my_pos = 0;
-  //   auto servers = group(kServerGroup);
-  //   int n = servers.size();
-  //   for (auto s : servers) {
-  //     if (s->node_.id() == my_node_.id()) break;
-  //     ++ my_pos;
-  //   }
-  //   CHECK_LT(my_pos, n);
+  // update replica group and owner group if necessary
+  if (node.role() != Node::SERVER || my_node_.role() != Node::SERVER) return;
+  if (num_replicas_ <= 0) return;
 
-  //   int nrep = FLAGS_num_replicas; CHECK_LT(nrep, n);
-  //   for (int i = 1; i <= nrep; ++i) {
-  //     // the replica group is just before me
-  //     node_groups_[kReplicaGroup].push_back(
-  //         servers[my_pos - i < 0 ? n + my_pos - i : my_pos - i]);
-  //     // the owner group is just after me
-  //     node_groups_[kOwnerGroup].push_back(
-  //         servers[my_pos + i < n ? my_pos + i : my_pos + i - n]);
-  //   }
-  //   // make an empty group otherwise
-  //   if (nrep <= 0) {
-  //     node_groups_[kReplicaGroup].clear();
-  //     node_groups_[kOwnerGroup].clear();
-  //   }
-  // }
+  const auto& servers = nodes_[kServerGroup];
+  for (int i = 0; i < servers.sub_nodes.size(); ++i) {
+    RNode* s = servers.sub_nodes[i];
+    if (s->node_.id() != my_node_.id()) continue;
+
+    // the replica group is just before me
+    auto& replicas = nodes_[kReplicaGroup];
+    replicas.clear();
+    for (int j = std::max(i-num_replicas_, 0); j < i; ++ j) {
+      replicas.sub_nodes.push_back(servers.sub_nodes[j]);
+      replicas.key_ranges.push_back(servers.key_ranges[j]);
+    }
+
+    // the owner group is just after me
+    auto& owners = nodes_[kOwnerGroup];
+    owners.clear();
+    for (int j = std::max(i-num_replicas_, 0); j < i; ++ j) {
+      owners.sub_nodes.push_back(servers.sub_nodes[j]);
+      owners.key_ranges.push_back(servers.key_ranges[j]);
+    }
+    break;
+  }
 }
 
 // a simple implementation of the DAG execution engine.
@@ -217,7 +219,7 @@ void Executor::run() {
         Lock l(sender->mu_);
         auto it = sender->pending_msgs_.find(t);
         CHECK(it != sender->pending_msgs_.end())
-            << myNode().id() << ": there is no message has been sent to "
+            << my_node_.id() << ": there is no message has been sent to "
             << sender->id() << " on time " << t;
         original_recver_id = it->second->original_recver;
         sender->pending_msgs_.erase(it);

@@ -19,10 +19,10 @@ class RNode {
       : sys_(Postoffice::instance()), exec_(exec), node_(node)  { }
   ~RNode() { }
 
-  // info of the remote node
+  // id of this node
   const NodeID& id() { return node_.id(); }
-  typename Node::Role role() { return node_.role(); }
   Range<Key> keyRange() { return Range<Key>(node_.key()); }
+
   // return number of node in this group or 1 otherwise
   int size();
 
