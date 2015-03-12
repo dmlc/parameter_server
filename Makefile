@@ -4,6 +4,7 @@ CC = g++
 OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
+THIRD_INC=-I$(shell pwd)/third_party/include
 STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
@@ -12,8 +13,16 @@ THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
 endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 
+# TODO: detect the Python version
+THIRD_INC+=-I/usr/include/python2.7
+THIRD_LIB+=-lpython2.7
+# borrow boost-python and boost-numpy from Minerva
+THIRD_INC+=-I../minerva/deps/include
+THIRD_LIB+=-L../minerva/deps/lib
+THIRD_LIB+=-lboost_python -lboost_numpy
+
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
-INCPATH = -I./src -I$(THIRD_PATH)/include
+INCPATH = -I./src $(THIRD_INC)
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
 LDFLAGS += $(THIRD_LIB) -lpthread -lrt
 
@@ -28,6 +37,9 @@ ps: $(PS_LIB) $(PS_MAIN)
 app: build/ps
 
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+build/ps_python: build/app/python/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
