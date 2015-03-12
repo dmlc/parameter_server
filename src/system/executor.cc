@@ -55,12 +55,34 @@ const std::vector<Range<Key>>& Executor::keyRanges(const NodeID& k) {
   return it->second.key_ranges;
 }
 
-void Executor::replaceNode(const Node& old_node, const Node& new_node) {
+void Executor::Manage(const MessagePtr& msg) {
+  Lock l(node_mu_);
+  CHECK(msg->task.has_ctrl());
+  auto ctrl = msg->task.ctrl();
+  switch (ctrl.cmd()) {
+    case Control::ADD_NODE:
+    case Control::UPDATE_NODE:
+      CHECK_EQ(ctrl.node_size(), 1);
+      AddNode(ctrl.node(0));
+      break;
+    case Control::REMOVE_NODE:
+      CHECK_EQ(ctrl.node_size(), 1);
+      RemoveNode(ctrl.node(0));
+      break;
+    case Control::REPLACE_NODE:
+      CHECK_EQ(ctrl.node_size(), 2);
+      ReplaceNode(ctrl.node(0), ctrl.node(1));
+      break;
+    default:
+      CHECK(false) << msg->task.ShortDebugString();
+  }
+}
+
+void Executor::ReplaceNode(const Node& old_node, const Node& new_node) {
   // TODO
 }
 
-void Executor::removeNode(const Node& node) {
-  Lock l(node_mu_);
+void Executor::RemoveNode(const Node& node) {
   auto id = node.id();
   if (nodes_.find(id) == nodes_.end()) return;
   RNode* w = nodes_[id].node;
@@ -70,9 +92,7 @@ void Executor::removeNode(const Node& node) {
   nodes_.erase(id);
 }
 
-void Executor::addNode(const Node& node) {
-  Lock l(node_mu_);
-
+void Executor::AddNode(const Node& node) {
   // add *node*
   if (node.id() == my_node_.id()) {
     my_node_ = node;
@@ -136,122 +156,113 @@ void Executor::addNode(const Node& node) {
   }
 }
 
-// a simple implementation of the DAG execution engine.
-void Executor::run() {
-  while (!done_) {
-    bool process = false;
-    VLOG(2) << obj_.id() << " before entering task loop; recved_msgs_. size [" <<
-        recved_msgs_.size() << "]";
-    {
-      std::unique_lock<std::mutex> lk(recved_msg_mu_);
-      // pickup a message with dependency satisfied
-      for (auto it = recved_msgs_.begin(); it != recved_msgs_.end(); ++it) {
-        auto& msg = *it;
-        auto sender = rnode(msg->sender);
-        if (!sender) {
-          LOG(WARNING) << my_node_.id() << ": " << msg->sender
-                       << " does not exist, ignore\n" << msg->debugString();
-          recved_msgs_.erase(it);
+bool Executor::PickActiveMsg() {
+  std::unique_lock<std::mutex> lk(msg_mu_);
+  auto it = recv_msgs_.begin();
+  while (it != recv_msgs_.end()) {
+    bool process = true;
+    auto& msg = *it;
+
+    // first check if the remote node is still alive. no locking is needed
+    auto it2 = nodes_.find(msg->sender);
+    if (it2 == nodes_.end()) {
+      VLOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
+          " does not exist, ignore received message: " << msg->debugString();
+      it = recv_msgs_.erase(it);
+      continue;
+    }
+    auto& rnode = it2->second;
+    if (!rnode.alive) {
+      VLOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
+          " is not alive, ignore received message: " << msg->debugString();
+      it = recv_msgs_.erase(it);
+      continue;
+    }
+
+    // only check for request and non-control message. otherwise there is no
+    // dependency constraint
+    if (msg->task.request() && !msg->task.control()) {
+      // check if the dependency constraints are satisfied
+      for (int i = 0; i < msg->task.wait_time_size(); ++i) {
+        int wait_time = msg->task.wait_time(i);
+        if (wait_time <= Message::kInvalidTime) continue;
+        std::lock_guard<std::mutex> lk2(node_mu_);
+        if (!rnode.recv_req_tracker.IsFinished(wait_time)) {
+          process = false;
+          ++ it;
           break;
         }
-        // ack message, no dependency constraint
-        process = !msg->task.request();
-        if (!process) {
-          // check if the dependency constraints are satisfied
-          bool satisfied = true;
-          for (int i = 0; i < msg->task.wait_time_size(); ++i) {
-            int wait_time = msg->task.wait_time(i);
-            if (wait_time > Message::kInvalidTime &&
-                !sender->tryWaitIncomingTask(wait_time)) {
-              satisfied = false;
-            }
-          }
-          process = satisfied;
-        }
-        if (process) {
-          active_msg_ = msg;
-          recved_msgs_.erase(it);
-          VLOG(2) << obj_.id() << " picked up an active_msg_ from recved_msgs_. " <<
-              "remaining size [" << recved_msgs_.size() << "]; msg [" <<
-              active_msg_->shortDebugString() << "]";
-          break;
-        }
-      }
-      if (!process) {
-        VLOG(2) << obj_.id() << " picked nothing from recved_msgs_. size [" <<
-            recved_msgs_.size() << "] waiting Executor::accept";
-        dag_cond_.wait(lk);
-        continue;
       }
     }
-    // process the picked message
-    bool req = active_msg_->task.request();
-    int t = active_msg_->task.time();
-    auto sender = rnode(active_msg_->sender);
-    CHECK(sender) << "unknow node: " << active_msg_->sender;
-    // mark it as been started in the task tracker
-    if (req) sender->incoming_task_.start(t);
-    // call user program to process this message if necessary
-    obj_.process(active_msg_);
-    if (req) {
-      // if this message is finished, then mark it in the task tracker,
-      // otherwise, it is the user program's job to mark it.
-      if (active_msg_->finished) {
-        sender->incoming_task_.finish(t);
-        notify();
-        // reply an empty ack message if it has not been replied yet
-        if (!active_msg_->replied) sender->sys_.reply(active_msg_);
-      }
-    } else {
-      // run the receiving callback if necessary
-      Message::Callback h;
-      {
-        Lock lk(sender->mu_);
-        auto b = sender->msg_receive_handle_.find(t);
-        if (b != sender->msg_receive_handle_.end()) h = b->second;
-      }
-      if (h) h();
-      // mark this out going task as finished
-      sender->outgoing_task_.finish(t);
-      // find the original receiver, such as the server group (all_servers)
-      NodeID original_recver_id;
-      {
-        Lock l(sender->mu_);
-        auto it = sender->pending_msgs_.find(t);
-        CHECK(it != sender->pending_msgs_.end())
-            << my_node_.id() << ": there is no message has been sent to "
-            << sender->id() << " on time " << t;
-        original_recver_id = it->second->original_recver;
-        sender->pending_msgs_.erase(it);
-      }
-      // run the finishing callback if necessary
-      auto o_recver = rnode(original_recver_id);
-      CHECK(o_recver) << "no such node: " << original_recver_id;
-      if (o_recver->tryWaitOutgoingTask(t)) {
-        VLOG(2) << "Task [" << t << "] completed. msg [" <<
-            active_msg_->shortDebugString() << "]";
-        Message::Callback h;
-        {
-          Lock lk(o_recver->mu_);
-          auto a = o_recver->msg_finish_handle_.find(t);
-          if (a != o_recver->msg_finish_handle_.end()) h = a->second;
-        }
-        if (h) h();
-      } else {
-        VLOG(2) << "Task [" << t << "] still running. msg [" <<
-            active_msg_->shortDebugString() << "]";
-      }
+    if (process) {
+      active_msg_ = *it;
+      recv_msgs_.erase(it);
+      rnode.DecodeMessage(active_msg_);
+      VLOG(2) << obj_.id() << " picked a messge in [" <<
+          recv_msgs_.size() << "]. sent from " << msg->sender <<
+          ": " << active_msg_->shortDebugString();
+      return true;
+    }
+  }
+
+  // sleep until received a new message or another message been marked as
+  // finished.
+  VLOG(2) << obj_.id() << " picked nothing. msg buffer size "
+          << recv_msgs_.size();
+  dag_cond_.wait(lk);
+  return false;
+}
+
+void Executor::ProcessActiveMsg() {
+  if (active_msg_->task.control()) {
+    Manage(active_msg_);
+    continue;
+  }
+
+  // ask the customer to process the picked message
+  obj_.process(active_msg_);
+
+  // postprocessing
+  const NodeID& sender_id = active_msg_->sender;
+  int ts = active_msg_->task.time();
+  auto it2 = nodes_.find(sender_id);
+  CHECK(it2 != nodes_.end()) << sender_id;
+  auto& rnode = it2->second;
+
+  if (active_msg_->task.request()) {
+    // if this message is marked as finished, then set the mark in tracker,
+    // otherwise, the user application need to call `Customer::FinishRecvReq`
+    // to set the mark
+    if (active_msg_->finished) {
+      rnode.recv_req_tracker.Finish(ts);
+      // reply an empty ACK message if necessary
+      if (!active_msg_->replied) obj_.Reply(active_msg_);
+    }
+  } else {
+    // find the original remote node this message goes to, it might be a group
+    // node
+    auto& orig_rnode = rnode;
+    // FIXME
+    // auto it3 = rnode.orig_recvers.find(ts);
+    // if (it3 != rnode.orig_recvers.end()) {
+    //   auto it4 = nodes_.find(it3->second);
+    //   CHECK(it4 != nodes_.end())
+    //       << "node " << it3->second << " does not exists";
+    //   orig_rnode = it4->second;
+    // }
+
+    // call the callback if valid
+    auto it5 = orig_rnode.sent_req_callbacks.find(ts);
+    if (it5 != orig_rnode.sent_req_callbacks.end()) {
+      if (it5->second) it5->second();
+      orig_rnode.sent_req_callbacks.erase(it5);
     }
   }
 }
 
-
-void Executor::accept(const MessagePtr& msg) {
-  Lock l(recved_msg_mu_);
-  auto sender = rnode(msg->sender);
-  if (!sender) return;
-  sender->decodeFilter(msg);
-  recved_msgs_.push_back(msg);
+void Executor::Accept(const MessagePtr& msg) {
+  Lock l(msg_mu_);
+  recv_msgs_.push_back(msg);
   dag_cond_.notify_one();
 }
 

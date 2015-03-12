@@ -7,6 +7,56 @@
 #include "filter/filter.h"
 namespace PS {
 
+// Track a request by its timestamp. It's not thread safe, do not use it directly.
+class RequestTracker {
+ public:
+  RequestTracker() { }
+  ~RequestTracker() { }
+
+  // Returns true if timestamp "ts" is marked as finished.
+  bool IsFinished(int ts) {
+    return (data_.size() > ts) && data_[ts];
+  }
+
+  // Mark time timstamp "ts" as finished.
+  void Finish(int ts) {
+    CHECK_LT(ts, 1000000);
+    if (data_.size() <= ts) data_.resize(ts*2);
+    data_[ts] = true;
+  }
+ private:
+  std::vector<bool> data_;
+};
+
+// The presentation of a remote node which is used by Executor. It's not thread
+// safe, do not use it directly.
+struct RemoteNode {
+ public:
+  RemoteNode() { }
+  ~RemoteNode();
+
+  void EncodeFilter(const MessagePtr& msg);
+  void DecodeFilter(const MessagePtr& msg);
+
+  // -- shared info --
+  Node rnode;  // the remote node
+  bool alive = true;  // aliveness
+  std::unordered_map<int, Filter*> filters;  // <filter_type, filter_ptr>
+
+  // -- info of requests sent to "rnode" --
+  RequestTracker sent_req_tracker;
+  std::unordered_map<int, Message::Callback> sent_req_callbacks;
+  std::unordered_map<int, NodeID> orig_recvers;
+
+  // -- info of request received from "rnode" --
+  RequestTracker recv_req_tracker;
+
+ private:
+  Filter* FindFilterOrCreate(const FilterConfig& conf);
+};
+
+
+
 class Executor;
 class Postoffice;
 

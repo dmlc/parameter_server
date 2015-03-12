@@ -27,8 +27,10 @@ class Customer {
   //   Task task; task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
   //   int ts = Submit(task, kWorkerGroup);
   //   WaitSentReq(ts, kWorkerGroup);
-  int Submit(const Task& task, const NodeID& recver);
-
+  int Submit(const Task& task, const NodeID& recver) {
+    MessagePtr ptr(new Message(task, recver));
+    return Submit(ptr);
+  }
 
   // Submits a request message into a remote node, where "msg" contains a
   // request task and other entries such as data arrays, callbacks when replies
@@ -42,12 +44,16 @@ class Customer {
   //   MessagePtr msg(new Message(task, kWorkerGroup));
   //   msg->wait = true;
   //   Submit(msg);
-  int Submit(const MessagePtr& msg);
+  int Submit(const MessagePtr& msg) {
+    return exec_.Submit(msg);
+  }
 
 
   // Replies the request message "msg" received from msg->sender with
   // "reply". In default, "reply" is an empty ack message.
-  void Reply(const MessagePtr& msg, Task reply = Task());
+  void Reply(const MessagePtr& msg, Task reply = Task()) {
+    sys_.reply(msg, reply);
+  }
 
   // -- Consistency APIs (thread-safe) --
 

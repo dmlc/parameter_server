@@ -1,7 +1,6 @@
 #pragma once
 #include "system/remote_node.h"
 #include "system/message.h"
-
 namespace PS {
 
 // all server nodes
@@ -26,8 +25,11 @@ class Executor {
   Executor(Customer& obj);
   ~Executor();
 
-  // wake up the processing thread
-  void notify() { Lock l(recved_msg_mu_); dag_cond_.notify_one(); }
+  // Submits a request message into a remote node. See comments in customer.h
+  int Submit(const MessagePtr& msg) {
+
+  }
+
 
   // mark this message as finshed in executor
   void finish(const MessagePtr& msg);
@@ -41,27 +43,51 @@ class Executor {
   const std::vector<Range<Key>>& keyRanges(const NodeID& k);
   const Node& myNode() { return my_node_; }
 
-  void addNode(const Node& node);
-  void removeNode(const Node& node);
-  void replaceNode(const Node& old_node, const Node& new_node);
 
-  // will be called by postoffice's receiving thread
-  // or the thread call wk->submit
-  void accept(const MessagePtr& msg);
+  // Accepts a received message from Postoffice. Thread-safe.
+  void Accept(const MessagePtr& msg);
 
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
-
-  Customer& obj() { return obj_; }
  private:
-  void run();
-  Customer& obj_;
-  // Temporal buffer for received messages
-  std::list<MessagePtr> recved_msgs_;
-  std::mutex recved_msg_mu_;
+
+  // Runs the DAG engine
+  void Run() {
+    while (!done_) {
+      if (PickActiveMsg()) ProcessActiveMsg();
+    }
+  }
+  // Returns true if a message with dependency satisfied is picked. Otherwise
+  // will be blocked.
+  bool PickActiveMsg();
+  void ProcessActiveMsg();
+
+  // Do management. Only thread-safe when run by "thread_".
+  void Manage(const MessagePtr& msg);
+  void AddNode(const Node& node);
+  void RemoveNode(const Node& node);
+  void ReplaceNode(const Node& old_node, const Node& new_node);
+
+  // -- received messages --
+  std::list<MessagePtr> recv_msgs_;
+  std::mutex msg_mu_;
   // the message is going to be processed or the last one be processed
   MessagePtr active_msg_;
   std::condition_variable dag_cond_;
+
+  // -- remote nodes --
+
+  std::mutex node_mu_;
+
+  std::unordered_map<NodeID, RemoteNode> nodes_;
+
+
+
+
+
+  void run();
+  Customer& obj_;
+  // Temporal buffer for received messages
 
   std::vector<NodeID> groupIDs() {
    std::vector<NodeID> ids = {
@@ -84,10 +110,8 @@ class Executor {
     std::vector<RNode*> sub_nodes;
     std::vector<Range<Key>> key_ranges;
   };
-  std::unordered_map<NodeID, NodeInfo> nodes_;
 
   Node my_node_;
-  std::mutex node_mu_;
   int num_replicas_ = 0;
   bool done_ = false;
   std::thread* thread_ = nullptr;
