@@ -16,13 +16,13 @@ public:
     //LOG(ERROR) << "InitLayer size = " << size;
     try {
 
-      Py_intptr_t shape[1] = { static_cast<Py_intptr_t>(size) };
+      auto shape = boost::python::make_tuple(size);
+      auto stride = boost::python::make_tuple(sizeof(V));
 
-      boost::numpy::ndarray py_weight = boost::numpy::zeros(1, shape, boost::numpy::dtype::get_builtin<float>());
+      // construct new ndarrays using the existing C arrays without copying
+      auto py_weight = boost::numpy::from_data(weight, boost::numpy::dtype::get_builtin<V>(), shape, stride, boost::python::object());
 
-      py_env_->globals().get("init_layer")(name, py_weight);
-
-      memcpy(weight, py_weight.get_data(), sizeof(V) * size);
+      py_env_->globals().get("server_init_layer")(name, py_weight);
 
     } catch (boost::python::error_already_set) {
       //LOG(ERROR) << "InitLayer failed";
@@ -36,17 +36,14 @@ public:
     //LOG(ERROR) << "Update size = " << size;
     try {
 
-      Py_intptr_t shape[1] = { static_cast<Py_intptr_t>(size) };
+      auto shape = boost::python::make_tuple(size);
+      auto stride = boost::python::make_tuple(sizeof(V));
 
-      boost::numpy::ndarray py_weight = boost::numpy::zeros(1, shape, boost::numpy::dtype::get_builtin<float>());
-      memcpy(py_weight.get_data(), weight, sizeof(V) * size);
+      // construct new ndarrays using the existing C arrays without copying
+      auto py_weight = boost::numpy::from_data(weight, boost::numpy::dtype::get_builtin<V>(), shape, stride, boost::python::object());
+      auto py_gradient = boost::numpy::from_data(gradient, boost::numpy::dtype::get_builtin<V>(), shape, stride, boost::python::object());
 
-      boost::numpy::ndarray py_gradient = boost::numpy::zeros(1, shape, boost::numpy::dtype::get_builtin<float>());
-      memcpy(py_gradient.get_data(), gradient, sizeof(V) * size);
-
-      py_env_->globals().get("update_layer")(name, py_weight, py_gradient);
-
-      memcpy(weight, py_weight.get_data(), sizeof(V) * size);
+      py_env_->globals().get("server_update_layer")(name, py_weight, py_gradient);
 
     } catch (boost::python::error_already_set) {
       //LOG(ERROR) << "Update failed";

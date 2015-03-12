@@ -11,6 +11,8 @@ import ps
 
 class MnistTrainer:
     def __init__(self, data_file='mnist_all.mat', num_epochs=100, mb_size=256, eps_w=0.01, eps_b=0.01):
+        print('Worker; NodeID: %s, Rank: %d, RankSize: %d' % (ps.myNodeID(), ps.myRank(), ps.rankSize()))
+
         self.cpu = owl.create_cpu_device()
         self.gpu = owl.create_gpu_device(0)
         self.data_file = data_file
@@ -106,54 +108,67 @@ class MnistTrainer:
             print 'Testing error:', float(np.count_nonzero(val)) / num_test_samples
             print '---Finish epoch #%d' % epoch
 
+
+
+class MnistServer:
+    def __init__(self):
+        print('Server; NodeID: %s, Rank: %d, RankSize: %d' % (ps.myNodeID(), ps.myRank(), ps.rankSize()))
+        self.cpu = owl.create_cpu_device()
+
+    def init_layer(self, name, weight):
+        l1 = 784; l2 = 256; l3 = 10
+
+        w1 = owl.randn([l2, l1], 0.0, math.sqrt(4.0 / (l1 + l2))).to_numpy()
+        w2 = owl.randn([l3, l2], 0.0, math.sqrt(4.0 / (l2 + l3))).to_numpy()
+        b1 = owl.zeros([l2, 1]).to_numpy()
+        b2 = owl.zeros([l3, 1]).to_numpy()
+
+        if name == 'w1':
+            np.copyto(weight, w1.flatten())
+        elif name == 'w2':
+            np.copyto(weight, w2.flatten())
+        elif name == 'b1':
+            np.copyto(weight, b1.flatten())
+        elif name == 'b2':
+            np.copyto(weight, b2.flatten())
+        else:
+            assert False
+
+    def update_layer(self, name, weight, gradient):
+        eps_w = 0.01
+        eps_b = 0.01
+
+        if name[0] == 'w':
+            weight -= eps_w * gradient
+        elif name[0] == 'b':
+            weight -= eps_b * gradient
+        else:
+            assert False
+
+
 # PS - server
-g_server_cpu = None
+server = None
+def server_node_init():
+    global server
+    owl.initialize(sys.argv)
+    server = MnistServer()
 
-def init_layer(name, weight):
-  # weight initialization
+def server_init_layer(name, weight):
+    server.init_layer(name, weight)
 
-  # we must use the CPU on the server to run Minerva
-  global g_server_cpu
-  if g_server_cpu is None:
-    g_server_cpu = owl.create_cpu_device()
-
-  print(ps.myNodeID(), ", this is server ", ps.myRank())
-
-  l1 = 784; l2 = 256; l3 = 10
-
-  w1 = owl.randn([l2, l1], 0.0, math.sqrt(4.0 / (l1 + l2))).to_numpy()
-  w2 = owl.randn([l3, l2], 0.0, math.sqrt(4.0 / (l2 + l3))).to_numpy()
-  b1 = owl.zeros([l2, 1]).to_numpy()
-  b2 = owl.zeros([l3, 1]).to_numpy()
-
-  if name == 'w1':
-    np.copyto(weight, w1.flatten())
-  elif name == 'w2':
-    np.copyto(weight, w2.flatten())
-  elif name == 'b1':
-    np.copyto(weight, b1.flatten())
-  elif name == 'b2':
-    np.copyto(weight, b2.flatten())
-  else:
-    assert False
-  print('init_layer done')
-
-def update_layer(name, weight, gradient):
-  eps_w = 0.01
-  eps_b = 0.01
-
-  if name[0] == 'w':
-    weight -= eps_w * gradient
-  elif name[0] == 'b':
-    weight -= eps_b * gradient
-  else:
-    assert False
+def server_update_layer(name, weight, gradient):
+    server.update_layer(name, weight, gradient)
 
 # PS - worker
+worker = None
+def worker_node_init():
+    global worker
+    owl.initialize(sys.argv)
+    worker = MnistTrainer(num_epochs = 10)
+
 def worker_node_main():
-    trainer = MnistTrainer(num_epochs = 10)
-    trainer.run()
+    worker.run()
 
 if __name__ == '__main__':
-    owl.initialize(sys.argv)
+  pass
 

@@ -24,6 +24,9 @@ int WorkerNodeMain(int argc, char *argv[]) {
   py_env.load_file(PS::FLAGS_script.c_str(), argc, argv);
 
   try {
+    if (py_env.globals().has_key("worker_node_init"))
+      py_env.globals().get("worker_node_init")();
+
     py_env.globals().get("worker_node_main")();
   } catch (boost::python::error_already_set) {
     PyErr_Print();

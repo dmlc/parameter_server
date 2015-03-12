@@ -16,7 +16,13 @@ public:
   }
 
   virtual void init() {
-    //LOG(ERROR) << "this is server " << myRank();
+    try {
+      if (py_env_->globals().has_key("server_node_init"))
+        py_env_->globals().get("server_node_init")();
+    } catch (boost::python::error_already_set) {
+      PyErr_Print();
+      throw;
+    }
   }
 
   virtual ~PythonServer() {

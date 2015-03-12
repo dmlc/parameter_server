@@ -39,7 +39,7 @@ app: build/ps
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-build/ps_python: build/app/python/main.o $(PS_LIB) $(PS_MAIN)
+build/ps_python: build/app/python/main.o build/app/python/python_env.o build/app/python/python_bindings.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
