@@ -1,6 +1,9 @@
 #include <Python.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/python.hpp>
 #include <boost/numpy.hpp>
+#pragma GCC diagnostic pop
 #include <mutex>
 #include "ps.h"
 #include "python_bindings.h"

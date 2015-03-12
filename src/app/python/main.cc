@@ -7,21 +7,18 @@ namespace PS {
 DEFINE_string(script, "", "the Python script path");
 
 App* CreateServerNode(const std::string& conf) {
-  static int argc = 2;
-  static std::string s_conf = conf;
-  static char* argv[2] = { const_cast<char*>(""), const_cast<char*>(s_conf.c_str()) };
+  std::string script = FLAGS_script;
 
-  PS::PythonEnv* py_env = new PS::PythonEnv();
-  py_env->load_file(PS::FLAGS_script.c_str(), argc, argv);
-
-  return new PythonServer(py_env);
+  return new PythonServer(script, conf);
 }
 
 } // namespace PS
 
 int WorkerNodeMain(int argc, char *argv[]) {
+  std::string script = PS::FLAGS_script;
+
   PS::PythonEnv py_env;
-  py_env.load_file(PS::FLAGS_script.c_str(), argc, argv);
+  py_env.load_file(script.c_str(), argc, argv);
 
   try {
     if (py_env.globals().has_key("worker_node_init"))

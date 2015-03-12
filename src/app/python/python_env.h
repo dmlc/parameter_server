@@ -1,5 +1,8 @@
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/python.hpp>
+#pragma GCC diagnostic pop
 
 namespace PS {
 
