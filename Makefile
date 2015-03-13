@@ -29,7 +29,7 @@ LDFLAGS += $(THIRD_LIB) -lpthread -lrt
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
 
-all: ps app
+all: ps build/ps_python
 clean:
 	rm -rf build
 
