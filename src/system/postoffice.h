@@ -16,7 +16,9 @@ class Postoffice {
 
   // queue a message into the sending buffer, which will be sent by the sending
   // thread. It is thread safe.
-  void queue(const MessagePtr& msg);
+  void queue(const MessagePtr& msg) {
+    sending_queue_.push(msg);
+  }
 
   // reply *msg* by *reply*
   void reply(const MessagePtr& msg, Task reply = Task());

@@ -70,13 +70,11 @@ struct Message {
   bool replied = false;
   // true if the task asscociated with this message has been finished.
   bool finished = true;
-  // an inivalid message will not be sent, instead, the postoffice will fake a
-  // reply message. see Postoffice::queue()
+  // an inivalid message should not be sent, but will be marked as finished
   bool valid = true;
+
   // set it to be true to stop the sending thread of Postoffice.
   bool terminate = false;
-  // wait or not when submit this message
-  bool wait = false;
 
   typedef std::function<void()> Callback;
   // *recv_handle* will be called if anythings goes back from the destination

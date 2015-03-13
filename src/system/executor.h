@@ -3,20 +3,19 @@
 #include "system/message.h"
 namespace PS {
 
+const static NodeID kGroupPrefix  = "all_";
 // all server nodes
-const static NodeID kServerGroup = "all_servers";
+const static NodeID kServerGroup  = kGroupPrefix + "servers";
 // all worker nodes
-const static NodeID kWorkerGroup = "all_workers";
+const static NodeID kWorkerGroup  = kGroupPrefix + "workers";
 // kServerGroup + kWorkerGroup
-const static NodeID kCompGroup = "all_comp_nodes";
+const static NodeID kCompGroup    = kGroupPrefix + "comp_nodes";
 // the nodes maintaining a replica of the key segment I own
-const static NodeID kReplicaGroup = "all_replicas";
+const static NodeID kReplicaGroup = kGroupPrefix + "replicas";
 // the owner nodes of the key segments this node backup
-const static NodeID kOwnerGroup = "all_owners";
+const static NodeID kOwnerGroup   = kGroupPrefix + "owners";
 // all live nodes, including scheduler, workers, servers, unused nodes...
-const static NodeID kLiveGroup = "all_lives";
-
-typedef std::vector<Node> NodeList;
+const static NodeID kLiveGroup    = kGroupPrefix + "lives";
 
 // Executor maintain all remote nodes for a customer. It has its own thread to process
 // received tasks.
@@ -25,32 +24,18 @@ class Executor {
   Executor(Customer& obj);
   ~Executor();
 
-  // Submits a request message into a remote node. See comments in customer.h
-  int Submit(const MessagePtr& msg) {
-
-  }
-
-
-  // mark this message as finshed in executor
-  void finish(const MessagePtr& msg);
-
-  // stop the processing thread
-  void stop();
-
-  // accessors
-  RNode* rnode(const NodeID& k);
-  std::vector<RNode*>& group(const NodeID& k);
-  const std::vector<Range<Key>>& keyRanges(const NodeID& k);
-  const Node& myNode() { return my_node_; }
-
-
-  // Accepts a received message from Postoffice. Thread-safe.
+  // -- communication and synchronization --
+  // see comments in customer.h
+  int Submit(const MessagePtr& msg);
   void Accept(const MessagePtr& msg);
+  void WaitSentReq(int timestamp, const NodeID& recver);
+  void WaitRecvReq(int timestamp, const NodeID& sender);
+  void FinishRecvReq(int timestamp, const NodeID& sender);
 
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
- private:
 
+ private:
   // Runs the DAG engine
   void Run() {
     while (!done_) {
@@ -76,46 +61,31 @@ class Executor {
   std::condition_variable dag_cond_;
 
   // -- remote nodes --
-
   std::mutex node_mu_;
-
   std::unordered_map<NodeID, RemoteNode> nodes_;
 
+  RemoteNode* GetRNode(const NodeID& node_id) {
+    auto it = nodes_.find(node_id);
+    CHECK(it != nodes_.end()) << "node [" << node_id << "] doesn't exist";
+    return &(it->second);
+  }
 
-
-
-
-  void run();
-  Customer& obj_;
-  // Temporal buffer for received messages
-
-  std::vector<NodeID> groupIDs() {
+  std::vector<NodeID> GroupIDs() {
    std::vector<NodeID> ids = {
-     kServerGroup, kWorkerGroup, kCompGroup,
-     kReplicaGroup, kOwnerGroup, kLiveGroup};
+     kServerGroup, kWorkerGroup, kCompGroup, kReplicaGroup, kOwnerGroup, kLiveGroup};
     return ids;
   }
 
-  struct NodeInfo {
-    NodeInfo() { };
-    ~NodeInfo() { delete node; }
-
-    void clear() { sub_nodes.clear(); key_ranges.clear(); }
-    void addSubNode(RNode* s);
-    void removeSubNode(RNode* s);
-
-    RNode* node = NULL;
-    // sub_nodes = {node} or all nodes in this node group. they are ordered
-    // according to the key range
-    std::vector<RNode*> sub_nodes;
-    std::vector<Range<Key>> key_ranges;
-  };
-
+  Customer& obj_;
   Node my_node_;
   int num_replicas_ = 0;
   bool done_ = false;
   std::thread* thread_ = nullptr;
 };
 
+// bool IsGroupNode(const NodeID& node_id) {
+//   return node_id.compare(
+//       0, std::max(node_id.size(), kGroupPrefix.size()), kGroupPrefix) == 0;
+// }
 
 } // namespace PS

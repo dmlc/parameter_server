@@ -67,22 +67,9 @@ void Postoffice::reply(
   queue(reply_msg);
 }
 
-void Postoffice::queue(const MessagePtr& msg) {
-  if (msg->valid) {
-    sending_queue_.push(msg);
-  } else {
-    // do not send, fake a reply mesage
-    Task reply_task;
-    reply_task.set_customer_id(msg->task.customer_id());
-    reply_task.set_request(false);
-    reply_task.set_control(msg->task.control());
-    reply_task.set_time(msg->task.time());
-    MessagePtr reply_msg(new Message(reply_task));
-    reply_msg->sender = msg->recver;
-    reply_msg->recver = msg->sender;
-    manager_.customer(msg->task.customer_id())->exec().accept(reply_msg);
-  }
-}
+// void Postoffice::queue(const MessagePtr& msg) {
+//   sending_queue_.push(msg);
+// }
 
 
 void Postoffice::send() {
@@ -115,7 +102,7 @@ void Postoffice::recv() {
       if (!manager_.process(msg)) break;
     } else {
       int id = msg->task.customer_id();
-      manager_.customer(id)->exec().Accept(msg);
+      manager_.customer(id)->Accept(msg);
     }
   }
 }

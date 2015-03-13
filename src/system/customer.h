@@ -11,8 +11,12 @@ class Customer {
  public:
   // A customer must have an unique ID so that it can communicate with the
   // customer with the same ID in a remote node.
-  Customer(int id);
-  virtual ~Customer();
+  Customer(int id) : id_(id), sys_(Postoffice::instance()), exec_(*this) {
+    sys_.manager().addCustomer(this);
+  }
+  virtual ~Customer() {
+    sys_.manager().removeCustomer(this);
+  }
 
   // -- Communication APIs (thread-safe): --
 
@@ -48,24 +52,34 @@ class Customer {
     return exec_.Submit(msg);
   }
 
-
   // Replies the request message "msg" received from msg->sender with
   // "reply". In default, "reply" is an empty ack message.
   void Reply(const MessagePtr& msg, Task reply = Task()) {
     sys_.reply(msg, reply);
   }
 
+
+  // Accepts a received message from a remote node
+  void Accept(const MessagePtr& msg) {
+    exec_.Accept(msg);
+  }
+
   // -- Consistency APIs (thread-safe) --
 
   // Waits until the task with "timestamp" sent to "recver" is finished. If
   // "recver" is a single node, it blocks until a reply message with "timestamp"
-  // has been received from "recver". Otherwise, it will wait a reply message
-  // from each node in the node group "recver".
-  void WaitSentReq(int timestamp, const NodeID& recver);
+  // has been received from "recver" or "recver" is dead. Otherwise, it will
+  // wait for each alive node in the node group "recver".
+  void WaitSentReq(int timestamp, const NodeID& recver) {
+    exec_.WaitSentReq(timestamp, recver);
+  }
 
   // Wait until the request task/message with "timestamp" received from "sender" is
-  // finished at this node.
-  void WaitRecvReq(int timestamp, const NodeID& sender);
+  // finished at this node or "sender" is dead. If "sender" is a node group,
+  // then wait for each alive node in this node group.
+  void WaitRecvReq(int timestamp, const NodeID& sender) {
+    exec_.WaitRecvReq(timestamp, sender);
+  }
 
   // Set the request with "timestamp" sent from "sender" as been
   // finished. Typically the DAG engine in `executor_` will do it
@@ -86,7 +100,9 @@ class Customer {
   // data; mark the virtual request t+1 as finished via
   // `FinishRecvReq(t+1)`. Then all blocked pull requests will be executed by
   // the DAG engine.
-  void FinishRecvReq(int timestamp, const NodeID& sender);
+  void FinishRecvReq(int timestamp, const NodeID& sender) {
+    exec_.FinishRecvReq(timestamp, sender);
+  }
 
   // -- User definable APIs --
 
@@ -100,31 +116,15 @@ class Customer {
   // which are sorted according to their key range. "krs" is the list of these n
   // key ranges.
   //
-  // It must return a list of n messages such as the i-th message is sent to
+  // It must return a list of n messages "msgs" such as the msgs[i] is sent to
   // the i-th node. In default, it copies "msg" n times.
-  virtual MessagePtrList Slice(const MessagePtr& msg, const KeyRangeList& krs);
-
+  virtual void Slice(
+      const MessagePtr& msg, const KeyRangeList& krs, MessagePtrList* msgs) {
+    for (auto& m : *msgs) *m = *msg;
+  }
 
   // -- accessors --
-
   int id() const { return id_; }
-
-
-  // DEPRECATED
-
-  // process a message received from a remote node. It will be called by
-  // executor's processing thread
-  virtual void process(const MessagePtr& msg) { }
-
-  // this function slices the message _msg_ into n messages such that the i-th
-  // one contains only keys and values in the key range _krs[i]_. _krs_ are
-  // ordered such that krs[i-1].end == krs[i].begin.
-  virtual MessagePtrList slice(const MessagePtr& msg, const KeyRangeList& krs);
-
-  // return the remote_note by its name
-  RNode* port(const NodeID& k) { return CHECK_NOTNULL(exec_.rnode(k)); }
-  Executor& exec() { return exec_; }
-
  protected:
   int id_;
   Postoffice& sys_;
@@ -136,7 +136,7 @@ class Customer {
 // The base class of an application.
 class App : public Customer {
  public:
-  App();
+  App() : Customer(Postoffice::instance().manager().nextCustomerID()) { }
   virtual ~App() { }
 
   // -- User definable APIs --
@@ -149,11 +149,6 @@ class App : public Customer {
   // `Run()` is executed by the main thread immediately after this app has ben
   // created.
   virtual void Run() { }
-
-
-  // DEPRECATED
-  static App* create(const std::string& conf);
-  virtual void run() { }
 };
 
 
