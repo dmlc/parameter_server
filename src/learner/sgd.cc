@@ -21,7 +21,7 @@ void ISGDScheduler::run() {
   Task task;
   task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
   int ts = Submit(task, kServerGroup);
-  WaitSubmittedReq(ts, kServerGroup);
+  Wait(ts, kServerGroup);
 }
 
 void ISGDScheduler::process(const MessagePtr& msg) {

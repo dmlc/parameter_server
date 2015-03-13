@@ -102,7 +102,7 @@ void Postoffice::recv() {
       if (!manager_.process(msg)) break;
     } else {
       int id = msg->task.customer_id();
-      manager_.customer(id)->Accept(msg);
+      manager_.customer(id)->executor()->Accept(msg);
     }
   }
 }

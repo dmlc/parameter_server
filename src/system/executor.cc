@@ -158,26 +158,27 @@ bool Executor::PickActiveMsg() {
 
 void Executor::ProcessActiveMsg() {
   if (active_msg_->task.control()) {
-    Manage(active_msg_);
+    ProcessControl(active_msg_);
     return;
   }
 
-  // ask the customer to process the picked message
-  obj_.Process(active_msg_);
-
-  // postprocessing
+  // ask the customer to process the picked message, and do post-processing
+  bool req = active_msg_->task.request();
   int ts = active_msg_->task.time();
+  if (req) {
+    obj_.ProcessRequest(active_msg_);
 
-  if (active_msg_->task.request()) {
     if (active_msg_->finished) {
       // if this message is marked as finished, then set the mark in tracker,
       // otherwise, the user application need to call `Customer::FinishRecvReq`
       // to set the mark
       FinishRecvReq(ts, active_msg_->sender);
       // reply an empty ACK message if necessary
-      if (!active_msg_->replied) obj_.Reply(active_msg_);
+      if (!active_msg_->replied) sys_.reply(active_msg_);
     }
   } else {
+    obj_.ProcessResponse(active_msg_);
+
     std::unique_lock<std::mutex> lk(msg_mu_);
     // mark as finished
     auto rnode = GetRNode(active_msg_->sender);
@@ -218,7 +219,7 @@ void Executor::Accept(const MessagePtr& msg) {
 }
 
 
-void Executor::Manage(const MessagePtr& msg) {
+void Executor::ProcessControl(const MessagePtr& msg) {
   Lock l(node_mu_);
   CHECK(msg->task.has_ctrl());
   auto ctrl = msg->task.ctrl();

@@ -48,7 +48,7 @@ class Executor {
   void ProcessActiveMsg();
 
   // Do management. Only thread-safe when run by "thread_".
-  void Manage(const MessagePtr& msg);
+  void ProcessControl(const MessagePtr& msg);
   void AddNode(const Node& node);
   void RemoveNode(const Node& node);
   void ReplaceNode(const Node& old_node, const Node& new_node);

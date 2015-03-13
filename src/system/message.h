@@ -107,6 +107,12 @@ struct Message {
   }
 };
 
+inline MessagePtr NewMessage(const Task& task, const NodeID& recver) {
+  return MessagePtr(new Message(task, recver));
+}
+
+inline MessagePtr NewMessage() { return MessagePtr(new Message()); }
+
 
 template <typename T> void Message::setKey(const SArray<T>& key) {
   task.set_key_type(encodeType<T>());

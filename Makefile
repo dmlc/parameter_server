@@ -56,3 +56,4 @@ build/%.o: src/%.cc
 -include build/*/*.d
 -include build/*/*/*.d
 -include src/test/build.mk
+-include src/app/tutorial/build.mk
