@@ -6,7 +6,33 @@
 namespace PS {
 
 // The base class of shared object in parameter server, such as an application,
-// or shared parameters.
+// or shared parameters. It implements an asynchronous RPC interface. A customer
+// can send a request to another customer with the same ID in a remote machine.
+//
+// How it works:
+//
+// Customer A at node NA can submit a request to customer B at node NB if both A
+// and B have the same `id()'. The request message contains arguments specified
+// by the protobuf class `Task' and additional data such as (key,value)
+// pairs. Customer B first accepts this request via `Accept', next processes it
+// by `Process', which is a user-defined function, if the dependency constraints
+// are satisifed, and then sent back the responce to A by `Reply'
+//
+// It's an asynchronous interface. `Submit' returns immediately after the
+// message is queued in the system. There is a timestamp assigned to each
+// request for synchronization. For example, B can use it to check whether this
+// request has been processed via `WaitAcceptedReq', while A can use
+// `WaitSubmittedReq' to wait the response from B. A can also set a callback
+// function when the response is arriving.
+//
+// Furthermore, customer A can submit a request to a node group, such as the
+// server group. There is a user-defined function `Slice' which will partition
+// the request message, mainly the (key,value) pairs, according to the key range
+// of the remote node. Each node in this group will get a part of the original
+// message.
+//
+// There are user-defined filters to encode and decode the messages
+// communicated between nodes, mainly to reduce the network overhead.
 class Customer {
  public:
   // A customer must have an unique ID so that it can communicate with the
@@ -15,7 +41,7 @@ class Customer {
     sys_.manager().addCustomer(this);
   }
   virtual ~Customer() {
-    sys_.manager().removeCustomer(this);
+    sys_.manager().removeCustomer(id_);
   }
 
   // -- Communication APIs (thread-safe): --
@@ -30,7 +56,8 @@ class Customer {
   // Sample usage: send a request to all worker nodes and wait until finished:
   //   Task task; task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
   //   int ts = Submit(task, kWorkerGroup);
-  //   WaitSentReq(ts, kWorkerGroup);
+  //   WaitSubmittedReq(ts, kWorkerGroup);
+  //   Foo();
   int Submit(const Task& task, const NodeID& recver) {
     MessagePtr ptr(new Message(task, recver));
     return Submit(ptr);
@@ -46,7 +73,7 @@ class Customer {
   //
   // Sample usage: the same functionality as above:
   //   MessagePtr msg(new Message(task, kWorkerGroup));
-  //   msg->wait = true;
+  //   msg->callback = [this](){ Foo(); }
   //   Submit(msg);
   int Submit(const MessagePtr& msg) {
     return exec_.Submit(msg);
@@ -58,31 +85,31 @@ class Customer {
     sys_.reply(msg, reply);
   }
 
-
-  // Accepts a received message from a remote node
+  // Accepts a message from a remote node
   void Accept(const MessagePtr& msg) {
     exec_.Accept(msg);
   }
 
   // -- Consistency APIs (thread-safe) --
 
-  // Waits until the task with "timestamp" sent to "recver" is finished. If
-  // "recver" is a single node, it blocks until a reply message with "timestamp"
-  // has been received from "recver" or "recver" is dead. Otherwise, it will
-  // wait for each alive node in the node group "recver".
-  void WaitSentReq(int timestamp, const NodeID& recver) {
+  // Waits until the request with "timestamp" sent to "recver" is finished. If
+  // "recver" is a single node, it blocks until a reply message with the same
+  // "timestamp" has been received from "recver" or "recver" is dead. Otherwise,
+  // it will wait for the responce of each alive node in the node group
+  // "recver".
+  void WaitSubmittedReq(int timestamp, const NodeID& recver) {
     exec_.WaitSentReq(timestamp, recver);
   }
 
   // Wait until the request task/message with "timestamp" received from "sender" is
-  // finished at this node or "sender" is dead. If "sender" is a node group,
+  // processed at this node or "sender" is dead. If "sender" is a node group,
   // then wait for each alive node in this node group.
-  void WaitRecvReq(int timestamp, const NodeID& sender) {
+  void WaitAcceptedReq(int timestamp, const NodeID& sender) {
     exec_.WaitRecvReq(timestamp, sender);
   }
 
-  // Set the request with "timestamp" sent from "sender" as been
-  // finished. Typically the DAG engine in `executor_` will do it
+  // Set the request with "timestamp" sent from "sender" as been finished
+  // (processed). Typically the DAG engine in `executor_` will do it
   // automatically. But this function can mark a virtual request as finished to
   // achieve certain synchronization.
   //
@@ -100,7 +127,7 @@ class Customer {
   // data; mark the virtual request t+1 as finished via
   // `FinishRecvReq(t+1)`. Then all blocked pull requests will be executed by
   // the DAG engine.
-  void FinishRecvReq(int timestamp, const NodeID& sender) {
+  void FinishAcceptedReq(int timestamp, const NodeID& sender) {
     exec_.FinishRecvReq(timestamp, sender);
   }
 
@@ -123,7 +150,7 @@ class Customer {
     for (auto& m : *msgs) *m = *msg;
   }
 
-  // -- accessors --
+  // Returns the unique ID of this customer
   int id() const { return id_; }
  protected:
   int id_;
@@ -146,7 +173,7 @@ class App : public Customer {
   // -app_conf.
   static App* Create(const std::string& conf);
 
-  // `Run()` is executed by the main thread immediately after this app has ben
+  // `Run()` is executed by the main thread immediately after this app has been
   // created.
   virtual void Run() { }
 };

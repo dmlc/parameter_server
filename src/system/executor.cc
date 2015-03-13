@@ -3,10 +3,10 @@
 #include <thread>
 namespace PS {
 
-Executor::Executor(Customer& obj) : obj_(obj) {
+Executor::Executor(Customer& obj) : obj_(obj), sys_(Postoffice::instance()) {
   my_node_ = Postoffice::instance().manager().van().myNode();
   // insert virtual group nodes
-  for (auto id : groupIDs()) {
+  for (auto id : GroupIDs()) {
     Node node;
     node.set_role(Node::GROUP);
     node.set_id(id);
@@ -27,19 +27,19 @@ Executor::~Executor() {
 void Executor::WaitSentReq(int timestamp, const NodeID& recver) {
   std::unique_lock<std::mutex> lk(node_mu_);
   auto rnode = GetRNode(recver);
-  rnode->cond.wait(lk, [rnode] {
+  rnode->cond.wait(lk, [rnode, timestamp] {
       return !rnode->alive || rnode->sent_req_tracker.IsFinished(timestamp); });
 }
 
 void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
   auto rnode = GetRNode(sender);
-  rnode->cond.wait(lk, [rnode] {
+  rnode->cond.wait(lk, [rnode, timestamp] {
       return !rnode->alive || rnode->recv_req_tracker.IsFinished(timestamp); });
 }
 
 void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
-  Lock lk(node_mu_);
+  std::unique_lock<std::mutex> lk(node_mu_);
   auto rnode = GetRNode(sender);
   rnode->recv_req_tracker.Finish(timestamp);
   lk.unlock();
@@ -49,17 +49,16 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
 
 int Executor::Submit(const MessagePtr& msg) {
   Lock l(node_mu_);
-  RNodeGroup* grp = FindGroup(msg->sender);
-  CHECK(grp != nullptr) << msg->sender << " doesn't exist";
+  RemoteNode* rnode = GetRNode(msg->sender);
 
   // timestamp
   int ts = msg->task.has_time() ? msg->task.time() : Message::kInvalidTime;
   if (ts <= Message::kInvalidTime) {
     // pick a proper timestamp
-    for (auto r : grp->nodes) ts = std::max(ts, r->time+1);
+    for (auto r : rnode->nodes) ts = std::max(ts, r->time+1);
   }
   // update the timestamp
-  for (auto r : grp->nodes) {
+  for (auto r : rnode->nodes) {
     CHECK_LT(r->time, ts) << my_node_.id() <<
         ": node " << r->rnode.id() << " has a newer timstamp";
     r->time = ts;
@@ -74,24 +73,24 @@ int Executor::Submit(const MessagePtr& msg) {
   }
 
   // slice "msg" and then send them one by one
-  MessagePtrList msgs(grp->keys.size());
-  obj_.Slice(msg, grp->keys, &msgs);
-  CHECK_EQ(msgs.size(), grp->nodes.size());
+  MessagePtrList msgs(rnode->keys.size());
+  obj_.Slice(msg, rnode->keys, &msgs);
+  CHECK_EQ(msgs.size(), rnode->nodes.size());
   for (int i = 0; i < msgs.size(); ++i) {
-    RemoteNode* rnode = CHECK_NOTNULL(grp->nodes[i]);
+    RemoteNode* r = CHECK_NOTNULL(rnode->nodes[i]);
     MessagePtr& m = msgs[i];
-    if (!m.valid) {
+    if (!m->valid) {
       // do not sent, just mark it as done
-      rnode->sent_req_tracker.Finish(ts);
+      r->sent_req_tracker.Finish(ts);
       continue;
     }
-    const NodeID& recv = rnode->rnode.id();  // the actual receiver of "m"
-    if (msg->recv != recv) {
+    const NodeID& recv = r->rnode.id();  // the actual receiver of "m"
+    if (msg->recver != recv) {
       // that means "msg" is sent to a group node. save this info
-      rnode->sent_to_group[ts] = msg->recv;
+      r->sent_to_group[ts] = msg->recver;
     }
-    rnode->EncodeMessage(m);
-    m->recv = recv;
+    r->EncodeMessage(m);
+    m->recver = recv;
     sys_.queue(m);
   }
 
@@ -110,7 +109,7 @@ bool Executor::PickActiveMsg() {
     Lock l(node_mu_);
     auto rnode = GetRNode(msg->sender);
     if (!rnode->alive) {
-      VLOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
+      LOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
           " is not alive, ignore received message: " << msg->debugString();
       it = recv_msgs_.erase(it);
       continue;
@@ -120,7 +119,7 @@ bool Executor::PickActiveMsg() {
     int ts = msg->task.time();
     if ((req && rnode->recv_req_tracker.IsFinished(ts)) ||
         (!req && rnode->sent_req_tracker.IsFinished(ts))) {
-      VLOG(WARNING) << my_node_.id() << ": doubly received message. ignore: " <<
+      LOG(WARNING) << my_node_.id() << ": doubly received message. ignore: " <<
           msg->debugString();
       it = recv_msgs_.erase(it);
       continue;
@@ -164,7 +163,7 @@ void Executor::ProcessActiveMsg() {
   }
 
   // ask the customer to process the picked message
-  obj_.process(active_msg_);
+  obj_.Process(active_msg_);
 
   // postprocessing
   int ts = active_msg_->task.time();
@@ -179,7 +178,7 @@ void Executor::ProcessActiveMsg() {
       if (!active_msg_->replied) obj_.Reply(active_msg_);
     }
   } else {
-    Lock l(node_mu_);
+    std::unique_lock<std::mutex> lk(msg_mu_);
     // mark as finished
     auto rnode = GetRNode(active_msg_->sender);
     rnode->sent_req_tracker.Finish(ts);
@@ -191,7 +190,7 @@ void Executor::ProcessActiveMsg() {
       // this message was sent to a group node. so "ts" is finished only if all
       // nodes in this group is finished
       bool done = true;
-      anto onode = GetNode(it->second);
+      auto onode = GetRNode(it->second);
       for (auto r : onode->nodes) {
         if (r->alive && !r->sent_req_tracker.IsFinished(ts)) {
           done = false;
@@ -202,11 +201,11 @@ void Executor::ProcessActiveMsg() {
       onode->sent_req_tracker.Finish(ts);
       onode->RunCallback(ts);
       groups.erase(it);
-      l.unlock();
+      lk.unlock();
       onode->cond.notify_all();
     } else {
       rnode->RunCallback(ts);
-      l.unlock();
+      lk.unlock();
       rnode->cond.notify_all();
     }
   }
@@ -250,7 +249,7 @@ void Executor::RemoveNode(const Node& node) {
   auto id = node.id();
   if (nodes_.find(id) == nodes_.end()) return;
   auto r = GetRNode(id);
-  for (const NodeID& gid : groupIDs()) {
+  for (const NodeID& gid : GroupIDs()) {
     nodes_[gid].RemoveSubNode(r);
   }
   // do not remove r from nodes_
@@ -268,7 +267,7 @@ void Executor::AddNode(const Node& node) {
     auto r = GetRNode(id);
     CHECK(r->alive);
     r->rnode = node;
-    for (const NodeID& gid : groupIDs()) {
+    for (const NodeID& gid : GroupIDs()) {
       nodes_[gid].RemoveSubNode(r);
     }
   } else {
@@ -316,26 +315,5 @@ void Executor::AddNode(const Node& node) {
     break;
   }
 }
-
-
-
-// void Executor::finish(const MessagePtr& msg) {
-//   RNode* r = rnode(msg->sender);
-//   if (r) r->finishIncomingTask(msg->task.time());
-// }
-
-// RNode* Executor::rnode(const NodeID& k) {
-//   Lock l(node_mu_);
-//   auto it = nodes_.find(k);
-//   return it == nodes_.end() ? NULL : it->second.node;
-// }
-
-// std::vector<RNode*>& Executor::group(const NodeID& k) {
-//   Lock l(node_mu_);
-//   auto it = nodes_.find(k);
-//   CHECK(it != nodes_.end()) << "unkonw node group: " << k;
-//   return it->second.sub_nodes;
-// }
-
 
 } // namespace PS

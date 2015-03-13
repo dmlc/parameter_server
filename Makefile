@@ -18,13 +18,11 @@ LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread -lrt
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
 
-all: ps app
 clean:
 	rm -rf build
 	find . -name "*.pb.[ch]*" -delete
 
 ps: $(PS_LIB) $(PS_MAIN)
-app: build/linear
 
 # PS system
 sys_dir		= $(addprefix src/, util data system filter learner parameter)

@@ -13,7 +13,6 @@ void Message::miniCopyFrom(const Message& msg) {
   // task.clear_value_type();
   task.clear_has_key();
   terminate = msg.terminate;
-  wait = msg.wait;
   recv_handle = msg.recv_handle;
   fin_handle = msg.fin_handle;
   original_recver = msg.original_recver;

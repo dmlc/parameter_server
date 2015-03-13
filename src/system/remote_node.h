@@ -56,7 +56,6 @@ struct RemoteNode {
   Node rnode;                               // the remote node
   bool alive = true;                        // aliveness
   int time = Message::kInvalidTime;         // current timestamp
-  std::unordered_map<int, Filter*> filters; // <filter_type, filter_ptr>
   std::condition_variable cond;
 
   // -- info of requests sent to "rnode" --
@@ -74,6 +73,9 @@ struct RemoteNode {
 
  private:
   Filter* FindFilterOrCreate(const FilterConfig& conf);
+  // key: filter_type
+  std::unordered_map<int, Filter*> filters;
+
   std::unordered_map<int, Message::Callback> sent_req_callbacks;
 };
 

@@ -5,13 +5,14 @@
 
 namespace PS {
 
-class Filter;
-typedef std::shared_ptr<Filter> FilterPtr;
-
 // A filter should be thread safe
 class Filter {
  public:
-  static FilterPtr create(const FilterConfig& conf);
+  Filter() { }
+  virtual ~Filter() { }
+
+  static Filter* create(const FilterConfig& conf);
+
 
   virtual void encode(const MessagePtr& msg) { }
   virtual void decode(const MessagePtr& msg) { }

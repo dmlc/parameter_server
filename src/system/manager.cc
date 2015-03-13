@@ -56,7 +56,7 @@ void Manager::run() {
   // while run() is called by the main thread, so here should be a thread
   // synchronization.
   app_promise_.get_future().wait();
-  app_->run();
+  app_->Run();
 }
 
 void Manager::stop() {
@@ -168,9 +168,10 @@ void Manager::addNode(const Node& node) {
   nodes_[node.id()] = node;
 
   // add to app
-  for (auto& it : customers_) {
-    it.second.first->exec().addNode(node);
-  }
+  // FIXME
+  // for (auto& it : customers_) {
+  //   it.second.first->exec().addNode(node);
+  // }
 
   if (isScheduler() && node.id() != van_.myNode().id()) {
     // send all existing nodes info to sender
@@ -257,7 +258,7 @@ void Manager::sendTask(const NodeID& recver, const Task& task) {
 }
 
 void Manager::createApp(const string& conf) {
-  app_ = App::create(conf);
+  app_ = App::Create(conf);
   CHECK(app_ != NULL)
       << ": failed to create app with conf\n" << app_conf_;
   app_promise_.set_value();

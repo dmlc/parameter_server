@@ -20,7 +20,8 @@ void ISGDScheduler::run() {
   // save model
   Task task;
   task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
-  port(kServerGroup)->submitAndWait(task);
+  int ts = Submit(task, kServerGroup);
+  WaitSubmittedReq(ts, kServerGroup);
 }
 
 void ISGDScheduler::process(const MessagePtr& msg) {
@@ -38,7 +39,7 @@ void ISGDScheduler::process(const MessagePtr& msg) {
       task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
       if (workload_pool_->assign(
               msg->sender, task.mutable_sgd()->mutable_load())) {
-        port(msg->sender)->submit(task);
+        Submit(task, msg->sender);
       }
     } break;
     default: ; // nothing

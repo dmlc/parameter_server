@@ -58,8 +58,7 @@ class MonitorSlaver : public Customer {
   void report(const Progress& prog) {
     string str; CHECK(prog.SerializeToString(&str));
     Task report; report.set_msg(str);
-    auto master = port(master_);
-    if (master) master->submit(report);
+    Submit(report, master_);
   }
  protected:
   NodeID master_;

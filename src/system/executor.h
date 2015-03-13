@@ -77,6 +77,7 @@ class Executor {
   }
 
   Customer& obj_;
+  Postoffice& sys_;
   Node my_node_;
   int num_replicas_ = 0;
   bool done_ = false;

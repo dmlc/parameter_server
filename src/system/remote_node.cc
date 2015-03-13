@@ -4,32 +4,29 @@
 #include "util/shared_array_inl.h"
 namespace PS {
 
-FilterPtr RemoteNode::findFilter(const FilterConfig& conf) {
-  // this lock is necessary, because encodeFileter and decodeFilter could be
-  // called by different threads.
-  Lock l(filter_mu_);
+Filter* RemoteNode::FindFilterOrCreate(const FilterConfig& conf) {
   int id = conf.type();
-  auto it = filter_.find(id);
-  if (it == filter_.end()) {
-    filter_[id] = Filter::create(conf);
-    it = filter_.find(id);
+  auto it = filters.find(id);
+  if (it == filters.end()) {
+    filters[id] = Filter::create(conf);
+    it = filters.find(id);
   }
   return it->second;
 }
 
-void RemoteNode::encodeFilter(const MessagePtr& msg) {
+void RemoteNode::EncodeMessage(const MessagePtr& msg) {
   const auto& tk = msg->task;
   for (int i = 0; i < tk.filter_size(); ++i) {
-    findFilter(tk.filter(i))->encode(msg);
+    FindFilterOrCreate(tk.filter(i))->encode(msg);
   }
 }
-void RemoteNode::decodeFilter(const MessagePtr& msg) {
+void RemoteNode::DecodeMessage(const MessagePtr& msg) {
   const auto& tk = msg->task;
+  // a reverse order comparing to encode
   for (int i = tk.filter_size()-1; i >= 0; --i) {
-    findFilter(tk.filter(i))->decode(msg);
+    FindFilterOrCreate(tk.filter(i))->decode(msg);
   }
 }
-
 
 void RemoteNode::AddSubNode(RemoteNode* rnode) {
   CHECK_NOTNULL(rnode);
@@ -37,20 +34,20 @@ void RemoteNode::AddSubNode(RemoteNode* rnode) {
   int pos = 0;
   Range<Key> kr(rnode->rnode.key());
   while (pos < nodes.size()) {
-    if (kr.inLeft(Range<Key>(CHECK_NOTNULL(nodes[pos])->key()))) {
+    if (kr.inLeft(Range<Key>(nodes[pos]->rnode.key()))) {
       break;
     }
     ++ pos;
   }
   nodes.insert(nodes.begin() + pos, rnode);
-  keys.insert(keys.begin() + pos, s->keyRange());
+  keys.insert(keys.begin() + pos, kr);
 }
 
 void RemoteNode::RemoveSubNode(RemoteNode* rnode) {
   size_t n = nodes.size();
   CHECK_EQ(n, keys.size());
   for (int i = 0; i < n; ++i) {
-    if (sub_nodes[i] == s) {
+    if (nodes[i] == rnode) {
       nodes.erase(nodes.begin() + i);
       keys.erase(keys.begin() + i);
       return;

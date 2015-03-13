@@ -39,9 +39,9 @@ inline std::string SchedulerID() {
   return Postoffice::instance().manager().van().scheduler().id();
 }
 
-// inline int NextCustomerID() {
-//   return Postoffice::instance().manager().nextCustomerID();
-// }
+inline int NextCustomerID() {
+  return Postoffice::instance().manager().nextCustomerID();
+}
 
 // The rank ID of this node in its group. Assume this a worker node in a worker
 // group with N workers. Then this node will be assigned an unique ID from 0,
