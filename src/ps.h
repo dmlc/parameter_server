@@ -63,4 +63,17 @@ inline void WaitWorkersReady() {
   PS::Postoffice::instance().manager().waitWorkersReady();
 }
 
+inline void StartSystem(int argc, char *argv[]) {
+  PS::Postoffice::instance().run(&argc, &argv);
+}
+
+inline void StopSystem() {
+  PS::Postoffice::instance().stop();
+}
+
+inline int RunSystem(int argc, char *argv[]) {
+  StartSystem(argc, argv); StopSystem();
+  return 0;
+}
+
 } // namespace PS

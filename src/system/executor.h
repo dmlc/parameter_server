@@ -35,6 +35,8 @@ class Executor {
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
 
+  // ndoe management
+  void AddNode(const Node& node);
  private:
   // Runs the DAG engine
   void Run() {
@@ -48,8 +50,6 @@ class Executor {
   void ProcessActiveMsg();
 
   // Do management. Only thread-safe when run by "thread_".
-  void ProcessControl(const MessagePtr& msg);
-  void AddNode(const Node& node);
   void RemoveNode(const Node& node);
   void ReplaceNode(const Node& old_node, const Node& new_node);
 
@@ -64,7 +64,7 @@ class Executor {
   std::mutex node_mu_;
   std::unordered_map<NodeID, RemoteNode> nodes_;
 
-  RemoteNode* GetRNode(const NodeID& node_id) {
+  inline RemoteNode* GetRNode(const NodeID& node_id) {
     auto it = nodes_.find(node_id);
     CHECK(it != nodes_.end()) << "node [" << node_id << "] doesn't exist";
     return &(it->second);

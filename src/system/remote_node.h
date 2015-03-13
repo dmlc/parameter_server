@@ -23,7 +23,7 @@ class RequestTracker {
   // Mark time timstamp "ts" as finished.
   void Finish(int ts) {
     CHECK_LT(ts, 1000000);
-    if (data_.size() <= ts) data_.resize(ts*2);
+    if (data_.size() <= ts) data_.resize(ts*2+5);
     data_[ts] = true;
   }
  private:

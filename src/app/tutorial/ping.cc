@@ -1,22 +1,21 @@
 #include "ps.h"
 namespace PS {
 
-class PingServer : public App {
+class HelloServer : public App {
  public:
-  // PingServer() { }
-
   virtual void ProcessRequest(const MessagePtr& req) {
     LL << req->task.time() << " " << req->task.msg();
   }
 };
 
-class PingWorker : public App {
+class HelloWorker : public App {
  public:
   virtual void ProcessResponse(const MessagePtr& res) {
     LL << res->task.time();
   }
 
   virtual void Run() {
+    WaitServersReady();
     for (int i = 0; i < 10; ++i) {
       int ts = Submit(Task(), kServerGroup);
       Wait(ts, kServerGroup);
@@ -26,9 +25,9 @@ class PingWorker : public App {
 
 App* App::Create(const std::string& conf) {
   if (IsWorker()) {
-    return new PingWorker();
+    return new HelloWorker();
   } else if (IsServer()) {
-    return new PingServer();
+    return new HelloServer();
   } else {
     return new App();
   }
@@ -36,9 +35,6 @@ App* App::Create(const std::string& conf) {
 
 }  // namespace PS
 
-
 int main(int argc, char *argv[]) {
-  PS::Postoffice::instance().run(&argc, &argv);
-  PS::Postoffice::instance().stop();
-  return 0;
+  return PS::RunSystem(argc, argv);
 }

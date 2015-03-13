@@ -49,7 +49,7 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
 
 int Executor::Submit(const MessagePtr& msg) {
   Lock l(node_mu_);
-  RemoteNode* rnode = GetRNode(msg->sender);
+  RemoteNode* rnode = GetRNode(msg->recver);
 
   // timestamp
   int ts = msg->task.has_time() ? msg->task.time() : Message::kInvalidTime;
@@ -103,7 +103,7 @@ bool Executor::PickActiveMsg() {
   auto it = recv_msgs_.begin();
   while (it != recv_msgs_.end()) {
     bool process = true;
-    auto& msg = *it;
+    auto& msg = *it; CHECK(!msg->task.control());
 
     // check if the remote node is still alive.
     Lock l(node_mu_);
@@ -125,8 +125,8 @@ bool Executor::PickActiveMsg() {
       continue;
     }
 
-    // check for dependency constraint. only needed for request and non-control message.
-    if (req && !msg->task.control()) {
+    // check for dependency constraint. only needed for request message.
+    if (req) {
       for (int i = 0; i < msg->task.wait_time_size(); ++i) {
         int wait_time = msg->task.wait_time(i);
         if (wait_time <= Message::kInvalidTime) continue;
@@ -141,7 +141,7 @@ bool Executor::PickActiveMsg() {
       active_msg_ = *it;
       recv_msgs_.erase(it);
       rnode->DecodeMessage(active_msg_);
-      VLOG(2) << obj_.id() << " picked a messge in [" <<
+      VLOG(2) << obj_.id() << " picks a messge in [" <<
           recv_msgs_.size() << "]. sent from " << msg->sender <<
           ": " << active_msg_->shortDebugString();
       return true;
@@ -150,18 +150,13 @@ bool Executor::PickActiveMsg() {
 
   // sleep until received a new message or another message been marked as
   // finished.
-  VLOG(2) << obj_.id() << " picked nothing. msg buffer size "
+  VLOG(2) << obj_.id() << " picks nothing. msg buffer size "
           << recv_msgs_.size();
   dag_cond_.wait(lk);
   return false;
 }
 
 void Executor::ProcessActiveMsg() {
-  if (active_msg_->task.control()) {
-    ProcessControl(active_msg_);
-    return;
-  }
-
   // ask the customer to process the picked message, and do post-processing
   bool req = active_msg_->task.request();
   int ts = active_msg_->task.time();
@@ -219,29 +214,6 @@ void Executor::Accept(const MessagePtr& msg) {
 }
 
 
-void Executor::ProcessControl(const MessagePtr& msg) {
-  Lock l(node_mu_);
-  CHECK(msg->task.has_ctrl());
-  auto ctrl = msg->task.ctrl();
-  switch (ctrl.cmd()) {
-    case Control::ADD_NODE:
-    case Control::UPDATE_NODE:
-      CHECK_EQ(ctrl.node_size(), 1);
-      AddNode(ctrl.node(0));
-      break;
-    case Control::REMOVE_NODE:
-      CHECK_EQ(ctrl.node_size(), 1);
-      RemoveNode(ctrl.node(0));
-      break;
-    case Control::REPLACE_NODE:
-      CHECK_EQ(ctrl.node_size(), 2);
-      ReplaceNode(ctrl.node(0), ctrl.node(1));
-      break;
-    default:
-      CHECK(false) << msg->task.ShortDebugString();
-  }
-}
-
 void Executor::ReplaceNode(const Node& old_node, const Node& new_node) {
   // TODO
 }
@@ -258,6 +230,7 @@ void Executor::RemoveNode(const Node& node) {
 }
 
 void Executor::AddNode(const Node& node) {
+  Lock l(node_mu_);
   // add "node"
   if (node.id() == my_node_.id()) {
     my_node_ = node;

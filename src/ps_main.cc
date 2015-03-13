@@ -1,7 +1,7 @@
 #include "ps.h"
 namespace PS {
 
-App* App::create(const string& conf) {
+App* App::Create(const string& conf) {
   auto my_role = MyNode().role();
   if (my_role == Node::SERVER) {
     return CreateServerNode(conf);

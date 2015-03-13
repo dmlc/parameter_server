@@ -60,7 +60,7 @@ class Customer {
   //   int ts = Submit(task, kWorkerGroup);
   //   Wait(ts, kWorkerGroup);
   //   Foo();
-  int Submit(const Task& request, const NodeID& recver) {
+  inline int Submit(const Task& request, const NodeID& recver) {
     return Submit(NewMessage(request, recver));
   }
 
@@ -76,7 +76,7 @@ class Customer {
   //   auto req = NewMessage(task, kWorkerGroup);
   //   reg->callback = [this](){ Foo(); }
   //   Submit(msg);
-  int Submit(const MessagePtr& request) {
+  inline int Submit(const MessagePtr& request) {
     return exec_.Submit(request);
   }
 
@@ -85,7 +85,7 @@ class Customer {
   // "timestamp" has been received from "recver" or "recver" is dead. Otherwise,
   // it will wait for the responce of each alive node in the node group
   // "recver".
-  void Wait(int timestamp, const NodeID& recver) {
+  inline void Wait(int timestamp, const NodeID& recver) {
     exec_.WaitSentReq(timestamp, recver);
   }
 
@@ -98,7 +98,7 @@ class Customer {
   // the i-th node. In default, it copies "msg" n times.
   virtual void Slice(
       const MessagePtr& request, const KeyRangeList& krs, MessagePtrList* msgs) {
-    for (auto& m : *msgs) *m = *request;
+    for (auto& m : *msgs) m = NewMessage(*request);
   }
 
   // Processes a response message received form "response->sender". It is a
@@ -117,7 +117,7 @@ class Customer {
   // Wait until the request task/message with "timestamp" received from "sender" is
   // processed at this node or "sender" is dead. If "sender" is a node group,
   // then wait for each alive node in this node group.
-  void WaitReceivedRequest(int timestamp, const NodeID& sender) {
+  inline void WaitReceivedRequest(int timestamp, const NodeID& sender) {
     exec_.WaitRecvReq(timestamp, sender);
   }
 
@@ -140,7 +140,7 @@ class Customer {
   // data; mark the virtual request t+1 as finished via
   // `FinishRecvReq(t+1)`. Then all blocked pull requests will be executed by
   // the DAG engine.
-  void FinishReceivedRequest(int timestamp, const NodeID& sender) {
+  inline void FinishReceivedRequest(int timestamp, const NodeID& sender) {
     exec_.FinishRecvReq(timestamp, sender);
   }
 
@@ -186,7 +186,11 @@ class App : public Customer {
 
   // `Run()` is executed by the main thread immediately after this app has been
   // created.
-  virtual void Run() { }
+  virtual void Run() {
+    // in default, just wait all nodes are ready.
+    sys_.manager().waitServersReady();
+    sys_.manager().waitWorkersReady();
+  }
 };
 
 

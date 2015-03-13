@@ -29,8 +29,10 @@ void Manager::init(char* argv0) {
   van_.init(argv0);
 
   if (isScheduler()) {
-    NOTICE("Staring system... info are logged in %s/%s.log.*",
-           FLAGS_log_dir.c_str(), basename(argv0));
+    if (!FLAGS_logtostderr) {
+      NOTICE("Staring system... info are logged in %s/%s.log.*",
+             FLAGS_log_dir.c_str(), basename(argv0));
+    }
 
     node_assigner_ = new NodeAssigner(FLAGS_num_servers);
     // create the app
@@ -72,6 +74,7 @@ void Manager::stop() {
     usleep(800);
     LOG(INFO) << "System stopped";
   } else {
+    LL << van_.myNode().id();
     Task task = newControlTask(Control::READY_TO_EXIT);
     sendTask(van_.scheduler(), task);
 
@@ -168,10 +171,9 @@ void Manager::addNode(const Node& node) {
   nodes_[node.id()] = node;
 
   // add to app
-  // FIXME
-  // for (auto& it : customers_) {
-  //   it.second.first->exec().addNode(node);
-  // }
+  for (auto& it : customers_) {
+    it.second.first->executor()->AddNode(node);
+  }
 
   if (isScheduler() && node.id() != van_.myNode().id()) {
     // send all existing nodes info to sender
