@@ -9,6 +9,8 @@ import mnist_io
 # PS
 import ps
 
+bulk = True
+
 class MnistTrainer:
     def __init__(self, data_file='mnist_all.mat', num_epochs=100, mb_size=256, eps_w=0.01, eps_b=0.01):
         print('Worker; NodeID: %s, Rank: %d, RankSize: %d' % (ps.myNodeID(), ps.myRank(), ps.rankSize()))
@@ -41,6 +43,12 @@ class MnistTrainer:
         self.w2 = owl.from_numpy(t_w2)
         self.b1 = owl.from_numpy(t_b1)
         self.b2 = owl.from_numpy(t_b2)
+
+        if bulk:
+            self.gw1 = owl.zeros([l2, l1])
+            self.gw2 = owl.zeros([l3, l2])
+            self.gb1 = owl.zeros([l2, 1])
+            self.gb2 = owl.zeros([l3, 1])
 
     def run(self):
         (train_data, test_data) = mnist_io.load_mb_from_mat(self.data_file, self.mb_size)
@@ -79,24 +87,61 @@ class MnistTrainer:
                 #self.b1 -= self.eps_b * gb1
                 #self.b2 -= self.eps_b * gb2
                 # PS: instead, push gradients and pull weights from servers
-                t_w1 = self.w1.to_numpy()
-                t_w2 = self.w2.to_numpy()
-                t_b1 = self.b1.to_numpy()
-                t_b2 = self.b2.to_numpy()
-                ps.PushGradAndPullWeight(gw1.to_numpy(), t_w1, 'w1')
-                ps.PushGradAndPullWeight(gw2.to_numpy(), t_w2, 'w2')
-                ps.PushGradAndPullWeight(gb1.to_numpy(), t_b1, 'b1')
-                ps.PushGradAndPullWeight(gb2.to_numpy(), t_b2, 'b2')
-                self.w1 = owl.from_numpy(t_w1)
-                self.w2 = owl.from_numpy(t_w2)
-                self.b1 = owl.from_numpy(t_b1)
-                self.b2 = owl.from_numpy(t_b2)
+                if not bulk:
+                    t_w1 = self.w1.to_numpy()
+                    t_w2 = self.w2.to_numpy()
+                    t_b1 = self.b1.to_numpy()
+                    t_b2 = self.b2.to_numpy()
+                    ps.PushGradAndPullWeight(gw1.to_numpy(), t_w1, 'w1')
+                    ps.PushGradAndPullWeight(gw2.to_numpy(), t_w2, 'w2')
+                    ps.PushGradAndPullWeight(gb1.to_numpy(), t_b1, 'b1')
+                    ps.PushGradAndPullWeight(gb2.to_numpy(), t_b2, 'b2')
+                    self.w1 = owl.from_numpy(t_w1)
+                    self.w2 = owl.from_numpy(t_w2)
+                    self.b1 = owl.from_numpy(t_b1)
+                    self.b2 = owl.from_numpy(t_b2)
+                else:
+                    self.gw1 += gw1
+                    self.gw2 += gw2
+                    self.gb1 += gb1
+                    self.gb2 += gb2
+                    if count % 10 == 0:
+                        t_w1 = self.w1.to_numpy()
+                        t_w2 = self.w2.to_numpy()
+                        t_b1 = self.b1.to_numpy()
+                        t_b2 = self.b2.to_numpy()
+                        ps.PushGradAndPullWeight(self.gw1.to_numpy(), t_w1, 'w1')
+                        ps.PushGradAndPullWeight(self.gw2.to_numpy(), t_w2, 'w2')
+                        ps.PushGradAndPullWeight(self.gb1.to_numpy(), t_b1, 'b1')
+                        ps.PushGradAndPullWeight(self.gb2.to_numpy(), t_b2, 'b2')
+                        self.w1 = owl.from_numpy(t_w1)
+                        self.w2 = owl.from_numpy(t_w2)
+                        self.b1 = owl.from_numpy(t_b1)
+                        self.b2 = owl.from_numpy(t_b2)
+                        self.gw1 -= self.gw1
+                        self.gw2 -= self.gw2
+                        self.gb1 -= self.gb1
+                        self.gb2 -= self.gb2
 
                 if (count % 40 == 0):
                     correct = out.argmax(0) - target.argmax(0)
                     val = correct.to_numpy()
                     print 'Training error:', float(np.count_nonzero(val)) / num_samples
                 count = count + 1
+
+            if bulk:
+                t_w1 = self.w1.to_numpy()
+                t_w2 = self.w2.to_numpy()
+                t_b1 = self.b1.to_numpy()
+                t_b2 = self.b2.to_numpy()
+                ps.PushGradAndPullWeight(self.gw1.to_numpy(), t_w1, 'w1')
+                ps.PushGradAndPullWeight(self.gw2.to_numpy(), t_w2, 'w2')
+                ps.PushGradAndPullWeight(self.gb1.to_numpy(), t_b1, 'b1')
+                ps.PushGradAndPullWeight(self.gb2.to_numpy(), t_b2, 'b2')
+                self.w1 = owl.from_numpy(t_w1)
+                self.w2 = owl.from_numpy(t_w2)
+                self.b1 = owl.from_numpy(t_b1)
+                self.b2 = owl.from_numpy(t_b2)
 
             # test
             a1 = test_samples
@@ -150,7 +195,7 @@ class MnistServer:
 server = None
 def server_node_init():
     global server
-    owl.initialize(sys.argv)
+    owl.initialize(sys.argv + ['-skip_glog_initialization'])
     server = MnistServer()
 
 def server_init_layer(name, weight):
@@ -163,7 +208,7 @@ def server_update_layer(name, weight, gradient):
 worker = None
 def worker_node_init():
     global worker
-    owl.initialize(sys.argv)
+    owl.initialize(sys.argv + ['-skip_glog_initialization'])
     worker = MnistTrainer(num_epochs = 10)
 
 def worker_node_main():
