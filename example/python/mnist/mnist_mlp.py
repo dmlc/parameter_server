@@ -8,7 +8,6 @@ import mnist_io
 
 # PS
 import ps
-
 bulk = True
 
 class MnistTrainer:
@@ -195,7 +194,7 @@ class MnistServer:
 server = None
 def server_node_init():
     global server
-    owl.initialize(sys.argv + ['-skip_glog_initialization'])
+    owl.initialize(sys.argv + ['-no_init_glog'])
     server = MnistServer()
 
 def server_init_layer(name, weight):
@@ -208,7 +207,7 @@ def server_update_layer(name, weight, gradient):
 worker = None
 def worker_node_init():
     global worker
-    owl.initialize(sys.argv + ['-skip_glog_initialization'])
+    owl.initialize(sys.argv + ['-no_init_glog'])
     worker = MnistTrainer(num_epochs = 10)
 
 def worker_node_main():
