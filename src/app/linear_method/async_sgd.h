@@ -271,10 +271,10 @@ class AsyncSGDWorker : public ISGDCompNode {
     msg->setKey(model_.key(id));
     msg->addValue(grad);
     msg->task.set_key_channel(id);
-    msg->AddFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    msg->add_filter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
     if (nbytes) {
-      auto conf = msg->AddFilter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
+      auto conf = msg->add_filter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
       conf->set_num_bytes(nbytes);
     }
     model_.push(msg);

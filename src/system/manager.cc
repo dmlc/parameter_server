@@ -26,7 +26,7 @@ Manager::~Manager() {
 }
 
 void Manager::init(char* argv0) {
-  van_.init(argv0);
+  van_.Init(argv0);
 
   if (isScheduler()) {
     if (!FLAGS_logtostderr) {
@@ -44,11 +44,11 @@ void Manager::init(char* argv0) {
     createApp(app_conf_);
 
     // add my node into app_
-    addNode(van_.myNode());
+    addNode(van_.my_node());
   } else {
     // request the app config from the scheduler
     Task task = newControlTask(Control::REQUEST_APP);
-    *task.mutable_ctrl()->add_node() = van_.myNode();
+    *task.mutable_ctrl()->add_node() = van_.my_node();
     sendTask(van_.scheduler(), task);
   }
 }
@@ -95,7 +95,7 @@ bool Manager::process(const MessagePtr& msg) {
         CHECK(isScheduler());
         // need to connect to this node before sending reply message
         CHECK_EQ(ctrl.node_size(), 1);
-        CHECK(van_.connect(ctrl.node(0)));
+        CHECK(van_.Connect(ctrl.node(0)));
         Task reply = task;
         reply.set_request(false);
         reply.set_msg(app_conf_);
@@ -149,7 +149,7 @@ bool Manager::process(const MessagePtr& msg) {
       createApp(task.msg());
       // app is created, now we can ask the scheduler to broadcast this node to others
       Task task = newControlTask(Control::REGISTER_NODE);
-      *task.mutable_ctrl()->add_node() = van_.myNode();
+      *task.mutable_ctrl()->add_node() = van_.my_node();
       sendTask(van_.scheduler(), task);
     }
   }
@@ -161,7 +161,7 @@ void Manager::addNode(const Node& node) {
   if (nodes_.find(node.id()) == nodes_.end()) {
     if (!isScheduler()) {
       // the scheduler has already connect this node when processing REQUEST_APP
-      CHECK(van_.connect(node));
+      CHECK(van_.Connect(node));
     }
     if (node.role() == Node::WORKER) ++ num_workers_;
     if (node.role() == Node::SERVER) ++ num_servers_;
@@ -174,7 +174,7 @@ void Manager::addNode(const Node& node) {
     it.second.first->executor()->AddNode(node);
   }
 
-  if (isScheduler() && node.id() != van_.myNode().id()) {
+  if (isScheduler() && node.id() != van_.my_node().id()) {
     // send all existing nodes info to sender
     Task add_node = newControlTask(Control::ADD_NODE);
     for (const auto& it : nodes_) {
@@ -184,7 +184,7 @@ void Manager::addNode(const Node& node) {
 
     // broadcast this new sender info
     for (const auto& it : nodes_) {
-      if (it.first == van_.myNode().id() || it.first == node.id()) {
+      if (it.first == van_.my_node().id() || it.first == node.id()) {
         continue;
       }
       Task add_new_node = newControlTask(Control::ADD_NODE);
@@ -220,9 +220,9 @@ void Manager::removeNode(const NodeID& node_id) {
   }
 
   // broadcast
-  if (isScheduler() && node.id() != van_.myNode().id()) {
+  if (isScheduler() && node.id() != van_.my_node().id()) {
     for (const auto& it : nodes_) {
-      if (it.first == van_.myNode().id() || it.first == node.id()) {
+      if (it.first == van_.my_node().id() || it.first == node.id()) {
         continue;
       }
       Task remove_node = newControlTask(Control::REMOVE_NODE);
@@ -250,7 +250,7 @@ void Manager::nodeDisconnected(const NodeID node_id) {
       usleep(1000);
       if (done_) return;
     }
-    LOG(ERROR) << van_.myNode().id() << ": the scheduler is died, killing myself";
+    LOG(ERROR) << van_.my_node().id() << ": the scheduler is died, killing myself";
     string kill = "kill -9 " + std::to_string(getpid());
     system(kill.c_str());
   }

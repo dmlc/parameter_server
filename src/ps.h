@@ -27,7 +27,7 @@ App* CreateServerNode(const std::string& conf);
 inline App* MyApp() { return Postoffice::instance().manager().app(); }
 
 // My node information
-inline Node MyNode() { return Postoffice::instance().manager().van().myNode(); }
+inline Node MyNode() { return Postoffice::instance().manager().van().my_node(); }
 // Each unique string id of my node
 inline std::string MyNodeID() { return MyNode().id(); }
 // Query the role of this node

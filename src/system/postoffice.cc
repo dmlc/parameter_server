@@ -29,7 +29,7 @@ void Postoffice::run(int* argc, char*** argv) {
   manager_.init((*argv)[0]);
 
   if (FLAGS_report_interval > 0) {
-    perf_monitor_.init(FLAGS_interface, manager_.van().myNode().hostname());
+    perf_monitor_.init(FLAGS_interface, manager_.van().my_node().hostname());
   }
 
   // start the I/O threads
@@ -78,7 +78,7 @@ void Postoffice::send() {
     sending_queue_.wait_and_pop(msg);
     if (msg->terminate) break;
     size_t send_bytes = 0;
-    manager_.van().send(msg, &send_bytes);
+    manager_.van().Send(msg, &send_bytes);
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseOutBytes(send_bytes);
     }
@@ -91,7 +91,7 @@ void Postoffice::recv() {
     // receive a message
     MessagePtr msg(new Message());
     size_t recv_bytes = 0;
-    CHECK(manager_.van().recv(msg, &recv_bytes));
+    CHECK(manager_.van().Recv(msg, &recv_bytes));
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseInBytes(recv_bytes);
     }

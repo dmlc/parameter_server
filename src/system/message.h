@@ -1,6 +1,5 @@
 #pragma once
 #include "util/common.h"
-#include "util/threadpool.h"
 #include "util/shared_array.h"
 #include "system/proto/task.pb.h"
 #include "filter/proto/filter.pb.h"
@@ -26,7 +25,6 @@ struct Message {
 
   Task task;  // argument
 
-  FilterConfig* AddFilter(FilterConfig::Type type);
 
   // keys
   bool has_key() const { return !key.empty(); }
@@ -54,6 +52,8 @@ struct Message {
 
   // memory size in bytes
   size_t mem_size();
+
+  FilterConfig* add_filter(FilterConfig::Type type);
 
   // -- more local control signals --
   // they will not be sent to other nodes

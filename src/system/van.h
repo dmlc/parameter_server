@@ -11,28 +11,28 @@ class Van {
   Van() { }
   ~Van();
 
-  void init(char*);
+  void Init(char*);
 
-  void disconnect(const Node&  node);
-  bool connect(const Node&  node);
+  void Disconnect(const Node&  node);
+  bool Connect(const Node&  node);
 
-  bool send(const MessagePtr& msg, size_t* send_bytes);
-  bool recv(const MessagePtr& msg, size_t* recv_bytes);
+  bool Send(const MessagePtr& msg, size_t* send_bytes);
+  bool Recv(const MessagePtr& msg, size_t* recv_bytes);
 
-  Node& myNode() { return my_node_; }
+  Node& my_node() { return my_node_; }
   Node& scheduler() { return scheduler_; };
  private:
   // bind to my port
-  void bind();
+  void Bind();
 
-  Node parseNode(const string& node_str);
+  Node ParseNode(const string& node_str);
 
-  Node assembleMyNode();
-  bool isScheduler() { return my_node_.role() == Node::SCHEDULER; }
-  bool getMonitorEvent(void *monitor, int *event, int *value);
+  Node AssembleMyNode();
+  bool IsScheduler() { return my_node_.role() == Node::SCHEDULER; }
+  bool GetMonitorEvent(void *monitor, int *event, int *value);
   // scheduler: monitor the liveness of all other nodes
   // other nodes: monitor the liveness of the scheduler
-  void monitor();
+  void Monitor();
 
   void *context_ = nullptr;
   void *receiver_ = nullptr;
@@ -44,7 +44,7 @@ class Van {
 
   // TODO move to postoffice::perf_monitor_
   // print statistic info
-  void statistic();
+  void Statistic();
   std::unordered_map<NodeID, string> hostnames_;
   size_t sent_to_local_ = 0;
   size_t sent_to_others_ = 0;

@@ -19,18 +19,18 @@ DECLARE_int32(num_servers);
 
 
 Van::~Van() {
-  statistic();
+  Statistic();
   for (auto& it : senders_) zmq_close(it.second);
   zmq_close(receiver_);
   zmq_ctx_destroy(context_);
 }
 
-void Van::init(char* argv0) {
-  scheduler_ = parseNode(FLAGS_scheduler);
+void Van::Init(char* argv0) {
+  scheduler_ = ParseNode(FLAGS_scheduler);
   if (FLAGS_my_rank < 0) {
-    my_node_ = parseNode(FLAGS_my_node);
+    my_node_ = ParseNode(FLAGS_my_node);
   } else {
-    my_node_ = assembleMyNode();
+    my_node_ = AssembleMyNode();
   }
 
   // the earliest time I can get my_node_.id(), so put the log setup here
@@ -58,23 +58,23 @@ void Van::init(char* argv0) {
   zmq_ctx_set(context_, ZMQ_MAX_SOCKETS, 65536);
   // zmq_ctx_set(context_, ZMQ_IO_THREADS, 4);
 
-  bind();
+  Bind();
   // connect(my_node_);
-  connect(scheduler_);
+  Connect(scheduler_);
 
   // setup monitor
-  if (isScheduler()) {
+  if (IsScheduler()) {
     CHECK(!zmq_socket_monitor(receiver_, "inproc://monitor", ZMQ_EVENT_ALL));
   } else {
     CHECK(!zmq_socket_monitor(
         senders_[scheduler_.id()], "inproc://monitor", ZMQ_EVENT_ALL));
   }
-  monitor_thread_ = new std::thread(&Van::monitor, this);
+  monitor_thread_ = new std::thread(&Van::Monitor, this);
   monitor_thread_->detach();
 }
 
 
-void Van::bind() {
+void Van::Bind() {
   receiver_ = zmq_socket(context_, ZMQ_ROUTER);
   CHECK(receiver_ != NULL)
       << "create receiver socket failed: " << zmq_strerror(errno);
@@ -91,7 +91,7 @@ void Van::bind() {
   VLOG(1) << "BIND address " << addr;
 }
 
-void Van::disconnect(const Node& node) {
+void Van::Disconnect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   NodeID id = node.id();
   if (senders_.find(id) != senders_.end()) {
@@ -101,7 +101,7 @@ void Van::disconnect(const Node& node) {
   VLOG(1) << "DISCONNECT from " << node.id();
 }
 
-bool Van::connect(const Node& node) {
+bool Van::Connect(const Node& node) {
   CHECK(node.has_id()) << node.ShortDebugString();
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
@@ -132,7 +132,7 @@ bool Van::connect(const Node& node) {
   return true;
 }
 
-bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
+bool Van::Send(const MessagePtr& msg, size_t* send_bytes) {
   // find the socket
   NodeID id = msg->recver;
   auto it = senders_.find(id);
@@ -192,7 +192,7 @@ bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   return true;
 }
 
-bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
+bool Van::Recv(const MessagePtr& msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clear_data();
   NodeID sender;
@@ -220,7 +220,7 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
       CHECK(msg->task.ParseFromString(std::string(buf, size)))
           << "parse string from " << sender << " I'm " << my_node_.id() << " "
           << size;
-      if (isScheduler() && msg->task.control() &&
+      if (IsScheduler() && msg->task.control() &&
           msg->task.ctrl().cmd() == Control::REQUEST_APP) {
         // it is the first time the scheduler receive message from the
         // sender. store the file desciptor of the sender for the monitor
@@ -258,7 +258,7 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   return true;
 }
 
-void Van::statistic() {
+void Van::Statistic() {
   // if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
   auto gb = [](size_t x) { return  x / 1e9; };
   LOG(INFO) << my_node_.id()
@@ -268,7 +268,7 @@ void Van::statistic() {
             << " (local " << gb(received_from_local_) << ") Gbyte";
 }
 
-Node Van::parseNode(const string& node_str) {
+Node Van::ParseNode(const string& node_str) {
   Node node; CHECK(
       google::protobuf::TextFormat::ParseFromString(node_str, &node));
   if (!node.has_id()) {
@@ -277,7 +277,7 @@ Node Van::parseNode(const string& node_str) {
   return node;
 }
 
-Node Van::assembleMyNode() {
+Node Van::AssembleMyNode() {
   if (0 == FLAGS_my_rank) {
     return scheduler_;
   }
@@ -316,12 +316,12 @@ Node Van::assembleMyNode() {
   return ret_node;
 }
 
-bool Van::getMonitorEvent(void *monitor, int *event, int *value) {
+bool Van::GetMonitorEvent(void *monitor, int *event, int *value) {
   // First frame in message contains event number and value
   return true;
 }
 
-void Van::monitor() {
+void Van::Monitor() {
   VLOG(1) << "starting monitor...";
   void *s = CHECK_NOTNULL(zmq_socket (context_, ZMQ_PAIR));
   CHECK(!zmq_connect (s, "inproc://monitor"));
@@ -338,7 +338,7 @@ void Van::monitor() {
 
     if (event == ZMQ_EVENT_DISCONNECTED) {
       auto& manager = Postoffice::instance().manager();
-      if (isScheduler()) {
+      if (IsScheduler()) {
         Lock l(fd_to_nodeid_mu_);
         if (fd_to_nodeid_.find(value) == fd_to_nodeid_.end()) {
           LOG(WARNING) << "cannot find the node id for FD = " << value;

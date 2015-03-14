@@ -4,7 +4,7 @@
 namespace PS {
 
 Executor::Executor(Customer& obj) : obj_(obj), sys_(Postoffice::instance()) {
-  my_node_ = Postoffice::instance().manager().van().myNode();
+  my_node_ = Postoffice::instance().manager().van().my_node();
   // insert virtual group nodes
   for (auto id : GroupIDs()) {
     Node node;

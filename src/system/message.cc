@@ -1,5 +1,4 @@
 #include "system/message.h"
-
 namespace PS {
 
 Message::Message(const NodeID& dest, int time, int wait_time)
@@ -16,7 +15,7 @@ void Message::MiniCopyFrom(const Message& msg) {
   callback = msg.callback;
 }
 
-FilterConfig* Message::AddFilter(FilterConfig::Type type) {
+FilterConfig* Message::add_filter(FilterConfig::Type type) {
   auto ptr = task.add_filter();
   ptr->set_type(type);
   return ptr;

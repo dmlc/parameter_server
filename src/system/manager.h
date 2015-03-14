@@ -52,7 +52,7 @@ class Manager {
   App* app() { return app_; }
 
  private:
-  bool isScheduler() { return van_.myNode().role() == Node::SCHEDULER; }
+  bool isScheduler() { return van_.my_node().role() == Node::SCHEDULER; }
   Task newControlTask(Control::Command cmd);
   void sendTask(const NodeID& recver, const Task& task);
   void sendTask(const Node& recver, const Task& task) {

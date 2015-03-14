@@ -32,7 +32,7 @@ class FMWorker {
     msg->task.set_key_channel(batch_id_);
     msg->setKey(uniq_key);
     msg->addValue(key_cnt);
-    msg->AddFilter(FilterConfig::KEY_CACHING);
+    msg->add_filter(FilterConfig::KEY_CACHING);
     auto tail = w_->set(msg)->mutable_tail_filter();
     tail->set_insert_count(true);
     tail->set_query_key(10);
@@ -84,7 +84,7 @@ class FMWorker {
     msg->setKey(w_->key(id));
     msg->addValue(grad);
     msg->task.set_key_channel(id);
-    msg->AddFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    msg->add_filter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     w_->push(msg);
   }
  protected:

@@ -322,7 +322,7 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
     pull->setKey(model_.key(grp).segment(col_range));
     g_key_range.to(pull->task.mutable_key_range());
     pull->task.set_key_channel(grp);
-    pull->AddFilter(FilterConfig::KEY_CACHING);
+    pull->add_filter(FilterConfig::KEY_CACHING);
 
     // once data pulled successfully, update dual_
     pull->callback = [this, time, grp, col_range, msg](){
@@ -374,7 +374,7 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
     push->addValue({G, U});
     g_key_range.to(push->task.mutable_key_range());
     push->task.set_key_channel(grp);
-    push->AddFilter(FilterConfig::KEY_CACHING);
+    push->add_filter(FilterConfig::KEY_CACHING);
     CHECK_EQ(time, model_.push(push));
   }
 
