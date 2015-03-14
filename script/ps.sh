@@ -6,7 +6,7 @@ cat << EOF
 Usage: ps.sh [start|add|kill|stop] [args]
 start 		start an application
     -hostfile 	a list of ip address of machines. parameter server nodes are
-evenly assigned to these machines. #nodes could > #machines. if it is empty, generate a file with one line "127.0.0.1"
+evenly assigned to these machines. #nodes could > #machines. if it is empty, generate a file with localhost ip
     -worker     number of worker nodes
     -server     number of server nodes
     -bin     	binary to launch, eg:../build/linear
@@ -50,7 +50,12 @@ check_start() {
 	# fi
 	if [[ ! $hostfile ]];
 	then
-	    echo '127.0.0.1' > ps_default_hostfile
+	    platform=$(uname)
+	    if [[ $platform = 'Darwin' ]];then
+	    	echo '127.0.0.1' > ps_default_hostfile
+	    else 
+		echo $(hostname -i) > ps_default_hostfile
+	    fi
 	    hostfile='ps_default_hostfile'
 	elif [[ ! -f $hostfile ]]; then
 		show_file_not_exist $hostfile
