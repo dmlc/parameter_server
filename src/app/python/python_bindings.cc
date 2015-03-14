@@ -79,7 +79,7 @@ static void PushGradAndPullWeight(boost::numpy::ndarray grad, boost::numpy::ndar
 
 } // namespace PS
 
-BOOST_PYTHON_MODULE(ps) {
+BOOST_PYTHON_MODULE(_ps) {
   using namespace boost::python;
   using namespace PS;
 
@@ -94,7 +94,7 @@ BOOST_PYTHON_MODULE(ps) {
 namespace PS {
 
 void init_bindings() {
-  initps();
+  init_ps();
 }
 
 } // namespace PS

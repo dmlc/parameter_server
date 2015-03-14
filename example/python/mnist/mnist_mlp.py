@@ -12,7 +12,7 @@ bulk = True
 
 class MnistTrainer:
     def __init__(self, data_file='mnist_all.mat', num_epochs=100, mb_size=256, eps_w=0.01, eps_b=0.01):
-        print('Worker; NodeID: %s, Rank: %d, RankSize: %d' % (ps.myNodeID(), ps.myRank(), ps.rankSize()))
+        print('Worker; NodeID: %s, Rank: %d, RankSize: %d' % (ps.my_node_id, ps.my_rank, ps.rank_size))
 
         self.cpu = owl.create_cpu_device()
         self.gpu = owl.create_gpu_device(0)
@@ -30,18 +30,10 @@ class MnistTrainer:
         # self.b1 = owl.zeros([l2, 1])
         # self.b2 = owl.zeros([l3, 1])
         # PS: instead, pull weights from servers
-        t_w1 = owl.zeros([l2, l1]).to_numpy()
-        t_w2 = owl.zeros([l3, l2]).to_numpy()
-        t_b1 = owl.zeros([l2, 1]).to_numpy()
-        t_b2 = owl.zeros([l3, 1]).to_numpy()
-        ps.PullWeight(t_w1, 'w1')
-        ps.PullWeight(t_w2, 'w2')
-        ps.PullWeight(t_b1, 'b1')
-        ps.PullWeight(t_b2, 'b2')
-        self.w1 = owl.from_numpy(t_w1)
-        self.w2 = owl.from_numpy(t_w2)
-        self.b1 = owl.from_numpy(t_b1)
-        self.b2 = owl.from_numpy(t_b2)
+        self.w1 = ps.pull_weight(owl.zeros([l2, l1]), 'w1')
+        self.w2 = ps.pull_weight(owl.zeros([l3, l2]), 'w2')
+        self.b1 = ps.pull_weight(owl.zeros([l2, 1]), 'b1')
+        self.b2 = ps.pull_weight(owl.zeros([l3, 1]), 'b2')
 
         if bulk:
             self.gw1 = owl.zeros([l2, l1])
@@ -87,36 +79,20 @@ class MnistTrainer:
                 #self.b2 -= self.eps_b * gb2
                 # PS: instead, push gradients and pull weights from servers
                 if not bulk:
-                    t_w1 = self.w1.to_numpy()
-                    t_w2 = self.w2.to_numpy()
-                    t_b1 = self.b1.to_numpy()
-                    t_b2 = self.b2.to_numpy()
-                    ps.PushGradAndPullWeight(gw1.to_numpy(), t_w1, 'w1')
-                    ps.PushGradAndPullWeight(gw2.to_numpy(), t_w2, 'w2')
-                    ps.PushGradAndPullWeight(gb1.to_numpy(), t_b1, 'b1')
-                    ps.PushGradAndPullWeight(gb2.to_numpy(), t_b2, 'b2')
-                    self.w1 = owl.from_numpy(t_w1)
-                    self.w2 = owl.from_numpy(t_w2)
-                    self.b1 = owl.from_numpy(t_b1)
-                    self.b2 = owl.from_numpy(t_b2)
+                    self.w1 = ps.push_grad_and_pull_weight(gw1, self.w1, 'w1')
+                    self.w2 = ps.push_grad_and_pull_weight(gw2, self.w2, 'w2')
+                    self.b1 = ps.push_grad_and_pull_weight(gb1, self.b1, 'b1')
+                    self.b2 = ps.push_grad_and_pull_weight(gb2, self.b2, 'b2')
                 else:
                     self.gw1 += gw1
                     self.gw2 += gw2
                     self.gb1 += gb1
                     self.gb2 += gb2
                     if count % 10 == 0:
-                        t_w1 = self.w1.to_numpy()
-                        t_w2 = self.w2.to_numpy()
-                        t_b1 = self.b1.to_numpy()
-                        t_b2 = self.b2.to_numpy()
-                        ps.PushGradAndPullWeight(self.gw1.to_numpy(), t_w1, 'w1')
-                        ps.PushGradAndPullWeight(self.gw2.to_numpy(), t_w2, 'w2')
-                        ps.PushGradAndPullWeight(self.gb1.to_numpy(), t_b1, 'b1')
-                        ps.PushGradAndPullWeight(self.gb2.to_numpy(), t_b2, 'b2')
-                        self.w1 = owl.from_numpy(t_w1)
-                        self.w2 = owl.from_numpy(t_w2)
-                        self.b1 = owl.from_numpy(t_b1)
-                        self.b2 = owl.from_numpy(t_b2)
+                        self.w1 = ps.push_grad_and_pull_weight(self.gw1, self.w1, 'w1')
+                        self.w2 = ps.push_grad_and_pull_weight(self.gw2, self.w2, 'w2')
+                        self.b1 = ps.push_grad_and_pull_weight(self.gb1, self.b1, 'b1')
+                        self.b2 = ps.push_grad_and_pull_weight(self.gb2, self.b2, 'b2')
                         self.gw1 -= self.gw1
                         self.gw2 -= self.gw2
                         self.gb1 -= self.gb1
@@ -129,18 +105,10 @@ class MnistTrainer:
                 count = count + 1
 
             if bulk:
-                t_w1 = self.w1.to_numpy()
-                t_w2 = self.w2.to_numpy()
-                t_b1 = self.b1.to_numpy()
-                t_b2 = self.b2.to_numpy()
-                ps.PushGradAndPullWeight(self.gw1.to_numpy(), t_w1, 'w1')
-                ps.PushGradAndPullWeight(self.gw2.to_numpy(), t_w2, 'w2')
-                ps.PushGradAndPullWeight(self.gb1.to_numpy(), t_b1, 'b1')
-                ps.PushGradAndPullWeight(self.gb2.to_numpy(), t_b2, 'b2')
-                self.w1 = owl.from_numpy(t_w1)
-                self.w2 = owl.from_numpy(t_w2)
-                self.b1 = owl.from_numpy(t_b1)
-                self.b2 = owl.from_numpy(t_b2)
+                self.w1 = ps.push_grad_and_pull_weight(self.gw1, self.w1, 'w1')
+                self.w2 = ps.push_grad_and_pull_weight(self.gw2, self.w2, 'w2')
+                self.b1 = ps.push_grad_and_pull_weight(self.gb1, self.b1, 'b1')
+                self.b2 = ps.push_grad_and_pull_weight(self.gb2, self.b2, 'b2')
 
             # test
             a1 = test_samples
@@ -156,25 +124,25 @@ class MnistTrainer:
 
 class MnistServer:
     def __init__(self):
-        print('Server; NodeID: %s, Rank: %d, RankSize: %d' % (ps.myNodeID(), ps.myRank(), ps.rankSize()))
+        print('Server; NodeID: %s, Rank: %d, RankSize: %d' % (ps.my_node_id, ps.my_rank, ps.rank_size))
         self.cpu = owl.create_cpu_device()
 
     def init_layer(self, name, weight):
         l1 = 784; l2 = 256; l3 = 10
 
-        w1 = owl.randn([l2, l1], 0.0, math.sqrt(4.0 / (l1 + l2))).to_numpy()
-        w2 = owl.randn([l3, l2], 0.0, math.sqrt(4.0 / (l2 + l3))).to_numpy()
-        b1 = owl.zeros([l2, 1]).to_numpy()
-        b2 = owl.zeros([l3, 1]).to_numpy()
+        w1 = owl.randn([l2, l1], 0.0, math.sqrt(4.0 / (l1 + l2)))
+        w2 = owl.randn([l3, l2], 0.0, math.sqrt(4.0 / (l2 + l3)))
+        b1 = owl.zeros([l2, 1])
+        b2 = owl.zeros([l3, 1])
 
         if name == 'w1':
-            np.copyto(weight, w1.flatten())
+            np.copyto(weight, w1.to_numpy().flatten())
         elif name == 'w2':
-            np.copyto(weight, w2.flatten())
+            np.copyto(weight, w2.to_numpy().flatten())
         elif name == 'b1':
-            np.copyto(weight, b1.flatten())
+            np.copyto(weight, b1.to_numpy().flatten())
         elif name == 'b2':
-            np.copyto(weight, b2.flatten())
+            np.copyto(weight, b2.to_numpy().flatten())
         else:
             assert False
 
