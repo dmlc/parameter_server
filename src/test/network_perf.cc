@@ -31,7 +31,7 @@ class Worker : public App {
     for (int j = 0; j < n; ++j) {
       SArray<int> val(m*1000/sizeof(int), 1);
       auto msg = NewMessage();
-      msg->addValue(val);
+      msg->add_value(val);
       msg->recver = kServerGroup;
       auto tv = tic();
       int ts = Submit(msg);

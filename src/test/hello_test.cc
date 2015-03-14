@@ -27,7 +27,7 @@ class Worker : public App {
 
     auto req = NewMessage();
     req->recver = kServerGroup;
-    req->fin_handle = [this]() {
+    req->callback = [this]() {
       std::cout << MyNodeID() << ": request " << LastResponse()->task.time() <<
       " is finished" << std::endl;
     };

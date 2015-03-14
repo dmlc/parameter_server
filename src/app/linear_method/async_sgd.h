@@ -228,7 +228,7 @@ class AsyncSGDWorker : public ISGDCompNode {
       MessagePtr msg(new Message(kServerGroup));
       msg->setKey(key);
       msg->task.set_key_channel(id);
-      msg->fin_handle = [this, id]() { computeGradient(id); };
+      msg->callback = [this, id]() { computeGradient(id); };
       model_.key(id) = key;
       model_.pull(msg);
 
@@ -271,10 +271,10 @@ class AsyncSGDWorker : public ISGDCompNode {
     msg->setKey(model_.key(id));
     msg->addValue(grad);
     msg->task.set_key_channel(id);
-    msg->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    msg->AddFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
     int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
     if (nbytes) {
-      auto conf = msg->addFilter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
+      auto conf = msg->AddFilter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
       conf->set_num_bytes(nbytes);
     }
     model_.push(msg);

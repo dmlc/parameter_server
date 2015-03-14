@@ -16,7 +16,7 @@ class SharedParameter : public Customer {
 
   // convenient wrappers of functions in remote_node.h
   int sync(MessagePtr msg) {
-    CHECK(msg->task.shared_para().has_cmd()) << msg->debugString();
+    CHECK(msg->task.shared_para().has_cmd()) << msg->DebugString();
     if (!msg->task.has_key_range()) Range<K>::all().to(msg->task.mutable_key_range());
     return port(msg->recver)->submit(msg);
   }
@@ -134,7 +134,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
     // pull the filtered keys
     if (cmd.has_query_key() && pull) {
       if (req) {
-        reply->clearData();
+        reply->clear_data();
         reply->setKey(key_filter_[chl].queryKeys(
             SArray<K>(msg->key), cmd.query_key()));
         if (cmd.has_query_value()) {

@@ -86,7 +86,7 @@ void KVVector<K,V>::getValue(const MessagePtr& msg) {
   size_t n = parallelOrderedMatch(
       key(chl), value(chl), recv_key, &val);
   CHECK_EQ(n, val.size());
-  msg->clearValue();
+  msg->clear_value();
   msg->addValue(val);
 }
 

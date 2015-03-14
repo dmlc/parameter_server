@@ -5,7 +5,7 @@ using namespace PS;
 
 TEST(FIXING_FLOAT, EncodeDecode) {
   MessagePtr msg(new Message());
-  auto filter_conf = msg->addFilter(FilterConfig::FIXING_FLOAT);
+  auto filter_conf = msg->AddFilter(FilterConfig::FIXING_FLOAT);
   auto conf = filter_conf->add_fixed_point();
   conf->set_min_value(-90);
   conf->set_max_value(90);

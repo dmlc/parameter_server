@@ -356,7 +356,7 @@ class BCDWorker : public App, public BCDCommon {
       count->setKey(uniq_key);
       count->addValue(key_cnt);
       count->task.set_key_channel(grp);
-      count->addFilter(FilterConfig::KEY_CACHING);
+      count->AddFilter(FilterConfig::KEY_CACHING);
       auto tail = model_.set(count)->mutable_tail_filter();
       tail->set_insert_count(true);
       tail->set_countmin_k(bcd_conf_.countmin_k());
@@ -367,10 +367,10 @@ class BCDWorker : public App, public BCDCommon {
       MessagePtr filter(new Message(kServerGroup, time+2, time+1));
       filter->setKey(uniq_key);
       filter->task.set_key_channel(grp);
-      filter->addFilter(FilterConfig::KEY_CACHING);
+      filter->AddFilter(FilterConfig::KEY_CACHING);
       model_.set(filter)->mutable_tail_filter()->set_query_key(
           bcd_conf_.tail_feature_freq());
-      filter->fin_handle = [this, grp, localizer, i, grp_size]() mutable {
+      filter->callback = [this, grp, localizer, i, grp_size]() mutable {
         // localize the training matrix
         if (FLAGS_verbose) {
           LI << "started remapIndex [" << i + 1 << "/" << grp_size << "]";
@@ -418,15 +418,15 @@ class BCDWorker : public App, public BCDCommon {
       int grp = fea_grp_[i];
       push_key->setKey(model_.key(grp));
       push_key->task.set_key_channel(grp);
-      push_key->addFilter(FilterConfig::KEY_CACHING);
+      push_key->AddFilter(FilterConfig::KEY_CACHING);
       CHECK_EQ(time, model_.push(push_key));
 
       // fetch the initial value of the model
       MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
       pull_val->setKey(model_.key(grp));
       pull_val->task.set_key_channel(grp);
-      pull_val->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-      pull_val->fin_handle = [this, grp, time, &wait_dual, i]() {
+      pull_val->AddFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+      pull_val->callback = [this, grp, time, &wait_dual, i]() {
         size_t n = model_.key(grp).size();
         if (n) { // otherwise received(time+2) may return error
           // intialize the local cache of the model

@@ -9,7 +9,7 @@ class CompressingFilter : public Filter {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
     conf->clear_uncompressed_size();
-    if (msg->hasKey()) {
+    if (msg->has_key()) {
       conf->add_uncompressed_size(msg->key.size());
       msg->key = msg->key.compressTo();
     }
@@ -21,7 +21,7 @@ class CompressingFilter : public Filter {
   void decode(const MessagePtr& msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
-    int has_key = msg->hasKey();
+    int has_key = msg->has_key();
     CHECK_EQ(conf->uncompressed_size_size(), msg->value.size() + has_key);
 
     if (has_key) {

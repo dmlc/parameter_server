@@ -188,13 +188,13 @@ bool Van::send(const MessagePtr& msg, size_t* send_bytes) {
   } else {
     sent_to_others_ += data_size;
   }
-  VLOG(1) << "TO " << msg->recver << " " << msg->shortDebugString();
+  VLOG(1) << "TO " << msg->recver << " " << msg->ShortDebugString();
   return true;
 }
 
 bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   size_t data_size = 0;
-  msg->clearData();
+  msg->clear_data();
   NodeID sender;
   for (int i = 0; ; ++i) {
     zmq_msg_t zmsg;
@@ -254,7 +254,7 @@ bool Van::recv(const MessagePtr& msg, size_t* recv_bytes) {
   } else {
     received_from_others_ += data_size;
   }
-  VLOG(1) << "FROM: " << msg->sender << " " << msg->shortDebugString();
+  VLOG(1) << "FROM: " << msg->sender << " " << msg->ShortDebugString();
   return true;
 }
 

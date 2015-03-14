@@ -83,8 +83,8 @@ int Executor::Submit(const MessagePtr& msg) {
   time_ = ts;
   auto& req_info = sent_reqs_[ts];
   req_info.recver = msg->recver;
-  if (msg->fin_handle) {
-    req_info.callback = msg->fin_handle;
+  if (msg->callback) {
+    req_info.callback = msg->callback;
   }
 
   // slice "msg" and then send them one by one
@@ -121,7 +121,7 @@ bool Executor::PickActiveMsg() {
     auto rnode = GetRNode(msg->sender);
     if (!rnode->alive) {
       LOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
-          " is not alive, ignore received message: " << msg->debugString();
+          " is not alive, ignore received message: " << msg->DebugString();
       it = recv_msgs_.erase(it);
       continue;
     }
@@ -131,7 +131,7 @@ bool Executor::PickActiveMsg() {
     if ((req && rnode->recv_req_tracker.IsFinished(ts)) ||
         (!req && rnode->sent_req_tracker.IsFinished(ts))) {
       LOG(WARNING) << my_node_.id() << ": doubly received message. ignore: " <<
-          msg->debugString();
+          msg->DebugString();
       it = recv_msgs_.erase(it);
       continue;
     }
@@ -154,7 +154,7 @@ bool Executor::PickActiveMsg() {
       rnode->DecodeMessage(active_msg_);
       VLOG(2) << obj_.id() << " picks a messge in [" <<
           recv_msgs_.size() << "]. sent from " << msg->sender <<
-          ": " << active_msg_->shortDebugString();
+          ": " << active_msg_->ShortDebugString();
       return true;
     }
   }
