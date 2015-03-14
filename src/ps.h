@@ -40,7 +40,7 @@ inline std::string SchedulerID() {
 }
 
 inline int NextCustomerID() {
-  return Postoffice::instance().manager().nextCustomerID();
+  return Postoffice::instance().manager().NextCustomerID();
 }
 
 // The rank ID of this node in its group. Assume this a worker node in a worker
@@ -50,25 +50,25 @@ inline int MyRank() { return MyNode().rank(); }
 // Total nodes in this node group.
 inline int RankSize() {
   auto& mng = Postoffice::instance().manager();
-  return IsWorker() ? mng.numWorkers() : (IsServer() ? mng.numServers() : 1);
+  return IsWorker() ? mng.num_workers() : (IsServer() ? mng.num_servers() : 1);
 }
 
 // Wait until all FLAGS_num_servers servers are ready.
 inline void WaitServersReady() {
-  PS::Postoffice::instance().manager().waitServersReady();
+  PS::Postoffice::instance().manager().WaitServersReady();
 }
 
 // Wait until all FLAGS_num_workers workers are ready.
 inline void WaitWorkersReady() {
-  PS::Postoffice::instance().manager().waitWorkersReady();
+  PS::Postoffice::instance().manager().WaitWorkersReady();
 }
 
 inline void StartSystem(int argc, char *argv[]) {
-  PS::Postoffice::instance().run(&argc, &argv);
+  PS::Postoffice::instance().Run(&argc, &argv);
 }
 
 inline void StopSystem() {
-  PS::Postoffice::instance().stop();
+  PS::Postoffice::instance().Stop();
 }
 
 inline int RunSystem(int argc, char *argv[]) {

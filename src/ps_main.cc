@@ -12,13 +12,13 @@ App* App::Create(const string& conf) {
 
 int main(int argc, char *argv[]) {
   auto& sys = PS::Postoffice::instance();
-  sys.run(&argc, &argv);
+  sys.Run(&argc, &argv);
 
   int ret = 0;
   if (PS::MyNode().role() == PS::Node::WORKER) {
     ret = WorkerNodeMain(argc, argv);
   }
 
-  sys.stop();
+  sys.Stop();
   return ret;
 }

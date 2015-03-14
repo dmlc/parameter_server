@@ -17,16 +17,16 @@ Postoffice::Postoffice() { }
 Postoffice::~Postoffice() {
   if (recv_thread_) recv_thread_->join();
   if (send_thread_) {
-    MessagePtr stop(new Message()); stop->terminate = true; queue(stop);
+    MessagePtr stop(new Message()); stop->terminate = true; Queue(stop);
     send_thread_->join();
   }
 }
 
-void Postoffice::run(int* argc, char*** argv) {
+void Postoffice::Run(int* argc, char*** argv) {
   google::InitGoogleLogging((*argv)[0]);
   google::ParseCommandLineFlags(argc, argv, true);
 
-  manager_.init((*argv)[0]);
+  manager_.Init((*argv)[0]);
 
   if (FLAGS_report_interval > 0) {
     perf_monitor_.init(FLAGS_interface, manager_.van().my_node().hostname());
@@ -34,14 +34,14 @@ void Postoffice::run(int* argc, char*** argv) {
 
   // start the I/O threads
   recv_thread_ =
-      std::unique_ptr<std::thread>(new std::thread(&Postoffice::recv, this));
+      std::unique_ptr<std::thread>(new std::thread(&Postoffice::Recv, this));
   send_thread_ =
-      std::unique_ptr<std::thread>(new std::thread(&Postoffice::send, this));
+      std::unique_ptr<std::thread>(new std::thread(&Postoffice::Send, this));
 
-  manager_.run();
+  manager_.Run();
 }
 
-void Postoffice::reply(const MessagePtr& msg, Task reply) {
+void Postoffice::Reply(const MessagePtr& msg, Task reply) {
   const Task& task = msg->task;
   if (!task.request()) return;
   reply.set_request(false);
@@ -50,7 +50,7 @@ void Postoffice::reply(const MessagePtr& msg, Task reply) {
   if (task.has_customer_id()) reply.set_customer_id(task.customer_id());
   MessagePtr reply_msg(new Message(reply));
   reply_msg->recver = msg->sender;
-  queue(reply_msg);
+  Queue(reply_msg);
 }
 
 void Postoffice::reply(
@@ -64,7 +64,7 @@ void Postoffice::reply(
   if (!reply_str.empty()) reply_task.set_msg(reply_str);
   MessagePtr reply_msg(new Message(reply_task));
   reply_msg->recver = recver;
-  queue(reply_msg);
+  Queue(reply_msg);
 }
 
 // void Postoffice::queue(const MessagePtr& msg) {
@@ -72,7 +72,7 @@ void Postoffice::reply(
 // }
 
 
-void Postoffice::send() {
+void Postoffice::Send() {
   MessagePtr msg;
   while (true) {
     sending_queue_.wait_and_pop(msg);
@@ -82,11 +82,11 @@ void Postoffice::send() {
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseOutBytes(send_bytes);
     }
-    manager_.addPendingMsg(msg);
+    manager_.AddPendingMsg(msg);
   }
 }
 
-void Postoffice::recv() {
+void Postoffice::Recv() {
   while (true) {
     // receive a message
     MessagePtr msg(new Message());
@@ -95,11 +95,11 @@ void Postoffice::recv() {
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseInBytes(recv_bytes);
     }
-    manager_.removePendingMsg(msg);
+    manager_.RemovePendingMsg(msg);
 
     // process this message
     if (msg->task.control()) {
-      if (!manager_.process(msg)) break;
+      if (!manager_.Process(msg)) break;
     } else {
       int id = msg->task.customer_id();
       manager_.customer(id)->executor()->Accept(msg);

@@ -102,7 +102,7 @@ int Executor::Submit(const MessagePtr& msg) {
     }
     r->EncodeMessage(m);
     m->recver = r->node.id();
-    sys_.queue(m);
+    sys_.Queue(m);
   }
 
   return ts;
@@ -181,7 +181,7 @@ void Executor::ProcessActiveMsg() {
       // to set the mark
       FinishRecvReq(ts, active_msg_->sender);
       // reply an empty ACK message if necessary
-      if (!active_msg_->replied) sys_.reply(active_msg_);
+      if (!active_msg_->replied) sys_.Reply(active_msg_);
     }
   } else {
     last_response_ = active_msg_;

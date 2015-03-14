@@ -43,7 +43,7 @@ App* App::create(const string& conf_str) {
 } // namespace PS
 
 int main(int argc, char *argv[]) {
-  PS::Postoffice::instance().run(&argc, &argv);
-  PS::Postoffice::instance().stop();
+  PS::Postoffice::instance().Run(&argc, &argv);
+  PS::Postoffice::instance().Stop();
   return 0;
 }

@@ -156,7 +156,7 @@ void SharedParameter<K>::process(const MessagePtr& msg) {
   // reply if necessary
   if (pull && req) {
     port(reply->recver)->encodeFilter(reply);
-    sys_.queue(reply);
+    sys_.Queue(reply);
     msg->replied = true;
   }
 }

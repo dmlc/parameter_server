@@ -14,53 +14,53 @@ class Manager {
   Manager();
   ~Manager();
 
-  void init(char* argv0);
-  void run();
-  void stop();
-  bool process(const MessagePtr& msg);
+  void Init(char* argv0);
+  void Run();
+  void Stop();
+  bool Process(const MessagePtr& msg);
 
   // manage nodes
-  void addNode(const Node& node);
-  void removeNode(const NodeID& node_id);
+  void AddNode(const Node& node);
+  void RemoveNode(const NodeID& node_id);
   // detect that *node_id* is disconnected
-  void nodeDisconnected(const NodeID node_id);
+  void NodeDisconnected(const NodeID node_id);
   // add a function handler which will be called in *nodeDisconnected*
   typedef std::function<void(const NodeID&)> NodeFailureHandler;
-  void addNodeFailureHandler(NodeFailureHandler handler) {
+  void AddNodeFailureHandler(NodeFailureHandler handler) {
     node_failure_handlers_.push_back(handler);
   }
 
   // manage customer
   Customer* customer(int id);
-  void addCustomer(Customer* obj);
-  void removeCustomer(int id);
-  int nextCustomerID();
+  void AddCustomer(Customer* obj);
+  void RemoveCustomer(int id);
+  int NextCustomerID();
 
   // workers and servers
-  void waitServersReady();
-  void waitWorkersReady();
+  void WaitServersReady();
+  void WaitWorkersReady();
 
-  int numWorkers() { return num_workers_; }
-  int numServers() { return num_servers_; }
+  int num_workers() { return num_workers_; }
+  int num_servers() { return num_servers_; }
 
   // manage message
-  void addPendingMsg(const MessagePtr& msg) { }
-  void removePendingMsg(const MessagePtr& msg) { }
+  void AddPendingMsg(const MessagePtr& msg) { }
+  void RemovePendingMsg(const MessagePtr& msg) { }
 
   // accessors
   Van& van() { return van_; }
   App* app() { return app_; }
 
  private:
-  bool isScheduler() { return van_.my_node().role() == Node::SCHEDULER; }
-  Task newControlTask(Control::Command cmd);
-  void sendTask(const NodeID& recver, const Task& task);
-  void sendTask(const Node& recver, const Task& task) {
-    sendTask(recver.id(), task);
+  bool IsScheduler() { return van_.my_node().role() == Node::SCHEDULER; }
+  Task NewControlTask(Control::Command cmd);
+  void SendTask(const NodeID& recver, const Task& task);
+  void SendTask(const Node& recver, const Task& task) {
+    SendTask(recver.id(), task);
   }
 
   // the app
-  void createApp(const string& conf);
+  void CreateApp(const string& conf);
   App* app_ = nullptr;
   string app_conf_;
   std::promise<void> app_promise_;

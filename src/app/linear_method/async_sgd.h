@@ -190,7 +190,7 @@ class AsyncSGDWorker : public ISGDCompNode {
       Task done;
       done.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
       done.mutable_sgd()->mutable_load()->add_finished(sgd.load().id());
-      sys_.reply(msg, done);
+      sys_.Reply(msg, done);
       msg->replied = true;
     }
   }

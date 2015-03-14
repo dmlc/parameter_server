@@ -12,7 +12,7 @@ void ISGDScheduler::run() {
   monitor_.setPrinter(1, std::bind(&ISGDScheduler::showProgress, this, _1, _2));
 
   // wait all jobs are finished
-  sys_.manager().addNodeFailureHandler([this](const NodeID& id) {
+  sys_.manager().AddNodeFailureHandler([this](const NodeID& id) {
       CHECK_NOTNULL(workload_pool_)->restore(id);
     });
   CHECK_NOTNULL(workload_pool_)->waitUtilDone();

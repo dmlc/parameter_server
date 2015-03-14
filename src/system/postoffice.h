@@ -11,17 +11,17 @@ class Postoffice {
   SINGLETON(Postoffice);
   ~Postoffice();
 
-  void run(int* argc, char***);
-  void stop() { manager_.stop(); }
+  void Run(int* argc, char***);
+  void Stop() { manager_.Stop(); }
 
   // queue a message into the sending buffer, which will be sent by the sending
   // thread. It is thread safe.
-  void queue(const MessagePtr& msg) {
+  void Queue(const MessagePtr& msg) {
     sending_queue_.push(msg);
   }
 
   // reply *msg* by *reply*
-  void reply(const MessagePtr& msg, Task reply = Task());
+  void Reply(const MessagePtr& msg, Task reply = Task());
 
   Manager& manager() { return manager_; }
   HeartbeatInfo& pm() { return perf_monitor_; }
@@ -38,8 +38,8 @@ class Postoffice {
 
  private:
   Postoffice();
-  void send();
-  void recv();
+  void Send();
+  void Recv();
 
   std::unique_ptr<std::thread> recv_thread_;
   std::unique_ptr<std::thread> send_thread_;

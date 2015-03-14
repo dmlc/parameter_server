@@ -53,6 +53,6 @@ int main(int argc, char *argv[]) {
   auto& sys = PS::Postoffice::instance();
   sys.start(&argc, &argv);
 
-  sys.stop();
+  sys.Stop();
   return 0;
 }

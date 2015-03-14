@@ -38,7 +38,7 @@ class Worker : public App {
       Wait(ts);
       time[j] = toc(tv);
     }
-    double thr = (double)m / 1000.0 * n * sys_.manager().numServers() / time.sum();
+    double thr = (double)m / 1000.0 * n * sys_.manager().num_servers() / time.sum();
     printf("%s: packet size: %d KB, latency: %lf +- %lf sec, throughput %.3lf MB/sec\n",
            MyNodeID().c_str(), m, time.mean(), time.std(), thr);
   }

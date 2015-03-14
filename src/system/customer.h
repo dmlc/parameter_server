@@ -41,10 +41,10 @@ class Customer {
   // A customer must have an unique ID so that it can communicate with the
   // customer with the same ID in a remote node.
   Customer(int id) : id_(id), sys_(Postoffice::instance()), exec_(*this) {
-    sys_.manager().addCustomer(this);
+    sys_.manager().AddCustomer(this);
   }
   virtual ~Customer() {
-    sys_.manager().removeCustomer(id_);
+    sys_.manager().RemoveCustomer(id_);
   }
 
   // -- APIs for the caller (thread-safe) --
@@ -159,7 +159,7 @@ class Customer {
   // Replies the request message "msg" received from msg->sender with
   // "reply". In default, "reply" is an empty ack message.
   void Reply(const MessagePtr& request, Task response = Task()) {
-    sys_.reply(request, response);
+    sys_.Reply(request, response);
   }
 
   void Reply(const MessagePtr& request, MessagePtr response) {
@@ -185,7 +185,7 @@ class Customer {
 // The base class of an application.
 class App : public Customer {
  public:
-  App() : Customer(Postoffice::instance().manager().nextCustomerID()) { }
+  App() : Customer(Postoffice::instance().manager().NextCustomerID()) { }
   virtual ~App() { }
 
   // -- User definable APIs --
@@ -199,8 +199,8 @@ class App : public Customer {
   // created.
   virtual void Run() {
     // in default, just wait all nodes are ready.
-    sys_.manager().waitServersReady();
-    sys_.manager().waitWorkersReady();
+    sys_.manager().WaitServersReady();
+    sys_.manager().WaitWorkersReady();
   }
 };
 

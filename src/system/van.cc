@@ -344,9 +344,9 @@ void Van::Monitor() {
           LOG(WARNING) << "cannot find the node id for FD = " << value;
           continue;
         }
-        manager.nodeDisconnected(fd_to_nodeid_[value]);
+        manager.NodeDisconnected(fd_to_nodeid_[value]);
       } else {
-        manager.nodeDisconnected(scheduler_.id());
+        manager.NodeDisconnected(scheduler_.id());
       }
     }
     if (event == ZMQ_EVENT_MONITOR_STOPPED) break;
