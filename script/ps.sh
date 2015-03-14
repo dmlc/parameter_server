@@ -50,7 +50,7 @@ check_start() {
 	# fi
 	if [[ ! $hostfile ]];
 	then
-	    platform=$((uname))
+	    platform=$(uname)
 	    if [[ $platform = 'Darwin' ]];then
 	    	echo '127.0.0.1' > ps_default_hostfile
 	    else 
