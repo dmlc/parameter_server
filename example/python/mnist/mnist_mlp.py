@@ -15,7 +15,9 @@ class MnistTrainer:
         print('Worker; NodeID: %s, Rank: %d, RankSize: %d' % (ps.my_node_id, ps.my_rank, ps.rank_size))
 
         self.cpu = owl.create_cpu_device()
-        self.gpu = owl.create_gpu_device(0)
+        # PS: for local tes
+        #self.gpu = owl.create_gpu_device(0)
+        self.gpu = owl.create_gpu_device(ps.my_rank % owl.get_gpu_device_count())
         self.data_file = data_file
         self.num_epochs=num_epochs
         self.mb_size=mb_size
@@ -23,13 +25,12 @@ class MnistTrainer:
         self.eps_b=eps_b
         # init weight
         l1 = 784; l2 = 256; l3 = 10
-        # PS: do not initialize weights on workers
+        # PS: pull weights from servers
         # self.l1 = l1; self.l2 = l2; self.l3 = l3
         # self.w1 = owl.randn([l2, l1], 0.0, math.sqrt(4.0 / (l1 + l2)))
         # self.w2 = owl.randn([l3, l2], 0.0, math.sqrt(4.0 / (l2 + l3)))
         # self.b1 = owl.zeros([l2, 1])
         # self.b2 = owl.zeros([l3, 1])
-        # PS: instead, pull weights from servers
         self.w1 = ps.pull_weight(owl.zeros([l2, l1]), 'w1')
         self.w2 = ps.pull_weight(owl.zeros([l3, l2]), 'w2')
         self.b1 = ps.pull_weight(owl.zeros([l2, 1]), 'b1')
@@ -51,7 +52,9 @@ class MnistTrainer:
         for epoch in range(self.num_epochs):
             print '---Start epoch #%d' % epoch
             # train
-            for (mb_samples, mb_labels) in train_data:
+            for idx, (mb_samples, mb_labels) in enumerate(train_data):
+                if idx % ps.rank_size != ps.my_rank: continue
+
                 num_samples = mb_samples.shape[0]
 
                 a1 = owl.from_numpy(mb_samples)
@@ -72,12 +75,11 @@ class MnistTrainer:
                 gw2 = s3 * a2.trans() / num_samples
                 gb2 = s3.sum(1) / num_samples
                 # update
-                # PS: do not update weights locally
+                # PS: update weights on the server
                 #self.w1 -= self.eps_w * gw1
                 #self.w2 -= self.eps_w * gw2
                 #self.b1 -= self.eps_b * gb1
                 #self.b2 -= self.eps_b * gb2
-                # PS: instead, push gradients and pull weights from servers
                 if not bulk:
                     self.w1 = ps.push_grad_and_pull_weight(gw1, self.w1, 'w1')
                     self.w2 = ps.push_grad_and_pull_weight(gw2, self.w2, 'w2')
@@ -158,7 +160,7 @@ class MnistServer:
             assert False
 
 
-# PS - server
+# PS: server
 server = None
 def server_node_init():
     global server
@@ -171,7 +173,7 @@ def server_init_layer(name, weight):
 def server_update_layer(name, weight, gradient):
     server.update_layer(name, weight, gradient)
 
-# PS - worker
+# PS: worker
 worker = None
 def worker_node_init():
     global worker

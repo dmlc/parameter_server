@@ -25,6 +25,7 @@ class MNISTCNNModel:
         ];
 
     def init_random(self):
+        # PS: pull from the server
         #self.weights = [
         #    owl.randn([5, 5, 1, 16], 0.0, 0.1),
         #    owl.randn([5, 5, 16, 32], 0.0, 0.1),
@@ -105,6 +106,7 @@ def bpprop(model, samples, label):
     biasgrad[0] = model.convs[0].bias_grad(errs[1])
     return (out, weightgrad, biasgrad)
 
+# PS: "mom" is used by the server
 #def train_network(model, num_epochs=100, minibatch_size=256, lr=0.01, mom=0.75, wd=5e-4):
 def train_network(model, num_epochs=100, minibatch_size=256, lr=0.01, wd=5e-4):
     # load data
@@ -118,7 +120,9 @@ def train_network(model, num_epochs=100, minibatch_size=256, lr=0.01, wd=5e-4):
         count = 0
         weightgrads = [None] * len(gpu)
         biasgrads = [None] * len(gpu)
-        for (mb_samples, mb_labels) in train_data:
+        for idx, (mb_samples, mb_labels) in enumerate(train_data):
+            if idx % ps.rank_size != ps.my_rank: continue
+
             count += 1
             current_gpu = count % len(gpu)
             owl.set_device(gpu[current_gpu])
@@ -126,9 +130,11 @@ def train_network(model, num_epochs=100, minibatch_size=256, lr=0.01, wd=5e-4):
             data = owl.from_numpy(mb_samples).reshape([28, 28, 1, num_samples])
             label = owl.from_numpy(mb_labels)
             out, weightgrads[current_gpu], biasgrads[current_gpu] = bpprop(model, data, label)
+            # PS: XXX: where is start_eval()?
             #out.start_eval()
             if current_gpu == 0:
                 for k in range(len(model.weights)):
+                    # PS: use the server for updates
                     #model.weightdelta[k] = mom * model.weightdelta[k] - lr / num_samples / len(gpu) * multi_gpu_merge(weightgrads, 0, k) - lr * wd * model.weights[k]
                     #model.biasdelta[k] = mom * model.biasdelta[k] - lr / num_samples / len(gpu) * multi_gpu_merge(biasgrads, 0, k)
                     #model.weights[k] += model.weightdelta[k]
@@ -151,6 +157,7 @@ def multi_gpu_merge(l, base, layer):
     right = multi_gpu_merge(l[len(l) / 2:], base + len(l) / 2, layer)
     owl.set_device(base)
     return left + right
+
 
 class MnistServer:
     def __init__(self, mom=0.75):
@@ -206,7 +213,7 @@ class MnistServer:
             assert False
 
 
-# PS - server
+# PS: server
 server = None
 def server_node_init():
     global server
@@ -219,7 +226,7 @@ def server_init_layer(name, weight):
 def server_update_layer(name, weight, gradient):
     server.update_layer(name, weight, gradient)
 
-# PS - worker
+# PS: worker
 worker = None
 def worker_node_init():
     global gpu
@@ -229,7 +236,9 @@ def worker_node_init():
     (args, remain) = parser.parse_known_args()
     assert(1 <= args.num)
     print 'Using %d GPU(s)' % args.num
-    gpu = [owl.create_gpu_device(i) for i in range(args.num)]
+    # PS: for local test
+    #gpu = [owl.create_gpu_device(i) for i in range(args.num)]
+    gpu = [owl.create_gpu_device((i + ps.my_rank * args.num) % owl.get_gpu_device_count()) for i in range(args.num)]
     owl.set_device(gpu[0])
 
 def worker_node_main():
