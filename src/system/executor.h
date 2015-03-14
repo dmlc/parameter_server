@@ -35,8 +35,10 @@ class Executor {
   // last received message
   MessagePtr activeMessage() { return active_msg_; }
 
-  // ndoe management
+  // node management
   void AddNode(const Node& node);
+  void RemoveNode(const Node& node);
+  void ReplaceNode(const Node& old_node, const Node& new_node);
  private:
   // Runs the DAG engine
   void Run() {
@@ -48,10 +50,6 @@ class Executor {
   // will be blocked.
   bool PickActiveMsg();
   void ProcessActiveMsg();
-
-  // Do management. Only thread-safe when run by "thread_".
-  void RemoveNode(const Node& node);
-  void ReplaceNode(const Node& old_node, const Node& new_node);
 
   // -- received messages --
   std::list<MessagePtr> recv_msgs_;

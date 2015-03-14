@@ -125,16 +125,16 @@ bool Manager::process(const MessagePtr& msg) {
       case Control::UPDATE_NODE: {
         for (int i = 0; i < ctrl.node_size(); ++i) {
           addNode(ctrl.node(i));
-        }
-        break;
+        } break;
       }
       case Control::REPLACE_NODE: {
         // TODO
         break;
       }
       case Control::REMOVE_NODE: {
-        // TODO
-        break;
+        for (int i = 0; i < ctrl.node_size(); ++i) {
+          removeNode(ctrl.node(i).id());
+        } break;
       }
       case Control::EXIT: {
         done_ = true;
@@ -201,6 +201,11 @@ void Manager::removeNode(const NodeID& node_id) {
   auto it = nodes_.find(node_id);
   if (it == nodes_.end()) return;
   Node node = it->second;
+  // van_.disconnect(node);
+  if (node.role() == Node::WORKER) -- num_workers_;
+  if (node.role() == Node::SERVER) -- num_servers_;
+  -- num_active_nodes_;
+  nodes_.erase(it);
 
   // TODO use *replace* for server
   // TODO remove from customers
@@ -209,11 +214,22 @@ void Manager::removeNode(const NodeID& node_id) {
   //   it.second.first->exec().removeNode(node);
   // }
 
-  // van_.disconnect(node);
-  if (node.role() == Node::WORKER) -- num_workers_;
-  if (node.role() == Node::SERVER) -- num_servers_;
-  -- num_active_nodes_;
-  nodes_.erase(it);
+  // remove from app
+  for (auto& it : customers_) {
+    it.second.first->executor()->RemoveNode(node);
+  }
+
+  // broadcast
+  if (isScheduler() && node.id() != van_.myNode().id()) {
+    for (const auto& it : nodes_) {
+      if (it.first == van_.myNode().id() || it.first == node.id()) {
+        continue;
+      }
+      Task remove_node = newControlTask(Control::REMOVE_NODE);
+      *remove_node.mutable_ctrl()->add_node() = node;
+      sendTask(it.second, remove_node);
+    }
+  }
 
   VLOG(1) << "remove node: " << node.ShortDebugString();
 }
