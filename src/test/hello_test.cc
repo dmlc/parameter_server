@@ -4,22 +4,32 @@ namespace PS {
 class HelloServer : public App {
  public:
   virtual void ProcessRequest(const MessagePtr& req) {
-    LL << req->task.time() << " " << req->task.msg();
+    LL << MyNodeID() <<  ": request " << req->task.time() << " from " << req->sender;
   }
 };
 
 class HelloWorker : public App {
  public:
   virtual void ProcessResponse(const MessagePtr& res) {
-    LL << res->task.time();
+    LL << MyNodeID() << ": response " << res->task.time() << " from " << res->sender;
   }
 
   virtual void Run() {
     WaitServersReady();
-    for (int i = 0; i < 10; ++i) {
-      int ts = Submit(Task(), kServerGroup);
-      Wait(ts, kServerGroup);
-    }
+
+    int ts = Submit(Task(), kServerGroup);
+    Wait(ts, kServerGroup);
+
+    ts = Submit(Task(), kServerGroup);
+    Wait(ts, kServerGroup);
+
+    auto req = NewMessage();
+    req->recver = kServerGroup;
+    req->fin_handle = [this]() {
+      LL << MyNodeID() << ": request " << LastResponse()->task.time() << " is finished";
+    };
+    Wait(Submit(req), req->recver);
+
   }
 };
 

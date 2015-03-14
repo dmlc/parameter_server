@@ -48,6 +48,7 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
 
 
 int Executor::Submit(const MessagePtr& msg) {
+  CHECK(msg->recver.size());
   Lock l(node_mu_);
   RemoteNode* rnode = GetRNode(msg->recver);
 
@@ -69,7 +70,7 @@ int Executor::Submit(const MessagePtr& msg) {
   msg->task.set_request(true);
   msg->task.set_customer_id(obj_.id());
   if (msg->fin_handle) {
-    CHECK_NOTNULL(GetRNode(msg->sender))->SetCallback(ts, msg->fin_handle);
+    GetRNode(msg->recver)->SetCallback(ts, msg->fin_handle);
   }
 
   // slice "msg" and then send them one by one

@@ -106,6 +106,10 @@ class Customer {
   // thread.
   virtual void ProcessResponse(const MessagePtr& response) { }
 
+  MessagePtr LastResponse() {
+    return exec_.activeMessage();
+  }
+
   // -- APIs for callee (thread-safe) --
 
   // Processes a request message received from "request->sender". It is a
@@ -113,6 +117,10 @@ class Customer {
   // thread once the time dependencies specified in "request->task" have been
   // satisfied.
   virtual void ProcessRequest(const MessagePtr& request) { }
+
+  MessagePtr LastRequest() {
+    return exec_.activeMessage();
+  }
 
   // Wait until the request task/message with "timestamp" received from "sender" is
   // processed at this node or "sender" is dead. If "sender" is a node group,

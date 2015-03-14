@@ -74,7 +74,6 @@ void Manager::stop() {
     usleep(800);
     LOG(INFO) << "System stopped";
   } else {
-    LL << van_.myNode().id();
     Task task = newControlTask(Control::READY_TO_EXIT);
     sendTask(van_.scheduler(), task);
 
