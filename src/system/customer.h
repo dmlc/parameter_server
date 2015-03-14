@@ -13,19 +13,20 @@ namespace PS {
 // How it works:
 //
 // Customer A at node NA can submit a request to customer B at node NB if both A
-// and B have the same `id()'. The request message, class `Message', contains arguments specified
-// by the protobuf class `Task' and additional data such as (key,value)
-// pairs. Customer B first accepts this request via `Accept'; next processes it
-// by `ProcessRequest', which is a user-defined function, if the dependency constraints
-// are satisifed; and then sent back the responce to A by `Reply'. Once A
-// received the process, `ProcessResponse' will be called.
+// and B have the same `id()'. The request message, class `Message', contains
+// arguments specified by the protobuf class `Task' and additional data such as
+// (key,value) pairs. Customer B first processes this request by the
+// user-defined function `ProcessRequest' if the dependency constraints in this
+// request are satisfied; and then sent back the response to A by `Reply'. Once
+// A received the process, the user-defined function `ProcessResponse' will be
+// called.
 //
 // It's an asynchronous interface. `Submit' returns immediately after the
 // message is queued in the system. There is a timestamp assigned to each
 // request for synchronization. For example, B can use it to check whether this
-// request has been processed via `WaitAcceptedReq', while A can use
-// `WaitSubmittedReq' to wait the response from B. A can also set a callback
-// function when the response is arriving.
+// request has been processed via `WaitReceivedRequest', while A can use `Wait'
+// to wait the response from B. A can also set a callback function when the
+// response is arriving.
 //
 // Furthermore, customer A can submit a request to a node group, such as the
 // server group. There is a user-defined function `Slice' which will partition
@@ -58,7 +59,7 @@ class Customer {
   // Sample usage: send a request to all worker nodes and wait until finished:
   //   Task task; task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
   //   int ts = Submit(task, kWorkerGroup);
-  //   Wait(ts, kWorkerGroup);
+  //   Wait(ts);
   //   Foo();
   inline int Submit(const Task& request, const NodeID& recver) {
     return Submit(NewMessage(request, recver));
@@ -75,18 +76,18 @@ class Customer {
   // Sample usage: the same functionality as above:
   //   auto req = NewMessage(task, kWorkerGroup);
   //   reg->callback = [this](){ Foo(); }
-  //   Submit(msg);
+  //   Wait(Submit(msg));
   inline int Submit(const MessagePtr& request) {
     return exec_.Submit(request);
   }
 
-  // Waits until the request with "timestamp" sent to "recver" is finished. If
-  // "recver" is a single node, it blocks until a reply message with the same
-  // "timestamp" has been received from "recver" or "recver" is dead. Otherwise,
-  // it will wait for the responce of each alive node in the node group
-  // "recver".
-  inline void Wait(int timestamp, const NodeID& recver) {
-    exec_.WaitSentReq(timestamp, recver);
+  // Waits until the submitted request with "timestamp" is finished. If the
+  // receiver is this request is a single node, this function is blocked until a
+  // reply message with the same "timestamp" has been received from this
+  // receiver, or it is considered as deed.  Otherwise, this function will wait
+  // for the response from each alive node in the receiver node group.
+  inline void Wait(int timestamp) {
+    exec_.WaitSentReq(timestamp);
   }
 
   // Slices a message into multiple parts. It will be called in `Submit` when
@@ -106,11 +107,12 @@ class Customer {
   // thread.
   virtual void ProcessResponse(const MessagePtr& response) { }
 
-  MessagePtr LastResponse() {
-    return exec_.activeMessage();
+  // The last received response.
+  inline MessagePtr LastResponse() {
+    return exec_.last_response();
   }
 
-  // -- APIs for callee (thread-safe) --
+  // -- APIs for the callee (thread-safe) --
 
   // Processes a request message received from "request->sender". It is a
   // user-defined function, which will be called by the executor's processing
@@ -118,8 +120,9 @@ class Customer {
   // satisfied.
   virtual void ProcessRequest(const MessagePtr& request) { }
 
-  MessagePtr LastRequest() {
-    return exec_.activeMessage();
+  // The last received request.
+  inline MessagePtr LastRequest() {
+    return exec_.last_request();
   }
 
   // Wait until the request task/message with "timestamp" received from "sender" is

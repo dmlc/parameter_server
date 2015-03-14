@@ -28,12 +28,14 @@ class Executor {
   // see comments in customer.h
   int Submit(const MessagePtr& msg);
   void Accept(const MessagePtr& msg);
-  void WaitSentReq(int timestamp, const NodeID& recver);
+  void WaitSentReq(int timestamp);
   void WaitRecvReq(int timestamp, const NodeID& sender);
   void FinishRecvReq(int timestamp, const NodeID& sender);
 
-  // last received message
-  MessagePtr activeMessage() { return active_msg_; }
+  // the last received request
+  inline MessagePtr last_request() { return last_request_; }
+  // the last received response
+  inline MessagePtr last_response() { return last_response_; }
 
   // node management
   void AddNode(const Node& node);
@@ -56,11 +58,13 @@ class Executor {
   std::mutex msg_mu_;
   // the message is going to be processed or the last one be processed
   MessagePtr active_msg_;
+  MessagePtr last_request_, last_response_;
   std::condition_variable dag_cond_;
 
   // -- remote nodes --
   std::mutex node_mu_;
   std::condition_variable recv_req_cond_;
+  std::condition_variable sent_req_cond_;
   std::unordered_map<NodeID, RemoteNode> nodes_;
 
   inline RemoteNode* GetRNode(const NodeID& node_id) {
@@ -68,6 +72,8 @@ class Executor {
     CHECK(it != nodes_.end()) << "node [" << node_id << "] doesn't exist";
     return &(it->second);
   }
+
+  inline bool CheckFinished(RemoteNode* rnode, int timestamp, bool sent);
 
   std::vector<NodeID> GroupIDs() {
    std::vector<NodeID> ids = {
@@ -78,14 +84,36 @@ class Executor {
   Customer& obj_;
   Postoffice& sys_;
   Node my_node_;
-  int num_replicas_ = 0;
+  int num_replicas_ = 0;  // number of replicas for a server node
+
+  int time_ = Message::kInvalidTime;  // current timestamp
+  struct ReqInfo {
+    NodeID recver;
+    Message::Callback callback;
+  };
+  // <timestamp, (receiver, callback)>
+  std::unordered_map<int, ReqInfo> sent_reqs_;
+
+  // void RunCallback(int ts) {
+  //   auto it = sent_req_callbacks.find(ts);
+  //   if (it != sent_req_callbacks.end()) {
+  //     if (it->second) it->second();
+  //     sent_req_callbacks.erase(it);
+  //   }
+  // }
+  // std::unordered_map<int, > sent_req_callbacks;
+
+  // void SetCallback(int ts, Message::Callback cb) {
+  //   sent_req_callbacks[ts] = cb;
+  // }
+
+  // the processing thread
   bool done_ = false;
   std::thread* thread_ = nullptr;
 };
 
-// bool IsGroupNode(const NodeID& node_id) {
-//   return node_id.compare(
-//       0, std::max(node_id.size(), kGroupPrefix.size()), kGroupPrefix) == 0;
-// }
-
 } // namespace PS
+  // bool IsGroupID(const NodeID& node_id) {
+  //   return node_id.compare(
+  //       0, std::max(node_id.size(), kGroupPrefix.size()), kGroupPrefix) == 0;
+  // }

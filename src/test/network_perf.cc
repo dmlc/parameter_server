@@ -35,7 +35,7 @@ class Worker : public App {
       msg->recver = kServerGroup;
       auto tv = tic();
       int ts = Submit(msg);
-      Wait(ts, kServerGroup);
+      Wait(ts);
       time[j] = toc(tv);
     }
     double thr = (double)m / 1000.0 * n * sys_.manager().numServers() / time.sum();

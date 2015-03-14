@@ -1,7 +1,7 @@
 #include "ps.h"
 namespace PS {
 
-class HelloServer : public App {
+class Server : public App {
  public:
   virtual void ProcessRequest(const MessagePtr& req) {
     std::cout << MyNodeID() <<  ": processing request " << req->task.time() <<
@@ -9,7 +9,7 @@ class HelloServer : public App {
   }
 };
 
-class HelloWorker : public App {
+class Worker : public App {
  public:
   virtual void ProcessResponse(const MessagePtr& res) {
     std::cout << MyNodeID() << ": received response " << res->task.time() <<
@@ -20,10 +20,10 @@ class HelloWorker : public App {
     WaitServersReady();
 
     int ts = Submit(Task(), kServerGroup);
-    Wait(ts, kServerGroup);
+    Wait(ts);
 
     ts = Submit(Task(), kServerGroup);
-    Wait(ts, kServerGroup);
+    Wait(ts);
 
     auto req = NewMessage();
     req->recver = kServerGroup;
@@ -31,13 +31,13 @@ class HelloWorker : public App {
       std::cout << MyNodeID() << ": request " << LastResponse()->task.time() <<
       " is finished" << std::endl;
     };
-    Wait(Submit(req), req->recver);
+    Wait(Submit(req));
   }
 };
 
 App* App::Create(const std::string& conf) {
-  if (IsWorker()) return new HelloWorker();
-  if (IsServer()) return new HelloServer();
+  if (IsWorker()) return new Worker();
+  if (IsServer()) return new Server();
   return new App();
 }
 

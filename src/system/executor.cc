@@ -24,30 +24,38 @@ Executor::~Executor() {
   delete thread_;
 }
 
-void Executor::WaitSentReq(int timestamp, const NodeID& recver) {
+bool Executor::CheckFinished(RemoteNode* rnode, int timestamp, bool sent) {
+  CHECK(rnode);
+  if (timestamp < 0) return true;
+  auto& tracker = sent ? rnode->sent_req_tracker : rnode->recv_req_tracker;
+  if (!rnode->alive || tracker.IsFinished(timestamp)) return true;
+  if (rnode->rnode.role() == Node::GROUP) {
+    for (auto r : rnode->nodes) {
+      auto& r_tracker = sent ? r->sent_req_tracker : r->recv_req_tracker;
+      if (r->alive && !r_tracker.IsFinished(timestamp)) return false;
+      // well, set this group node as been finished
+      r_tracker.Finish(timestamp);
+    }
+    return true;
+  }
+  return false;
+}
+
+void Executor::WaitSentReq(int timestamp) {
   std::unique_lock<std::mutex> lk(node_mu_);
+  const NodeID& recver = sent_reqs_[timestamp].recver;
+  CHECK(recver.size());
   auto rnode = GetRNode(recver);
-  rnode->cond.wait(lk, [rnode, timestamp] {
-      return !rnode->alive || rnode->sent_req_tracker.IsFinished(timestamp); });
+  sent_req_cond_.wait(lk, [this, rnode, timestamp] {
+      return CheckFinished(rnode, timestamp, true);
+    });
 }
 
 void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
   auto rnode = GetRNode(sender);
-  recv_req_cond_.wait(lk, [rnode, timestamp] {
-      if (!rnode->alive || rnode->recv_req_tracker.IsFinished(timestamp)) {
-        return true;
-      }
-      if (rnode->rnode.role() == Node::GROUP) {
-        for (auto r : rnode->nodes) {
-          if (r->alive && !r->recv_req_tracker.IsFinished(timestamp))
-            return false;
-        }
-        // well, set this group node as been finished
-        rnode->recv_req_tracker.Finish(timestamp);
-        return true;
-      }
-      return false;
+  recv_req_cond_.wait(lk, [this, rnode, timestamp] {
+      return CheckFinished(rnode, timestamp, false);
     });
 }
 
@@ -63,30 +71,24 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
 int Executor::Submit(const MessagePtr& msg) {
   CHECK(msg->recver.size());
   Lock l(node_mu_);
-  RemoteNode* rnode = GetRNode(msg->recver);
 
-  // timestamp
-  int ts = msg->task.has_time() ? msg->task.time() : Message::kInvalidTime;
-  if (ts <= Message::kInvalidTime) {
-    // pick a proper timestamp
-    for (auto r : rnode->nodes) ts = std::max(ts, r->time+1);
-  }
-  // update the timestamp
-  for (auto r : rnode->nodes) {
-    CHECK_LT(r->time, ts) << my_node_.id() <<
-        ": node " << r->rnode.id() << " has a newer timstamp";
-    r->time = ts;
-  }
+  // timestamp and other flags
+  int ts = msg->task.has_time() ? msg->task.time() : time_ + 1;
+  CHECK_LT(time_, ts) << my_node_.id() << " has a newer timestamp";
   msg->task.set_time(ts);
-
-  // set and store something
   msg->task.set_request(true);
   msg->task.set_customer_id(obj_.id());
+
+  // store something
+  time_ = ts;
+  auto& req_info = sent_reqs_[ts];
+  req_info.recver = msg->recver;
   if (msg->fin_handle) {
-    GetRNode(msg->recver)->SetCallback(ts, msg->fin_handle);
+    req_info.callback = msg->fin_handle;
   }
 
   // slice "msg" and then send them one by one
+  RemoteNode* rnode = GetRNode(msg->recver);
   MessagePtrList msgs(rnode->keys.size());
   obj_.Slice(msg, rnode->keys, &msgs);
   CHECK_EQ(msgs.size(), rnode->nodes.size());
@@ -98,13 +100,8 @@ int Executor::Submit(const MessagePtr& msg) {
       r->sent_req_tracker.Finish(ts);
       continue;
     }
-    const NodeID& recv = r->rnode.id();  // the actual receiver of "m"
-    if (msg->recver != recv) {
-      // that means "msg" is sent to a group node. save this info
-      r->sent_to_group[ts] = msg->recver;
-    }
     r->EncodeMessage(m);
-    m->recver = recv;
+    m->recver = r->rnode.id();
     sys_.queue(m);
   }
 
@@ -175,6 +172,7 @@ void Executor::ProcessActiveMsg() {
   bool req = active_msg_->task.request();
   int ts = active_msg_->task.time();
   if (req) {
+    last_request_ = active_msg_;
     obj_.ProcessRequest(active_msg_);
 
     if (active_msg_->finished) {
@@ -186,6 +184,7 @@ void Executor::ProcessActiveMsg() {
       if (!active_msg_->replied) sys_.reply(active_msg_);
     }
   } else {
+    last_response_ = active_msg_;
     obj_.ProcessResponse(active_msg_);
 
     std::unique_lock<std::mutex> lk(msg_mu_);
@@ -193,30 +192,32 @@ void Executor::ProcessActiveMsg() {
     auto rnode = GetRNode(active_msg_->sender);
     rnode->sent_req_tracker.Finish(ts);
 
-    // run callback if necessary
-    auto& groups = rnode->sent_to_group;
-    auto it = groups.find(ts);
-    if (it != groups.end()) {
-      // this message was sent to a group node. so "ts" is finished only if all
-      // nodes in this group is finished
-      bool done = true;
-      auto onode = GetRNode(it->second);
-      for (auto r : onode->nodes) {
-        if (r->alive && !r->sent_req_tracker.IsFinished(ts)) {
-          done = false;
-          break;
+    // check if the callback is ready to run
+    auto it = sent_reqs_.find(ts);
+    CHECK(it != sent_reqs_.end());
+    const NodeID& orig_recver = it->second.recver;
+    if (orig_recver != active_msg_->sender) {
+      auto onode = GetRNode(orig_recver);
+      if (onode->rnode.role() == Node::GROUP) {
+        // the orginal recver is a group node, need to check whether repsonses
+        // have been received from all nodes in this group
+        for (auto r : onode->nodes) {
+          if (r->alive && !r->sent_req_tracker.IsFinished(ts)) {
+            return;
+          }
         }
+        onode->sent_req_tracker.Finish(ts);
+      } else {
+        // the orig_recver should be dead, and active_msgs_->sender is the
+        // replacement of this dead node. Just run callback
       }
-      if (!done) return;
-      onode->sent_req_tracker.Finish(ts);
-      onode->RunCallback(ts);
-      groups.erase(it);
-      lk.unlock();
-      onode->cond.notify_all();
-    } else {
-      rnode->RunCallback(ts);
-      lk.unlock();
-      rnode->cond.notify_all();
+    }
+    lk.unlock();
+    sent_req_cond_.notify_all();
+    if (it->second.callback) {
+      // run the callback, and then empty it
+      it->second.callback();
+      it->second.callback = Message::Callback();
     }
   }
 }

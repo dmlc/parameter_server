@@ -41,26 +41,12 @@ struct RemoteNode {
   void EncodeMessage(const MessagePtr& msg);
   void DecodeMessage(const MessagePtr& msg);
 
-  void SetCallback(int ts, Message::Callback cb) {
-    sent_req_callbacks[ts] = cb;
-  }
-  void RunCallback(int ts) {
-    auto it = sent_req_callbacks.find(ts);
-    if (it != sent_req_callbacks.end()) {
-      if (it->second) it->second();
-      sent_req_callbacks.erase(it);
-    }
-  }
-
-  //
   Node rnode;                               // the remote node
   bool alive = true;                        // aliveness
-  int time = Message::kInvalidTime;         // current timestamp
   std::condition_variable cond;
 
   // -- info of requests sent to "rnode" --
   RequestTracker sent_req_tracker;
-  std::unordered_map<int, NodeID> sent_to_group;
 
   // -- info of request received from "rnode" --
   RequestTracker recv_req_tracker;
@@ -76,7 +62,6 @@ struct RemoteNode {
   // key: filter_type
   std::unordered_map<int, Filter*> filters;
 
-  std::unordered_map<int, Message::Callback> sent_req_callbacks;
 };
 
 

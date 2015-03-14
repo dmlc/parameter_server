@@ -4,7 +4,7 @@ namespace PS {
 DEFINE_int32(n, 100, "# of aggregation");
 DEFINE_int32(interval, 100000, "time (usec) between two aggregation");
 
-class AggregationServer : public App {
+class Server : public App {
  public:
   virtual void Run() {
     WaitWorkersReady();
@@ -16,14 +16,14 @@ class AggregationServer : public App {
   }
 };
 
-class AggregationWorker : public App {
+class Worker : public App {
  public:
   virtual void Run() {
     WaitServersReady();
     for (int i = 0; i < FLAGS_n; ++i) {
       int ts = Submit(Task(), kServerGroup);
       usleep(FLAGS_interval);
-      Wait(ts, kServerGroup);
+      Wait(ts);
       LL << MyNodeID() << " " << i;
     }
     LL << MyNodeID() << " done";
@@ -31,8 +31,8 @@ class AggregationWorker : public App {
 };
 
 App* App::Create(const std::string& conf) {
-  if (IsWorker()) return new AggregationWorker();
-  if (IsServer()) return new AggregationServer();
+  if (IsWorker()) return new Worker();
+  if (IsServer()) return new Server();
   return new App();
 }
 

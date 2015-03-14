@@ -244,8 +244,6 @@ void Manager::nodeDisconnected(const NodeID node_id) {
   if (isScheduler()) {
     LOG(INFO) << node_id << " is disconnected";
     removeNode(node_id);
-    // broadcast the dead node info
-    // TODO
   } else {
     // sleep a while, in case this node is already in terminating
     for (int i = 0; i < 1000; ++i) {
