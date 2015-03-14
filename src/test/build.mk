@@ -2,7 +2,11 @@ TESTFLAGS= -lgtest_main -lgtest $(LDFLAGS)
 
 build/hello_test: src/test/hello_test.cc $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
 build/aggregation_test: src/test/aggregation_test.cc $(PS_LIB)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+build/network_perf: src/test/network_perf.cc $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 # build/common_test: src/test/common_test.cc src/util/common.h
