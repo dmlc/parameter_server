@@ -17,11 +17,12 @@ class RequestTracker {
 
   // Returns true if timestamp "ts" is marked as finished.
   bool IsFinished(int ts) {
-    return (data_.size() > ts) && data_[ts];
+    return ts < 0 || ((data_.size() > ts) && data_[ts]);
   }
 
-  // Mark time timstamp "ts" as finished.
+  // Mark timestamp "ts" as finished.
   void Finish(int ts) {
+    CHECK_GE(ts, 0);
     CHECK_LT(ts, 1000000);
     if (data_.size() <= ts) data_.resize(ts*2+5);
     data_[ts] = true;
@@ -41,20 +42,19 @@ struct RemoteNode {
   void EncodeMessage(const MessagePtr& msg);
   void DecodeMessage(const MessagePtr& msg);
 
-  Node rnode;                               // the remote node
-  bool alive = true;                        // aliveness
-  std::condition_variable cond;
+  Node node;         // the remote node
+  bool alive = true; // aliveness
 
-  // -- info of requests sent to "rnode" --
+  // timestamp tracker
   RequestTracker sent_req_tracker;
-
-  // -- info of request received from "rnode" --
   RequestTracker recv_req_tracker;
 
-  // node group
-  void AddSubNode(RemoteNode* rnode);
-  void RemoveSubNode(RemoteNode* rnode);
-  std::vector<RemoteNode*> nodes;
+  // node group info. if "node" is a node group, then "group" contains all node
+  // pointer in this group. otherwise, group contains "this"
+  void AddGroupNode(RemoteNode* rnode);
+  void RemoveGroupNode(RemoteNode* rnode);
+  std::vector<RemoteNode*> group;
+  // keys[i] is the key range of group[i]
   KeyRangeList keys;
 
  private:

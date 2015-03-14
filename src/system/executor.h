@@ -94,25 +94,13 @@ class Executor {
   // <timestamp, (receiver, callback)>
   std::unordered_map<int, ReqInfo> sent_reqs_;
 
-  // void RunCallback(int ts) {
-  //   auto it = sent_req_callbacks.find(ts);
-  //   if (it != sent_req_callbacks.end()) {
-  //     if (it->second) it->second();
-  //     sent_req_callbacks.erase(it);
-  //   }
-  // }
-  // std::unordered_map<int, > sent_req_callbacks;
-
-  // void SetCallback(int ts, Message::Callback cb) {
-  //   sent_req_callbacks[ts] = cb;
-  // }
-
   // the processing thread
   bool done_ = false;
   std::thread* thread_ = nullptr;
 };
 
 } // namespace PS
+
   // bool IsGroupID(const NodeID& node_id) {
   //   return node_id.compare(
   //       0, std::max(node_id.size(), kGroupPrefix.size()), kGroupPrefix) == 0;

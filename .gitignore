@@ -10,3 +10,4 @@ third_party
 .*
 *core*
 config.mk
+**/bak/**

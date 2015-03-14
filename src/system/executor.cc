@@ -29,8 +29,8 @@ bool Executor::CheckFinished(RemoteNode* rnode, int timestamp, bool sent) {
   if (timestamp < 0) return true;
   auto& tracker = sent ? rnode->sent_req_tracker : rnode->recv_req_tracker;
   if (!rnode->alive || tracker.IsFinished(timestamp)) return true;
-  if (rnode->rnode.role() == Node::GROUP) {
-    for (auto r : rnode->nodes) {
+  if (rnode->node.role() == Node::GROUP) {
+    for (auto r : rnode->group) {
       auto& r_tracker = sent ? r->sent_req_tracker : r->recv_req_tracker;
       if (r->alive && !r_tracker.IsFinished(timestamp)) return false;
       // well, set this group node as been finished
@@ -91,9 +91,9 @@ int Executor::Submit(const MessagePtr& msg) {
   RemoteNode* rnode = GetRNode(msg->recver);
   MessagePtrList msgs(rnode->keys.size());
   obj_.Slice(msg, rnode->keys, &msgs);
-  CHECK_EQ(msgs.size(), rnode->nodes.size());
+  CHECK_EQ(msgs.size(), rnode->group.size());
   for (int i = 0; i < msgs.size(); ++i) {
-    RemoteNode* r = CHECK_NOTNULL(rnode->nodes[i]);
+    RemoteNode* r = CHECK_NOTNULL(rnode->group[i]);
     MessagePtr& m = msgs[i];
     if (!m->valid) {
       // do not sent, just mark it as done
@@ -101,7 +101,7 @@ int Executor::Submit(const MessagePtr& msg) {
       continue;
     }
     r->EncodeMessage(m);
-    m->recver = r->rnode.id();
+    m->recver = r->node.id();
     sys_.queue(m);
   }
 
@@ -198,10 +198,10 @@ void Executor::ProcessActiveMsg() {
     const NodeID& orig_recver = it->second.recver;
     if (orig_recver != active_msg_->sender) {
       auto onode = GetRNode(orig_recver);
-      if (onode->rnode.role() == Node::GROUP) {
+      if (onode->node.role() == Node::GROUP) {
         // the orginal recver is a group node, need to check whether repsonses
         // have been received from all nodes in this group
-        for (auto r : onode->nodes) {
+        for (auto r : onode->group) {
           if (r->alive && !r->sent_req_tracker.IsFinished(ts)) {
             return;
           }
@@ -238,7 +238,7 @@ void Executor::RemoveNode(const Node& node) {
   if (nodes_.find(id) == nodes_.end()) return;
   auto r = GetRNode(id);
   for (const NodeID& gid : GroupIDs()) {
-    nodes_[gid].RemoveSubNode(r);
+    nodes_[gid].RemoveGroupNode(r);
   }
   // do not remove r from nodes_
   r->alive = false;
@@ -255,26 +255,26 @@ void Executor::AddNode(const Node& node) {
     // update
     auto r = GetRNode(id);
     CHECK(r->alive);
-    r->rnode = node;
+    r->node = node;
     for (const NodeID& gid : GroupIDs()) {
-      nodes_[gid].RemoveSubNode(r);
+      nodes_[gid].RemoveGroupNode(r);
     }
   } else {
     // create
-    nodes_[id].rnode = node;
+    nodes_[id].node = node;
   }
 
   // add "node" into group
   auto role = node.role();
   auto w = GetRNode(id);
   if (role != Node::GROUP) {
-    nodes_[id].AddSubNode(w); nodes_[kLiveGroup].AddSubNode(w);
+    nodes_[id].AddGroupNode(w); nodes_[kLiveGroup].AddGroupNode(w);
   }
   if (role == Node::SERVER) {
-    nodes_[kServerGroup].AddSubNode(w); nodes_[kCompGroup].AddSubNode(w);
+    nodes_[kServerGroup].AddGroupNode(w); nodes_[kCompGroup].AddGroupNode(w);
   }
   if (role == Node::WORKER) {
-    nodes_[kWorkerGroup].AddSubNode(w); nodes_[kCompGroup].AddSubNode(w);
+    nodes_[kWorkerGroup].AddGroupNode(w); nodes_[kCompGroup].AddGroupNode(w);
   }
 
   // update replica group and owner group if necessary
@@ -282,23 +282,23 @@ void Executor::AddNode(const Node& node) {
   if (num_replicas_ <= 0) return;
 
   const auto& servers = nodes_[kServerGroup];
-  for (int i = 0; i < servers.nodes.size(); ++i) {
-    auto s = servers.nodes[i];
-    if (s->rnode.id() != my_node_.id()) continue;
+  for (int i = 0; i < servers.group.size(); ++i) {
+    auto s = servers.group[i];
+    if (s->node.id() != my_node_.id()) continue;
 
     // the replica group is just before me
     auto& replicas = nodes_[kReplicaGroup];
-    replicas.nodes.clear(); replicas.keys.clear();
+    replicas.group.clear(); replicas.keys.clear();
     for (int j = std::max(i-num_replicas_, 0); j < i; ++ j) {
-      replicas.nodes.push_back(servers.nodes[j]);
+      replicas.group.push_back(servers.group[j]);
       replicas.keys.push_back(servers.keys[j]);
     }
 
     // the owner group is just after me
     auto& owners = nodes_[kOwnerGroup];
-    owners.nodes.clear(); owners.keys.clear();
+    owners.group.clear(); owners.keys.clear();
     for (int j = std::max(i-num_replicas_, 0); j < i; ++ j) {
-      owners.nodes.push_back(servers.nodes[j]);
+      owners.group.push_back(servers.group[j]);
       owners.keys.push_back(servers.keys[j]);
     }
     break;

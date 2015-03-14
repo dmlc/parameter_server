@@ -28,27 +28,27 @@ void RemoteNode::DecodeMessage(const MessagePtr& msg) {
   }
 }
 
-void RemoteNode::AddSubNode(RemoteNode* rnode) {
+void RemoteNode::AddGroupNode(RemoteNode* rnode) {
   CHECK_NOTNULL(rnode);
   // insert s into sub_nodes such as sub_nodes is still ordered
   int pos = 0;
-  Range<Key> kr(rnode->rnode.key());
-  while (pos < nodes.size()) {
-    if (kr.inLeft(Range<Key>(nodes[pos]->rnode.key()))) {
+  Range<Key> kr(rnode->node.key());
+  while (pos < group.size()) {
+    if (kr.inLeft(Range<Key>(group[pos]->node.key()))) {
       break;
     }
     ++ pos;
   }
-  nodes.insert(nodes.begin() + pos, rnode);
+  group.insert(group.begin() + pos, rnode);
   keys.insert(keys.begin() + pos, kr);
 }
 
-void RemoteNode::RemoveSubNode(RemoteNode* rnode) {
-  size_t n = nodes.size();
+void RemoteNode::RemoveGroupNode(RemoteNode* rnode) {
+  size_t n = group.size();
   CHECK_EQ(n, keys.size());
   for (int i = 0; i < n; ++i) {
-    if (nodes[i] == rnode) {
-      nodes.erase(nodes.begin() + i);
+    if (group[i] == rnode) {
+      group.erase(group.begin() + i);
       keys.erase(keys.begin() + i);
       return;
     }
