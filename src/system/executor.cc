@@ -34,8 +34,21 @@ void Executor::WaitSentReq(int timestamp, const NodeID& recver) {
 void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
   auto rnode = GetRNode(sender);
-  rnode->cond.wait(lk, [rnode, timestamp] {
-      return !rnode->alive || rnode->recv_req_tracker.IsFinished(timestamp); });
+  recv_req_cond_.wait(lk, [rnode, timestamp] {
+      if (!rnode->alive || rnode->recv_req_tracker.IsFinished(timestamp)) {
+        return true;
+      }
+      if (rnode->rnode.role() == Node::GROUP) {
+        for (auto r : rnode->nodes) {
+          if (r->alive && !r->recv_req_tracker.IsFinished(timestamp))
+            return false;
+        }
+        // well, set this group node as been finished
+        rnode->recv_req_tracker.Finish(timestamp);
+        return true;
+      }
+      return false;
+    });
 }
 
 void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
@@ -43,7 +56,7 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
   auto rnode = GetRNode(sender);
   rnode->recv_req_tracker.Finish(timestamp);
   lk.unlock();
-  rnode->cond.notify_all();
+  recv_req_cond_.notify_all();
 }
 
 

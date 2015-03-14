@@ -62,6 +62,7 @@ class Executor {
 
   // -- remote nodes --
   std::mutex node_mu_;
+  std::condition_variable recv_req_cond_;
   std::unordered_map<NodeID, RemoteNode> nodes_;
 
   inline RemoteNode* GetRNode(const NodeID& node_id) {

@@ -4,14 +4,16 @@ namespace PS {
 class HelloServer : public App {
  public:
   virtual void ProcessRequest(const MessagePtr& req) {
-    LL << MyNodeID() <<  ": request " << req->task.time() << " from " << req->sender;
+    std::cout << MyNodeID() <<  ": processing request " << req->task.time() <<
+        " from " << req->sender << std::endl;
   }
 };
 
 class HelloWorker : public App {
  public:
   virtual void ProcessResponse(const MessagePtr& res) {
-    LL << MyNodeID() << ": response " << res->task.time() << " from " << res->sender;
+    std::cout << MyNodeID() << ": received response " << res->task.time() <<
+        " from " << res->sender << std::endl;
   }
 
   virtual void Run() {
@@ -26,21 +28,17 @@ class HelloWorker : public App {
     auto req = NewMessage();
     req->recver = kServerGroup;
     req->fin_handle = [this]() {
-      LL << MyNodeID() << ": request " << LastResponse()->task.time() << " is finished";
+      std::cout << MyNodeID() << ": request " << LastResponse()->task.time() <<
+      " is finished" << std::endl;
     };
     Wait(Submit(req), req->recver);
-
   }
 };
 
 App* App::Create(const std::string& conf) {
-  if (IsWorker()) {
-    return new HelloWorker();
-  } else if (IsServer()) {
-    return new HelloServer();
-  } else {
-    return new App();
-  }
+  if (IsWorker()) return new HelloWorker();
+  if (IsServer()) return new HelloServer();
+  return new App();
 }
 
 }  // namespace PS

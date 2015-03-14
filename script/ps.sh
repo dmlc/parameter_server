@@ -1,14 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
 # Part 1 : command parsing functions
 show_help() {
 cat << EOF
-Usage: ${0} [start|add|kill|stop] [args]
-start 		start app
-
-    -h|--help 	display this help and exit
-    -hostfile 	a list of ip address of machines. parameter server nodes are evenly assigned to these machines. 
-    		#nodes could > #machines. if it is empty, generate a file with one line "127.0.0.1"
+Usage: ps.sh [start|add|kill|stop] [args]
+start 		start an application
+    -hostfile 	a list of ip address of machines. parameter server nodes are
+evenly assigned to these machines. #nodes could > #machines. if it is empty, generate a file with one line "127.0.0.1"
     -worker     number of worker nodes
     -server     number of server nodes
     -bin     	binary to launch, eg:../build/linear
@@ -16,22 +14,14 @@ start 		start app
 
 ls 		print a list of running nodes with format "node_id server/worker/scheduler machine:port bin arg"
 
-    -h|--help 	display this help and exit
-
 add 		add nodes
-
-    -h|--help 	display this help and exit
     -worker     number of worker nodes to add
     -server     number of server nodes to add
 
 kill 		kill a node
-
-    -h|--help 	display this help and exit
     [nodeid]     id of scheduler/worker/server node to kill
 
 stop 		stop app
-
-    -h|--help 	display this help and exit
 EOF
 }
 
@@ -55,10 +45,10 @@ check_start() {
 	if [[ ! $bin ]]; then
 	    show_empty '-bin'
 	fi
-	if [[ ! $arg ]]; then
-	    show_empty '-arg'
-	fi
-	if [[ ! $hostfile ]]; 
+	# if [[ ! $arg ]]; then
+	#     show_empty '-arg'
+	# fi
+	if [[ ! $hostfile ]];
 	then
 	    echo '127.0.0.1' > ps_default_hostfile
 	    hostfile='ps_default_hostfile'
@@ -106,10 +96,10 @@ clear_state() {
 get_port() {
 	# $1 host
 	port=$(($RANDOM%(32767-1023)+1024))
-	ssh $1 "/usr/sbin/lsof -i tcp:$port" >> /dev/null
+	ssh $1 "/usr/bin/env lsof -i tcp:$port" >> /dev/null
 	while [[ $? -lt 1 ]]; do
 		port=$(($RANDOM%(32767-1023)+1024))
-		ssh $1 "/usr/sbin/lsof -i tcp:$port" >> /dev/null
+		ssh $1 "/usr/bin/env lsof -i tcp:$port" >> /dev/null
 	done
 }
 
@@ -118,7 +108,7 @@ start_scheduler() {
 	get_port $1
 	# start scheduler
 	Sch="\"role:SCHEDULER,hostname:'$1',port:$port,id:'H'\""
-	ssh $1 "cd $(pwd) && $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg & 
+	ssh $1 "cd $(pwd) && $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg &
 	echo -e \"H\tscheduler\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
 	echo "$bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg"
 	# save parameter to facilitate add operation
@@ -130,7 +120,7 @@ start_worker() {
 	get_port $1
 	# start scheduler
 	N="\"role:WORKER,hostname:'$1',port:$port,id:'W$2'\""
-	ssh $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & 
+	ssh $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg &
 	echo -e \"W$2\tworker\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
 	echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
 }
@@ -140,7 +130,7 @@ start_server() {
 	get_port $1
 	# start scheduler
 	N="\"role:SERVER,hostname:'$1',port:$port,id:'S$2'\""
-	ssh $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & 
+	ssh $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg &
 	echo -e \"S$2\tserver\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
 	echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
 }
@@ -163,8 +153,8 @@ read_hosts() {
 	# read hosts in array
 	# $1 first time
 	num_hosts=0
-	while read line           
-	do           
+	while read line
+	do
 	    hosts[num_hosts]=$line
 	    num_hosts=$((num_hosts+1))
 	    # init state file on this machine
@@ -214,7 +204,7 @@ kill_node() {
 	wait
 	pid=$(grep $1 /tmp/ps-state/nodes | awk '{print $4}')
 	host=$(grep $1  /tmp/ps-state/nodes | awk '{print $3}' | awk -F: '{print $1}')
-	ssh $host "kill -9 $pid && sed -i '/$1/d' /tmp/ps-state/nodes" 
+	ssh $host "kill -9 $pid && sed -i '/$1/d' /tmp/ps-state/nodes"
 }
 
 get_next_node_id_and_machine() {
@@ -225,7 +215,7 @@ get_next_node_id_and_machine() {
 	then
 		next_node_id=$(grep W /tmp/ps-state/nodes | awk '{print $1}' | grep -o [0-9].* | sort -gr | head -n 1)
 		next_node_id=$((next_node_id+1))
-	elif [[ $1 = 'server' ]]; 
+	elif [[ $1 = 'server' ]];
 	then
 		next_node_id=$(grep S /tmp/ps-state/nodes | awk '{print $1}' | grep -o [0-9].* | sort -gr | head -n 1)
 		next_node_id=$((next_node_id+1))
@@ -252,13 +242,13 @@ add_nodes() {
 			start_worker $next_node_machine $next_node_id
 		done
 	fi
-	if [[ $new_server ]]; 
+	if [[ $new_server ]];
 	then
 		for (( j = 0; j < $new_server; j++ )); do
 			get_next_node_id_and_machine 'server'
 			start_server $next_node_machine $next_node_id
 		done
-	fi 
+	fi
 }
 
 clear() {
@@ -274,7 +264,7 @@ stop() {
 	do
 		pid=$(echo $line | awk '{print $4}')
 		host=$(echo $line | awk '{print $3}' | awk -F: '{print $1}')
-		ssh $host "kill -9 $pid" < /dev/null 
+		ssh $host "kill -9 $pid" < /dev/null
 	done < /tmp/ps-state/nodes
 
 	#read hosts for clear
@@ -365,14 +355,14 @@ elif [[ $1 = 'stop' ]]; then
 	shift
 	while [[ $# -gt 0 ]]; do
 	    case $1 in
-	        -h|-\?|--help)   
+	        -h|-\?|--help)
 	            show_help
 	            exit
 	            ;;
 	        -?*)
 	            printf 'WARN: Unknown option (ignored): %s\n' $1 >&2
 	            ;;
-	        *)               
+	        *)
 	            break
 	    esac
 
@@ -383,14 +373,14 @@ elif [[ $1 = 'ls' ]]; then
 	shift
 	while [[ $# -gt 0 ]]; do
 	    case $1 in
-	        -h|-\?|--help)   
+	        -h|-\?|--help)
 	            show_help
 	            exit
 	            ;;
 	        -?*)
 	            printf 'WARN: Unknown option (ignored): %s\n' $1 >&2
 	            ;;
-	        *)               
+	        *)
 	            break
 	    esac
 
@@ -402,7 +392,7 @@ elif [[ $1 = 'add' ]]; then
 	shift
 	while [[ $# -gt 0 ]]; do
 	    case $1 in
-	        -h|-\?|--help)   
+	        -h|-\?|--help)
 	            show_help
 	            exit
 	            ;;
@@ -427,7 +417,7 @@ elif [[ $1 = 'add' ]]; then
 	        -?*)
 	            printf 'WARN: Unknown option (ignored): %s\n' $1 >&2
 	            ;;
-	        *)               
+	        *)
 	            break
 	    esac
 
@@ -440,7 +430,7 @@ elif [[ $1 = 'kill' ]]; then
 	shift
 	while [[ $# -gt 0 ]]; do
 	    case $1 in
-	        -h|-\?|--help)   
+	        -h|-\?|--help)
 	            show_help
 	            exit
 	            ;;
@@ -451,7 +441,7 @@ elif [[ $1 = 'kill' ]]; then
 	        -?*)
 	            printf 'WARN: Unknown option (ignored): %s\n' $1 >&2
 	            ;;
-	        *)               
+	        *)
 	            break
 	    esac
 
@@ -462,5 +452,3 @@ elif [[ $1 = 'kill' ]]; then
 else
 	show_help
 fi
-
-

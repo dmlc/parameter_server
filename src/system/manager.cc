@@ -30,7 +30,7 @@ void Manager::init(char* argv0) {
 
   if (isScheduler()) {
     if (!FLAGS_logtostderr) {
-      NOTICE("Staring system... info are logged in %s/%s.log.*",
+      NOTICE("Staring system... logs are saved in %s/%s.log.*",
              FLAGS_log_dir.c_str(), basename(argv0));
     }
 
