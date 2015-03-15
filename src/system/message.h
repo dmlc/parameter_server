@@ -5,26 +5,17 @@
 #include "filter/proto/filter.pb.h"
 namespace PS {
 
-struct Message;
-typedef std::shared_ptr<Message> MessagePtr;
-typedef std::shared_ptr<const Message> MessageCPtr;
-typedef std::vector<MessagePtr> MessagePtrList;
-typedef std::vector<Range<Key>> KeyRangeList;
-typedef std::string NodeID;
-
 // The message communicated between nodes. It conntains all argument and data
 // a request or a response needed.
 struct Message {
  public:
   const static int kInvalidTime = -1;
   Message() { }
-  Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
+  // Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
   Message(const Task& tk, const NodeID& dst) : task(tk), recver(dst) { }
   explicit Message(const Task& tk) : task(tk) { }
-  void MiniCopyFrom(const Message& msg);
 
   Task task;  // argument
-
 
   // keys
   bool has_key() const { return !key.empty(); }
@@ -82,16 +73,6 @@ struct Message {
 
 };
 
-inline MessagePtr NewMessage(const Task& task, const NodeID& recver) {
-  return MessagePtr(new Message(task, recver));
-}
-
-inline MessagePtr NewMessage() { return MessagePtr(new Message()); }
-
-inline MessagePtr NewMessage(const Message& other) {
-  return MessagePtr(new Message(other));
-}
-
 
 template <typename T> void Message::set_key(const SArray<T>& key) {
   task.set_key_type(EncodeType<T>());
@@ -122,46 +103,46 @@ template <typename V> DataType Message::EncodeType() {
 
 // slice the message if msg->key is ordered, and each key corresponds to a
 // fix-length value
-template <typename K>
-MessagePtrList SliceKeyOrderedMsg(const MessagePtr& msg, const KeyRangeList& krs) {
-  // find the positions in msg.key
-  size_t n = krs.size();
-  std::vector<size_t> pos(n+1);
-  SArray<K> key(msg->key);
-  Range<Key> msg_key_range(msg->task.key_range());
-  for (int i = 0; i < n; ++i) {
-    if (i == 0) {
-      K k = (K)msg_key_range.project(krs[0].begin());
-      pos[0] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
-    } else {
-      CHECK_EQ(krs[i-1].end(), krs[i].begin());
-    }
-    K k = (K)msg_key_range.project(krs[i].end());
-    pos[i+1] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
-  }
+// template <typename K>
+// MessagePtrList SliceKeyOrderedMsg(const MessagePtr& msg, const KeyRangeList& krs) {
+//   // find the positions in msg.key
+//   size_t n = krs.size();
+//   std::vector<size_t> pos(n+1);
+//   SArray<K> key(msg->key);
+//   Range<Key> msg_key_range(msg->task.key_range());
+//   for (int i = 0; i < n; ++i) {
+//     if (i == 0) {
+//       K k = (K)msg_key_range.project(krs[0].begin());
+//       pos[0] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
+//     } else {
+//       CHECK_EQ(krs[i-1].end(), krs[i].begin());
+//     }
+//     K k = (K)msg_key_range.project(krs[i].end());
+//     pos[i+1] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
+//   }
 
-  // split the message according to *pos*
-  MessagePtrList ret(n);
-  for (int i = 0; i < n; ++i) {
-    ret[i] = MessagePtr(new Message());
-    ret[i]->MiniCopyFrom(*msg);
-    if (krs[i].setIntersection(msg_key_range).empty()) {
-      // the remote node does not maintain this key range. mark this message as
-      // valid, which will not be sent
-      ret[i]->valid = false;
-    } else {
-      ret[i]->valid = true;  // must set true, otherwise this piece might not be sent
-      if (key.empty()) continue;  // to void be divided by 0
-      SizeR lr(pos[i], pos[i+1]);
-      ret[i]->set_key(key.segment(lr));
-      for (auto& v : msg->value) {
-        // ret[i]->addValue(v.segment(lr * (v.size() / key.size())));
-        ret[i]->value.push_back(v.segment(lr * (v.size() / key.size())));
-      }
-    }
-  }
-  return ret;
-}
+//   // split the message according to *pos*
+//   MessagePtrList ret(n);
+//   for (int i = 0; i < n; ++i) {
+//     ret[i] = MessagePtr(new Message());
+//     ret[i]->MiniCopyFrom(*msg);
+//     if (krs[i].setIntersection(msg_key_range).empty()) {
+//       // the remote node does not maintain this key range. mark this message as
+//       // valid, which will not be sent
+//       ret[i]->valid = false;
+//     } else {
+//       ret[i]->valid = true;  // must set true, otherwise this piece might not be sent
+//       if (key.empty()) continue;  // to void be divided by 0
+//       SizeR lr(pos[i], pos[i+1]);
+//       ret[i]->set_key(key.segment(lr));
+//       for (auto& v : msg->value) {
+//         // ret[i]->addValue(v.segment(lr * (v.size() / key.size())));
+//         ret[i]->value.push_back(v.segment(lr * (v.size() / key.size())));
+//       }
+//     }
+//   }
+//   return ret;
+// }
 
 } // namespace PS
 

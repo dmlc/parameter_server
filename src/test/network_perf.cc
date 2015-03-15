@@ -30,11 +30,11 @@ class Worker : public App {
     SArray<double> time(n);
     for (int j = 0; j < n; ++j) {
       SArray<int> val(m*1000/sizeof(int), 1);
-      auto msg = NewMessage();
-      msg->add_value(val);
-      msg->recver = kServerGroup;
+      Message msg;
+      msg.add_value(val);
+      msg.recver = kServerGroup;
       auto tv = tic();
-      int ts = Submit(msg);
+      int ts = Submit(&msg);
       Wait(ts);
       time[j] = toc(tv);
     }
@@ -42,6 +42,7 @@ class Worker : public App {
     printf("%s: packet size: %d KB, latency: %lf +- %lf sec, throughput %.3lf MB/sec\n",
            MyNodeID().c_str(), m, time.mean(), time.std(), thr);
   }
+
 };
 
 App* App::Create(const std::string& conf) {

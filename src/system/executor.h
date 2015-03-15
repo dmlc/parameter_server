@@ -26,16 +26,16 @@ class Executor {
 
   // -- communication and synchronization --
   // see comments in customer.h
-  int Submit(const MessagePtr& msg);
-  void Accept(const MessagePtr& msg);
+  int Submit(Message* msg);
+  void Accept(Message* msg);
   void WaitSentReq(int timestamp);
   void WaitRecvReq(int timestamp, const NodeID& sender);
   void FinishRecvReq(int timestamp, const NodeID& sender);
 
   // the last received request
-  inline MessagePtr last_request() { return last_request_; }
+  inline std::shared_ptr<Message> last_request() { return last_request_; }
   // the last received response
-  inline MessagePtr last_response() { return last_response_; }
+  inline std::shared_ptr<Message> last_response() { return last_response_; }
 
   // node management
   void AddNode(const Node& node);
@@ -54,11 +54,10 @@ class Executor {
   void ProcessActiveMsg();
 
   // -- received messages --
-  std::list<MessagePtr> recv_msgs_;
+  std::list<Message*> recv_msgs_;
   std::mutex msg_mu_;
   // the message is going to be processed or the last one be processed
-  MessagePtr active_msg_;
-  MessagePtr last_request_, last_response_;
+  std::shared_ptr<Message> active_msg_, last_request_, last_response_;
   std::condition_variable dag_cond_;
 
   // -- remote nodes --

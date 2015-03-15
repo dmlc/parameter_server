@@ -132,7 +132,7 @@ bool Van::Connect(const Node& node) {
   return true;
 }
 
-bool Van::Send(const MessagePtr& msg, size_t* send_bytes) {
+bool Van::Send(Message* msg, size_t* send_bytes) {
   // find the socket
   NodeID id = msg->recver;
   auto it = senders_.find(id);
@@ -192,7 +192,7 @@ bool Van::Send(const MessagePtr& msg, size_t* send_bytes) {
   return true;
 }
 
-bool Van::Recv(const MessagePtr& msg, size_t* recv_bytes) {
+bool Van::Recv(Message* msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clear_data();
   NodeID sender;
@@ -314,11 +314,6 @@ Node Van::AssembleMyNode() {
   ret_node.set_port(static_cast<int32>(port));
 
   return ret_node;
-}
-
-bool Van::GetMonitorEvent(void *monitor, int *event, int *value) {
-  // First frame in message contains event number and value
-  return true;
 }
 
 void Van::Monitor() {

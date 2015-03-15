@@ -110,8 +110,8 @@ void SArray<V>::setValue(V value) {
 }
 
 template <typename V>
-void SArray<V>::setValue(const ParameterInitConfig& cf) {
-  typedef ParameterInitConfig Type;
+void SArray<V>::setValue(const ParamInitConfig& cf) {
+  typedef ParamInitConfig Type;
   if (cf.type() == Type::ZERO) {
     setZero();
   } else if (cf.type() == Type::CONSTANT) {

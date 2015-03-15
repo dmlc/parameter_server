@@ -20,7 +20,7 @@ class MonitorMaster : public Customer {
     merger_ = merger;
   }
 
-  void process(const MessagePtr& msg) {
+  void process(Message* msg) {
     NodeID sender = msg->sender;
     Progress prog;
     CHECK(prog.ParseFromString(msg->task.msg()));

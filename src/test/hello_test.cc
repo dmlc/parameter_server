@@ -3,7 +3,7 @@ namespace PS {
 
 class Server : public App {
  public:
-  virtual void ProcessRequest(const MessagePtr& req) {
+  virtual void ProcessRequest(Message* req) {
     std::cout << MyNodeID() <<  ": processing request " << req->task.time() <<
         " from " << req->sender << std::endl;
   }
@@ -11,7 +11,7 @@ class Server : public App {
 
 class Worker : public App {
  public:
-  virtual void ProcessResponse(const MessagePtr& res) {
+  virtual void ProcessResponse(Message* res) {
     std::cout << MyNodeID() << ": received response " << res->task.time() <<
         " from " << res->sender << std::endl;
   }
@@ -25,13 +25,13 @@ class Worker : public App {
     ts = Submit(Task(), kServerGroup);
     Wait(ts);
 
-    auto req = NewMessage();
-    req->recver = kServerGroup;
-    req->callback = [this]() {
+    Message req;
+    req.recver = kServerGroup;
+    req.callback = [this]() {
       std::cout << MyNodeID() << ": request " << LastResponse()->task.time() <<
       " is finished" << std::endl;
     };
-    Wait(Submit(req));
+    Wait(Submit(&req));
   }
 };
 

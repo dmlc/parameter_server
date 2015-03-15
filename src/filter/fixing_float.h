@@ -5,11 +5,11 @@ namespace PS {
 
 class FixingFloatFilter : public Filter {
  public:
-  void encode(const MessagePtr& msg) {
+  void encode(Message* msg) {
     convert(msg, true);
   }
 
-  void decode(const MessagePtr& msg) {
+  void decode(Message* msg) {
     convert(msg, false);
   }
 
@@ -21,7 +21,7 @@ class FixingFloatFilter : public Filter {
   }
 
   // decode / encode a message
-  void convert(const MessagePtr& msg, bool encode) {
+  void convert(Message* msg, bool encode) {
     auto filter_conf = CHECK_NOTNULL(find(FilterConfig::FIXING_FLOAT, msg));
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());

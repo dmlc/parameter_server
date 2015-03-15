@@ -39,8 +39,8 @@ struct RemoteNode {
     for (auto f : filters) delete f.second;
   }
 
-  void EncodeMessage(const MessagePtr& msg);
-  void DecodeMessage(const MessagePtr& msg);
+  void EncodeMessage(Message* msg);
+  void DecodeMessage(Message* msg);
 
   Node node;         // the remote node
   bool alive = true; // aliveness
@@ -55,7 +55,7 @@ struct RemoteNode {
   void RemoveGroupNode(RemoteNode* rnode);
   std::vector<RemoteNode*> group;
   // keys[i] is the key range of group[i]
-  KeyRangeList keys;
+  std::vector<Range<Key>> keys;
 
  private:
   Filter* FindFilterOrCreate(const FilterConfig& conf);

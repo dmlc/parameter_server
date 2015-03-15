@@ -17,7 +17,7 @@ class ISGDScheduler : public App {
  public:
   ISGDScheduler() : App() { }
   virtual ~ISGDScheduler();
-  virtual void process(const MessagePtr& msg);
+  virtual void process(Message* msg);
   virtual void run();
 
  protected:

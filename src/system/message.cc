@@ -1,19 +1,11 @@
 #include "system/message.h"
 namespace PS {
 
-Message::Message(const NodeID& dest, int time, int wait_time)
-    : recver(dest) {
-  task.set_time(time);
-  if (wait_time != kInvalidTime) task.add_wait_time(wait_time);
-}
-
-void Message::MiniCopyFrom(const Message& msg) {
-  task = msg.task;
-  // task.clear_value_type();
-  task.clear_has_key();
-  terminate = msg.terminate;
-  callback = msg.callback;
-}
+// Message::Message(const NodeID& dest, int time, int wait_time)
+//     : recver(dest) {
+//   task.set_time(time);
+//   if (wait_time != kInvalidTime) task.add_wait_time(wait_time);
+// }
 
 FilterConfig* Message::add_filter(FilterConfig::Type type) {
   auto ptr = task.add_filter();

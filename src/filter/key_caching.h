@@ -6,7 +6,7 @@ namespace PS {
 class KeyCachingFilter : public Filter {
  public:
   // thread safe
-  void encode(const MessagePtr& msg) {
+  void encode(Message* msg) {
     // if (!msg->task.has_key_range()) return;
     auto conf = find(FilterConfig::KEY_CACHING, msg);
     if (!conf) return;
@@ -33,7 +33,7 @@ class KeyCachingFilter : public Filter {
     }
   }
 
-  void decode(const MessagePtr& msg) {
+  void decode(Message* msg) {
     // if (!msg->task.has_key_range()) return;
     auto conf = find(FilterConfig::KEY_CACHING, msg);
     if (!conf || !conf->has_signature()) return;
@@ -62,8 +62,8 @@ class KeyCachingFilter : public Filter {
  private:
   bool isDone(const Task& task) {
     return (!task.request() ||
-            (task.has_shared_para()
-             && task.shared_para().cmd() == CallSharedPara::PUSH));
+            (task.has_param()
+             && task.param().cmd() == ParamCall::PUSH));
   }
 
   std::unordered_map<

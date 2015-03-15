@@ -9,8 +9,8 @@ build/aggregation_test: src/test/aggregation_test.cc $(PS_LIB)
 build/network_perf: src/test/network_perf.cc $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-# build/common_test: src/test/common_test.cc src/util/common.h
-# 	$(CC) $(CFLAGS) $< $(TESTFLAGS) -o $@
+build/common_test: src/test/common_test.cc src/util/common.h
+	$(CC) $(CFLAGS) $< $(TESTFLAGS) -o $@
 
 # build/bitmap_test: src/test/bitmap_test.cc src/util/bitmap.h
 # 	$(CC) $(CFLAGS) $< $(TESTFLAGS) -o $@

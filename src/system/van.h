@@ -16,8 +16,8 @@ class Van {
   void Disconnect(const Node&  node);
   bool Connect(const Node&  node);
 
-  bool Send(const MessagePtr& msg, size_t* send_bytes);
-  bool Recv(const MessagePtr& msg, size_t* recv_bytes);
+  bool Send(Message* msg, size_t* send_bytes);
+  bool Recv(Message* msg, size_t* recv_bytes);
 
   Node& my_node() { return my_node_; }
   Node& scheduler() { return scheduler_; };
@@ -29,9 +29,8 @@ class Van {
 
   Node AssembleMyNode();
   bool IsScheduler() { return my_node_.role() == Node::SCHEDULER; }
-  bool GetMonitorEvent(void *monitor, int *event, int *value);
-  // scheduler: monitor the liveness of all other nodes
-  // other nodes: monitor the liveness of the scheduler
+  // for scheduler: monitor the liveness of all other nodes
+  // for other nodes: monitor the liveness of the scheduler
   void Monitor();
 
   void *context_ = nullptr;

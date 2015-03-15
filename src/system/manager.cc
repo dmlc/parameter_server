@@ -83,7 +83,7 @@ void Manager::Stop() {
 }
 
 
-bool Manager::Process(const MessagePtr& msg) {
+bool Manager::Process(Message* msg) {
   const Task& task = msg->task;
   CHECK(task.control());
 
@@ -141,7 +141,7 @@ bool Manager::Process(const MessagePtr& msg) {
         return false;
       }
     }
-    if (!msg->replied) Postoffice::instance().reply(msg->sender, msg->task);
+    if (!msg->replied) Postoffice::instance().Reply(*msg);
   } else {
     if (!task.has_ctrl()) return true;
     if (task.ctrl().cmd() == Control::REQUEST_APP) {
@@ -267,7 +267,7 @@ Task Manager::NewControlTask(Control::Command cmd) {
 }
 
 void Manager::SendTask(const NodeID& recver, const Task& task) {
-  MessagePtr msg(new Message(task));
+  Message* msg = new Message(task);
   msg->recver = recver;
   Postoffice::instance().Queue(msg);
 }

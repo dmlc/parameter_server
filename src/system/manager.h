@@ -17,7 +17,7 @@ class Manager {
   void Init(char* argv0);
   void Run();
   void Stop();
-  bool Process(const MessagePtr& msg);
+  bool Process(Message* msg);
 
   // manage nodes
   void AddNode(const Node& node);
@@ -43,9 +43,9 @@ class Manager {
   int num_workers() { return num_workers_; }
   int num_servers() { return num_servers_; }
 
-  // manage message
-  void AddPendingMsg(const MessagePtr& msg) { }
-  void RemovePendingMsg(const MessagePtr& msg) { }
+  // manage message TODO
+  void AddRequest(Message* msg) { delete msg; }
+  void AddResponse(Message* msg) { }
 
   // accessors
   Van& van() { return van_; }

@@ -62,22 +62,21 @@ class Customer {
   //   Wait(ts);
   //   Foo();
   inline int Submit(const Task& request, const NodeID& recver) {
-    return Submit(NewMessage(request, recver));
+    Message msg(request, recver);
+    return Submit(&msg);
   }
 
   // Submits a request message into a remote node, where "request" contains a
   // request task and other entries such as data arrays, callbacks when replies
   // received, and other flags. Returns the timestamp of this request.
   //
-  // The system may read and write the content of "request" even after "submit"
-  // returns. "request" is a shared pointer, it will be deleted after both the caller
-  // and system release the pointer.
+  // The system may write the content of "request".
   //
   // Sample usage: the same functionality as above:
-  //   auto req = NewMessage(task, kWorkerGroup);
-  //   reg->callback = [this](){ Foo(); }
-  //   Wait(Submit(msg));
-  inline int Submit(const MessagePtr& request) {
+  //   Message req(task, kWorkerGroup);
+  //   reg.callback = [this](){ Foo(); }
+  //   Wait(Submit(&req));
+  inline int Submit(Message* request) {
     return exec_.Submit(request);
   }
 
@@ -90,25 +89,22 @@ class Customer {
     exec_.WaitSentReq(timestamp);
   }
 
-  // Slices a message into multiple parts. It will be called in `Submit` when
-  // the receive node is a node group. Assume there are n nodes in this group,
-  // which are sorted according to their key range. "krs" is the list of these n
-  // key ranges.
+  // Slices a message into multiple parts. It will be called in `Submit`. Assume
+  // there are n nodes in this group, which are sorted according to their key
+  // range. "krs" is the list of these n key ranges.
   //
   // It must return a list of n messages "msgs" such as the msgs[i] is sent to
-  // the i-th node. In default, it copies "msg" n times.
-  virtual void Slice(
-      const MessagePtr& request, const KeyRangeList& krs, MessagePtrList* msgs) {
-    for (auto& m : *msgs) m = NewMessage(*request);
-  }
+  // the i-th node. Each msgs[i] is already initilized by msgs[i]->task = msg.task
+  virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
+                     std::vector<Message*>* msgs) { }
 
   // Processes a response message received form "response->sender". It is a
   // user-defined function, which will be called by the executor's processing
   // thread.
-  virtual void ProcessResponse(const MessagePtr& response) { }
+  virtual void ProcessResponse(Message* response) { }
 
   // The last received response.
-  inline MessagePtr LastResponse() {
+  inline std::shared_ptr<Message> LastResponse() {
     return exec_.last_response();
   }
 
@@ -118,10 +114,10 @@ class Customer {
   // user-defined function, which will be called by the executor's processing
   // thread once the time dependencies specified in "request->task" have been
   // satisfied.
-  virtual void ProcessRequest(const MessagePtr& request) { }
+  virtual void ProcessRequest(Message* request) { }
 
   // The last received request.
-  inline MessagePtr LastRequest() {
+  inline std::shared_ptr<Message> LastRequest() {
     return exec_.last_request();
   }
 
@@ -158,13 +154,13 @@ class Customer {
 
   // Replies the request message "msg" received from msg->sender with
   // "reply". In default, "reply" is an empty ack message.
-  void Reply(const MessagePtr& request, Task response = Task()) {
+  void Reply(const Message& request, Task response = Task()) {
     sys_.Reply(request, response);
   }
 
-  void Reply(const MessagePtr& request, MessagePtr response) {
-    // TODO
-  }
+  // void Reply(const MessagePtr& request, MessagePtr& response) {
+  //   // TODO
+  // }
 
 
   // Returns the unique ID of this customer

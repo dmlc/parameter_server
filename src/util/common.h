@@ -55,6 +55,8 @@ namespace PS {
 typedef uint64 Key;
 static const Key kMaxKey = kuint64max;
 
+typedef std::string NodeID;
+
 typedef std::lock_guard<std::mutex> Lock;
 using std::string;
 

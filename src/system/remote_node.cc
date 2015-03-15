@@ -14,13 +14,13 @@ Filter* RemoteNode::FindFilterOrCreate(const FilterConfig& conf) {
   return it->second;
 }
 
-void RemoteNode::EncodeMessage(const MessagePtr& msg) {
+void RemoteNode::EncodeMessage(Message* msg) {
   const auto& tk = msg->task;
   for (int i = 0; i < tk.filter_size(); ++i) {
     FindFilterOrCreate(tk.filter(i))->encode(msg);
   }
 }
-void RemoteNode::DecodeMessage(const MessagePtr& msg) {
+void RemoteNode::DecodeMessage(Message* msg) {
   const auto& tk = msg->task;
   // a reverse order comparing to encode
   for (int i = tk.filter_size()-1; i >= 0; --i) {

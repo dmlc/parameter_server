@@ -68,8 +68,8 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
 }
 
 
-int Executor::Submit(const MessagePtr& msg) {
-  CHECK(msg->recver.size());
+int Executor::Submit(Message* msg) {
+  CHECK(msg); CHECK(msg->recver.size());
   Lock l(node_mu_);
 
   // timestamp and other flags
@@ -87,14 +87,17 @@ int Executor::Submit(const MessagePtr& msg) {
     req_info.callback = msg->callback;
   }
 
-  // slice "msg" and then send them one by one
+  // slice "msg"
   RemoteNode* rnode = GetRNode(msg->recver);
-  MessagePtrList msgs(rnode->keys.size());
-  obj_.Slice(msg, rnode->keys, &msgs);
+  std::vector<Message*> msgs(rnode->keys.size());
+  for (auto& m : msgs) m = new Message(msg->task);
+  obj_.Slice(*msg, rnode->keys, &msgs);
   CHECK_EQ(msgs.size(), rnode->group.size());
+
+  // send them one by one
   for (int i = 0; i < msgs.size(); ++i) {
     RemoteNode* r = CHECK_NOTNULL(rnode->group[i]);
-    MessagePtr& m = msgs[i];
+    Message* m = CHECK_NOTNULL(msgs[i]);
     if (!m->valid) {
       // do not sent, just mark it as done
       r->sent_req_tracker.Finish(ts);
@@ -104,7 +107,6 @@ int Executor::Submit(const MessagePtr& msg) {
     m->recver = r->node.id();
     sys_.Queue(m);
   }
-
   return ts;
 }
 
@@ -114,15 +116,16 @@ bool Executor::PickActiveMsg() {
   auto it = recv_msgs_.begin();
   while (it != recv_msgs_.end()) {
     bool process = true;
-    auto& msg = *it; CHECK(!msg->task.control());
+    Message* msg = *it; CHECK(msg); CHECK(!msg->task.control());
 
     // check if the remote node is still alive.
     Lock l(node_mu_);
     auto rnode = GetRNode(msg->sender);
     if (!rnode->alive) {
       LOG(WARNING) << my_node_.id() << ": rnode " << msg->sender <<
-          " is not alive, ignore received message: " << msg->DebugString();
+          " is not alive, ignore received message: " << msg->ShortDebugString();
       it = recv_msgs_.erase(it);
+      delete msg;
       continue;
     }
     // check if double receiving
@@ -130,9 +133,10 @@ bool Executor::PickActiveMsg() {
     int ts = msg->task.time();
     if ((req && rnode->recv_req_tracker.IsFinished(ts)) ||
         (!req && rnode->sent_req_tracker.IsFinished(ts))) {
-      LOG(WARNING) << my_node_.id() << ": doubly received message. ignore: " <<
-          msg->DebugString();
+      LOG(WARNING) << my_node_.id() << ": received message twice. ignore: " <<
+          msg->ShortDebugString();
       it = recv_msgs_.erase(it);
+      delete msg;
       continue;
     }
 
@@ -149,12 +153,12 @@ bool Executor::PickActiveMsg() {
       }
     }
     if (process) {
-      active_msg_ = *it;
+      active_msg_ = std::shared_ptr<Message>(msg);
       recv_msgs_.erase(it);
-      rnode->DecodeMessage(active_msg_);
+      rnode->DecodeMessage(active_msg_.get());
       VLOG(2) << obj_.id() << " picks a messge in [" <<
           recv_msgs_.size() << "]. sent from " << msg->sender <<
-          ": " << active_msg_->ShortDebugString();
+          ": " << msg->ShortDebugString();
       return true;
     }
   }
@@ -173,7 +177,7 @@ void Executor::ProcessActiveMsg() {
   int ts = active_msg_->task.time();
   if (req) {
     last_request_ = active_msg_;
-    obj_.ProcessRequest(active_msg_);
+    obj_.ProcessRequest(active_msg_.get());
 
     if (active_msg_->finished) {
       // if this message is marked as finished, then set the mark in tracker,
@@ -181,11 +185,11 @@ void Executor::ProcessActiveMsg() {
       // to set the mark
       FinishRecvReq(ts, active_msg_->sender);
       // reply an empty ACK message if necessary
-      if (!active_msg_->replied) sys_.Reply(active_msg_);
+      if (!active_msg_->replied) sys_.Reply(*active_msg_);
     }
   } else {
     last_response_ = active_msg_;
-    obj_.ProcessResponse(active_msg_);
+    obj_.ProcessResponse(active_msg_.get());
 
     std::unique_lock<std::mutex> lk(msg_mu_);
     // mark as finished
@@ -222,7 +226,7 @@ void Executor::ProcessActiveMsg() {
   }
 }
 
-void Executor::Accept(const MessagePtr& msg) {
+void Executor::Accept(Message* msg) {
   Lock l(msg_mu_);
   recv_msgs_.push_back(msg);
   dag_cond_.notify_one();

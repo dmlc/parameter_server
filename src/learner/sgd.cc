@@ -24,7 +24,7 @@ void ISGDScheduler::run() {
   Wait(ts);
 }
 
-void ISGDScheduler::process(const MessagePtr& msg) {
+void ISGDScheduler::process(Message* msg) {
   if (!msg->task.has_sgd()) return;
   const auto& sgd = msg->task.sgd();
   switch (sgd.cmd()) {

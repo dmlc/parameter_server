@@ -5,7 +5,7 @@ namespace PS {
 
 class CompressingFilter : public Filter {
  public:
-  void encode(const MessagePtr& msg) {
+  void encode(Message* msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
     conf->clear_uncompressed_size();
@@ -18,7 +18,7 @@ class CompressingFilter : public Filter {
       v = v.compressTo();
     }
   }
-  void decode(const MessagePtr& msg) {
+  void decode(Message* msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
     int has_key = msg->has_key();

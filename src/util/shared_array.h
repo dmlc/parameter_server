@@ -107,7 +107,7 @@ template<typename V> class SArray {
   // set all entries into 0
   void setZero() { memset(data_, 0, size_*sizeof(V)); }
   // set values according to *cf*
-  void setValue(const ParameterInitConfig& cf);
+  void setValue(const ParamInitConfig& cf);
 
   // Others
   // Assume values are ordered, return the value range.

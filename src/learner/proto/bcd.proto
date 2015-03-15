@@ -36,7 +36,7 @@ message BCDConfig {
   optional int32 max_data_buf_size_in_mb = 10 [default = 1000];
   optional DataConfig local_cache = 11;
 
-  optional ParameterInitConfig init_w = 12;
+  optional ParamInitConfig init_w = 12;
   extensions 100 to 199;
 }
 
