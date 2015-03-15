@@ -45,7 +45,7 @@ message Task {
   optional Control ctrl = 18;
 
   // parameters
-  optional CallSharedPara shared_para = 20;
+  optional ParamCall param = 20;
   optional SGDCall sgd = 21;
   optional BCDCall bcd = 22;
 

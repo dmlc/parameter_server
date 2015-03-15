@@ -1,5 +1,24 @@
 package PS;
 
+message ParamCall {
+  enum Command {
+    PUSH = 1;
+    PULL = 2;
+  }
+  required Command cmd = 1 [default = PUSH];
+
+  optional Operator op = 2;
+
+  optional TailKeyFilter tail_filter = 3;
+
+  optional bool insert_key = 5;
+  optional bool gather = 6;
+
+  // it's a replica request
+  optional bool replica = 10;
+  repeated Timestamp backup = 11;
+}
+
 enum Operator {
   PLUS = 0;
   MINUS = 1;
@@ -10,7 +29,7 @@ enum Operator {
   XOR = 6;
 }
 
-message ParameterInitConfig {
+message ParamInitConfig {
   enum Type {
     ZERO = 1;
     CONSTANT = 2;
@@ -37,22 +56,4 @@ message TailKeyFilter {
   optional bool query_value = 3;
   optional int32 countmin_n = 4;
   optional int32 countmin_k = 5;
-}
-
-message CallSharedPara {
-  enum Command {
-    PUSH = 1;
-    PULL = 2;
-  }
-  required Command cmd = 1 [default = PUSH];
-  optional Operator op = 2;
-
-  optional TailKeyFilter tail_filter = 3;
-
-  optional bool insert_key = 5;
-  optional bool gather = 6;
-
-  // it's a replica request
-  optional bool replica = 10;
-  repeated Timestamp backup = 11;
 }
