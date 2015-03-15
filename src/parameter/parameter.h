@@ -9,18 +9,21 @@ class Parameter : public Customer {
   Parameter(int id = NextCustomerID()) : Customer(id)  { }
   virtual ~Parameter() { }
 
-  int Push(MessagePtr& msg) {
+  int Push(Message* msg) {
     msg->task.mutable_param()->set_cmd(ParamCall::PUSH);
     return Submit(msg);
   }
 
-  int Pull(MessagePtr& msg) {
+  int Pull(Message* msg) {
     msg->task.mutable_param()->set_cmd(ParamCall::PULL);
     return Submit(msg);
   }
 
-  virtual
+  virtual void ProcessRequest(Message* request);
+  virtual void ProcessResponse(Message* response);
+
  protected:
 
+ private:
 };
 }  // namespace PS

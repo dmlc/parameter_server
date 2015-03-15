@@ -15,7 +15,6 @@ class Server : public App {
     //   WaitWorkersReady();
     //   auto data = split(FLAGS_data_size, ',',true);
     //   for (int i = 0; i < data.size() * FLAGS_n; ++i) {
-
     //   }
     // }
   }
@@ -23,26 +22,29 @@ class Server : public App {
 
 class Worker : public App {
  public:
+
+  virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
+                     std::vector<Message*>* msgs) {
+    for (auto m : *msgs) *m = request;
+  }
+
   virtual void Run() {
     WaitServersReady();
     int n = FLAGS_n;
     int m = FLAGS_data_size;
-    SArray<double> time(n);
+    auto tv = tic();
     for (int j = 0; j < n; ++j) {
       SArray<int> val(m*1000/sizeof(int), 1);
       Message msg;
       msg.add_value(val);
       msg.recver = kServerGroup;
-      auto tv = tic();
       int ts = Submit(&msg);
       Wait(ts);
-      time[j] = toc(tv);
     }
-    double thr = (double)m / 1000.0 * n * sys_.manager().num_servers() / time.sum();
-    printf("%s: packet size: %d KB, latency: %lf +- %lf sec, throughput %.3lf MB/sec\n",
-           MyNodeID().c_str(), m, time.mean(), time.std(), thr);
+    double thr = (double)m / 1000.0 * n * sys_.manager().num_servers() / toc(tv);
+    printf("%s: packet size: %d KB, throughput %.3lf MB/sec\n",
+           MyNodeID().c_str(), m, thr);
   }
-
 };
 
 App* App::Create(const std::string& conf) {
