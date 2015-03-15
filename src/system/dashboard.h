@@ -5,8 +5,8 @@
 namespace PS {
 
 struct NodeIDCmp {
-  void splitNodeID(const NodeID& in, string& primary, string& secondary);
-  bool operator()(const NodeID& a, const NodeID& b);
+  void splitNodeID(const NodeID& in, string& primary, string& secondary) const;
+  bool operator()(const NodeID& a, const NodeID& b) const;
 };
 
 class Dashboard {

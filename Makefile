@@ -15,7 +15,11 @@ endif
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+LDFLAGS += $(THIRD_LIB) -lpthread
+OS := $(shell uname -s)
+ifeq ($(OS),Linux)
+	LFLAGS += -lrt
+endif
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
