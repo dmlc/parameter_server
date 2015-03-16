@@ -11,3 +11,4 @@
 *.pb.cc
 .*
 /script/van*
+Makefile.config
