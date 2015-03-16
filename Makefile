@@ -1,9 +1,14 @@
+
+CONFIG_FILE := Makefile.config
+include $(CONFIG_FILE)
+
 CC = g++
 
 # OPT = -O0 -ggdb
 OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
+
 STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
@@ -13,9 +18,9 @@ endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
-INCPATH = -I./src -I$(THIRD_PATH)/include
+INCPATH = -I./src -I$(THIRD_PATH)/include -I/usr/include/eigen3 -I$(CAFFE_PATH)/include -I$(CAFFE_PATH)/build/src  -I$(CUDA_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+LDFLAGS += $(THIRD_LIB) -lpthread -lrt -lcaffe -L$(CAFFE_PATH)/build/lib
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
