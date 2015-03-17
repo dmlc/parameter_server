@@ -16,6 +16,8 @@ void PythonEnv::load_file(const char* path, int argc, char** argv) {
   globals_ = boost::python::dict(main_module.attr("__dict__"));
 
   // construct a new argument list, with the first one replaced by the script path to enable module imports in the same directory
+  if (argc == 0)
+    argc = 1;
   char* new_argv[argc];
   new_argv[0] = const_cast<char*>(path);
   for (int i = 1; i < argc; i++)
