@@ -230,10 +230,10 @@ def server_update_layer(name, weight, gradient):
 worker = None
 def worker_node_init():
     global gpu
-    owl.initialize(sys.argv + ['-no_init_glog'])
     parser = argparse.ArgumentParser(description='MNIST CNN')
-    parser.add_argument('-n', '--num', help='number of GPUs to use', action='store', type=int, default=1)
+    parser.add_argument('-n', '--num', dest='num', help='number of GPUs to use', action='store', type=int, default=1)
     (args, remain) = parser.parse_known_args()
+    owl.initialize([sys.argv[0]] + remain + ['-no_init_glog'])
     assert(1 <= args.num)
     print 'Using %d GPU(s)' % args.num
     # PS: for local test
