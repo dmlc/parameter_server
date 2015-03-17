@@ -26,7 +26,9 @@ class Executor {
 
   // -- communication and synchronization --
   // see comments in customer.h
-  int Submit(Message* msg);
+  int Submit(Message* request);
+  void Reply(Message* request, Message* response);
+
   void Accept(Message* msg);
   void WaitSentReq(int timestamp);
   void WaitRecvReq(int timestamp, const NodeID& sender);

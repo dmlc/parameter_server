@@ -110,6 +110,24 @@ int Executor::Submit(Message* msg) {
   return ts;
 }
 
+void Executor::Reply(Message* request, Message* response) {
+  const auto& req = CHECK_NOTNULL(request)->task;
+  if (!req.request()) return;
+
+  auto& res = CHECK_NOTNULL(response)->task;
+  res.set_request(false);
+  if (req.has_control()) res.set_control(req.control());
+  if (req.has_customer_id()) res.set_customer_id(req.customer_id());
+  res.set_time(req.time());
+
+  response->recver = request->sender;
+  node_mu_.lock();
+  GetRNode(response->recver)->EncodeMessage(response);
+  node_mu_.unlock();
+  sys_.Queue(response);
+
+  request->replied = true;
+}
 
 bool Executor::PickActiveMsg() {
   std::unique_lock<std::mutex> lk(msg_mu_);
@@ -185,7 +203,7 @@ void Executor::ProcessActiveMsg() {
       // to set the mark
       FinishRecvReq(ts, active_msg_->sender);
       // reply an empty ACK message if necessary
-      if (!active_msg_->replied) sys_.Reply(active_msg_.get());
+      if (!active_msg_->replied) obj_.Reply(active_msg_.get());
     }
   } else {
     last_response_ = active_msg_;

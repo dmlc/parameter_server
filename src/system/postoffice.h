@@ -25,7 +25,7 @@ class Postoffice {
   // void Reply(const Message& msg, Task reply = Task());
 
   // Do not delete response
-  void Reply(Message* request, Message* response = nullptr) { }
+  // void Reply(Message* request, Message* response = nullptr) { }
 
   Manager& manager() { return manager_; }
   HeartbeatInfo& pm() { return perf_monitor_; }

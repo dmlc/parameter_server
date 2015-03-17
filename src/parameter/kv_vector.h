@@ -192,20 +192,20 @@ int KVVector<K,V>::Push(int chl, const SArray<K>& keys,
   Message push;
   push.set_key(kv.key);
   for (const auto& v : values) push.add_value(v);
-  push->
-
+  push.task.set_key_channel(chl);
+  return Push(&push);
 }
 
 template <typename K, typename V>
 int KVVector<K,V>::Pull(int chl, const SArray<K>& keys) {
   Lock l(mu_);
   if (keys.empty() ) CHECK_EQ(data_.count(chl), 1) << "empty channel " << chl;
-
   auto& kv = data_[chl];
 
-  } else {
-
-  }
+  Message pull;
+  pull.set_key(kv.key);
+  pull.task.set_key_channel(chl);
+  return Pull(pull);
 }
 
 }  // namespace PS

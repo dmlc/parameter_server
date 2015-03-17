@@ -88,6 +88,11 @@ bool Manager::Process(Message* msg) {
   CHECK(task.control());
 
   if (task.request()) {
+    Task reply;
+    reply.set_control(true);
+    reply.set_request(false);
+    reply.set_time(task.time());
+
     CHECK(task.has_ctrl());
     const auto& ctrl = task.ctrl();
     switch (ctrl.cmd()) {
@@ -96,11 +101,8 @@ bool Manager::Process(Message* msg) {
         // need to connect to this node before sending reply message
         CHECK_EQ(ctrl.node_size(), 1);
         CHECK(van_.Connect(ctrl.node(0)));
-        Task reply = task;
-        reply.set_request(false);
+        reply.mutable_ctrl()->set_cmd(Control::REQUEST_APP);
         reply.set_msg(app_conf_);
-        SendTask(msg->sender, reply);
-        msg->replied = true;
         break;
       }
       case Control::REGISTER_NODE: {
@@ -141,7 +143,7 @@ bool Manager::Process(Message* msg) {
         return false;
       }
     }
-    if (!msg->replied) Postoffice::instance().Reply(msg);
+    SendTask(msg->sender, reply);
   } else {
     if (!task.has_ctrl()) return true;
     if (task.ctrl().cmd() == Control::REQUEST_APP) {

@@ -161,14 +161,8 @@ class Customer {
 
   // the system will delete response, so do not delete it.
   void Reply(Message* request, Message* response) {
-    // TODO encode
-    // sys_.Reply(request, response);
+    exec_.Reply(request, response);
   }
-
-  // void Reply(const MessagePtr& request, MessagePtr& response) {
-  //   // TODO
-  // }
-
 
   // Returns the unique ID of this customer
   int id() const { return id_; }
