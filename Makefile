@@ -17,12 +17,13 @@ LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread -lrt
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
+TEST_MAIN = build/test_main.o
 
 clean:
 	rm -rf build
 	find . -name "*.pb.[ch]*" -delete
 
-ps: $(PS_LIB) $(PS_MAIN)
+ps: $(PS_LIB) $(PS_MAIN) $(TEST_MAIN)
 
 # PS system
 sys_dir		= $(addprefix src/, util data system filter learner parameter)
@@ -37,10 +38,7 @@ build/libps.a: $(patsubst %.proto, %.pb.h, $(sys_protos)) $(sys_objs)
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
 
-# PS applications
-build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
+# applications
 build/linear: $(addprefix build/app/linear_method/, proto/linear.pb.o main.o) $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 

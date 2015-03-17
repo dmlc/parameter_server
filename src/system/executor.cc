@@ -185,7 +185,7 @@ void Executor::ProcessActiveMsg() {
       // to set the mark
       FinishRecvReq(ts, active_msg_->sender);
       // reply an empty ACK message if necessary
-      if (!active_msg_->replied) sys_.Reply(*active_msg_);
+      if (!active_msg_->replied) sys_.Reply(active_msg_.get());
     }
   } else {
     last_response_ = active_msg_;

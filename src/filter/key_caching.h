@@ -63,7 +63,7 @@ class KeyCachingFilter : public Filter {
   bool isDone(const Task& task) {
     return (!task.request() ||
             (task.has_param()
-             && task.param().cmd() == ParamCall::PUSH));
+             && task.param().push()));
   }
 
   std::unordered_map<

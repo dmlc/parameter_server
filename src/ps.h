@@ -35,6 +35,7 @@ inline int IsWorker() { return MyNode().role() == Node::WORKER; }
 inline int IsServer() { return MyNode().role() == Node::SERVER; }
 inline int IsScheduler() { return MyNode().role() == Node::SCHEDULER; }
 
+inline Range<Key> MyKeyRange() { return Range<Key>(MyNode().key()); }
 inline std::string SchedulerID() {
   return Postoffice::instance().manager().van().scheduler().id();
 }

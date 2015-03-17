@@ -141,7 +141,7 @@ bool Manager::Process(Message* msg) {
         return false;
       }
     }
-    if (!msg->replied) Postoffice::instance().Reply(*msg);
+    if (!msg->replied) Postoffice::instance().Reply(msg);
   } else {
     if (!task.has_ctrl()) return true;
     if (task.ctrl().cmd() == Control::REQUEST_APP) {

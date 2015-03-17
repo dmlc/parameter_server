@@ -22,7 +22,10 @@ class Postoffice {
   void Queue(Message* msg) { sending_queue_.push(msg); }
 
   // reply "msg" by "reply"
-  void Reply(const Message& msg, Task reply = Task());
+  // void Reply(const Message& msg, Task reply = Task());
+
+  // Do not delete response
+  void Reply(Message* request, Message* response = nullptr) { }
 
   Manager& manager() { return manager_; }
   HeartbeatInfo& pm() { return perf_monitor_; }

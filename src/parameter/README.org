@@ -3,6 +3,6 @@
 
 | name           | key-value pair operation | sorted key | fixed-length value | storage  |
 |----------------+--------------------------+------------+--------------------+----------|
-| KVVector       | batch                    | yes        | yes                | array    |
+| KVVector       | batched                  | yes        | yes                | array    |
 | KVMap          | individual               | no         | yes                | hash map |
 | KVStore (TODO) | individual               | no         | no                 | hash map |

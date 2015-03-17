@@ -274,9 +274,9 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
   std::vector<std::string> files;
   string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
 
-  if (FLAGS_verbose) {
-    LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
-  }
+  // if (FLAGS_verbose) {
+  //   LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
+  // }
 
   FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
   char line[10000];

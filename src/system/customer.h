@@ -154,8 +154,15 @@ class Customer {
 
   // Replies the request message "msg" received from msg->sender with
   // "reply". In default, "reply" is an empty ack message.
-  void Reply(const Message& request, Task response = Task()) {
-    sys_.Reply(request, response);
+  void Reply(Message* request, Task response = Task()) {
+    Message* msg = new Message(response);
+    Reply(request, msg);
+  }
+
+  // the system will delete response, so do not delete it.
+  void Reply(Message* request, Message* response) {
+    // TODO encode
+    // sys_.Reply(request, response);
   }
 
   // void Reply(const MessagePtr& request, MessagePtr& response) {
