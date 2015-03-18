@@ -4,57 +4,62 @@
 #include "util/parallel_ordered_match.h"
 namespace PS {
 
-// Key-value vectors. Keys are with type K, and a value is a fixed
-// length array with type V, such as int[10]. Format:
-//
-//   key_0,   ...   key_n
-//   val_00,  ...   val_n0
-//   val_01,  ...   val_n1
-//    ...     ...    ...
-//   val_0k,  ...   val_nk
-//
-// Keys are ordered and unique. Both keys and values are stored in continous
-// arrays to accelerate read and overwrite, where values are in a column-major
-// order. However, it is efficient only when insert bulk (key,value) pairs each
-// time.
-//
-// It supports multiple channels. Communication is isolated between
-// channels. For example, we can sent a pull request on channel 1 and 2 at same
-// time, then the pulled results will be store at channel 1 and 2,
-// respectively.
-//
-//
+/**
+ * @brief Key-value vectors.
+ *
+ * Keys are with type K, and a value is a fixed
+ * length array with type V, such as int[10]. Storage format
+   \verbatim
+   key_0,   ...   key_n
+   val_00,  ...   val_n0
+   val_01,  ...   val_n1
+    ...     ...    ...
+   val_0k,  ...   val_nk
+   \endverbatim
+ *
+ * Keys are ordered and unique. Both keys and values are stored in continous
+ * arrays to accelerate read and overwrite, where values are in a column-major
+ * order. However, it is efficient only when insert bulk (key,value) pairs each
+ * time.
+ *
+ * It supports multiple channels. Communication is isolated between
+ * channels. For example, we can sent a pull request on channel 1 and 2 at same
+ * time, then the pulled results will be store at channel 1 and 2,
+ * respectively.
+ */
 template <typename K, typename V>
 class KVVector : public Parameter {
  public:
-  // k: the length of a value entry
-  // buffer_value: if true then the received data in push request or a pull
-  // response is merged into my value directly. otherwise, they will be aligned,
-  // stored, and can be retrieved by `received'' into
-  // id: customer id
+  /**
+   * @brief Constructor
+   *
+   * @param buffer_value if true then the received data in push request or a
+   * pull response is merged into my value directly. otherwise, they will be
+   * aligned, stored, and can be retrieved by `received'' into
+   * @param k the length of a value entry
+   * @param id customer id
+   */
   KVVector(bool buffer_value = false, int k = 1, int id = NextCustomerID()) :
       Parameter(id), k_(k), buffer_value_(buffer_value) {
     CHECK_GT(k, 0);
   }
   virtual ~KVVector() { }
 
-  // -- accessors --
-
-  // n key-value pairs stored by arrays
+  /// n key-value pairs stored by arrays
   struct KVPairs {
     SArray<K> key;    // [key_0,  ..., key_n]
     SArray<V> value;  // [val_00, ..., val_0k, ..., val_n0, ..., val_nk]
   };
 
-  // Returns the key-vale pairs in channel "chl"
+  /// Returns the key-vale pairs in channel "chl"
   KVPairs& operator[] (int chl) { Lock l(mu_); return data_[chl]; }
 
-  // Clears both key and value at channel "chl"
+  /// Clears both key and value at channel "chl"
   void clear(int chl) {
     Lock l(mu_); data_[chl].key.clear(); data_[chl].value.clear();
   }
 
-  // buffered
+  /// buffered
   struct Buffer {
     int channel;
     SizeR idx_range;
@@ -67,7 +72,6 @@ class KVVector : public Parameter {
     for (auto& v : buffer_[timestamp].values) v.clear();
   }
 
-  // -- communication APIs --
 
   int Push(const Task& request,
            const SArray<K>& keys,     //
@@ -82,7 +86,6 @@ class KVVector : public Parameter {
   int Pull(const Task& request, const SArray<K>& keys);
 
 
-  // -- implements virtual functions --
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
                      std::vector<Message*>* msgs) {
     SliceKOFVMessage<K>(request, krs, msgs);
@@ -116,11 +119,8 @@ void KVVector<K,V>::SetValue(Message* msg) {
     // clear the values, because they are not matched any more
     kv.value.clear();
     return;
-  }
-
-  CHECK_EQ(kv.key.size() * k_, kv.value.size());
-  if (kv.key.empty()) {
-    LOG(ERROR) << "empty key/value at channel " << msg->task.key_channel();
+  } else if (kv.key.empty()) {
+    LOG(ERROR) << "empty keys at channel " << msg->task.key_channel();
     return;
   }
 
@@ -130,8 +130,10 @@ void KVVector<K,V>::SetValue(Message* msg) {
       // write the received value into kv.value directly
       CHECK_EQ(i, 0) << " can only receive one value";
       CHECK_EQ(recv_data.size(), recv_key.size() * k_);
-      size_t n = ParallelOrderedMatch(recv_key, recv_data, kv.key, &kv.value);
-      CHECK_EQ(n, recv_key.size());
+      CHECK_EQ(kv.key.size() * k_, kv.value.size());
+
+      size_t n = ParallelOrderedMatch(recv_key, recv_data, kv.key, &kv.value, k_);
+      CHECK_EQ(n, recv_key.size() * k_);
     } else {
       // match the received value, then save it
       mu_.lock();
@@ -153,7 +155,7 @@ void KVVector<K,V>::SetValue(Message* msg) {
       size_t k = recv_data.size() / recv_key.size();  // not necessary == k_
       size_t n = ParallelOrderedMatch(
           recv_key, recv_data, kv.key.segment(buf.idx_range), &buf.values[i], k);
-      CHECK_EQ(n, recv_key.size());
+      CHECK_LE(n, recv_key.size() * k);
     }
   }
 }

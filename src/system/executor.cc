@@ -43,6 +43,7 @@ bool Executor::CheckFinished(RemoteNode* rnode, int timestamp, bool sent) {
 
 void Executor::WaitSentReq(int timestamp) {
   std::unique_lock<std::mutex> lk(node_mu_);
+  VLOG(2) << obj_.id() << ": wait sent request " << timestamp;
   const NodeID& recver = sent_reqs_[timestamp].recver;
   CHECK(recver.size());
   auto rnode = GetRNode(recver);
@@ -53,6 +54,8 @@ void Executor::WaitSentReq(int timestamp) {
 
 void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
+  VLOG(2) << obj_.id() << ": wait received request "
+          << timestamp << " from " << sender;
   auto rnode = GetRNode(sender);
   recv_req_cond_.wait(lk, [this, rnode, timestamp] {
       return CheckFinished(rnode, timestamp, false);
@@ -61,10 +64,18 @@ void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
 
 void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
+  VLOG(2) << obj_.id() << ": finish received request "
+          << timestamp << " from " << sender;
   auto rnode = GetRNode(sender);
   rnode->recv_req_tracker.Finish(timestamp);
+  if (rnode->node.role() == Node::GROUP) {
+    for (auto r : rnode->group) {
+      r->recv_req_tracker.Finish(timestamp);
+    }
+  }
   lk.unlock();
   recv_req_cond_.notify_all();
+  dag_cond_.notify_all();
 }
 
 

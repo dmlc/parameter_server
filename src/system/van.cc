@@ -36,6 +36,9 @@ void Van::Init(char* argv0) {
   // the earliest time I can get my_node_.id(), so put the log setup here
   // before logging anything
   if (FLAGS_log_dir.empty()) FLAGS_log_dir = "/tmp";
+
+  if (!dirExists(FLAGS_log_dir)) { createDir(FLAGS_log_dir); }
+
   // change the hostname in default log filename to node id
   string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
                    + "." + my_node_.id() + ".log.";

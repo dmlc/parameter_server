@@ -63,6 +63,7 @@ void Manager::Run() {
   if (van_.my_node().role() == Node::WORKER) {
     WaitServersReady();
   }
+  VLOG(1) << "run app..";
   CHECK_NOTNULL(app_)->Run();
 }
 
