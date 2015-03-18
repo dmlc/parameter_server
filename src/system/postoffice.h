@@ -21,12 +21,6 @@ class Postoffice {
   // delete "msg" before
   void Queue(Message* msg) { sending_queue_.push(msg); }
 
-  // reply "msg" by "reply"
-  // void Reply(const Message& msg, Task reply = Task());
-
-  // Do not delete response
-  // void Reply(Message* request, Message* response = nullptr) { }
-
   Manager& manager() { return manager_; }
   HeartbeatInfo& pm() { return perf_monitor_; }
 
@@ -43,21 +37,5 @@ class Postoffice {
   HeartbeatInfo perf_monitor_;
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
 };
-
-  // deprecated
-  // reply *task* from *recver* by *reply_str*. thread-safe
-  // void reply(const NodeID& recver,
-  //            const Task& task,
-  //            const string& reply_str = string());
-  // // reply *msg* with google protocbuf *proto*. thread-safe
-  // template <class Proto>
-  // void replyProtocalMessage(const MessagePtr& msg, const Proto& proto);
-// template <class Proto>
-// void Postoffice::replyProtocalMessage(
-//     const MessagePtr& msg, const Proto& proto) {
-//   string str; CHECK(proto.SerializeToString(&str));
-//   reply(msg->sender, msg->task, str);
-//   msg->replied = true;
-// }
 
 } // namespace PS

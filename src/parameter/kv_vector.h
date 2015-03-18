@@ -32,8 +32,8 @@ class KVVector : public Parameter {
   // response is merged into my value directly. otherwise, they will be aligned,
   // stored, and can be retrieved by `received'' into
   // id: customer id
-  KVVector(bool buffer_value = true, int k = 1, int id = NextCustomerID()) :
-      Parameter<K>(id), k_(k), buffer_value_(buffer_value) {
+  KVVector(bool buffer_value = false, int k = 1, int id = NextCustomerID()) :
+      Parameter(id), k_(k), buffer_value_(buffer_value) {
     CHECK_GT(k, 0);
   }
   virtual ~KVVector() { }
@@ -63,42 +63,32 @@ class KVVector : public Parameter {
 
   Buffer buffer(int timestamp) { Lock l(mu_); return buffer_[timestamp]; }
 
-  void clear_buffer(int chl) {
-    for (auto& v : buffer_[chl].values) v.clear();
+  void clear_buffer(int timestamp) {
+    for (auto& v : buffer_[timestamp].values) v.clear();
   }
 
   // -- communication APIs --
 
-  int Push(int chl,                   //
+  int Push(const Task& request,
            const SArray<K>& keys,     //
            const SArray<V>& values) {
-    return Push(chl, keys, {values});
+    return Push(request, keys, {values});
   }
 
-  int Push(int chl,
+  int Push(const Task& request,
            const SArray<K>& keys,
            const std::initializer_list<SArray<V>>& values);
 
-  // Similar to above, but assume keys in channel "chl" are already set
-  int Push(int chl, const SArray<V>& values) {
-    return Push(chl, SArray<K>(), values);
-  }
-  int Push(int chl, const std::initializer_list<SArray<V>>& values) {
-    return Push(chl, SArray<K>(), values);
-  }
+  int Pull(const Task& request, const SArray<K>& keys);
 
-  int Pull(int chl, const SArray<K>& keys);
-  int Pull(int chl) {
-    return Pull(chl, SArray<K>());
-  }
 
   // -- implements virtual functions --
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
                      std::vector<Message*>* msgs) {
-    SliceKOFVMessage(request, krs, msgs);
+    SliceKOFVMessage<K>(request, krs, msgs);
   }
-  virtual void GetValue(Message* msg) { }
-  virtual void SetValue(Message* msg) { }
+  virtual void GetValue(Message* msg);
+  virtual void SetValue(Message* msg);
 
  protected:
   int k_;  // value entry size
@@ -140,12 +130,12 @@ void KVVector<K,V>::SetValue(Message* msg) {
       // write the received value into kv.value directly
       CHECK_EQ(i, 0) << " can only receive one value";
       CHECK_EQ(recv_data.size(), recv_key.size() * k_);
-      size_t n = ParallelOrderedMatch(recv_key, recv_val, kv.key, &kv.value);
+      size_t n = ParallelOrderedMatch(recv_key, recv_data, kv.key, &kv.value);
       CHECK_EQ(n, recv_key.size());
     } else {
       // match the received value, then save it
       mu_.lock();
-      auto& buf = buffer_[chl];
+      auto& buf = buffer_[msg->task.time()];
       mu_.unlock();
 
       if (i == 0) {
@@ -154,8 +144,10 @@ void KVVector<K,V>::SetValue(Message* msg) {
           // "msg" comes from the first nodes in this channel, allocate memory first
           buf.values.resize(msg->value.size());
           buf.idx_range = idx_range;
+          buf.channel = chl;
         } else {
           CHECK_EQ(buf.idx_range, idx_range);
+          CHECK_EQ(buf.channel, chl);
         }
       }
       size_t k = recv_data.size() / recv_key.size();  // not necessary == k_
@@ -175,37 +167,37 @@ void KVVector<K,V>::GetValue(Message* msg) {
   auto& kv = data_[msg->task.key_channel()];
   CHECK_EQ(kv.key.size() * k_, kv.value.size());
 
-
   // get the data
   SArray<V> val;
   size_t n = ParallelOrderedMatch(kv.key, kv.value, recv_key, &val, k_);
+  CHECK_EQ(n, kv.value.size());
   msg->clear_value();
   msg->add_value(val);
 }
 
 template <typename K, typename V>
-int KVVector<K,V>::Push(int chl, const SArray<K>& keys,
+int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
                         const std::initializer_list<SArray<V>>& values) {
   Lock l(mu_);
-  auto& kv = data_[chl];
+  auto& kv = data_[request.key_channel()];
   if (!keys.empty()) kv.key = keys;
-  Message push;
+  Message push(request);
   push.set_key(kv.key);
   for (const auto& v : values) push.add_value(v);
-  push.task.set_key_channel(chl);
-  return Push(&push);
+  return Parameter::Push(&push);
 }
 
 template <typename K, typename V>
-int KVVector<K,V>::Pull(int chl, const SArray<K>& keys) {
+int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys) {
   Lock l(mu_);
+  int chl = request.key_channel();
   if (keys.empty() ) CHECK_EQ(data_.count(chl), 1) << "empty channel " << chl;
   auto& kv = data_[chl];
+  if (!keys.empty()) kv.key = keys;
 
-  Message pull;
+  Message pull(request);
   pull.set_key(kv.key);
-  pull.task.set_key_channel(chl);
-  return Pull(pull);
+  return Parameter::Pull(&pull);
 }
 
 }  // namespace PS

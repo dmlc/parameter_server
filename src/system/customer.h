@@ -159,7 +159,7 @@ class Customer {
     Reply(request, msg);
   }
 
-  // the system will delete response, so do not delete it.
+  // the system will DELETE response, so do not delete it.
   void Reply(Message* request, Message* response) {
     exec_.Reply(request, response);
   }

@@ -41,37 +41,6 @@ void Postoffice::Run(int* argc, char*** argv) {
   manager_.Run();
 }
 
-// void Postoffice::Reply(const Message& msg, Task reply) {
-//   const Task& task = msg.task;
-//   if (!task.request()) return;
-//   reply.set_request(false);
-//   reply.set_control(task.control());
-//   reply.set_time(task.time());
-//   if (task.has_customer_id()) reply.set_customer_id(task.customer_id());
-//   Message* reply_msg = new Message(reply);
-//   reply_msg->recver = msg.sender;
-//   Queue(reply_msg);
-// }
-
-// void Postoffice::reply(
-//     const NodeID& recver, const Task& task, const string& reply_str) {
-//   if (!task.request()) return;
-//   Task reply_task;
-//   reply_task.set_customer_id(task.customer_id());
-//   reply_task.set_request(false);
-//   reply_task.set_time(task.time());
-//   reply_task.set_control(task.control());
-//   if (!reply_str.empty()) reply_task.set_msg(reply_str);
-//   MessagePtr reply_msg(new Message(reply_task));
-//   reply_msg->recver = recver;
-//   Queue(reply_msg);
-// }
-
-// void Postoffice::queue(const MessagePtr& msg) {
-//   sending_queue_.push(msg);
-// }
-
-
 void Postoffice::Send() {
   Message* msg;
   while (true) {

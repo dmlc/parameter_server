@@ -3,6 +3,7 @@ build/aggregation_test \
 build/network_perf \
 build/assign_op_test \
 build/parallel_ordered_match_test \
+build/kv_vector_test \
 build/common_test
 
 build/hello_test: src/test/hello_test.cc $(PS_LIB)
@@ -13,6 +14,10 @@ build/aggregation_test: src/test/aggregation_test.cc $(PS_LIB)
 
 build/network_perf: src/test/network_perf.cc $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+build/kv_vector_test: src/test/kv_vector_test.cc $(PS_LIB)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
 
 # google test
 TESTFLAGS = $(TEST_MAIN) -lgtest $(LDFLAGS)

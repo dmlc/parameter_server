@@ -224,13 +224,13 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
           msg->task.ctrl().cmd() == Control::REQUEST_APP) {
         // it is the first time the scheduler receive message from the
         // sender. store the file desciptor of the sender for the monitor
-        char val[300]; size_t val_len = sender.size();
+        int val[10]; size_t val_len = sender.size();
         CHECK_LT(val_len, 300);
         memcpy(val, sender.data(), val_len);
-        CHECK(!zmq_getsockopt(receiver_,  ZMQ_IDENTITY_FD, val, &val_len))
+        CHECK(!zmq_getsockopt(receiver_,  ZMQ_IDENTITY_FD, (char*)val, &val_len))
             << "failed to get the file descriptor of " << sender;
         CHECK_EQ(val_len, 4);
-        int fd = *((int*)val);
+        int fd = val[0];
         VLOG(1) << "node [" << sender << "] is on file descriptor " << fd;
         Lock l(fd_to_nodeid_mu_);
         fd_to_nodeid_[fd] = sender;

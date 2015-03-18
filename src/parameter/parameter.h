@@ -9,6 +9,22 @@ class Parameter : public Customer {
   Parameter(int id) : Customer(id)  { }
   virtual ~Parameter() { }
 
+  typedef std::initializer_list<int> Timestamps;
+  typedef std::initializer_list<FilterConfig> Filters;
+
+  static Task Request(int channel,
+                      const Timestamps& wait = {},
+                      const Filters& filters = {},
+                      const Range<Key>& key_range = Range<Key>::all()) {
+    Task req; req.set_request(true);
+    req.set_key_channel(channel);
+    for (int t : wait) req.add_wait_time(t);
+    for (const auto& f : filters) *req.add_filter() = f;
+    key_range.to(req.mutable_key_range());
+    return req;
+  }
+
+
   inline int Push(Message* msg) {
     msg->task.mutable_param()->set_push(true);
     return Submit(msg);
