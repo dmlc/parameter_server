@@ -17,8 +17,8 @@ class Server : public App {
     vec1_[1].key = key;
     vec1_[1].value = {2, 3, 4, 5, 6};
 
-    // channel 5
-    vec2_[5].key = key;
+    // channel 4
+    vec2_[4].key = key;
   }
 
   virtual void Run() {
@@ -35,7 +35,7 @@ class Worker : public App {
 
   virtual void Run() {
     WaitServersReady();
-    std::cout << MyNodeID() << ": this is worker " << MyRank();
+    std::cout << MyNodeID() << ": this is worker " << MyRank() << std::endl;
 
     SArray<K> key;
     if (MyRank() == 0) {
@@ -48,21 +48,23 @@ class Worker : public App {
     int ts2 = vec1_.Pull(Parameter::Request(1), key);
 
     vec1_.Wait(ts1);
-    std::cout << MyNodeID() << ": pulled value in channel 0 " << vec1_[0].value;
+    std::cout << MyNodeID() << ": pulled value in channel 0 " << vec1_[0].value
+              << std::endl;
 
     vec1_.Wait(ts2);
-    std::cout << MyNodeID() << ": pulled value in channel 1 " << vec1_[1].value;
+    std::cout << MyNodeID() << ": pulled value in channel 1 " << vec1_[1].value
+              << std::endl;
 
     // push [1 1 1 1  and [3 3 3 3  into servers
     //       2 2 2 2]      4 4 4 4]
     SArray<V2> val1 = {1, 2, 1, 2, 1, 2, 1, 2};
     SArray<V2> val2 = {3, 4, 3, 4, 3, 4, 3, 4};
 
-    int ts3 = vec2_.Push(Parameter::Request(4), key, {val1, val2});
-    int ts4 = vec2_.Pull(Parameter::Request(4, {ts3+1}), key);
-    vec2_.Wait(ts4);
+    // int ts3 = vec2_.Push(Parameter::Request(4), key, {val1, val2});
+    // int ts4 = vec2_.Pull(Parameter::Request(4, {ts3+1}), key);
+    // vec2_.Wait(ts4);
 
-    std::cout << MyNodeID() << ": pulled value in channel 4 " << vec2_[4].value;
+    // std::cout << MyNodeID() << ": pulled value in channel 4 " << vec2_[4].value;
   }
  private:
   KVVector<K, V1> vec1_;

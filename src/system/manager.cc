@@ -57,8 +57,8 @@ void Manager::Run() {
   // app_ is created by postoffice::recv_thread (except for the scheduler),
   // while run() is called by the main thread, so here should be a thread
   // synchronization.
-  app_promise_.get_future().wait();
-  app_->Run();
+  while (!is_my_node_inited_) usleep(500);
+  CHECK_NOTNULL(app_)->Run();
 }
 
 void Manager::Stop() {
@@ -195,6 +195,7 @@ void Manager::AddNode(const Node& node) {
     }
   }
 
+  if (node.id() == van_.my_node().id()) is_my_node_inited_ = true;
   VLOG(1) << "add node: " << node.ShortDebugString();
 }
 
@@ -278,7 +279,6 @@ void Manager::CreateApp(const string& conf) {
   app_ = App::Create(conf);
   CHECK(app_ != NULL)
       << ": failed to create app with conf\n" << app_conf_;
-  app_promise_.set_value();
 }
 
 void Manager::WaitServersReady() {

@@ -20,7 +20,7 @@ class NodeAssigner {
     if (node->role() == Node::SERVER) {
       kr = key_range_.evenDivide(num_servers_, server_rank_);
       rank = server_rank_ ++;
-    } else if (node->role() == Node::SERVER) {
+    } else if (node->role() == Node::WORKER) {
       rank = worker_rank_ ++;
     }
     node->set_rank(rank);

@@ -106,6 +106,10 @@ bool Van::Connect(const Node& node) {
   CHECK(node.has_port()) << node.ShortDebugString();
   CHECK(node.has_hostname()) << node.ShortDebugString();
   NodeID id = node.id();
+  if (id == my_node_.id()) {
+    // update my node info
+    my_node_ = node;
+  }
   if (senders_.find(id) != senders_.end()) {
     return true;
   }

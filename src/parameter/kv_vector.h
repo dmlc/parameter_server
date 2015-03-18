@@ -126,7 +126,7 @@ void KVVector<K,V>::SetValue(Message* msg) {
 
   for (int i = 0; i < msg->value.size(); ++i) {
     SArray<V> recv_data(msg->value[i]);
-    if (buffer_value_) {
+    if (!buffer_value_) {
       // write the received value into kv.value directly
       CHECK_EQ(i, 0) << " can only receive one value";
       CHECK_EQ(recv_data.size(), recv_key.size() * k_);
@@ -170,7 +170,8 @@ void KVVector<K,V>::GetValue(Message* msg) {
   // get the data
   SArray<V> val;
   size_t n = ParallelOrderedMatch(kv.key, kv.value, recv_key, &val, k_);
-  CHECK_EQ(n, kv.value.size());
+  LL << val;
+  CHECK_LE(n, recv_key.size() * k_);
   msg->clear_value();
   msg->add_value(val);
 }
@@ -181,7 +182,7 @@ int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
   Lock l(mu_);
   auto& kv = data_[request.key_channel()];
   if (!keys.empty()) kv.key = keys;
-  Message push(request);
+  Message push(request, kServerGroup);
   push.set_key(kv.key);
   for (const auto& v : values) push.add_value(v);
   return Parameter::Push(&push);
@@ -194,8 +195,9 @@ int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys) {
   if (keys.empty() ) CHECK_EQ(data_.count(chl), 1) << "empty channel " << chl;
   auto& kv = data_[chl];
   if (!keys.empty()) kv.key = keys;
+  kv.value = SArray<V>(kv.key.size()*k_, 0);
 
-  Message pull(request);
+  Message pull(request, kServerGroup);
   pull.set_key(kv.key);
   return Parameter::Pull(&pull);
 }

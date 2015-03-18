@@ -2,15 +2,15 @@
 # set -x
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../third_party/lib
 if [ $# -lt 3 ]; then
-    echo "usage: $0 bin num_servers num_workers [args..]"
+    echo "usage: $0 num_servers num_workers bin [args..]"
     exit -1;
 fi
 
-bin=$1
-shift
 num_servers=$1
 shift
 num_workers=$1
+shift
+bin=$1
 shift
 arg="-num_servers ${num_servers} -num_workers ${num_workers} -log_dir log $@" #" -app ${dir}/$@"
 

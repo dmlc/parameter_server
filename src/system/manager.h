@@ -63,7 +63,7 @@ class Manager {
   void CreateApp(const string& conf);
   App* app_ = nullptr;
   string app_conf_;
-  std::promise<void> app_promise_;
+  // std::promise<void> my_node_promise_;
 
   // nodes
   std::map<NodeID, Node> nodes_;
@@ -71,6 +71,7 @@ class Manager {
   int num_servers_ = 0;
   int num_active_nodes_ = 0;
   std::vector<NodeFailureHandler> node_failure_handlers_;
+  bool is_my_node_inited_ = false;
 
   // only available at the scheduler node
   NodeAssigner* node_assigner_ = nullptr;
