@@ -1,3 +1,11 @@
+/**
+ * @file   kv_vector_ps.cc
+ * @author Mu Li <muli@cs.cmu.edu>
+ * @date   Tue Mar 17 23:44:46 2015
+ *
+ * @brief simple test for class KVVector
+ *
+ */
 #include "ps.h"
 #include "parameter/kv_vector.h"
 namespace PS {

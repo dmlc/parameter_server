@@ -3,7 +3,7 @@
 #include "parameter/proto/param.pb.h"
 namespace PS {
 
-// the base class of shared parameters
+/// the base class of shared parameters
 class Parameter : public Customer {
  public:
   Parameter(int id) : Customer(id)  { }
@@ -12,6 +12,16 @@ class Parameter : public Customer {
   typedef std::initializer_list<int> Timestamps;
   typedef std::initializer_list<FilterConfig> Filters;
 
+  /**
+   *
+   *
+   * @param channel
+   * @param wait
+   * @param filters
+   * @param key_range
+   *
+   * @return
+   */
   static Task Request(int channel,
                       const Timestamps& wait = {},
                       const Filters& filters = {},

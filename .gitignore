@@ -11,3 +11,5 @@ third_party
 *core*
 config.mk
 **/bak/**
+doc/html
+doc/latex
