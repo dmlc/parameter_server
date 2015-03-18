@@ -17,8 +17,6 @@ class Worker : public App {
   }
 
   virtual void Run() {
-    WaitServersReady();
-
     int ts = Submit(Task(), kServerGroup);
     Wait(ts);
 

@@ -19,7 +19,6 @@ class Server : public App {
 class Worker : public App {
  public:
   virtual void Run() {
-    WaitServersReady();
     for (int i = 0; i < FLAGS_n; ++i) {
       int ts = Submit(Task(), kServerGroup);
       usleep(FLAGS_interval);

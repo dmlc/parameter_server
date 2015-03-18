@@ -34,7 +34,6 @@ class Worker : public App {
   Worker() : vec1_(), vec2_(true, 2) { }
 
   virtual void Run() {
-    WaitServersReady();
     std::cout << MyNodeID() << ": this is worker " << MyRank() << std::endl;
 
     SArray<K> key;

@@ -170,7 +170,6 @@ void KVVector<K,V>::GetValue(Message* msg) {
   // get the data
   SArray<V> val;
   size_t n = ParallelOrderedMatch(kv.key, kv.value, recv_key, &val, k_);
-  LL << val;
   CHECK_LE(n, recv_key.size() * k_);
   msg->clear_value();
   msg->add_value(val);

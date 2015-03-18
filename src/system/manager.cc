@@ -57,7 +57,12 @@ void Manager::Run() {
   // app_ is created by postoffice::recv_thread (except for the scheduler),
   // while run() is called by the main thread, so here should be a thread
   // synchronization.
+
+  // wait my node info is updated
   while (!is_my_node_inited_) usleep(500);
+  if (van_.my_node().role() == Node::WORKER) {
+    WaitServersReady();
+  }
   CHECK_NOTNULL(app_)->Run();
 }
 

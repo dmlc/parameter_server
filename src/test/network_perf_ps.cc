@@ -29,7 +29,6 @@ class Worker : public App {
   }
 
   virtual void Run() {
-    WaitServersReady();
     int n = FLAGS_n;
     int m = FLAGS_data_size;
     auto tv = tic();
