@@ -20,7 +20,7 @@ endif
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include -I/usr/include/eigen3 -I$(CAFFE_PATH)/include -I$(CAFFE_PATH)/build/src  -I$(CUDA_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt -lcaffe -L$(CAFFE_PATH)/build/lib
+LDFLAGS += $(THIRD_LIB) -lpthread -lrt -lcaffe -L$(CAFFE_PATH)/build/lib -Wl,-rpath=$(CAFFE_PATH)/build/lib -Wl,-rpath=$(THIRD_PATH)/lib
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
@@ -34,6 +34,9 @@ app: build/ps
 
 build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+build/caffe: build/app/caffe/caffe_main.o $(PS_LIB)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@	
 
 sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
 			  $(wildcard src/system/*.cc) $(wildcard src/filter/*.cc)
