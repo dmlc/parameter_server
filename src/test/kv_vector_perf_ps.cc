@@ -1,5 +1,11 @@
 /**
- * @brief  Simple test of buffered KVVector
+ * @file   kv_vector_perf_ps.cc
+ * @author Mu Li <muli@cs.cmu.edu>
+ * @date   Wed Mar 18 16:34:31 2015
+ *
+ * @brief  Performance test of KVVector
+ *
+ *
  */
 #include "ps.h"
 #include "parameter/kv_vector.h"

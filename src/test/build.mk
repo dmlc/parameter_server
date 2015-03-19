@@ -3,6 +3,8 @@ build/aggregation_ps \
 build/network_perf_ps \
 build/kv_vector_ps \
 build/kv_vector_buffer_ps \
+build/kv_map_ps \
+build/kv_map_perf_ps \
 build/assign_op_test \
 build/parallel_ordered_match_test \
 build/common_test

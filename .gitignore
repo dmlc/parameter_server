@@ -13,3 +13,4 @@ config.mk
 **/bak/**
 doc/html
 doc/latex
+test
