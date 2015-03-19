@@ -25,9 +25,9 @@ DEFINE_string(snapshot, "",
 
 // client puller / pusher flags
 
-DEFINE_int32(pullstep, 1,
+DEFINE_int32(pullstep, 4,
     "interval, in minibatches, between pull operation.");
-DEFINE_int32(pushstep, 1,
+DEFINE_int32(pushstep, 3,
     "interval, in minibatches, between push operation.");
 
 
@@ -119,38 +119,45 @@ class CaffeServer : public App, public VVListener<float> {
   }
 
   void process(const MessagePtr& msg) {
-    LL << "message received!";
     auto sgd = msg->task.sgd();
-    if (sgd.cmd() == SGDCall::SAVE_MODEL) { // sync param to memory
-	{
-	  Lock l(mu_solver);
-	    for (int i = 0; i < solver->net()->params().size();i++){
-		auto blob = solver->net()->params()[i];
-		blob->cpu_data();
-	    }
+    if (sgd.cmd() == SGDCall::UPDATE_MODEL) { // sync param to memory
+      {
+	Lock l(mu_solver);
+//	float first, last;
+	for (int i = 0; i < solver->net()->params().size();i++){
+	  auto blob = solver->net()->params()[i];
+	  blob->cpu_data();
+/*	  if(i == 0){
+	    first = blob->cpu_data()[0];
+	  }else if(i == solver->net()->params().size()-1){
+	    last = blob->cpu_data()[blob->count()-1];
+	  }
+*/
 	}
+//	LL << "weight synced to cpu:[" << first << ",...," << last << "]";
+      }
     }
   }
 
   void vectorChanged(VVector<float>* data){
-    //TODO copy diff into net->params->diff, and compute weight update
-    LL << "vector change received:" << data->name();
+//    LL << "vector change received:" << data->name();
     CHECK_EQ(data, this->diffs) << "server only accept diff changes";
 
     Lock l(mu_solver);
-    float first,last, firstv, lastv;
+//    float first,last, firstv, lastv;
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       float* dest = blob->mutable_cpu_diff();
       auto src = diffs->value(i);
       memcpy(dest, src.data(), blob->diff()->size());
-      if(i==0){
+/*      if(i==0){
 	  first=blob->cpu_diff()[0];
 	  firstv = src[0];
       }else if(i == solver->net()->params().size()-1){
 	  last=blob->cpu_diff()[blob->count()-1];
 	  lastv = src[src.size() - 1];
       }
+*/
     }
 //    LL<< "got diff[" << first<<",...,"<<last<<"]/[" << firstv << ",...," << lastv <<"]";
 
@@ -328,24 +335,15 @@ public:
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
     msg->task.set_key_channel(0);
-    float first,last, firstv, lastv;
     for(int i = 0; i < diffs->vcount();i++){
 	auto acc = diffBlobs[i];
 	acc->cpu_diff(); // sync to cpu
 	auto diff = diffs->value(i);
 	CHECK_EQ(acc->cpu_diff(), diff.data());
 	msg->addValue(diff);
-	if(i == 0){
-	    first = acc->cpu_diff()[0];
-	    firstv = diff[0];
-	}else if(i == diffs->vcount()-1){
-	    last = acc->cpu_diff()[acc->count()-1];
-	    lastv = diff[diff.size() - 1];
-	}
     }
     int push_time = diffs->push(msg);
     diffs->waitOutMsg(kServerGroup, push_time);
-//    LL<< "pushed diff[" << first<<",...,"<<last<<"]/[" << firstv << ",...," << lastv <<"]";
     //clear previous diff
     for(auto acc : diffBlobs){
 	memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
@@ -393,7 +391,7 @@ public:
     int pull_time = weights->pull(msg);
     weights->waitOutMsg(kServerGroup, pull_time);
     weight_ready = true;
-    LL << "weight pulled from server, total:" << weights->totalSize();
+//    LL << "weight pulled from server, total:" << weights->totalSize();
   }
   /**
    * by main, copy received weight into solver->net
@@ -403,13 +401,20 @@ public:
     if(!weight_ready){
       return;
     }
+    float first,last;
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       float* dest = blob->mutable_cpu_data();
       auto src = weights->value(i);
       memcpy(dest, src.data(), blob->data()->size());
       //TODO direct copy to GPU?
+      if(i == 0){
+	  first = blob->cpu_data()[0];
+      }else if(i == solver->net()->params().size()-1){
+	  last = blob->cpu_data()[blob->count()-1];
+      }
     }
+    LL << "weight from server:[" << first << ",...," << last << "]";
     weight_ready = false;
   }
 };
@@ -435,15 +440,6 @@ int main(int argc, char *argv[]) {
 
   auto& sys = PS::Postoffice::instance();
   sys.start(&argc, &argv);
-//
-//  int ret = 0;
-//  if (sys.myNode().role() == PS::Node::WORKER) {
-//      using namespace PS;
-//      LOG(ERROR) << MyNodeID() <<  ": this is worker " << MyRank();
-//      {
-//	ret = CaffeWorker().start();
-//      }
-//  }
 
   sys.stop();
   return 0;
