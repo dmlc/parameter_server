@@ -104,7 +104,7 @@ class CaffeServer : public App, public VVListener<float> {
       nextSnapshot = solver->iter() - solver->iter() % param.snapshot() + param.snapshot();
     }
     while(true){
-      LL << "server looping: iter " << solver->iter() << " vs test " << nextTest << " vs snapshot " << nextSnapshot;
+//    LL << "server looping: iter " << solver->iter() << " vs test " << nextTest << " vs snapshot " << nextSnapshot;
       if (needTest && solver->iter() >= nextTest) {
 	nextTest = solver->iter() - solver->iter() % param.test_interval() + param.test_interval();
 	solver->TestAll();
@@ -216,6 +216,15 @@ public:
   }
 
   void init(){
+
+  }
+
+  /**
+   * by main
+   */
+  void run(){
+    LL << "worker run()";
+
     solver = initCaffeSolver();
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
@@ -228,13 +237,6 @@ public:
       diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
     }
 
-  }
-
-  /**
-   * by main
-   */
-  void run(){
-    LL << "worker run()";
     //initial pull from server
     pullWeight();
     swapWeight();
