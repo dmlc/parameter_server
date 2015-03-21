@@ -3,8 +3,32 @@
 #include "parameter/parameter.h"
 namespace PS {
 
-// TODO review the memcpy
-template <typename V, class Updater>
+/**
+ * @brief the default updater for KVLayer
+ */
+template <typename V>
+class KVLayerUpdater {
+ public:
+  /// @brief initialize the data
+  void InitModel(int id, V* data, size_t size) {
+    layer_[id] = data;
+  }
+
+  /// @brief update the model by using received data
+  void Update(int id, const V* recv_data, size_t size) {
+    memcpy(layer_[id], recv_data, size*sizeof(V));
+  }
+ private:
+  std::unordered_map<int, V*> layer_;
+};
+
+/**
+ * @brief multiple layers with various size
+ *
+ * @tparam V value type
+ * @tparam Updater the updater class.
+ */
+template <typename V, class Updater = KVLayerUpdater<V>>
 class  KVLayer : public Parameter {
  public:
   /**
@@ -12,7 +36,7 @@ class  KVLayer : public Parameter {
    * @param id customer id
    */
   KVLayer(size_t partition_thr = 1000, int id = NextCustomerID()) :
-      partition_thr_(partition_thr), Parameter(id) { }
+      Parameter(id), partition_thr_(partition_thr) { }
   virtual ~KVLayer() { }
 
   /// @brief set the updater,
@@ -28,7 +52,7 @@ class  KVLayer : public Parameter {
   /**
    * @brief Push data into servers
    *
-   * @param key the layer key
+   * @param task the request task
    * @param data layer pointer
    * @param size layer size
    * @param zero_copy if true, the system will not copy "data", which means
@@ -37,12 +61,12 @@ class  KVLayer : public Parameter {
    *
    * @return the timestamp of the push request
    */
-  int Push(int key, V* data, size_t size, bool zero_copy = false);
+  int Push(const Task& task, V* data, size_t size, bool zero_copy = false);
 
   /**
    * @brief Sent a pull request to servers.
    *
-   * @param key the layer key
+   * @param task the request task
    * @param data if not NULL, then pulled back will be written into "data";
    * otherwise the received data will be saved in layer_
    * @param size layer size
@@ -50,7 +74,7 @@ class  KVLayer : public Parameter {
    *
    * @return the timestamp of the pull request
    */
-  int Pull(int key, V* data, size_t size, Message::Callback callback);
+  int Pull(const Task& task, V* data, size_t size, Message::Callback callback);
 
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
                      std::vector<Message*>* msgs);
@@ -59,37 +83,34 @@ class  KVLayer : public Parameter {
  protected:
   std::unordered_map<int, SArray<V>> layer_;
   size_t partition_thr_;
-  Updater updater_ = nullptr;
+  Updater* updater_ = nullptr;
 };
 
 template <typename V, class Updater>
-int KVLayer<V, Updater>::Push(int key, V* data, size_t size, bool zero_copy) {
-  Task task;
-  task.set_key_channel(key);
-  Range<Key>(0, size).to(task.mutable_key_range());
-  SArray<DType> val;
+int KVLayer<V, Updater>::Push(const Task& task, V* data, size_t size, bool zero_copy) {
+  SArray<V> val;
   if (zero_copy) {
     val = SArray<V>(data, size, false);
   } else {
     val.copyFrom(data, size);
   }
   Message push(task);
+  Range<Key>(0, size).to(push.task.mutable_key_range());
   push.add_value(val);
   return Push(push);
 }
 
 template <typename V, class Updater>
 int KVLayer<V, Updater>::Pull(
-    int key, V* data, size_t size, std::function<void()> callback) {
+    const Task& task, V* data, size_t size, std::function<void()> callback) {
+  int id = task.key_channel();
   if (data == NULL) {
-    if (layer_[key].size() != size) layer_[key].resize(size, 0);
+    if (layer_[id].size() != size) layer_[id].resize(size, 0);
   } else {
-    layer_[key] = SArray<V>(data, size, false);
+    layer_[id] = SArray<V>(data, size, false);
   }
-  Task task;
-  task.set_key_channel(key);
-  Range<Key>(0, size).to(task.mutable_key_range());
   Message pull(task);
+  Range<Key>(0, size).to(pull.task.mutable_key_range());
   if (callback) pull.callback = callback;
   return Pull(pull);
 }
@@ -100,8 +121,8 @@ void KVLayer<V, Updater>::Slice(
     std::vector<Message*>* msgs) {
   // divide the key range
   size_t n = krs.size();
-  int key = request->task.key_channel();
-  Range<Key> kr(request->task.key_range());
+  int key = request.task.key_channel();
+  Range<Key> kr(request.task.key_range());
   for (size_t i = 0; i < n; ++i) {
     Message* msg = (*msgs)[i];
     auto mut_kr = msg->task.mutable_key_range();
@@ -121,8 +142,8 @@ void KVLayer<V, Updater>::Slice(
   }
 
   // divide the data
-  for (size_t i = 0; i < request->value.size(); ++i) {
-    SArray<V> data(request->value[i]);
+  for (size_t i = 0; i < request.value.size(); ++i) {
+    SArray<V> data(request.value[i]);
     CHECK_EQ(data.size(), kr.size());
     for (size_t j = 0; j < n; ++j) {
       Message* msg = (*msgs)[j];
