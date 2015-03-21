@@ -47,9 +47,9 @@ class SparseMatrix : public Matrix<V> {
 
   bool writeToBinFile(string name) const {
     return (writeProtoToASCIIFile(info_, name+".info") &&
-            offset_.writeToFile(name+".offset") &&
-            index_.writeToFile(name+".index") &&
-            (binary() || value_.writeToFile(name+".value")));
+            offset_.WriteToFile(name+".offset") &&
+            index_.WriteToFile(name+".index") &&
+            (binary() || value_.WriteToFile(name+".value")));
   }
 
   MatrixPtr<V> colBlock(SizeR range) const;
@@ -60,7 +60,7 @@ class SparseMatrix : public Matrix<V> {
   SArray<size_t> offset() const { return offset_; }
 
   size_t memSize() const {
-    return value_.memSize() + index_.memSize() + offset_.memSize();
+    return value_.MemSize() + index_.MemSize() + offset_.MemSize();
   }
   void resize(size_t rows, size_t cols, size_t nnz, bool row_major) {
     CHECK(false) << "TODO";
@@ -158,7 +158,7 @@ MatrixPtr<V> SparseMatrix<I,V>::colBlock(SizeR range) const {
     return MatrixPtr<V>(new SparseMatrix<I,V>(info_, offset_, index_, value_));
   } else {
     // if (range.empty()) LL << range;
-    auto new_offset = offset_.segment(SizeR(range.begin(), range.end()+1));
+    auto new_offset = offset_.Segment(SizeR(range.begin(), range.end()+1));
     auto new_info = info_;
     range.to(new_info.mutable_col());
     new_info.set_nnz(new_offset.back() - new_offset.front());
@@ -172,7 +172,7 @@ MatrixPtr<V> SparseMatrix<I,V>::rowBlock(SizeR range) const {
   CHECK(rowMajor());
   CHECK(!range.empty());
 
-  auto new_offset = offset_.segment(SizeR(range.begin(), range.end()+1));
+  auto new_offset = offset_.Segment(SizeR(range.begin(), range.end()+1));
 
   auto new_info = info_;
   range.to(new_info.mutable_row());
@@ -191,7 +191,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
   CHECK_LT(inner_n, (size_t)kuint32max) << "run localize first";
 
   SArray<size_t> new_offset(inner_n + 1);
-  new_offset.setZero();
+  new_offset.SetZero();
 
   int num_threads = FLAGS_num_threads;
   CHECK_GT(num_threads, 0);

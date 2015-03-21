@@ -49,10 +49,10 @@ class FixingFloatFilter : public Filter {
 
     if (encode) {
       if (!conf->has_min_value()) {
-        conf->set_min_value(SArray<V>(array).eigenArray().minCoeff());
+        conf->set_min_value(SArray<V>(array).EigenArray().minCoeff());
       }
       if (!conf->has_max_value()) {
-        conf->set_max_value(SArray<V>(array).eigenArray().maxCoeff() + 1e-6); // to avoid max_v == min_v
+        conf->set_max_value(SArray<V>(array).EigenArray().maxCoeff() + 1e-6); // to avoid max_v == min_v
       }
     }
 

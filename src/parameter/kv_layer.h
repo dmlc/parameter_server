@@ -149,7 +149,7 @@ void KVLayer<V, Updater>::Slice(
       Message* msg = (*msgs)[j];
       if (msg->valid) {
         Range<Key> kr(msg->task.key_range());
-        msg->add_value(data.segment(kr));
+        msg->add_value(data.Segment(kr));
       }
     }
   }
@@ -168,7 +168,7 @@ void KVLayer<V, Updater>::GetValue(Message* msg) {
 
   CHECK_EQ(my_val.size(), kr.size());
   SArray<V> send_data(kr.size());
-  send_data.copyFrom(my_val);  // TODO, memcpy?
+  send_data.CopyFrom(my_val);  // TODO, memcpy?
   msg->add_value(send_data);
 }
 
@@ -184,7 +184,7 @@ void KVLayer<V, Updater>::SetValue(Message* msg) {
   if (IsWorker()) {
     if (my_val.empty()) my_val.resize(kr.size(), 0);
     CHECK_GE(my_val.size(), kr.end());
-    my_val.segment(kr).copyFrom(recv_data);
+    my_val.Segment(kr).CopyFrom(recv_data);
   } else if (IsServer()) {
     // TODO this server can do flexible consistency control here
 

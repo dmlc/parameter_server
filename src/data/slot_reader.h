@@ -53,8 +53,8 @@ template<typename V> SArray<V> SlotReader::value(int slot_id) const {
   if (nnzEle(slot_id) == 0) return val;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".value";
-    SArray<char> comp; CHECK(comp.readFromFile(file));
-    SArray<float> uncomp; uncomp.uncompressFrom(comp);
+    SArray<char> comp; CHECK(comp.ReadFromFile(file));
+    SArray<float> uncomp; uncomp.UncompressFrom(comp);
     size_t n = val.size();
     val.resize(n+uncomp.size());
     for (size_t i = 0; i < uncomp.size(); ++i) val[n+i] = uncomp[i];

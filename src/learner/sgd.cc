@@ -56,13 +56,13 @@ void ISGDScheduler::showProgress(
     num_ex += prog.num_examples_processed();
     nnz_w += prog.nnz();
     for (int i = 0; i < prog.objective_size(); ++i) {
-      objv.pushBack(prog.objective(i));
+      objv.push_back(prog.objective(i));
     }
     for (int i = 0; i < prog.auc_size(); ++i) {
-      auc.pushBack(prog.auc(i));
+      auc.push_back(prog.auc(i));
     }
     for (int i = 0; i < prog.accuracy_size(); ++i) {
-      acc.pushBack(prog.accuracy(i));
+      acc.push_back(prog.accuracy(i));
     }
     weight_sum += prog.weight_sum();
     delta_sum += prog.delta_sum();
@@ -76,9 +76,9 @@ void ISGDScheduler::showProgress(
   NOTICE("%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e",
          (int)time,
          (double)num_ex_processed_ ,
-         objv.sum()/(double)num_ex,
-         auc.mean(),
-         acc.mean(),
+         objv.Sum()/(double)num_ex,
+         auc.Mean(),
+         acc.Mean(),
          (double)nnz_w,
          sqrt(delta_sum) / sqrt(weight_sum));
 }

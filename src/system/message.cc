@@ -14,8 +14,8 @@ FilterConfig* Message::add_filter(FilterConfig::Type type) {
 }
 
 size_t Message::mem_size() {
-  size_t nbytes = task.SpaceUsed() + key.memSize();
-  for (const auto& v : value) nbytes += v.memSize();
+  size_t nbytes = task.SpaceUsed() + key.MemSize();
+  for (const auto& v : value) nbytes += v.MemSize();
   return nbytes;
 }
 

@@ -27,14 +27,6 @@ struct Message {
   // values
   template <typename T>
   void add_value(const SArray<T>& value);
-  template <typename T>
-  void add_value(const SArrayList<T>& value) {
-    for (const auto& v : value) add_value(v);
-  }
-  template <typename T>
-  void add_value(const std::initializer_list<SArray<T>>& value) {
-    for (const auto& v : value) add_value(v);
-  }
   void clear_value() { task.clear_value_type(); value.clear(); }
   std::vector<SArray<char> > value;  // values
 
@@ -143,11 +135,11 @@ template <typename K> void SliceKOFVMessage(
       ret->valid = true;  // must set true, otherwise this piece might not be sent
       if (key.empty()) continue;  // to void be divided by 0
       SizeR lr(pos[i], pos[i+1]);
-      ret->set_key(key.segment(lr));
+      ret->set_key(key.Segment(lr));
       for (auto& v : msg.value) {
         size_t k = v.size() / key.size();
         CHECK_EQ(key.size() * k, v.size());
-        ret->value.push_back(v.segment(lr*k));
+        ret->value.push_back(v.Segment(lr*k));
       }
     }
   }
@@ -157,4 +149,13 @@ template <typename K> void SliceKOFVMessage(
 
 // inline std::ostream& operator<<(std::ostream& os, const Message& msg) {
 //   return (os << msg.ShortDebugString());
+// }
+
+// template <typename T>
+// void add_value(const SArrayList<T>& value) {
+//   for (const auto& v : value) add_value(v);
+// }
+// template <typename T>
+// void add_value(const std::initializer_list<SArray<T>>& value) {
+//   for (const auto& v : value) add_value(v);
 // }

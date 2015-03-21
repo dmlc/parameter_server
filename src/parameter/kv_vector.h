@@ -115,7 +115,7 @@ void KVVector<K,V>::SetValue(Message* msg) {
 
   if (msg->value.size() == 0) {
     // only has keys. merge these keys
-    kv.key = kv.key.setUnion(recv_key);
+    kv.key = kv.key.SetUnion(recv_key);
     // clear the values, because they are not matched any more
     kv.value.clear();
     return;
@@ -141,7 +141,7 @@ void KVVector<K,V>::SetValue(Message* msg) {
       mu_.unlock();
 
       if (i == 0) {
-        SizeR idx_range = kv.key.findRange(Range<K>(msg->task.key_range()));
+        SizeR idx_range = kv.key.FindRange(Range<K>(msg->task.key_range()));
         if (buf.values.size() == 0) {
           // "msg" comes from the first nodes in this channel, allocate memory first
           buf.values.resize(msg->value.size());
@@ -154,7 +154,7 @@ void KVVector<K,V>::SetValue(Message* msg) {
       }
       size_t k = recv_data.size() / recv_key.size();  // not necessary == k_
       size_t n = ParallelOrderedMatch(
-          recv_key, recv_data, kv.key.segment(buf.idx_range), &buf.values[i], k);
+          recv_key, recv_data, kv.key.Segment(buf.idx_range), &buf.values[i], k);
       CHECK_LE(n, recv_key.size() * k);
     }
   }

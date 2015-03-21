@@ -68,11 +68,11 @@ size_t ParallelOrderedMatch(
   CHECK_EQ(src_key.size() * k, src_val.size());
   if (dst_val->empty()) {
     dst_val->resize(dst_key.size()*k);
-    dst_val->setZero();
+    dst_val->SetZero();
   } else {
     CHECK_EQ(dst_val->size(), dst_key.size()*k);
   }
-  SizeR range = dst_key.findRange(src_key.range());
+  SizeR range = dst_key.FindRange(src_key.range());
   size_t grainsize = std::max(range.size() * k / num_threads + 5, (size_t)1024*1024);
   size_t n = 0;
   ParallelOrderedMatch<K, V>(

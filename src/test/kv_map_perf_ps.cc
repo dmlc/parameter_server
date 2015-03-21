@@ -36,13 +36,13 @@ class Worker : public App {
 
       int k = dis(gen);
       SArray<K> key;
-      key.readFromFile("../test/keys/key_" + std::to_string(k));
+      key.ReadFromFile("../test/keys/key_" + std::to_string(k));
       SArray<V> val(key.size());
       ParamInitConfig cf;
       cf.set_type(ParamInitConfig::GAUSSIAN);
       cf.set_mean(0);
       cf.set_std(1);
-      val.setValue(cf);
+      val.SetValue(cf);
 
       int ts = vec_.Push(Parameter::Request(i), key, val);
       vec_.Wait(vec_.Pull(Parameter::Request(i, ts+1, {ts}), key));

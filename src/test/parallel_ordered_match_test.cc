@@ -12,8 +12,8 @@ DEFINE_int32(k, 1, "k");
 class PMatchTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    key1.readFromFile("../test/keys/key_1");
-    key2.readFromFile("../test/keys/key_2");
+    key1.ReadFromFile("../test/keys/key_1");
+    key2.ReadFromFile("../test/keys/key_2");
   };
 
   SArray<uint64> key1, key2;
