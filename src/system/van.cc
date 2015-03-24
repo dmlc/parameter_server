@@ -1,6 +1,7 @@
 #include "system/van.h"
 #include <string.h>
 #include <zmq.h>
+#include <libgen.h>
 #include "util/shared_array_inl.h"
 #include "util/local_machine.h"
 #include "system/manager.h"
