@@ -3,7 +3,7 @@ import "util/proto/assign_op.proto";
 
 message ParamCall {
   // push or pull
-  optional bool push = 1;
+  optional bool push = 1 [default = true];
 
   // merge operator
   optional AssignOpType op = 2;

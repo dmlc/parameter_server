@@ -10,16 +10,10 @@ template <typename V>
 class KVLayerUpdater {
  public:
   /// @brief initialize the data
-  void InitModel(int id, V* data, size_t size) {
-    layer_[id] = data;
-  }
+  void Init(int id, size_t size, V* data) { }
 
   /// @brief update the model by using received data
-  void Update(int id, const V* recv_data, size_t size) {
-    memcpy(layer_[id], recv_data, size*sizeof(V));
-  }
- private:
-  std::unordered_map<int, V*> layer_;
+  void Update(int id, size_t size, const V* recv_data, V* data) { }
 };
 
 /**
@@ -43,7 +37,10 @@ class  KVLayer : public Parameter {
   void set_updater(Updater* updt) { updater_ = updt; }
 
   /// @brief get the layer by the key
-  SArray<V> layer(int key) { return layer_[key]; }
+  SArray<V> operator[] (int key) { Lock l(mu_); return layer_[key]; }
+
+  /// @brief get the layer by the key
+  SArray<V> layer(int key) { Lock l(mu_); return layer_[key]; }
 
   // void set_layer(int key, V* data, size_t size) {
   //   layer_[key] = SArray<V>(data, size, false);
@@ -81,6 +78,7 @@ class  KVLayer : public Parameter {
   virtual void GetValue(Message* msg);
   virtual void SetValue(Message* msg);
  protected:
+  std::mutex mu_;
   std::unordered_map<int, SArray<V>> layer_;
   size_t partition_thr_;
   Updater* updater_ = nullptr;
@@ -92,12 +90,12 @@ int KVLayer<V, Updater>::Push(const Task& task, V* data, size_t size, bool zero_
   if (zero_copy) {
     val = SArray<V>(data, size, false);
   } else {
-    val.copyFrom(data, size);
+    val.CopyFrom(data, size);
   }
-  Message push(task);
+  Message push(task, kServerGroup);
   Range<Key>(0, size).to(push.task.mutable_key_range());
   push.add_value(val);
-  return Push(push);
+  return Parameter::Push(&push);
 }
 
 template <typename V, class Updater>
@@ -109,10 +107,10 @@ int KVLayer<V, Updater>::Pull(
   } else {
     layer_[id] = SArray<V>(data, size, false);
   }
-  Message pull(task);
+  Message pull(task, kServerGroup);
   Range<Key>(0, size).to(pull.task.mutable_key_range());
   if (callback) pull.callback = callback;
-  return Pull(pull);
+  return Parameter::Pull(&pull);
 }
 
 template <typename V, class Updater>
@@ -157,13 +155,17 @@ void KVLayer<V, Updater>::Slice(
 
 template <typename V, class Updater>
 void KVLayer<V, Updater>::GetValue(Message* msg) {
+
+  // Lock l(mu_);
+  mu_.lock();
   auto& my_val = layer_[msg->task.key_channel()];
+  mu_.unlock();
   Range<Key> kr(msg->task.key_range());
   if (my_val.empty()) {
     // initialize weight
     my_val.resize(kr.size(), 0);
-    CHECK_NOTNULL(updater_)->InitModel(
-        msg->task.key_channel(), my_val.data(), my_val.size());
+    CHECK_NOTNULL(updater_)->Init(
+        msg->task.key_channel(), my_val.size(), my_val.data());
   }
 
   CHECK_EQ(my_val.size(), kr.size());
@@ -174,29 +176,33 @@ void KVLayer<V, Updater>::GetValue(Message* msg) {
 
 template <typename V, class Updater>
 void KVLayer<V, Updater>::SetValue(Message* msg) {
+  // Lock l(mu_);
   CHECK_EQ(msg->value.size(), 1);
   SArray<V> recv_data(msg->value[0]);
   Range<Key> kr(msg->task.key_range());
   CHECK_EQ(kr.size(), recv_data.size());
   int key = msg->task.key_channel();
+  mu_.lock();
   auto& my_val = layer_[key];
+  mu_.unlock();
 
   if (IsWorker()) {
     if (my_val.empty()) my_val.resize(kr.size(), 0);
     CHECK_GE(my_val.size(), kr.end());
     my_val.Segment(kr).CopyFrom(recv_data);
+    LL << key << " " << my_val;
   } else if (IsServer()) {
     // TODO this server can do flexible consistency control here
 
     if (my_val.empty()) {
       // initialize weight
       my_val.resize(kr.size(), 0);
-      CHECK_NOTNULL(updater_)->InitModel(key, my_val.data(), my_val.size());
+      CHECK_NOTNULL(updater_)->Init(key, kr.size(), my_val.data());
     }
 
     // update weight
     CHECK_GE(my_val.size(), kr.size());
-    CHECK_NOTNULL(updater_)->Update(key, recv_data.data(), recv_data.size());
+    CHECK_NOTNULL(updater_)->Update(key, kr.size(), recv_data.data(), my_val.data());
   }
 }
 
