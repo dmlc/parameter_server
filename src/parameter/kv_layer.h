@@ -71,7 +71,8 @@ class  KVLayer : public Parameter {
    *
    * @return the timestamp of the pull request
    */
-  int Pull(const Task& task, V* data, size_t size, Message::Callback callback);
+  int Pull(const Task& task, V* data, size_t size,
+           Message::Callback callback = Message::Callback());
 
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
                      std::vector<Message*>* msgs);
@@ -190,7 +191,6 @@ void KVLayer<V, Updater>::SetValue(Message* msg) {
     if (my_val.empty()) my_val.resize(kr.size(), 0);
     CHECK_GE(my_val.size(), kr.end());
     my_val.Segment(kr).CopyFrom(recv_data);
-    LL << key << " " << my_val;
   } else if (IsServer()) {
     // TODO this server can do flexible consistency control here
 
