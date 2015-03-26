@@ -6,9 +6,9 @@ OPT = -O3 -ggdb
 THIRD_PATH=$(shell pwd)/third_party
 STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
-THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
+THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a libxml2.a)
 else
-THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
+THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lxml2
 endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 

@@ -9,6 +9,9 @@
 #include <dirent.h>
 #include "util/common.h"
 #include "util/split.h"
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
@@ -46,6 +49,26 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   CHECK(f != NULL && f->open());
   return f;
 }
+bool s3file(const std::string& name) {
+  return (name.size() > 5 && std::string(name.begin(), name.begin()+5) == "s3://");
+}
+std::string s3Prefix(const std::string& path) {
+  size_t pos = path.find('/',5);
+  return std::string(path.begin()+pos+1,path.end());
+}
+std::string s3Bucket(const std::string& path) {
+  size_t pos = path.find('/',5);
+  return std::string(path.begin()+5,path.begin()+pos);
+}
+
+std::string s3DirectoryUrl(const std::string& path) {
+  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/?prefix="+s3Prefix(path);
+  return str;
+}
+std::string s3FileUrl(const std::string& path) {
+  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/"+s3Prefix(path);
+  return str;
+}
 
 File* File::open(const DataConfig& name,  const char* const flag) {
   CHECK_EQ(name.file_size(), 1);
@@ -66,7 +89,18 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     }
     auto f = new File(des, filename);
     return f;
-  } else {
+  } else if (s3file(filename)) {
+    std::string cmd = "curl -s -X GET "+s3FileUrl(filename);
+    // .gz
+    if (gzfile(filename)) {
+      cmd += " | gunzip";
+    }
+    FILE* des = popen(cmd.c_str(), "r");
+    CHECK(des);
+    auto f = new File(des, filename);
+    return f;
+  } 
+  else {
     return open(filename, flag);
   }
 }
@@ -252,6 +286,36 @@ std::string hadoopFS(const HDFSConfig& conf) {
   return str;
 }
 
+std::vector<std::string> s3GetFileNamesFromXml(const char* fbuf, int fsize, const xmlChar* nspace, const xmlChar* uri, const xmlChar* xpathExpr,std::string& prefix)
+{
+    std::vector<std::string> files;
+    // get xml
+    xmlDocPtr doc = xmlParseMemory(fbuf,fsize);
+    // create context
+    xmlXPathContextPtr xpathCtx = xmlXPathNewContext(doc);
+    // register namespace
+    if(xmlXPathRegisterNs(xpathCtx,nspace,uri)==0){
+      // execute xpath
+      xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
+      if(!xmlXPathNodeSetIsEmpty(xpathObj->nodesetval)){
+        xmlNodeSetPtr nodes=xpathObj->nodesetval;
+        for (int i=0; i < nodes->nodeNr; i++) {
+          xmlChar* str = xmlNodeListGetString(doc, nodes->nodeTab[i]->xmlChildrenNode, 1);
+          std::string file((char *)str);
+          //make sure only files
+          if(file.length()>prefix.length()+1 && file.find('/',prefix.length()+1)==std::string::npos)
+            files.push_back(file);
+          xmlFree(str);
+        }
+      }
+      xmlXPathFreeObject(xpathObj);  
+    }
+    xmlXPathFreeContext(xpathCtx); 
+    xmlFreeDoc(doc); 
+    return files;
+}
+
+
 
 std::vector<std::string> readFilenamesInDirectory(const std::string& directory) {
   std::vector<std::string> files;
@@ -267,34 +331,55 @@ std::vector<std::string> readFilenamesInDirectory(const std::string& directory) 
 std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
   CHECK_EQ(directory.file_size(), 1);
   auto dirname = directory.file(0);
-  if (!directory.has_hdfs()) {
-    return readFilenamesInDirectory(dirname);
-  }
-  // read hdfs directory
-  std::vector<std::string> files;
-  string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
+  if (directory.has_hdfs()) {
+    // read hdfs directory
+    std::vector<std::string> files;
+    string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
 
-  if (FLAGS_verbose) {
-    LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
-  }
-
-  FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
-  char line[10000];
-  while (fgets(line, 10000, des)) {
-    auto ents = split(std::string(line), ' ', true);
-    if (ents.size() != 8) continue;
-    if (ents[0][0] == 'd') continue;
-
-    // remove tailing line break
-    string this_is_file = ents.back();
-    if ('\n' == this_is_file.back()) {
-      this_is_file.resize(this_is_file.size() - 1);
+    if (FLAGS_verbose) {
+      LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
     }
 
-    files.push_back(this_is_file);
+    FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
+    char line[10000];
+    while (fgets(line, 10000, des)) {
+      auto ents = split(std::string(line), ' ', true);
+      if (ents.size() != 8) continue;
+      if (ents[0][0] == 'd') continue;
+
+      // remove tailing line break
+      string this_is_file = ents.back();
+      if ('\n' == this_is_file.back()) {
+        this_is_file.resize(this_is_file.size() - 1);
+      }
+
+      files.push_back(this_is_file);
+    }
+    pclose(des);
+    return files;
+  } else if (s3file(dirname)) {
+    // open xml
+    std::string cmd = "curl -s -X GET "+s3DirectoryUrl(dirname);
+    FILE* des = popen(cmd.c_str(), "r");
+    CHECK(des);
+    // alloc buffer for file
+    // TODO check the exact size of file before allocation
+    size_t fsize=20000;
+    char* fbuf = (char*) malloc (sizeof(char)*fsize);
+    CHECK(fbuf);
+    memset(fbuf,0,fsize);
+    size_t rsize=fread (fbuf,1,fsize,des);
+    // execute xpath
+    std::string prefix=s3Prefix(dirname);
+    std::vector<std::string> files=s3GetFileNamesFromXml(fbuf,fsize,BAD_CAST "ListBucketResult",
+      BAD_CAST "http://s3.amazonaws.com/doc/2006-03-01/",BAD_CAST "//ListBucketResult:Key",prefix);
+    // clean up
+    pclose (des);
+    free (fbuf);
+    return files;
+  } else {
+    return readFilenamesInDirectory(dirname);
   }
-  pclose(des);
-  return files;
 }
 
 string getFilename(const string& full) {
