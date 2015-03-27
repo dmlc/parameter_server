@@ -22,4 +22,7 @@ EXTRA_LDFLAGS =
 # additional compile flags
 EXTRA_CFLAGS =
 
-all: ps build/linear test
+# io option
+USE_S3 = 0
+
+all: ps build/linear

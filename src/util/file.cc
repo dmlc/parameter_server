@@ -9,9 +9,11 @@
 #include <dirent.h>
 #include "util/common.h"
 #include "util/split.h"
+#if USE_S3
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+#endif // USE_S3
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
 namespace PS {
@@ -49,6 +51,7 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   CHECK(f != NULL && f->open());
   return f;
 }
+#if USE_S3
 bool s3file(const std::string& name) {
   return (name.size() > 5 && std::string(name.begin(), name.begin()+5) == "s3://");
 }
@@ -69,7 +72,7 @@ std::string s3FileUrl(const std::string& path) {
   std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/"+s3Prefix(path);
   return str;
 }
-
+#endif // USE_S3
 File* File::open(const DataConfig& name,  const char* const flag) {
   CHECK_EQ(name.file_size(), 1);
   auto filename = name.file(0);
@@ -89,7 +92,9 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     }
     auto f = new File(des, filename);
     return f;
-  } else if (s3file(filename)) {
+  }
+#if USE_S3 
+  else if (s3file(filename)) {
     std::string cmd = "curl -s -X GET "+s3FileUrl(filename);
     // .gz
     if (gzfile(filename)) {
@@ -99,7 +104,8 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     CHECK(des);
     auto f = new File(des, filename);
     return f;
-  } 
+  }
+#endif // USE_S3 
   else {
     return open(filename, flag);
   }
@@ -285,7 +291,7 @@ std::string hadoopFS(const HDFSConfig& conf) {
   if (conf.has_ugi()) str += " -D hadoop.job.ugi=" + conf.ugi();
   return str;
 }
-
+#if USE_S3
 std::vector<std::string> s3GetFileNamesFromXml(const char* fbuf, int fsize, const xmlChar* nspace, const xmlChar* uri, const xmlChar* xpathExpr,std::string& prefix)
 {
     std::vector<std::string> files;
@@ -314,6 +320,7 @@ std::vector<std::string> s3GetFileNamesFromXml(const char* fbuf, int fsize, cons
     xmlFreeDoc(doc); 
     return files;
 }
+#endif // USE_S3
 
 
 
@@ -357,7 +364,9 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     }
     pclose(des);
     return files;
-  } else if (s3file(dirname)) {
+  }
+#if USE_S3 
+  else if (s3file(dirname)) {
     // open xml
     std::string cmd = "curl -s -X GET "+s3DirectoryUrl(dirname);
     FILE* des = popen(cmd.c_str(), "r");
@@ -377,7 +386,9 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     pclose (des);
     free (fbuf);
     return files;
-  } else {
+  }
+#endif // USE_S3 
+  else {
     return readFilenamesInDirectory(dirname);
   }
 }
