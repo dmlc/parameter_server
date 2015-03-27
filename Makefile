@@ -5,16 +5,26 @@ OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
 STATIC_THIRD_LIB=0
+USE_S3=0
 ifeq ($(STATIC_THIRD_LIB), 1)
-THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a libxml2.a)
+THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
+	ifeq ($(USE_S3), 1)
+	THIRD_LIB+=$(addprefix $(THIRD_PATH)/lib/, libxml2.a)
+	endif
 else
-THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -lxml2
+THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
+	ifeq ($(USE_S3), 1)
+        THIRD_LIB+=-lxml2
+        endif
 endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
+ifeq ($(USE_S3), 1)
+CFLAGS += -DUSE_S3=1
+endif
 LDFLAGS += $(THIRD_LIB) -lpthread -lrt
 
 PS_LIB = build/libps.a
