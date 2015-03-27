@@ -104,7 +104,7 @@ class AsyncSGDServer : public ISGDCompNode {
       prog.set_nnz(nnz);
       prog.set_weight_sum(weight_sum); weight_sum = 0;
       prog.set_delta_sum(delta_sum); delta_sum = 0;
-      reporter->report(prog);
+      reporter->Report(prog);
     }
 
     void UpdateWeight(V new_weight, V old_weight) {
@@ -196,9 +196,9 @@ class AsyncSGDWorker : public ISGDCompNode {
     VLOG(1) << "workload data: " << load.data().ShortDebugString();
     const auto& sgd = conf_.async_sgd();
     MinibatchReader<V> reader;
-    reader.setReader(load.data(), sgd.minibatch(), sgd.data_buf());
-    reader.setFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
-    reader.start();
+    reader.InitReader(load.data(), sgd.minibatch(), sgd.data_buf());
+    reader.InitFilter(sgd.countmin_n(), sgd.countmin_k(), sgd.tail_feature_freq());
+    reader.Start();
 
     processed_batch_ = 0;
     int id = 0;
@@ -207,7 +207,7 @@ class AsyncSGDWorker : public ISGDCompNode {
       mu_.lock();
       auto& data = data_[id];
       mu_.unlock();
-      if (!reader.read(data.first, data.second, key)) break;
+      if (!reader.Read(data.first, data.second, key)) break;
       VLOG(1) << "load minibatch " << id << ", X: "
               << data.second->rows() << "-by-" << data.second->cols();
 
@@ -240,7 +240,7 @@ class AsyncSGDWorker : public ISGDCompNode {
     prog.add_accuracy(Evaluation<V>::accuracy(Y->value(), Xw));
     prog.set_num_examples_processed(
         prog.num_examples_processed() + Xw.size());
-    this->reporter_.report(prog);
+    this->reporter_.Report(prog);
 
     // compute the gradient
     SArray<V> grad(X->cols());

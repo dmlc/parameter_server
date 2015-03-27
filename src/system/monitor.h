@@ -1,22 +1,44 @@
+/**
+ * @file   monitor.h
+ * @brief  A distributed monitor
+ *
+ */
 #pragma once
-#include "ps.h"
+#include "system/customer.h"
 namespace PS {
 
+/**
+ * @brief The master of the monitor, which collects reports from slavers and
+ * display the progress
+ *
+ * @tparam Progress A proto buffer class
+ */
 template <typename Progress>
 class MonitorMaster : public Customer {
  public:
   MonitorMaster(int id = NextCustomerID()) : Customer(id) {}
 
-  typedef std::unordered_map<NodeID, Progress> AllProgress;
-  typedef std::function<void(double time, AllProgress*)> Printer;
-  void setPrinter(double time_interval, Printer printer) {
+  typedef std::function<void(
+      double time, std::unordered_map<NodeID, Progress>*)> Printer;
+  /**
+   * @brief set the printer
+   *
+   * @param time_interval in sec
+   * @param printer
+   */
+  void set_printer(double time_interval, Printer printer) {
     timer_.start();
     printer_ = printer;
     interval_ = time_interval;
   }
 
   typedef std::function<void(const Progress& src, Progress* dst)> Merger;
-  void setMerger(Merger merger) {
+  /**
+   * @brief set the merger
+   *
+   * @param merger merges two reports
+   */
+  void set_merger(Merger merger) {
     merger_ = merger;
   }
 
@@ -40,7 +62,7 @@ class MonitorMaster : public Customer {
     }
   }
  private:
-  AllProgress progress_;
+  std::unordered_map<NodeID, Progress> progress_;
   double interval_;
   Timer timer_;
   double total_time_ = 0;
@@ -48,6 +70,11 @@ class MonitorMaster : public Customer {
   Printer printer_;
 };
 
+/**
+ * @brief A slave monitor, which report to the master monitor
+ *
+ * @tparam Progress a proto class
+ */
 template <typename Progress>
 class MonitorSlaver : public Customer {
  public:
@@ -55,7 +82,12 @@ class MonitorSlaver : public Customer {
       : Customer(id), master_(master) { }
   virtual ~MonitorSlaver() { }
 
-  void report(const Progress& prog) {
+  /**
+   * @brief Sends a report to the master
+   *
+   * @param prog
+   */
+  void Report(const Progress& prog) {
     string str; CHECK(prog.SerializeToString(&str));
     Task report; report.set_msg(str);
     Submit(report, master_);

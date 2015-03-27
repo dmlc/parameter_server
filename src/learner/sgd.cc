@@ -8,8 +8,8 @@ ISGDScheduler::~ISGDScheduler() {
 void ISGDScheduler::Run() {
   // init monitor
   using namespace std::placeholders;
-  monitor_.setMerger(std::bind(&ISGDScheduler::MergeProgress, this, _1, _2));
-  monitor_.setPrinter(1, std::bind(&ISGDScheduler::ShowProgress, this, _1, _2));
+  monitor_.set_merger(std::bind(&ISGDScheduler::MergeProgress, this, _1, _2));
+  monitor_.set_printer(1, std::bind(&ISGDScheduler::ShowProgress, this, _1, _2));
 
   // wait all jobs are finished
   sys_.manager().AddNodeFailureHandler([this](const NodeID& id) {

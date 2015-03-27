@@ -59,7 +59,7 @@ class ISGDCompNode : public App {
 
 /**
  * @brief A multithread minibatch reader
- *
+ * @tparam V the value type
  */
 template <typename V>
 class MinibatchReader {
@@ -67,22 +67,36 @@ class MinibatchReader {
   MinibatchReader() { }
   ~MinibatchReader() { }
 
-  // read *minibatch_size* examples from file each time
-  void setReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
+  /**
+   * @brief set the text reader
+   *
+   * @param file data file
+   * @param minibatch_size # of examples
+   * @param data_buf in MB
+   */
+  void InitReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
     reader_.init(file);
     minibatch_size_ = minibatch_size;
     data_prefetcher_.setCapacity(data_buf);
   }
 
-  // features whose frequency <= freq is filtered by the countmin sketch with
-  // parameter *n* and *k*
-  void setFilter(size_t n, int k, int freq) {
+  /**
+   * @brief tails features are filtered by the countmin sketch
+   *
+   * @param n countmin sketch parameter
+   * @param k countmin sketch parameter
+   * @param freq frequency threshold
+   */
+  void InitFilter(size_t n, int k, int freq) {
     filter_.resize(n, k);
     key_freq_ = freq;
   }
 
-  // start the reader thread
-  void start() {
+  /**
+   * @brief Start the reader thread
+   *
+   */
+  void Start() {
     data_prefetcher_.startProducer(
         [this](MatrixPtrList<V>* data, size_t* size)->bool {
           bool ret = reader_.readMatrices(minibatch_size_, data);
@@ -93,12 +107,17 @@ class MinibatchReader {
         });
   }
 
-  // read a minibatch
-  // *Y*: the *minibatch_size* x 1 label vector
-  // *X*: the *minibatch_size* x p data matrix, all features are remapped to
-  // continues id starting from 0
-  // *key*: p length array contains the original feature id in the data
-  bool read(MatrixPtr<V>& Y, MatrixPtr<V>& X, SArray<Key>& key) {
+  /**
+   * @brief Reads a minibatch
+   *
+   * @param Y the *minibatch_size* x 1 label vector
+   * @param X the *minibatch_size* x p data matrix, all features are remapped to
+   * continues id starting from 0 to p-1
+   * @param key p length array contains the original feature id in the data
+   *
+   * @return false if end of file
+   */
+  bool Read(MatrixPtr<V>& Y, MatrixPtr<V>& X, SArray<Key>& key) {
     MatrixPtrList<V> data;
     if (!data_prefetcher_.pop(&data)) return false;
     CHECK_EQ(data.size(), 2);
@@ -118,6 +137,7 @@ class MinibatchReader {
     X = localizer.remapIndex(key);
     return true;
   }
+
  private:
   int minibatch_size_ = 1000;
   StreamReader<V> reader_;
