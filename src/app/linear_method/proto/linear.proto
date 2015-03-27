@@ -1,7 +1,9 @@
+// configuration of linear methods
 package PS.LM;
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
 import "filter/proto/filter.proto";
+
 message Config {
   optional DataConfig training_data = 1;
   optional DataConfig validation_data = 2;
@@ -44,6 +46,7 @@ message SGDConfig {
   optional int32 minibatch = 2 [default = 1000];
 
   optional int32 data_buf = 12 [default = 1000];  // in mb
+
   optional bool ada_grad = 5 [default = true];
 
   optional int32 max_delay = 4 [default = 0];
@@ -89,7 +92,7 @@ message PenaltyConfig {
 message LearningRateConfig {
   enum Type {
     CONSTANT = 1;  // = alpha
-    DECAY = 2;  // = alpha / (beta + x), where x is defineable, such as sqrt(iter)
+    DECAY = 2;  // = alpha / (beta + x), where x is user-defined, such as sqrt(iter)
   }
   optional Type type = 1;
   optional double alpha = 2;
