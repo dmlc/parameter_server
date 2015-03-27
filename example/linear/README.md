@@ -1,27 +1,45 @@
 # Tutorial to run linear method
 
-## Prepearing Data
+**Prepearing Data**
 
-Use the script such as `rcv1/download.sh` and `ctr/download.sh` to download
+Use the script such as `rcv1/download.sh` and `ctr/download.sh` to prepare
 sample data.
 
-## Build the parameter server
 
+**Run L1 Logistic Regression on the CTR dataset**
 
-## Run in local machine
+Let first start one worker and one server in local machine, and run the online
+solver for L1 logistic regression.
 
-The system can be run by either building the binary or downloading a docker images.
+```bash
+../../script/ps.sh start ../../build/linear -app_file ctr/online_l1lr.conf
+```
 
-*by build binary*
+We can use more workers and servers, such as 3 workers and 4 workers, via
 
-Use the binary you compiled to run l1-regularized logistic regression:
+```bash
+../../script/ps.sh start -nw 3 -ns 4 ../../build/linear -app_file ctr/online_l1lr.conf
+```
 
-#+BEGIN_SRC bash
-# run block coordinate descent with 2 servers and 2 workers:
-../../script/local.sh  2 2 ../../build/linear -app_file ctr/batch_l1lr.conf
-# evaluate the model
-../../script/local.sh ../../build/linear 0 0 -app_file ctr/eval_batch.conf
-#+END_SRC
+We can also start the jobs in multiple machines. Assume there is a `your_hostfile`
+containing all machines IPs, where each line has one IP. Then start the job via
+the `-hostfile` option.
+
+```bash
+../../script/ps.sh start -hostfile your_hostfile -nw 3 -ns 4 ../../build/linear -app_file ctr/online_l1lr.conf
+```
+
+Finally, we can change the application by the `-app_file` option. Evaluate the
+trained model
+```bash
+../../script/ps.sh start ../../build/linear -app_file ctr/eval_online.conf
+```
+or train by the batch solver
+```bash
+../../script/ps.sh start ../../build/linear -app_file ctr/batch_l1lr.conf
+```
+
+See more information about the configuration file in [linear.proto](../../src/app/linear_method/proto/linear.proto)
 
 <!-- *by [[www.docker.com][docker]]* -->
 <!-- #+BEGIN_SRC bash -->
