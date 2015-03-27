@@ -1,10 +1,14 @@
-* Sample configurations to run linear method
+# Tutorial to run linear method
 
-** Data
+## Prepearing Data
 
-Use the script such as =rcv1/download.sh= and =ctr/download.sh= to download data
+Use the script such as `rcv1/download.sh` and `ctr/download.sh` to download
+sample data.
 
-** Run in local machine
+## Build the parameter server
+
+
+## Run in local machine
 
 The system can be run by either building the binary or downloading a docker images.
 
@@ -19,8 +23,7 @@ Use the binary you compiled to run l1-regularized logistic regression:
 ../../script/local.sh ../../build/linear 0 0 -app_file ctr/eval_batch.conf
 #+END_SRC
 
-*by [[www.docker.com][docker]]*
-
-#+BEGIN_SRC bash
-sudo ../../docker/local.sh 2 2 ctr/batch_l1lr.conf data model
-#+END_SRC
+<!-- *by [[www.docker.com][docker]]* -->
+<!-- #+BEGIN_SRC bash -->
+<!-- sudo ../../docker/local.sh 2 2 ctr/batch_l1lr.conf data model -->
+<!-- #+END_SRC -->

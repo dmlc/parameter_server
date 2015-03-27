@@ -22,4 +22,4 @@ EXTRA_LDFLAGS =
 # additional compile flags
 EXTRA_CFLAGS =
 
-all: ps build/linear
+all: ps build/linear test
