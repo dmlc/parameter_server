@@ -30,19 +30,23 @@ class FixingFloatFilter : public Filter {
       auto type = msg->task.value_type(i);
       if (type == DataType::FLOAT) {
         CHECK_GT(filter_conf->fixed_point_size(), k);
-        msg->value[i] = convert<float>(msg->value[i], encode, filter_conf->mutable_fixed_point(k++));
+        msg->value[i] = convert<float>(
+            msg->value[i], encode, filter_conf->num_bytes(),
+            filter_conf->mutable_fixed_point(k++));
       }
       if (type == DataType::DOUBLE) {
         CHECK_GT(filter_conf->fixed_point_size(), k);
-        msg->value[i] = convert<double>(msg->value[i], encode, filter_conf->mutable_fixed_point(k++));
+        msg->value[i] = convert<double>(
+            msg->value[i], encode, filter_conf->num_bytes(),
+            filter_conf->mutable_fixed_point(k++));
       }
     }
   }
 
   // decode / encode an array
   template <typename V>
-  SArray<char> convert(const SArray<char>& array, bool encode, FilterConfig::FixedFloatConfig* conf) {
-    int nbytes = conf->num_bytes();
+  SArray<char> convert(const SArray<char>& array, bool encode, int nbytes,
+                       FilterConfig::FixedFloatConfig* conf) {
     CHECK_GT(nbytes, 0);
     CHECK_LT(nbytes, 8);
     double ratio = static_cast<double>(1 << (nbytes*8)) - 2;

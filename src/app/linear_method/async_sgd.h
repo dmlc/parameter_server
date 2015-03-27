@@ -60,7 +60,6 @@ class AsyncSGDServer : public ISGDCompNode {
       //   model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>();
       // }
     }
-    // CHECK_NOTNULL(model_)->set_state(state);
   }
 
   virtual ~AsyncSGDServer() {
@@ -139,7 +138,7 @@ class AsyncSGDServer : public ISGDCompNode {
     V z = 0;
     V sqrt_n = 0;
 
-    void Get(V const* data, void* state) {
+    void Set(const V* data, void* state) {
       SGDState* st = (SGDState*) state;
       // update model
       V w_old = w;
@@ -155,11 +154,15 @@ class AsyncSGDServer : public ISGDCompNode {
       st->UpdateWeight(w, w_old);
     }
 
-    void Set(V* data, void* state) { *data = w; }
+    void Get(V* data, void* state) { *data = w; }
   };
 
 };
 
+/**
+ * @brief A worker node
+ *
+ */
 template <typename V>
 class AsyncSGDWorker : public ISGDCompNode {
  public:
@@ -191,6 +194,11 @@ class AsyncSGDWorker : public ISGDCompNode {
   }
 
  private:
+  /**
+   * @brief process a data file
+   *
+   * @param load
+   */
   void UpdateModel(const Workload& load) {
     LOG(INFO) << MyNodeID() << ": accept workload " << load.id();
     VLOG(1) << "workload data: " << load.data().ShortDebugString();
@@ -213,6 +221,9 @@ class AsyncSGDWorker : public ISGDCompNode {
 
       // pull the weight
       auto req = Parameter::Request(id);
+      for (int i = 0; i < conf_.pull_filter_size(); ++i) {
+        *req.add_filter() = conf_.pull_filter(i);
+      }
       model_.Pull(req, key, [this, id]() { ComputeGradient(id); });
     }
 
@@ -220,6 +231,10 @@ class AsyncSGDWorker : public ISGDCompNode {
     LOG(INFO) << MyNodeID() << ": finished workload " << load.id();
   }
 
+  /**
+   *
+   * @param id minibatch id
+   */
   void ComputeGradient(int id) {
     mu_.lock();
     auto Y = data_[id].first;
@@ -248,18 +263,16 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // push the gradient
     auto req = Parameter::Request(id);
-    // LL << grad;
+    for (int i = 0; i < conf_.push_filter_size(); ++i) {
+      // add filters
+      auto filter = conf_.push_filter(i);
+      if (filter.type() == FilterConfig::KEY_CACHING) {
+        filter.set_clear_cache_if_done(true);
+      }
+      *req.add_filter() = filter;
+    }
     model_.Push(req, model_[id].key, grad);
     model_.clear(id);
-
-
-    // msg->add_filter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-    // int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
-    // if (nbytes) {
-    //   auto conf = msg->add_filter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
-    //   conf->set_num_bytes(nbytes);
-    // }
-
 
     ++ processed_batch_;
   }

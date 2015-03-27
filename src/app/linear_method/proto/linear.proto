@@ -1,7 +1,7 @@
 package PS.LM;
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
-
+import "filter/proto/filter.proto";
 message Config {
   optional DataConfig training_data = 1;
   optional DataConfig validation_data = 2;
@@ -17,6 +17,8 @@ message Config {
   optional SGDConfig async_sgd = 17;
   optional BCDConfig darlin = 15;
 
+  repeated FilterConfig push_filter = 13;
+  repeated FilterConfig pull_filter = 14;
 }
 
 extend BCDConfig {
@@ -62,9 +64,6 @@ message SGDConfig {
   // filtered feature.
   optional float countmin_n = 8 [default = 1e8];
   optional int32 countmin_k = 7 [default = 2];
-
-  // if > 0, then use *fixing_float_by_nbytes* bytes to encode float during communication
-  optional int32 fixing_float_by_nbytes = 13 [default = 0];
 }
 
 message LossConfig {

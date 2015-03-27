@@ -14,10 +14,11 @@ message FilterConfig {
   // if the task is done, then clear the cache (to save memory)
   optional bool clear_cache_if_done = 20 [default = false];
 
+  optional int32 num_bytes = 5 [default = 3];
+
   message FixedFloatConfig {
     optional float min_value = 1 [default = -1];
     optional float max_value = 2 [default = 1];
-    optional int32 num_bytes = 3 [default = 3];
   }
   repeated FixedFloatConfig fixed_point = 4;
 
