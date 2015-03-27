@@ -107,8 +107,13 @@ start_scheduler() {
     get_port $1
     # start scheduler
     Sch="\"role:SCHEDULER,hostname:'$1',port:$port,id:'H'\""
-    ssh  $1 "cd $(pwd) && $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"H\tscheduler\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
-    echo "$bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg"
+    cmd="cd $(pwd) && $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"H\tscheduler\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes"
+    if [[ $local ]]; then
+        eval $cmd
+    else
+        ssh $1 &
+    fi
+    # echo "$bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg"
     # save parameter to facilitate add operation
     echo -e "$bin\t$Sch\t$server\t$worker\t$arg" > /tmp/ps-state/args
 }
@@ -118,8 +123,9 @@ start_worker() {
     get_port $1
     # start scheduler
     N="\"role:WORKER,hostname:'$1',port:$port,id:'W$2'\""
-    ssh  $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"W$2\tworker\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
-    echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
+    cmd="cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"W$2\tworker\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes"
+    ssh $1 $cmd &
+    # echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
 }
 
 start_server() {
@@ -127,8 +133,9 @@ start_server() {
     get_port $1
     # start scheduler
     N="\"role:SERVER,hostname:'$1',port:$port,id:'S$2'\""
-    ssh  $1 "cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"S$2\tserver\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes" &
-    echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
+    cmd="cd $(pwd) && $bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"S$2\tserver\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes"
+    ssh $1 $cmd &
+    # echo "$bin -my_node $N -scheduler $Sch -num_workers $worker -num_servers $server $arg"
 }
 
 reset_counter() {
@@ -341,9 +348,9 @@ if [[ $1 = 'start' ]]; then
 
 	check_start
 	start
+    wait
+	clear
 	wait
-	# clear
-	# wait
 elif [[ $1 = 'stop' ]]; then
 	shift
 	while [[ $# -gt 0 ]]; do
