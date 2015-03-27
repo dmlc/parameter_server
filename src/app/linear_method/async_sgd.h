@@ -1,10 +1,15 @@
+/**
+ * @file   async_sgd.h
+ * @brief  Asynchronous stochastic gradient descent to solve linear methods.
+ *
+ */
 #pragma once
 #include <random>
 #include "ps.h"
 #include "learner/sgd.h"
 #include "util/evaluation.h"
 #include "parameter/kv_vector.h"
-#include "parameter/kv_store.h"
+#include "parameter/kv_map.h"
 #include "app/linear_method/learning_rate.h"
 #include "app/linear_method/proto/linear.pb.h"
 #include "app/linear_method/loss.h"
@@ -12,8 +17,10 @@
 namespace PS {
 namespace LM {
 
-// async sgd. support various loss functions and regularizers
-
+/**
+ * @brief The scheduler node
+ *
+ */
 class AsyncSGDScheduler : public ISGDScheduler {
  public:
   AsyncSGDScheduler(const Config& conf)
@@ -31,144 +38,126 @@ class AsyncSGDScheduler : public ISGDScheduler {
   Config conf_;
 };
 
-template <typename V>
-struct SGDState {
-  SGDState() { }
-  SGDState(const PenaltyConfig& h_conf, const LearningRateConfig& lr_conf) {
-    lr = std::shared_ptr<LearningRate<V>>(new LearningRate<V>(lr_conf));
-    h = std::shared_ptr<Penalty<V>>(createPenalty<V>(h_conf));
-  }
-  virtual ~SGDState() { }
-
-  void update() {
-    if (!reporter) return;
-    SGDProgress prog;
-    prog.set_nnz(nnz);
-    prog.set_weight_sum(weight_sum); weight_sum = 0;
-    prog.set_delta_sum(delta_sum); delta_sum = 0;
-    reporter->report(prog);
-  }
-
-  void updateWeight(V new_weight, V old_weight) {
-    // LL << new_weight << " " << old_weight;
-    if (new_weight == 0 && old_weight != 0) {
-      -- nnz;
-    } else if (new_weight != 0 && old_weight == 0) {
-      ++ nnz;
-    }
-    weight_sum += new_weight * new_weight;
-    V delta = new_weight - old_weight;
-    delta_sum += delta * delta;
-  }
-
-  std::shared_ptr<LearningRate<V>> lr;
-  std::shared_ptr<Penalty<V>> h;
-
-  int iter = 0;
-  size_t nnz = 0;
-  V weight_sum = 0;
-  V delta_sum = 0;
-  V max_delta = 1.0;  // maximal change of weight
-  MonitorSlaver<SGDProgress>* reporter = nullptr;
-};
-
-template <typename V>
-struct AdaGradEntry {
-  void get(V const* data, SGDState<V>* state) {
-    // update model
-    V grad = *data;
-    sum_sq_grad += grad * grad;
-    // state->update(weight, grad, sqrt(sum_sq_grad));
-    // TODO
-  }
-
-  void put(V* data, SGDState<V>* state) {
-    *data = weight;
-  }
-  V weight = 0;
-  V sum_sq_grad = 0;
-};
-
-template <typename V>
-struct SGDEntry {
-  void get(V const* data, SGDState<V>* state) {
-    // V grad = *((V*)data);
-    // state->update(weight, grad);
-    // TODO
-  }
-  void put(V* data, SGDState<V>* state) {
-    *data = weight;
-  }
-  V weight = 0;
-};
-
-template <typename V>
-struct FTRLEntry {
-  V w = 0;  // not necessary to store w, because it can be computed from z
-  V z = 0;
-  V sqrt_n = 0;
-
-  void get(V const* data, SGDState<V>* state) {
-    // update model
-    V w_old = w;
-    V grad = *data;
-    V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
-    V sigma = (sqrt_n_new - sqrt_n) / state->lr->alpha();
-    z += grad  - sigma * w;
-    sqrt_n = sqrt_n_new;
-
-    V eta = state->lr->eval(sqrt_n);
-    w = state->h->proximal(-z*eta, eta);
-    state->updateWeight(w, w_old);
-  }
-
-  void put(V* data, SGDState<V>* state) {
-    *data = w;
-  }
-};
-
+/**
+ * @brief A server node
+ *
+ */
 template <typename V>
 class AsyncSGDServer : public ISGDCompNode {
-public:
+ public:
   AsyncSGDServer(const Config& conf)
       : ISGDCompNode(), conf_(conf) {
-    if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
-      model_ = new KVStore<Key, V, FTRLEntry<V>, SGDState<V>>();
-    } else {
-      if (conf_.async_sgd().ada_grad()) {
-        model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>();
-      } else {
-        model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>();
-      }
-    }
-
-    SGDState<V> state(conf_.penalty(), conf_.learning_rate());
+    SGDState state(conf_.penalty(), conf_.learning_rate());
     state.reporter = &(this->reporter_);
-    CHECK_NOTNULL(model_)->setState(state);
+    if (conf_.async_sgd().algo() == SGDConfig::FTRL) {
+      auto model = new KVMap<Key, V, FTRLEntry, SGDState>();
+      model->set_state(state);
+      model_ = model;
+    } else {
+      // if (conf_.async_sgd().ada_grad()) {
+      //   model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>();
+      // } else {
+      //   model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>();
+      // }
+    }
+    // CHECK_NOTNULL(model_)->set_state(state);
   }
 
   virtual ~AsyncSGDServer() {
     delete model_;
   }
 
-  void saveModel() {
+  void SaveModel() {
     auto output = conf_.model_output();
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + MyNodeID();
-      CHECK_NOTNULL(model_)->writeToFile(file);
-      LI << MyNodeID() << " written the model to " << file;
+      // CHECK_NOTNULL(model_)->writeToFile(file);
+      // LI << MyNodeID() << " written the model to " << file;
     }
   }
 
-  virtual void process(const MessagePtr& msg) {
-    if (msg->task.sgd().cmd() == SGDCall::SAVE_MODEL) {
-      saveModel();
+  virtual void ProcessRequest(Message* request) {
+    if (request->task.sgd().cmd() == SGDCall::SAVE_MODEL) {
+      SaveModel();
     }
   }
  protected:
-  KVState<Key, SGDState<V>>* model_ = nullptr;
+  Parameter* model_ = nullptr;
   Config conf_;
+
+  /**
+   * @brief Progress state
+   *
+   */
+  struct SGDState {
+    SGDState() { }
+    SGDState(const PenaltyConfig& h_conf, const LearningRateConfig& lr_conf) {
+      lr = std::shared_ptr<LearningRate<V>>(new LearningRate<V>(lr_conf));
+      h = std::shared_ptr<Penalty<V>>(createPenalty<V>(h_conf));
+    }
+    virtual ~SGDState() { }
+
+    void Update() {
+      if (!reporter) return;
+      SGDProgress prog;
+      prog.set_nnz(nnz);
+      prog.set_weight_sum(weight_sum); weight_sum = 0;
+      prog.set_delta_sum(delta_sum); delta_sum = 0;
+      reporter->report(prog);
+    }
+
+    void UpdateWeight(V new_weight, V old_weight) {
+      // LL << new_weight << " " << old_weight;
+      if (new_weight == 0 && old_weight != 0) {
+        -- nnz;
+      } else if (new_weight != 0 && old_weight == 0) {
+        ++ nnz;
+      }
+      weight_sum += new_weight * new_weight;
+      V delta = new_weight - old_weight;
+      delta_sum += delta * delta;
+    }
+
+    std::shared_ptr<LearningRate<V>> lr;
+    std::shared_ptr<Penalty<V>> h;
+
+    int iter = 0;
+    size_t nnz = 0;
+    V weight_sum = 0;
+    V delta_sum = 0;
+    V max_delta = 1.0;  // maximal change of weight
+    MonitorSlaver<SGDProgress>* reporter = nullptr;
+  };
+
+  /**
+   * @brief An entry for FTRL
+   *
+   */
+  struct FTRLEntry {
+    V w = 0;  // not necessary to store w, because it can be computed from z
+    V z = 0;
+    V sqrt_n = 0;
+
+    void Get(V const* data, void* state) {
+      SGDState* st = (SGDState*) state;
+      // update model
+      V w_old = w;
+      V grad = *data;
+      V sqrt_n_new = sqrt(sqrt_n * sqrt_n + grad * grad);
+      V sigma = (sqrt_n_new - sqrt_n) / st->lr->alpha();
+      z += grad  - sigma * w;
+      sqrt_n = sqrt_n_new;
+
+      // update status
+      V eta = st->lr->eval(sqrt_n);
+      w = st->h->proximal(-z*eta, eta);
+      st->UpdateWeight(w, w_old);
+    }
+
+    void Set(V* data, void* state) { *data = w; }
+  };
+
 };
 
 template <typename V>
@@ -180,31 +169,29 @@ class AsyncSGDWorker : public ISGDCompNode {
   }
   virtual ~AsyncSGDWorker() { }
 
-  virtual void process(const MessagePtr& msg) {
-    const auto& sgd = msg->task.sgd();
+  virtual void ProcessRequest(Message* request) {
+    const auto& sgd = request->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
       // do workload
-      updateModel(sgd.load());
+      UpdateModel(sgd.load());
 
       // reply the scheduler with the finished id
       Task done;
       done.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
       done.mutable_sgd()->mutable_load()->add_finished(sgd.load().id());
-      sys_.Reply(msg, done);
-      msg->replied = true;
+      Reply(request, done);
     }
   }
 
-  virtual void run() {
-    WaitServersReady();
-
+  virtual void Run() {
     // request workload from the scheduler
-    Task task; task.mutable_sgd()->set_cmd(SGDCall::REQUEST_WORKLOAD);
-    port(SchedulerID())->submit(task);
+    Task task;
+    task.mutable_sgd()->set_cmd(SGDCall::REQUEST_WORKLOAD);
+    Submit(task, SchedulerID());
   }
 
  private:
-  void updateModel(const Workload& load) {
+  void UpdateModel(const Workload& load) {
     LOG(INFO) << MyNodeID() << ": accept workload " << load.id();
     VLOG(1) << "workload data: " << load.data().ShortDebugString();
     const auto& sgd = conf_.async_sgd();
@@ -216,7 +203,7 @@ class AsyncSGDWorker : public ISGDCompNode {
     processed_batch_ = 0;
     int id = 0;
     SArray<Key> key;
-    while (true) {
+    for (; ; ++id) {
       mu_.lock();
       auto& data = data_[id];
       mu_.unlock();
@@ -225,21 +212,15 @@ class AsyncSGDWorker : public ISGDCompNode {
               << data.second->rows() << "-by-" << data.second->cols();
 
       // pull the weight
-      MessagePtr msg(new Message(kServerGroup));
-      msg->setKey(key);
-      msg->task.set_key_channel(id);
-      msg->callback = [this, id]() { computeGradient(id); };
-      model_.key(id) = key;
-      model_.pull(msg);
-
-      ++ id;
+      auto req = Parameter::Request(id);
+      model_.Pull(req, key, [this, id]() { ComputeGradient(id); });
     }
 
     while (processed_batch_ < id) { usleep(500); }
     LOG(INFO) << MyNodeID() << ": finished workload " << load.id();
   }
 
-  void computeGradient(int id) {
+  void ComputeGradient(int id) {
     mu_.lock();
     auto Y = data_[id].first;
     auto X = data_[id].second;
@@ -250,12 +231,11 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // evaluate
     SArray<V> Xw(Y->rows());
-    auto w = model_.value(id);
-    Xw.eigenArray() = *X * w.eigenArray();
+    auto w = model_[id].value;
+    Xw.EigenArray() = *X * w.EigenArray();
     SGDProgress prog;
-    prog.add_objective(loss_->evaluate({Y, Xw.matrix()}));
-    // not with penalty.
-    // + penalty_->evaluate(w.matrix());
+    prog.add_objective(loss_->evaluate({Y, Xw.SMatrix()}));
+    // not with penalty. penalty_->evaluate(w.SMatrix());
     prog.add_auc(Evaluation<V>::auc(Y->value(), Xw));
     prog.add_accuracy(Evaluation<V>::accuracy(Y->value(), Xw));
     prog.set_num_examples_processed(
@@ -264,21 +244,22 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // compute the gradient
     SArray<V> grad(X->cols());
-    loss_->compute({Y, X, Xw.matrix()}, {grad.matrix()});
+    loss_->compute({Y, X, Xw.SMatrix()}, {grad.SMatrix()});
 
     // push the gradient
-    MessagePtr msg(new Message(kServerGroup));
-    msg->setKey(model_.key(id));
-    msg->addValue(grad);
-    msg->task.set_key_channel(id);
-    msg->add_filter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-    int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
-    if (nbytes) {
-      auto conf = msg->add_filter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
-      conf->set_num_bytes(nbytes);
-    }
-    model_.push(msg);
+    auto req = Parameter::Request(id);
+    // LL << grad;
+    model_.Push(req, model_[id].key, grad);
     model_.clear(id);
+
+
+    // msg->add_filter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
+    // int nbytes = conf_.async_sgd().fixing_float_by_nbytes();
+    // if (nbytes) {
+    //   auto conf = msg->add_filter(FilterConfig::FIXING_FLOAT)->add_fixed_point();
+    //   conf->set_num_bytes(nbytes);
+    // }
+
 
     ++ processed_batch_;
   }
@@ -300,8 +281,8 @@ private:
 } // namespace LM
 } // namespace PS
 
-// auto we = w.eigenArray();
-// auto ge = grad.eigenArray();
+// auto we = w.EigenArray();
+// auto ge = grad.EigenArray();
 // LL << we.minCoeff() << " " << we.maxCoeff() << " "
 //    << w.mean() << " " << w.std() << " "
 //    << ge.minCoeff() << " " << ge.maxCoeff() << " "
@@ -329,3 +310,33 @@ private:
 //   LL << sqrt(n1) << " " << sqrt(n2);
 // }
 // // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
+
+// template <typename V>
+// struct AdaGradEntry {
+//   void get(V const* data, SGDState<V>* state) {
+//     // update model
+//     V grad = *data;
+//     sum_sq_grad += grad * grad;
+//     // state->update(weight, grad, sqrt(sum_sq_grad));
+//     // TODO
+//   }
+
+//   void put(V* data, SGDState<V>* state) {
+//     *data = weight;
+//   }
+//   V weight = 0;
+//   V sum_sq_grad = 0;
+// };
+
+// template <typename V>
+// struct SGDEntry {
+//   void get(V const* data, SGDState<V>* state) {
+//     // V grad = *((V*)data);
+//     // state->update(weight, grad);
+//     // TODO
+//   }
+//   void put(V* data, SGDState<V>* state) {
+//     *data = weight;
+//   }
+//   V weight = 0;
+// };

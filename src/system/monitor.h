@@ -20,10 +20,10 @@ class MonitorMaster : public Customer {
     merger_ = merger;
   }
 
-  void process(Message* msg) {
-    NodeID sender = msg->sender;
+  virtual void ProcessRequest(Message* request) {
+    NodeID sender = request->sender;
     Progress prog;
-    CHECK(prog.ParseFromString(msg->task.msg()));
+    CHECK(prog.ParseFromString(request->task.msg()));
     if (merger_) {
       merger_(prog, &progress_[sender]);
     } else {

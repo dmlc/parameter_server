@@ -92,7 +92,7 @@ Penalty<T>* createPenalty(const PenaltyConfig& conf) {
 //   bool smooth() { return p_ > 1; }
 
 //   T evaluate(const MatrixPtr<T>& model) {
-//     auto w = model->value().eigenArray();
+//     auto w = model->value().EigenArray();
 //     return lambda_ * pow(w.abs(), p_).sum();
 //   }
 

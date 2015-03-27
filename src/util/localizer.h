@@ -89,15 +89,15 @@ void Localizer<I,V>::countUniqIndex(
   uint32 cnt = 0;
   for (const Pair& v : pair_) {
     if (v.k != curr) {
-      uniq_idx->pushBack(curr);
+      uniq_idx->push_back(curr);
       curr = v.k;
-      if (idx_frq) idx_frq->pushBack((C)cnt);
+      if (idx_frq) idx_frq->push_back((C)cnt);
       cnt = 0;
     }
     ++ cnt;
   }
-  uniq_idx->pushBack(curr);
-  if (idx_frq) idx_frq->pushBack((C)cnt);
+  uniq_idx->push_back(curr);
+  if (idx_frq) idx_frq->push_back((C)cnt);
 
   // LL << pair_.size() << " " << idx.size() << " " << uniq_idx->size();
   // LL << crc32c::Value((char*)uniq_idx->data(), uniq_idx->size()*sizeof(V));

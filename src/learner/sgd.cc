@@ -5,11 +5,11 @@ ISGDScheduler::~ISGDScheduler() {
   // core dump when delete workload_pool_;
 }
 
-void ISGDScheduler::run() {
+void ISGDScheduler::Run() {
   // init monitor
   using namespace std::placeholders;
-  monitor_.setMerger(std::bind(&ISGDScheduler::mergeProgress, this, _1, _2));
-  monitor_.setPrinter(1, std::bind(&ISGDScheduler::showProgress, this, _1, _2));
+  monitor_.setMerger(std::bind(&ISGDScheduler::MergeProgress, this, _1, _2));
+  monitor_.setPrinter(1, std::bind(&ISGDScheduler::ShowProgress, this, _1, _2));
 
   // wait all jobs are finished
   sys_.manager().AddNodeFailureHandler([this](const NodeID& id) {
@@ -24,29 +24,31 @@ void ISGDScheduler::run() {
   Wait(ts);
 }
 
-void ISGDScheduler::process(Message* msg) {
-  if (!msg->task.has_sgd()) return;
-  const auto& sgd = msg->task.sgd();
-  switch (sgd.cmd()) {
-    case SGDCall::UPDATE_MODEL:
-      CHECK(!msg->task.request());
-      for (int i = 0; i < sgd.load().finished_size(); ++i) {
-        workload_pool_->finish(sgd.load().finished(i));
-      }
-      // no break here
-    case SGDCall::REQUEST_WORKLOAD: {
-      Task task;
-      task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
-      if (workload_pool_->assign(
-              msg->sender, task.mutable_sgd()->mutable_load())) {
-        Submit(task, msg->sender);
-      }
-    } break;
-    default: ; // nothing
+void ISGDScheduler::ProcessResponse(Message* response) {
+  const auto& sgd = response->task.sgd();
+  if (sgd.cmd() == SGDCall::UPDATE_MODEL) {
+    for (int i = 0; i < sgd.load().finished_size(); ++i) {
+      workload_pool_->finish(sgd.load().finished(i));
+    }
+    SendWorkload(response->sender);
   }
 }
 
-void ISGDScheduler::showProgress(
+void ISGDScheduler::ProcessRequest(Message* request) {
+  if (request->task.sgd().cmd() == SGDCall::REQUEST_WORKLOAD) {
+    SendWorkload(request->sender);
+  }
+}
+
+void ISGDScheduler::SendWorkload(const NodeID& recver) {
+  Task task;
+  task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+  if (workload_pool_->assign(recver, task.mutable_sgd()->mutable_load())) {
+    Submit(task, recver);
+  }
+}
+
+void ISGDScheduler::ShowProgress(
     double time, std::unordered_map<NodeID, SGDProgress>* progress) {
   uint64 num_ex = 0, nnz_w = 0;
   SArray<double> objv, auc, acc;
@@ -84,7 +86,7 @@ void ISGDScheduler::showProgress(
 }
 
 
-void ISGDScheduler::mergeProgress(const SGDProgress& src, SGDProgress* dst) {
+void ISGDScheduler::MergeProgress(const SGDProgress& src, SGDProgress* dst) {
   auto old = *dst; *dst = src;
   // TODO also append objv
   dst->set_num_examples_processed(

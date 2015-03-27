@@ -28,7 +28,7 @@ SArray<K> FreqencyFilter<K,V>::queryKeys(const SArray<K>& key, int freqency) {
   SArray<K> filtered_key;
   for (auto k : key) {
     if (count_.query(k) > freqency) {
-     filtered_key.pushBack(k);
+     filtered_key.push_back(k);
     }
   }
   return filtered_key;
@@ -49,7 +49,7 @@ void FreqencyFilter<K,V>::insertKeys(const SArray<K>& key, const SArray<V>& coun
 // SArray<K> FreqencyFilter<K>::queryKeys(const SArray<K>& key, int freqency) {
 //   SArray<K> filtered_key;
 //   for (K k : key) {
-//     if (map_[k] > freqency) filtered_key.pushBack(k);
+//     if (map_[k] > freqency) filtered_key.push_back(k);
 //   }
 //   return filtered_key;
 // }

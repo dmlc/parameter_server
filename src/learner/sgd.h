@@ -1,3 +1,8 @@
+/**
+ * @file   sgd.h
+ * @brief  The interface for a stochastic gradient descent solver
+ *
+ */
 #pragma once
 #include "ps.h"
 #include "util/producer_consumer.h"
@@ -10,22 +15,26 @@
 #include "learner/workload_pool.h"
 namespace PS {
 
-// interface for stochastic gradient descent solver
-
-// the base class of a scheduler node
+/**
+ * @brief The base class of a scheduler node
+ *
+ */
 class ISGDScheduler : public App {
  public:
   ISGDScheduler() : App() { }
   virtual ~ISGDScheduler();
-  virtual void process(Message* msg);
-  virtual void run();
 
+  virtual void Run();
+  virtual void ProcessResponse(Message* response);
+  virtual void ProcessRequest(Message* request);
  protected:
   // print the progress
-  virtual void showProgress(
+  virtual void ShowProgress(
       double time, std::unordered_map<NodeID, SGDProgress>* progress);
   // merge the progress report from a computation node
-  virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst);
+  virtual void MergeProgress(const SGDProgress& src, SGDProgress* dst);
+
+  void SendWorkload(const NodeID& recver);
   MonitorMaster<SGDProgress> monitor_;
 
   WorkloadPool *workload_pool_ = nullptr;
@@ -35,7 +44,10 @@ class ISGDScheduler : public App {
   bool show_prog_head_ = true;
 };
 
-// the base class of a computation node
+/**
+ * @brief The base class of a computation node
+ *
+ */
 class ISGDCompNode : public App {
  public:
   ISGDCompNode() : App(), reporter_(SchedulerID()) { }
@@ -45,7 +57,10 @@ class ISGDCompNode : public App {
   MonitorSlaver<SGDProgress> reporter_;
 };
 
-// a multithread minibatch reader
+/**
+ * @brief A multithread minibatch reader
+ *
+ */
 template <typename V>
 class MinibatchReader {
  public:

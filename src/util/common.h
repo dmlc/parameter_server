@@ -81,14 +81,19 @@ inline string dbstr(const V* data, int n, int m = 5) {
   return ss.str();
 }
 
-#define NOTICE(_fmt_, args...) do {              \
-    struct timeval tv; gettimeofday(&tv, NULL);  \
-    time_t ts = (time_t)(tv.tv_sec);             \
+#define NOTICE(_fmt_, args...) do {                                     \
+    struct timeval tv; gettimeofday(&tv, NULL);                         \
+    time_t ts = (time_t)(tv.tv_sec);                                    \
     struct ::tm tm_time; localtime_r(&ts, &tm_time);                    \
+    int n = strlen(__FILE__) - 1;                                       \
+    for (; n > -1; --n) { if (n==-1 || __FILE__[n] == '/') break; }     \
     fprintf(stdout, "[%02d%02d %02d:%02d:%02d.%03d %s:%d] " _fmt_ "\n", \
             1+tm_time.tm_mon, tm_time.tm_mday, tm_time.tm_hour,         \
             tm_time.tm_min, tm_time.tm_sec, (int)tv.tv_usec/1000,       \
-            basename(__FILE__), __LINE__, ##args);                      \
+            __FILE__+n+1, __LINE__, ##args);                            \
 } while (0)
 
 } // namespace PS
+
+
+// basename(__FILE__)

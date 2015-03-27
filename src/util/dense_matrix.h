@@ -38,7 +38,7 @@ class DenseMatrix : public Matrix<V> {
     auto info = info_;
     range.to(info.mutable_row());
     info.set_nnz(range.size() * cols());
-    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*cols())));
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.Segment(range*cols())));
   }
 
   virtual MatrixPtr<V> colBlock(SizeR range) const {
@@ -46,12 +46,12 @@ class DenseMatrix : public Matrix<V> {
     auto info = info_;
     range.to(info.mutable_col());
     info.set_nnz(range.size() * rows());
-    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*rows())));
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.Segment(range*rows())));
   }
 
   virtual bool writeToBinFile(string name) const {
     return (writeProtoToASCIIFile(info_, name+".info")
-            && value_.writeToFile(name+".value"));
+            && value_.WriteToFile(name+".value"));
   }
 
   virtual string debugString() const {
@@ -78,7 +78,7 @@ void DenseMatrix<V>::resize(
   // info_.set_nnz_per_col(rows);
   // data
   value_.resize(nnz);
-  value_.setZero();
+  value_.SetZero();
 
 }
 

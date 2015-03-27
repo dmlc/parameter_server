@@ -17,14 +17,14 @@ class RequestTracker {
 
   // Returns true if timestamp "ts" is marked as finished.
   bool IsFinished(int ts) {
-    return ts < 0 || ((data_.size() > ts) && data_[ts]);
+    return ts < 0 || (((int)data_.size() > ts) && data_[ts]);
   }
 
   // Mark timestamp "ts" as finished.
   void Finish(int ts) {
     CHECK_GE(ts, 0);
     CHECK_LT(ts, 1000000);
-    if (data_.size() <= ts) data_.resize(ts*2+5);
+    if ((int)data_.size() <= ts) data_.resize(ts*2+5);
     data_[ts] = true;
   }
  private:

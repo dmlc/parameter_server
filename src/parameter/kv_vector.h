@@ -83,7 +83,8 @@ class KVVector : public Parameter {
            const SArray<K>& keys,
            const std::initializer_list<SArray<V>>& values);
 
-  int Pull(const Task& request, const SArray<K>& keys);
+  int Pull(const Task& request, const SArray<K>& keys,
+           Message::Callback callback = Message::Callback());
 
 
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
@@ -190,7 +191,8 @@ int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
 }
 
 template <typename K, typename V>
-int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys) {
+int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
+                        Message::Callback callback) {
   Lock l(mu_);
   int chl = request.key_channel();
   if (keys.empty() ) CHECK_EQ(data_.count(chl), 1) << "empty channel " << chl;
@@ -200,6 +202,7 @@ int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys) {
 
   Message pull(request, kServerGroup);
   pull.set_key(kv.key);
+  if (callback) pull.callback = callback;
   return Parameter::Pull(&pull);
 }
 

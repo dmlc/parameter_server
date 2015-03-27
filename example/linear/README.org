@@ -14,7 +14,7 @@ Use the binary you compiled to run l1-regularized logistic regression:
 
 #+BEGIN_SRC bash
 # run block coordinate descent with 2 servers and 2 workers:
-../../script/local.sh ../../build/linear 2 2 -app_file ctr/batch_l1lr.conf
+../../script/local.sh  2 2 ../../build/linear -app_file ctr/batch_l1lr.conf
 # evaluate the model
 ../../script/local.sh ../../build/linear 0 0 -app_file ctr/eval_batch.conf
 #+END_SRC
