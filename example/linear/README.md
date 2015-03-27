@@ -8,28 +8,26 @@ sample data.
 
 **Run L1 Logistic Regression on the CTR dataset**
 
-Let first start one worker and one server in local machine, and run the online
-solver for L1 logistic regression.
-
+Let's first start one worker and one server in the local machine to run the online
+solver.
 ```bash
 ../../script/ps.sh start ../../build/linear -app_file ctr/online_l1lr.conf
 ```
 
-We can use more workers and servers, such as 3 workers and 4 workers, via
+Next we use 3 workers and 4 servers:
 
 ```bash
 ../../script/ps.sh start -nw 3 -ns 4 ../../build/linear -app_file ctr/online_l1lr.conf
 ```
 
 We can also start the jobs in multiple machines. Assume there is a `your_hostfile`
-containing all machines IPs, where each line has one IP. Then start the job via
+containing all machines IPs line by line. Then start the job via
 the `-hostfile` option.
-
 ```bash
 ../../script/ps.sh start -hostfile your_hostfile -nw 3 -ns 4 ../../build/linear -app_file ctr/online_l1lr.conf
 ```
 
-Finally, we can change the application by the `-app_file` option. Evaluate the
+Finally, we can change the application by the `-app_file` option. For example, Evaluate the
 trained model
 ```bash
 ../../script/ps.sh start ../../build/linear -app_file ctr/eval_online.conf
