@@ -3,6 +3,7 @@ import "util/proto/range.proto";
 import "data/proto/data.proto";
 import "data/proto/example.proto";
 import "parameter/proto/param.proto";
+import "filter/proto/filter.proto";
 
 message BCDConfig {
   // Divide a feature group into feature_block_ratio x nnz_feature_per_example

@@ -7,6 +7,7 @@
 #include "system/assigner.h"
 #include "data/slot_reader.h"
 #include "data/common.h"
+#include "util/localizer.h"
 #include "parameter/kv_vector.h"
 namespace PS {
 
@@ -49,6 +50,7 @@ class BCDScheduler : public App {
   BCDConfig bcd_conf_;
   std::vector<int> fea_grp_;
 
+  DataAssigner data_assigner_;
  private:
   /**
    * @brief waits util all workers finished data loading
@@ -67,7 +69,6 @@ class BCDScheduler : public App {
    */
   void MergeProgress(int iter, const BCDProgress& recv);
 
-  DataAssigner data_assigner_;
   int hit_cache_ = 0;
   int load_data_ = 0;
   Timer total_timer_;
@@ -77,12 +78,33 @@ class BCDScheduler : public App {
  * @brief The iterface of a computation node. One must implement the virtual
  * functions defined here.
  */
+template <typename V>
 class BCDCompNode : public App {
  public:
-  BCDCompNode() { }
-  virtual BCDCompNode() { }
-  virtual void ProcessRequest(Message* request);
-
+  BCDCompNode(const BCDConfig& conf) : bcd_conf_(conf), model_(true) { }
+  virtual ~BCDCompNode() { }
+  virtual void ProcessRequest(Message* request) {
+    const auto& task = request->task;
+    int time = task.time() * time_ratio_;
+    CHECK(task.has_bcd());
+    switch (task.bcd().cmd()) {
+      case BCDCall::PREPROCESS_DATA:
+        PreprocessData(time, request);
+        break;
+      case BCDCall::UPDATE_MODEL:
+        Update(time, request);
+        break;
+      case BCDCall::EVALUATE_PROGRESS: {
+        BCDProgress prog; Evaluate(&prog);
+        string str; CHECK(prog.SerializeToString(&str));
+        Task res; res.set_msg(str);
+        res.mutable_bcd()->set_iter(task.bcd().iter());
+        res.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
+        Reply(request, res);
+      } break;
+      default: break;
+    }
+  }
  protected:
   /**
    * @brief Update the model
@@ -113,28 +135,34 @@ class BCDCompNode : public App {
   // feature group
   std::vector<int> fea_grp_;
   BCDConfig bcd_conf_;
+  KVVector<Key, V> model_;
 };
+
+#define USING_BCD_COMP_NODE                     \
+  using BCDCompNode<V>::fea_grp_;               \
+  using BCDCompNode<V>::time_ratio_;            \
+  using BCDCompNode<V>::model_;                 \
+  using BCDCompNode<V>::bcd_conf_
 
 /**
  * @brief A server node
  *
  */
 template <typename V>
-class BCDServer : public BCDCompNode {
+class BCDServer : public BCDCompNode<V> {
  public:
   BCDServer(const BCDConfig& conf)
-      : BCDCompNode(), model_(true), bcd_conf_(conf) { }
+      : BCDCompNode<V>(conf) { }
   virtual ~BCDServer() { }
 
   virtual void ProcessRequest(Message* request) {
-    BCDCompNode::ProcessRequest(request);
-    auto bcd = msg->task.bcd();
+    BCDCompNode<V>::ProcessRequest(request);
+    auto bcd = request->task.bcd();
     if (bcd.cmd() == BCDCall::SAVE_MODEL) {
       CHECK(bcd.has_data());
       SaveModel(bcd.data());
     }
   }
-
  protected:
   virtual void PreprocessData(int time, Message* request) {
     auto call = request->task.bcd();
@@ -182,15 +210,14 @@ class BCDServer : public BCDCompNode {
       LI << MyNodeID() << " written the model to " << file;
     }
   }
-  KVVector<Key, V> model_;
-  BCDConfig bcd_conf_;
+  USING_BCD_COMP_NODE;
 };
 
 template <typename V>
-class BCDWorker : public BCDCompNode {
+class BCDWorker : public BCDCompNode<V> {
  public:
   BCDWorker(const BCDConfig& conf)
-      : BCDCompNode(), model_(true), bcd_conf_(conf) {
+      : BCDCompNode<V>(conf) {
     if (!bcd_conf_.has_local_cache()) {
       bcd_conf_.mutable_local_cache()->add_file("/tmp/bcd_");
     }
@@ -199,14 +226,14 @@ class BCDWorker : public BCDCompNode {
 
   virtual void Run() {
     Task task;
-    task.mutable_sgd()->set_cmd(BCDCall::REQUEST_WORKLOAD);
-    Submit(task, SchedulerID());
+    task.mutable_bcd()->set_cmd(BCDCall::REQUEST_WORKLOAD);
+    this->Submit(task, SchedulerID());
   }
 
   virtual void ProcessRequest(Message* request) {
-    auto bcd = msg->task.bcd();
+    auto bcd = request->task.bcd();
     if (bcd.cmd() == BCDCall::LOAD_DATA) {
-      CHECK_EQ(msg->task.time(), 0);
+      CHECK_EQ(request->task.time(), 0);
       CHECK(bcd.has_data());
       LoadDataResponse ret;
       int hit_cache = 0;
@@ -216,7 +243,7 @@ class BCDWorker : public BCDCompNode {
       string str; CHECK(ret.SerializeToString(&str));
       Task res; res.set_msg(str);
       res.mutable_bcd()->set_cmd(BCDCall::LOAD_DATA);
-      Reply(request, res);
+      this->Reply(request, res);
     }
   }
  private:
@@ -243,7 +270,7 @@ class BCDWorker : public BCDCompNode {
     std::vector<int> pull_time(grp_size);
     for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
       if (hit_cache) continue;
-      pull_time[i] = FilterTailFeatures(fea_grp_[i]);
+      pull_time[i] = FilterTailFeatures(time, i);
 
       // wait if necessary to reduce memory usage
       if (i >= max_parallel) {
@@ -258,7 +285,7 @@ class BCDWorker : public BCDCompNode {
       if (!hit_cache && i >= grp_size - max_parallel) {
         model_.Wait(pull_time[i], kServerGroup);
       }
-      InitModel(fea_grp_[i], wait_dual[i]);
+      InitModel(time, fea_grp_[i], wait_dual[i]);
     }
 
     // load the label if necessary
@@ -274,7 +301,9 @@ class BCDWorker : public BCDCompNode {
     DataCache("train", false);
   }
 
-  int FilterTailFeatures(int grp) {
+  int FilterTailFeatures(int time, int i) {
+    int grp_size = fea_grp_.size();
+    int grp = fea_grp_[i];
     // find all unique keys with their count in feature group i
     SArray<Key> uniq_key;
     SArray<uint8> key_cnt;
@@ -314,7 +343,7 @@ class BCDWorker : public BCDCompNode {
         });
   }
 
-  void InitModel(int grp, std::promise<void>& wait) {
+  void InitModel(int time, int grp, std::promise<void>& wait) {
     // push the filtered keys to let servers build the key maps. when the
     // key_caching fitler is used, the communication cost will be little
     model_.Push(Parameter::Request(grp, time, {}, bcd_conf_.comm_filter()));
@@ -322,7 +351,7 @@ class BCDWorker : public BCDCompNode {
     // fetch the initial value of the model
     model_.Pull(
         Parameter::Request(grp, time+2, {time+1}, bcd_conf_.comm_filter()),
-        SArray<Key>(), [this, grp, time, &wait, i]() {
+        SArray<Key>(), [this, grp, time, &wait]() {
           size_t n = model_[grp].key.size();
           if (n) { // otherwise buffer(time+2) may return error
             // intialize the local cache of the model
@@ -340,7 +369,7 @@ class BCDWorker : public BCDCompNode {
             } else {
               CHECK_EQ(dual_.size(), X->rows());
             }
-            if (bcd_conf_.init_w().type() != ParameterInitConfig::ZERO) {
+            if (bcd_conf_.init_w().type() != ParamInitConfig::ZERO) {
               dual_.EigenVector() = *X * model_[grp].value.EigenVector();
             }
           }
@@ -364,22 +393,10 @@ class BCDWorker : public BCDCompNode {
 
   std::mutex mu_;
 
-  KVVector<Key, V> model_;
+  USING_BCD_COMP_NODE;
 };
 
 } // namespace PS
-
-// class BCDCommon {
-//  public:
-//   BCDCommon(const BCDConfig& conf) : bcd_conf_(conf) {
-//     if (!bcd_conf_.has_local_cache()) {
-//       bcd_conf_.mutable_local_cache()->add_file("/tmp/bcd_");
-//     }
-//   }
-//   virtual ~BCDCommon() { }
-//  protected:
-// };
-
 
   // bool DataCache(const string& name, bool load) {
     // // load / save label

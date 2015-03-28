@@ -1,7 +1,7 @@
 #include "ps.h"
 // #include "app/linear_method/linear.h"
 #include "app/linear_method/async_sgd.h"
-// #include "app/linear_method/darlin.h"
+#include "app/linear_method/darlin.h"
 // #include "app/linear_method/model_evaluation.h"
 
 namespace PS {
@@ -16,13 +16,13 @@ App* App::Create(const string& conf_str) {
   auto my_role = MyNode().role();
   App* app = nullptr;
   if (conf.has_darlin()) {
-    // if (my_role == Node::SCHEDULER) {
-    //   app = new DarlinScheduler(conf);
-    // } else if (my_role == Node::WORKER) {
-    //   app = new DarlinWorker(conf);
-    // } else if (my_role == Node::SERVER) {
-    //   app = new DarlinServer(conf);
-    // }
+    if (my_role == Node::SCHEDULER) {
+      app = new DarlinScheduler(conf);
+    } else if (my_role == Node::WORKER) {
+      app = new DarlinWorker(conf);
+    } else if (my_role == Node::SERVER) {
+      app = new DarlinServer(conf);
+    }
   } else if (conf.has_async_sgd()) {
     typedef float Real;
     if (my_role == Node::SCHEDULER) {

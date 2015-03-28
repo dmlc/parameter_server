@@ -1,9 +1,11 @@
 #include "learner/bcd.h"
+#include "util/split.h"
+#include "util/resource_usage.h"
 namespace PS {
 
 void BCDScheduler::ProcessRequest(Message* request) {
-  CHECK(msg->task.has_bcd());
-  auto bcd = msg->task.bcd();
+  CHECK(request->task.has_bcd());
+  auto bcd = request->task.bcd();
   if (bcd.cmd() == BCDCall::REQUEST_WORKLOAD) {
     Task req;
     CHECK(data_assigner_.next(req.mutable_bcd()->mutable_data()));
@@ -15,11 +17,11 @@ void BCDScheduler::ProcessResponse(Message* response) {
   const auto& task = response->task;
   if (!task.has_bcd()) return;
 
-  if (task.bcd().cmd() == BCDConfig::LOAD_DATA) {
+  if (task.bcd().cmd() == BCDCall::LOAD_DATA) {
     LoadDataResponse info;
     CHECK(info.ParseFromString(task.msg()));
     // LL << info.DebugString();
-    g_train_info_ = MergeExampleInfo(g_train_info_, info.example_info());
+    g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
     hit_cache_ += info.hit_cache();
     ++ load_data_;
   } else if (task.bcd().cmd() == BCDCall::EVALUATE_PROGRESS) {
@@ -56,14 +58,14 @@ void BCDScheduler::PreprocesseData() {
     if (info.id() == 0) continue;  // it's the label
     fea_grp_.push_back(info.id());
   }
-  auto tv = tic();
+  auto prep_time = tic();
   Task req; auto bcd = req.mutable_bcd();
   bcd->set_cmd(BCDCall::PREPROCESS_DATA);
   for (auto grp : fea_grp_) bcd->add_fea_grp(grp);
-  prep_bcd->set_hit_cache(hit_cache_ > 0);
+  bcd->set_hit_cache(hit_cache_ > 0);
   Wait(Submit(req, kCompGroup));
 
-  NOTICE("Preprocessing is finished in %lf sec", toc(preprocess_time));
+  NOTICE("Preprocessing is finished in %lf sec", toc(prep_time));
   if (bcd_conf_.tail_feature_freq()) {
     NOTICE("Features with frequency <= %d are filtered", bcd_conf_.tail_feature_freq());
   }
@@ -90,7 +92,7 @@ void BCDScheduler::DivideFeatureBlocks() {
       fea_blk_.push_back(std::make_pair(info.id(), block));
     }
   }
-  NOTICE("Features are partitioned into %d blocks", fea_blk_.size());
+  NOTICE("Features are partitioned into %ld blocks", fea_blk_.size());
 
   // a simple block order
   for (int i = 0; i < fea_blk_.size(); ++i) blk_order_.push_back(i);
@@ -167,36 +169,13 @@ string BCDScheduler::ShowObjective(int iter) {
   } else if (iter == -2) {
     snprintf(buf, 500, "iter |  objective    relative |     |w|_0 ");
   } else if (iter == -1) {
-    fprintf(buf, 500, " ----+------------------------+-----------");
+    snprintf(buf, 500, " ----+------------------------+-----------");
   } else {
     auto prog = g_progress_[iter];
     snprintf(buf, 500, "%4d | %.5e  %.3e |%10lu ",
              iter, prog.objective(), prog.relative_obj(), (size_t)prog.nnz_w());
   }
   return string(buf);
-}
-
-void BCDCompNode::ProcessRequest(Message* request) {
-  int time = msg->task.time() * time_ratio_;
-  CHECK(msg->task.has_bcd());
-  switch (msg->task.bcd().cmd()) {
-    case BCDCall::PREPROCESS_DATA:
-      PreprocessData(time, request);
-      break;
-    case BCDCall::UPDATE_MODEL:
-      Update(time, request);
-      break;
-    case BCDCall::EVALUATE_PROGRESS:
-      BCDProgress prog; Evaluate(&prog);
-      string str; CHECK(prog.SerializeToString(&str));
-      Task res; res.set_msg(str);
-      res.mutable_bcd()->set_iter(msg->task.bcd().iter());
-      res.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
-      Reply(request, res);
-      break;
-    default:
-      break;
-  }
 }
 
 }  // namespace PS

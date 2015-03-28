@@ -9,7 +9,7 @@ class SlotReader {
  public:
   SlotReader() { }
   SlotReader(const DataConfig& data, const DataConfig& cache) {
-    init(data, cache);
+    Init(data, cache);
   }
 
   void Init(const DataConfig& data, const DataConfig& cache);

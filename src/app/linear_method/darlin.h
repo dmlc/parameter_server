@@ -9,22 +9,7 @@ DECLARE_int32(num_workers);
 namespace LM {
 typedef double Real;
 
-class DarlinCommon {
- public:
-  DarlinCommon() { }
-  ~DarlinCommon() { }
-  Real newDelta(Real delta_max, Real delta_w) {
-    return std::min(delta_max, 2 * fabs(delta_w) + .1);
-  }
- protected:
-  std::unordered_map<int, Bitmap> active_set_;
-  std::unordered_map<int, SArray<Real>> delta_;
-  SparseFilter kkt_filter_;
-  Real kkt_filter_threshold_;
-  Config conf_;
-};
-
-class DarlinScheduler : public BCDScheduler, DarlinCommon {
+class DarlinScheduler : public BCDScheduler {
  public:
   DarlinScheduler(const Config& conf)
       : BCDScheduler(conf.darlin()), conf_(conf) {
@@ -53,9 +38,8 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
 
     // iterating
     int max_iter = darlin.max_pass_of_data();
-    auto pool = port(kCompGroup);
     // pick up a large enough time stamp to avoid any possible conflict
-    int time = std::max(10000, 1000 + (int)fea_grp_.size() * time_ratio_);
+    int time = std::max(10000, 1000 + (int)fea_grp_.size() * this->time_ratio_);
     const int first_time = time + 1;
 
     for (int iter = 0; iter < max_iter; ++iter) {
@@ -158,23 +142,41 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
       NOTICE("%s", str.c_str());
     }
   }
+
+  Real kkt_filter_threshold_;
+  Config conf_;
 };
 
-class DarlinServer : public BCDServer<Real>, DarlinCommon {
+class DarlinCompNode {
+ public:
+  DarlinCompNode() { }
+  virtual ~DarlinCompNode() { }
+  Real Delta(Real delta_max, Real delta_w) {
+    return std::min(delta_max, 2 * fabs(delta_w) + .1);
+  }
+ protected:
+  std::unordered_map<int, Bitmap> active_set_;
+  std::unordered_map<int, SArray<Real>> delta_;
+  SparseFilter kkt_filter_;
+  Real kkt_filter_threshold_;
+};
+
+class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
  public:
   DarlinServer(const Config& conf)
       : BCDServer<Real>(conf.darlin()), conf_(conf) { }
   virtual ~DarlinServer() { }
 
  protected:
-  virtual void preprocessData(int time, const BCDCall& call) {
-    BCDServer<Real>::preprocessData(time, call);
+  virtual void PreprocessData(int time, Message* request) {
+    BCDServer<Real>::PreprocessData(time, call);
     for (int grp : fea_grp_) {
       size_t n = model_.key(grp).size();
       active_set_[grp].resize(n, true);
       delta_[grp].resize(n, bcd_conf_.GetExtension(delta_init_value));
     }
   }
+
   virtual void updateModel(int time, const BCDCall& call) {
     if (call.has_kkt_filter_threshold()) {
       kkt_filter_threshold_ = call.kkt_filter_threshold();
@@ -267,10 +269,11 @@ class DarlinServer : public BCDServer<Real>, DarlinCommon {
     prog->set_nnz_active_set(nnz_as);
   }
 
+  Config conf_;
   Real violation_ = 0;
 };
 
-class DarlinWorker : public BCDWorker<Real>, DarlinCommon {
+class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
  public:
   DarlinWorker(const Config& conf)
       : BCDWorker<Real>(conf.darlin()), conf_(conf) { }
@@ -553,6 +556,7 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon {
     }
   }
 
+  Config conf_;
   Timer busy_timer_;
 };
 
