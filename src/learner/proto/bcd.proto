@@ -37,6 +37,9 @@ message BCDConfig {
   optional DataConfig local_cache = 11;
 
   optional ParamInitConfig init_w = 12;
+
+  repeated FilterConfig comm_filter = 15;
+
   extensions 100 to 199;
 }
 
@@ -64,6 +67,7 @@ message BCDCall {
     SAVE_MODEL = 5;  // save w
     RECOVER = 6;
     COMPUTE_VALIDATION_AUC = 7;
+    REQUEST_WORKLOAD = 8;
     // SAVE_AS_DENSE = 7;     // save X * w in a given key range
   }
   required Command cmd = 1;
@@ -79,7 +83,7 @@ message BCDCall {
 }
 
 
-message LoadDataReturn {
+message LoadDataResponse {
   optional ExampleInfo example_info = 1;
   optional int32 hit_cache = 2;
 }

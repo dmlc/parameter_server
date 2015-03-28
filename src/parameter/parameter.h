@@ -10,7 +10,8 @@ class Parameter : public Customer {
   virtual ~Parameter() { }
 
   typedef std::initializer_list<int> Timestamps;
-  typedef std::initializer_list<FilterConfig> Filters;
+  typedef ::google::protobuf::RepeatedPtrField<FilterConfig> Filters;
+  // typedef std::initializer_list<FilterConfig> Filters;
 
   /**
    * @brief Creats a request task
@@ -26,7 +27,7 @@ class Parameter : public Customer {
   static Task Request(int channel,
                       int ts = Message::kInvalidTime,
                       const Timestamps& wait = {},
-                      const Filters& filters = {},
+                      const Filters& filters = Filters(),
                       const Range<Key>& key_range = Range<Key>::all()) {
     Task req; req.set_request(true);
     req.set_key_channel(channel);

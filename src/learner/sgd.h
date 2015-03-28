@@ -11,7 +11,7 @@
 #include "system/assigner.h"
 #include "data/stream_reader.h"
 #include "util/localizer.h"
-#include "parameter/frequency_filter.h"
+#include "filter/frequency_filter.h"
 #include "learner/workload_pool.h"
 namespace PS {
 
@@ -88,7 +88,7 @@ class MinibatchReader {
    * @param freq frequency threshold
    */
   void InitFilter(size_t n, int k, int freq) {
-    filter_.resize(n, k);
+    filter_.Resize(n, k);
     key_freq_ = freq;
   }
 
@@ -130,8 +130,8 @@ class MinibatchReader {
     localizer.countUniqIndex(data[1], &uniq_key, &key_cnt);
 
     // filter keys
-    filter_.insertKeys(uniq_key, key_cnt);
-    key = filter_.queryKeys(uniq_key, key_freq_);
+    filter_.InsertKeys(uniq_key, key_cnt);
+    key = filter_.QueryKeys(uniq_key, key_freq_);
 
     // remap keys
     X = localizer.remapIndex(key);

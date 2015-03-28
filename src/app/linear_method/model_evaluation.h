@@ -10,12 +10,12 @@ class ModelEvaluation : public App, public LinearMethod {
  public:
   ModelEvaluation(const Config& conf) : App(), LinearMethod(conf) { }
   virtual ~ModelEvaluation() { }
-  void run();
+  virtual void Run();
  private:
   typedef float Real;
 };
 
-void ModelEvaluation::run() {
+void ModelEvaluation::Run() {
   if (!IsScheduler()) return;
   // load model
   std::unordered_map<Key, Real> weight;

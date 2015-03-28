@@ -2,7 +2,6 @@
 #include "util/shared_array_inl.h"
 #include "proto/example.pb.h"
 #include "data/common.h"
-
 namespace PS {
 
 // read all slots in *data* with multithreadd, save them into *cache*.
@@ -13,10 +12,10 @@ class SlotReader {
     init(data, cache);
   }
 
-  void init(const DataConfig& data, const DataConfig& cache);
+  void Init(const DataConfig& data, const DataConfig& cache);
 
   // first read, then save
-  int read(ExampleInfo* info = nullptr);
+  int Read(ExampleInfo* info = nullptr);
 
   template<typename V> MatrixInfo info(int slot_id) const {
     return readMatrixInfo(info_, slot_id, sizeof(uint64), sizeof(V));

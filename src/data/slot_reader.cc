@@ -6,9 +6,7 @@
 #include "util/filelinereader.h"
 namespace PS {
 
-DECLARE_bool(verbose);
-
-void SlotReader::init(const DataConfig& data, const DataConfig& cache) {
+void SlotReader::Init(const DataConfig& data, const DataConfig& cache) {
   // if (cache.file_size()) dump_to_disk_ = true;
   CHECK(cache.file_size());
   cache_ = cache.file(0);
@@ -28,7 +26,7 @@ size_t SlotReader::nnzEle(int slot_id) const {
   return nnz;
 }
 
-int SlotReader::read(ExampleInfo* info) {
+int SlotReader::Read(ExampleInfo* info) {
   CHECK_GT(FLAGS_num_threads, 0);
   {
     Lock l(mu_);
@@ -36,11 +34,9 @@ int SlotReader::read(ExampleInfo* info) {
     num_ex_.resize(data_.file_size());
   }
   {
-    if (FLAGS_verbose) {
-      for (size_t i = 0; i < data_.file_size(); ++i) {
-        LI << "I will load data file [" << i + 1 << "/" <<
+    for (size_t i = 0; i < data_.file_size(); ++i) {
+      VLOG(1) << "I will load data file [" << i + 1 << "/" <<
           data_.file_size() << "] [" << data_.file(i) << "]";
-      }
     }
 
     ThreadPool pool(FLAGS_num_threads);
@@ -58,11 +54,11 @@ int SlotReader::read(ExampleInfo* info) {
 }
 
 bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
-  if (FLAGS_verbose) {
-    Lock l(mu_);
-    LI << "loading data file [" << data.file(0) << "]; loaded [" <<
+  mu_.lock();
+  VLOG(1) << "loading data file [" << data.file(0) << "]; loaded [" <<
       loaded_file_count_ << "/" << data_.file_size() << "]";
-  }
+  mu_.unlock();
+
   // check if hit cache
   string info_name = cache_ + getFilename(data.file(0)) + ".info";
   ExampleInfo info;
@@ -146,10 +142,8 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     info_ = mergeExampleInfo(info_, info);
     loaded_file_count_++;
     num_ex_[ith_file] = num_ex;
-    if (FLAGS_verbose) {
-      LI << "loaded data file [" << data.file(0) << "]; loaded [" <<
+    VLOG(1) << "loaded data file [" << data.file(0) << "]; loaded [" <<
         loaded_file_count_ << "/" << data_.file_size() << "]";
-    }
   }
   return true;
 }

@@ -4,8 +4,8 @@
 #include "util/bitmap.h"
 #include "filter/sparse_filter.h"
 #include "app/linear_method/linear.h"
-
 namespace PS {
+DECLARE_int32(num_workers);
 namespace LM {
 typedef double Real;
 
@@ -21,33 +21,36 @@ class DarlinCommon {
   std::unordered_map<int, SArray<Real>> delta_;
   SparseFilter kkt_filter_;
   Real kkt_filter_threshold_;
+  Config conf_;
 };
 
-class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
+class DarlinScheduler : public BCDScheduler, DarlinCommon {
  public:
   DarlinScheduler(const Config& conf)
-      : BCDScheduler(conf.darlin()), LinearMethod(conf) { }
+      : BCDScheduler(conf.darlin()), conf_(conf) {
+    data_assigner_.set(conf_.training_data(), FLAGS_num_workers);
+  }
+
   virtual ~DarlinScheduler() { }
 
-  virtual void run() {
+  virtual void Run() {
     CHECK_EQ(conf_.loss().type(), LossConfig::LOGIT);
     CHECK_EQ(conf_.penalty().type(), PenaltyConfig::L1);
-    LI << "Train l_1 logistic regression by block coordinate descent";
+    NOTICE("Train l_1 logistic regression by block coordinate descent");
 
-    loadTrainingData(conf_.training_data());
-
-    divideFeatureBlocks();
+    // load data
+    BCDScheduler::Run();
 
     auto darlin = conf_.darlin();
     int tau = darlin.max_block_delay();
-    LI << "Maximal allowed delay: " << tau;
+    NOTICE("Maximal allowed delay: %d", tau);
     bool random_blk_order = darlin.random_feature_block_order();
     if (!random_blk_order) {
-      LI << "Warning: Randomized block order often acclerates the convergence.";
+      LOG(WARNING) <<
+          "Warning: Randomized block order often acclerates the convergence.";
     }
     kkt_filter_threshold_ = 1e20;
     bool reset_kkt_filter = false;
-
 
     // iterating
     int max_iter = darlin.max_pass_of_data();
@@ -131,36 +134,35 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon, LinearMethod {
     }
   }
  protected:
-  // TOOD merge
 
-  void showKKTFilter(int iter) {
+  std::string ShowKKTFilter(int iter) {
+    char buf[500];
     if (iter == -3) {
-      fprintf(stderr, "|      KKT filter     ");
+      snprintf(buf, 500, "|      KKT filter     ");
     } else if (iter == -2) {
-      fprintf(stderr, "| threshold  #activet ");
+      snprintf(buf, 500, "| threshold  #activet ");
     } else if (iter == -1) {
-      fprintf(stderr, "+---------------------");
+      snprintf(buf, 500, "+---------------------");
     } else {
-      fprintf(stderr, "| %.1e %11llu ",
-              kkt_filter_threshold_, (uint64)g_progress_[iter].nnz_active_set());
+      snprintf(buf, 500, "| %.1e %11llu ",
+               kkt_filter_threshold_, (uint64)g_progress_[iter].nnz_active_set());
     }
+    return string(buf);
   }
 
-  void showProgress(int iter) {
+  void ShowProgress(int iter) {
     int s = iter == 0 ? -3 : iter;
     for (int i = s; i <= iter; ++i) {
-      showObjective(i);
-      showKKTFilter(i);
-      showTime(i);
+      string str = ShowObjective(i) + ShowKKTFilter(i) + ShowTime(i);
+      NOTICE("%s", str.c_str());
     }
   }
-
 };
 
-class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
+class DarlinServer : public BCDServer<Real>, DarlinCommon {
  public:
   DarlinServer(const Config& conf)
-      : BCDServer<Real>(conf.darlin()), LinearMethod(conf) { }
+      : BCDServer<Real>(conf.darlin()), conf_(conf) { }
   virtual ~DarlinServer() { }
 
  protected:
@@ -264,18 +266,13 @@ class DarlinServer : public BCDServer<Real>, DarlinCommon, LinearMethod {
     prog->set_nnz_active_set(nnz_as);
   }
 
-  Real kkt_filter_threshold_ = 1e20;
   Real violation_ = 0;
-
-  std::unordered_map<int, Bitmap> active_set_;
-  std::unordered_map<int, SArray<Real>> delta_;
-  SparseFilter kkt_filter_;
 };
 
-class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
+class DarlinWorker : public BCDWorker<Real>, DarlinCommon {
  public:
   DarlinWorker(const Config& conf)
-      : BCDWorker<Real>(conf.darlin()), LinearMethod(conf) { }
+      : BCDWorker<Real>(conf.darlin()), conf_(conf) { }
   virtual ~DarlinWorker() { }
  protected:
 
@@ -294,61 +291,54 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
     }
   }
 
-  virtual void computeGradient(int time, const BCDCall& call, MessagePtr msg) {
+  virtual void ComputeGradient(int time, Message* msg) {
+    auto call = msg->task.bcd();
     if (call.reset_kkt_filter()) {
       for (int grp : fea_grp_) active_set_[grp].fill(true);
     }
     CHECK_EQ(call.fea_grp_size(), 1);
     int grp = call.fea_grp(0);
     Range<Key> g_key_range(call.key());
-    auto col_range = model_.find(grp, g_key_range);
+    auto col_range = model_[grp].key.FindRange(g_key_range);
 
     // compute and push the gradient
-    computeAndPushGradient(time, g_key_range, grp, col_range);
+    ComputeAndPushGradient(time, g_key_range, grp, col_range);
 
     // pull the updated model, and update dual
-    pullAndUpdateDual(time+2, g_key_range, grp, col_range, msg);
+    PullAndUpdateDual(time+2, g_key_range, grp, col_range, msg);
 
     // this task is not finished until the updated model is pulled
     msg->finished = false;
   }
 
+  virtual void Evaluate(BCDProgress* prog) {
+    busy_timer_.start();
+    mu_.lock();  // lock the dual_
+    prog->set_objective(log(1+1/dual_.EigenArray()).sum());
+    mu_.unlock();
+    prog->add_busy_time(busy_timer_.stop());
+    busy_timer_.restart();
+  };
 
-  void pullAndUpdateDual(
-      int time, Range<Key> g_key_range, int grp, SizeR col_range,
-      const MessagePtr& msg) {
-    // pull the updated weight from the server
-    MessagePtr pull(new Message(kServerGroup, time, time-1));
-    pull->setKey(model_.key(grp).segment(col_range));
-    g_key_range.to(pull->task.mutable_key_range());
-    pull->task.set_key_channel(grp);
-    pull->add_filter(FilterConfig::KEY_CACHING);
-
-    // once data pulled successfully, update dual_
-    pull->callback = [this, time, grp, col_range, msg](){
-      if (!col_range.empty()) {
-        auto data = model_.received(time);
-        CHECK_EQ(col_range, data.first);
-        CHECK_EQ(data.second.size(), 1);
-        updateDual(grp, col_range, data.second[0]);
-      }
-
-      // mark the message finished, and reply the sender
-      port(msg->sender)->finishIncomingTask(msg->task.time());
-      sys_.reply(msg->sender, msg->task);
-    };
-
-    CHECK_EQ(time, model_.pull(pull));
-  }
-
-  void computeAndPushGradient(
+ private:
+  /**
+   * @brief compute the gradients and then push to servers
+   *
+   * @param time time stamp
+   * @param g_key_range global key range
+   * @param grp feature group
+   * @param col_range column index range
+   */
+  void ComputeAndPushGradient(
       int time, Range<Key> g_key_range, int grp, SizeR col_range) {
+    // first-order gradient
     SArray<Real> G(col_range.size(), 0);
+    // the upper bound of the diagnal second-order gradient
     SArray<Real> U(col_range.size(), 0);
 
+    // compute the gradient in multi-thread
     mu_.lock();  // lock the dual_
     busy_timer_.start();
-    // compute the gradient in multi-thread
     if (!col_range.empty()) {
       CHECK_GT(FLAGS_num_threads, 0);
       // TODO partition by rows for small col_range size
@@ -360,25 +350,33 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
         if (thr_range.empty()) continue;
         auto gr = thr_range - col_range.begin();
         pool.add([this, grp, thr_range, gr, &G, &U]() {
-            computeGradient(grp, thr_range, G.segment(gr), U.segment(gr));
+            ComputeGradient(grp, thr_range, G.segment(gr), U.segment(gr));
           });
       }
       pool.startWorkers();
     }
     busy_timer_.stop();
-    mu_.unlock();  // lock the dual_
+    mu_.unlock();  // unlock the dual_
 
     // push the gradient into servers
-    MessagePtr push(new Message(kServerGroup, time));
-    push->setKey(model_.key(grp).segment(col_range));
-    push->addValue({G, U});
-    g_key_range.to(push->task.mutable_key_range());
-    push->task.set_key_channel(grp);
-    push->add_filter(FilterConfig::KEY_CACHING);
-    CHECK_EQ(time, model_.push(push));
+    Parameter::Fillters filters;
+    for (int i = 0; i < conf_.push_filter_size(); ++i) {
+      filters.push_back(conf_.push_filter(i));
+    }
+    Task req = Parameter::Request(grp, time, {}, filters, g_key_range);
+    int ts = model_.Push(req, model_[grp].key.Segment(col_range), {G,U});
+    CHECK_EQ(time, ts);
   }
 
-  void computeGradient(
+  /**
+   * @brief the thread function to compute gradient
+   *
+   * @param grp feature group
+   * @param col_range column index range
+   * @param G first-order gradient
+   * @param U the upper bound of the diagnal second-order gradient
+   */
+  void ComputeGradient(
       int grp, SizeR col_range, SArray<Real> G, SArray<Real> U) {
     CHECK_EQ(G.size(), col_range.size());
     CHECK_EQ(U.size(), col_range.size());
@@ -426,7 +424,52 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
     }
   }
 
-  void updateDual(int grp, SizeR col_range, SArray<Real> new_w) {
+  /**
+   * @brief pull weight from servers and then update the dual variable
+   *
+   * @param time timestamp
+   * @param g_key_range global key range
+   * @param grp feature group
+   * @param col_range column index range
+   * @param msg the request message from the scheduler
+   */
+  void PullAndUpdateDual(
+      int time, Range<Key> g_key_range, int grp, SizeR col_range,
+      Message* msg) {
+    // pull the updated weight from the server
+    Parameter::Fillters filters;
+    for (int i = 0; i < conf_.pull_filter_size(); ++i) {
+      filters.push_back(conf_.pull_filter(i));
+    }
+    Task req = Parameter::Request(grp, time, {time-1}, filters, g_key_range);
+
+    Message orig_req = *msg;
+    int ts = model_.Pull(
+        req, model_[grp].key.Segment(col_range), [this, time, grp, col_range, orig_req](){
+          // once data pulled successfully, update dual_
+          if (!col_range.empty()) {
+            auto data = model_.buffer(time);
+            CHECK_EQ(data.channel, grp);
+            CHECK_EQ(data.idx_range, col_range);
+            CHECK_EQ(data.values.size(), 1);
+            PpdateDual(grp, col_range, data.values[0]);
+          }
+
+          // mark the message finished, and reply the sender
+          FinishReceivedRequest(orig_req.task.time(), orig_req.sender);
+          Reply(&orig_req);
+        });
+    CHECK_EQ(time, ts);
+  }
+
+  /**
+   * @brief Updates the dual variable
+   *
+   * @param grp feature group
+   * @param col_range column index range
+   * @param new_w new weight
+   */
+  void UpdateDual(int grp, SizeR col_range, SArray<Real> new_w) {
     auto& cur_w = model_.value(grp);
     auto& active_set = active_set_[grp];
     auto& delta = delta_[grp];
@@ -460,16 +503,24 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
         auto thr_range = row_range.evenDivide(npart, i);
         if (thr_range.empty()) continue;
         pool.add([this, grp, thr_range, col_range, delta_w]() {
-            updateDual(grp, thr_range, col_range, delta_w);
+            UpdateDual(grp, thr_range, col_range, delta_w);
           });
       }
       pool.startWorkers();
     }
     busy_timer_.stop();
-    mu_.unlock();  // lock the dual_
+    mu_.unlock();  // unlock the dual_
   }
 
-  void updateDual(
+  /**
+   * @brief the thread function for updating the dual
+   *
+   * @param grp feature group
+   * @param row_range the row index range
+   * @param col_range the column index range
+   * @param w_delta change of weight
+   */
+  void UpdateDual(
       int grp, SizeR row_range, SizeR col_range, SArray<Real> w_delta) {
     CHECK_EQ(w_delta.size(), col_range.size());
     CHECK(X_[grp]->colMajor());
@@ -501,15 +552,6 @@ class DarlinWorker : public BCDWorker<Real>, DarlinCommon, LinearMethod {
     }
   }
 
-  void evaluate(BCDProgress* prog) {
-    busy_timer_.start();
-    mu_.lock();  // lock the dual_
-    prog->set_objective(log(1+1/dual_.eigenArray()).sum());
-    mu_.unlock();
-    prog->add_busy_time(busy_timer_.stop());
-    busy_timer_.restart();
-  };
- protected:
   Timer busy_timer_;
 };
 

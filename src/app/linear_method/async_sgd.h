@@ -221,9 +221,10 @@ class AsyncSGDWorker : public ISGDCompNode {
 
       // pull the weight
       auto req = Parameter::Request(id);
-      for (int i = 0; i < conf_.pull_filter_size(); ++i) {
-        *req.add_filter() = conf_.pull_filter(i);
-      }
+      // TODO
+      // for (int i = 0; i < conf_.pull_filter_size(); ++i) {
+      //   *req.add_filter() = conf_.pull_filter(i);
+      // }
       model_.Pull(req, key, [this, id]() { ComputeGradient(id); });
     }
 
@@ -263,14 +264,15 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // push the gradient
     auto req = Parameter::Request(id);
-    for (int i = 0; i < conf_.push_filter_size(); ++i) {
-      // add filters
-      auto filter = conf_.push_filter(i);
-      if (filter.type() == FilterConfig::KEY_CACHING) {
-        filter.set_clear_cache_if_done(true);
-      }
-      *req.add_filter() = filter;
-    }
+    // TODO
+    // for (int i = 0; i < conf_.push_filter_size(); ++i) {
+    //   // add filters
+    //   auto filter = conf_.push_filter(i);
+    //   if (filter.type() == FilterConfig::KEY_CACHING) {
+    //     filter.set_clear_cache_if_done(true);
+    //   }
+    //   *req.add_filter() = filter;
+    // }
     model_.Push(req, model_[id].key, grad);
     model_.clear(id);
 
