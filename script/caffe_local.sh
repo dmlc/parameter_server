@@ -7,7 +7,7 @@ if [ $# -lt 3 ]; then
     exit -1;
 fi
 
-bin=$(pwd)/build/caffe
+bin=$( pwd -L )/build/caffe
 num_servers=$1
 shift
 num_workers=$1
@@ -37,6 +37,7 @@ for ((i=0; i<${num_servers}; ++i)); do
     N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'${id}'"
     # HEAPPROFILE=/tmp/S${i} \
     # CPUPROFILE=/tmp/S${i} \
+    echo "cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &"
     cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &
 done
 

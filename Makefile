@@ -7,7 +7,7 @@ CC = g++
 # OPT = -O0 -ggdb
 OPT = -O3 -ggdb
 
-THIRD_PATH=$(shell pwd)/third_party
+THIRD_PATH=$(shell pwd -L )/third_party
 
 STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)

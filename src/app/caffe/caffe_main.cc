@@ -80,6 +80,7 @@ class CaffeServer : public App, public VVListener<float> {
     solver = initCaffeSolver();
 
     // initialize the weight at server
+    int total_weight = 0;
     weights = new VVector<float>(V_WEIGHT, true);
     diffs = new VVector<float>(V_DIFF, false, this);
     for (int i = 0; i < solver->net()->params().size();i++){
@@ -88,9 +89,23 @@ class CaffeServer : public App, public VVListener<float> {
 	Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
 	diffBlobs.push_back(newBlob);
 	diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
+	total_weight += blob->data()->size();
     }
+
+    LL << "total weight size:" << total_weight;
   }
   
+  void testPhase(){
+    Lock l(mu_solver);
+    solver->TestAll();
+  }
+
+  void snapshotPhase(){
+    Lock l(mu_solver);
+    solver->Snapshot();
+  }
+
+
   void run() {
     LL << myNodeID() << ", server " << myRank() << " run()ing";
     int nextTest=0,nextSnapshot=0;
@@ -107,12 +122,13 @@ class CaffeServer : public App, public VVListener<float> {
 //    LL << "server looping: iter " << solver->iter() << " vs test " << nextTest << " vs snapshot " << nextSnapshot;
       if (needTest && solver->iter() >= nextTest) {
 	nextTest = solver->iter() - solver->iter() % param.test_interval() + param.test_interval();
-	solver->TestAll();
+	//test too slow!! on CPU!! a waste if on GPU!!
+//	testPhase();
       }
       //no loss to display at server
       if (needSnapshot && solver->iter() >= nextSnapshot) {
 	nextSnapshot = solver->iter() - solver->iter() % param.snapshot() + param.snapshot();
-	solver->Snapshot();
+	snapshotPhase();
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -121,21 +137,13 @@ class CaffeServer : public App, public VVListener<float> {
   void process(const MessagePtr& msg) {
     auto sgd = msg->task.sgd();
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) { // sync param to memory
-      {
-	Lock l(mu_solver);
-//	float first, last;
-	for (int i = 0; i < solver->net()->params().size();i++){
-	  auto blob = solver->net()->params()[i];
-	  blob->cpu_data();
-/*	  if(i == 0){
-	    first = blob->cpu_data()[0];
-	  }else if(i == solver->net()->params().size()-1){
-	    last = blob->cpu_data()[blob->count()-1];
-	  }
-*/
-	}
-//	LL << "weight synced to cpu:[" << first << ",...," << last << "]";
+    {
+      Lock l(mu_solver);
+      for (int i = 0; i < solver->net()->params().size();i++){
+        auto blob = solver->net()->params()[i];
+        blob->cpu_data();
       }
+    }
     }
   }
 
