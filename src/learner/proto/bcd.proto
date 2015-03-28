@@ -77,6 +77,7 @@ message BCDCall {
   optional double kkt_filter_threshold = 4;
   optional bool reset_kkt_filter = 5;
 
+  optional int32 iter = 11;
   repeated int32 fea_grp = 8;
   optional bool hit_cache = 9;
   optional DataConfig data = 10;

@@ -11,7 +11,7 @@
 namespace PS {
 
 /**
- * @brief The scheduler. One need to implement Run()
+ * @brief The scheduler.
  */
 class BCDScheduler : public App {
  public:
@@ -21,16 +21,12 @@ class BCDScheduler : public App {
   virtual void ProcessRequest(Message* request);
   virtual void ProcessResponse(Message* response);
   virtual void Run();
-
  protected:
   /**
    * @brief issues model saving tasks to workers
    */
   void SaveModel(const DataConfig& data);
-  /**
-   * @brief merge the progress of all nodes at iteration iter
-   */
-  void MergeProgress(int iter);
+
   /**
    * @brief returns the time string
    */
@@ -43,7 +39,6 @@ class BCDScheduler : public App {
   // progress of all iterations. The progress of all nodes are merged for every
   // iteration.
   std::map<int, BCDProgress> g_progress_;
-  Timer total_timer_;
   // feature block info, format: pair<fea_grp_id, fea_range>
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blk_;
@@ -67,10 +62,15 @@ class BCDScheduler : public App {
    * @brief divide feature into blocks
    */
   void DivideFeatureBlocks();
+  /**
+   * @brief merge the progress of all nodes at iteration iter
+   */
+  void MergeProgress(int iter, const BCDProgress& recv);
 
   DataAssigner data_assigner_;
   int hit_cache_ = 0;
   int load_data_ = 0;
+  Timer total_timer_;
 };
 
 /**
@@ -81,27 +81,8 @@ class BCDCompNode : public App {
  public:
   BCDCompNode() { }
   virtual BCDCompNode() { }
+  virtual void ProcessRequest(Message* request);
 
-  virtual void ProcessRequest(Message* request) {
-    int time = msg->task.time() * time_ratio_;
-    CHECK(msg->task.has_bcd());
-    switch (msg->task.bcd().cmd()) {
-      case BCDCall::PREPROCESS_DATA:
-        PreprocessData(time, request);
-        break;
-      case BCDCall::UPDATE_MODEL:
-        Update(time, request);
-        break;
-      case BCDCall::EVALUATE_PROGRESS:
-        BCDProgress prog; Evaluate(&prog);
-        string str; CHECK(prog.SerializeToString(&str));
-        Task res; res.set_msg(str);
-        Reply(request, res);
-        break;
-      default:
-        break;
-    }
-  }
  protected:
   /**
    * @brief Update the model
@@ -110,14 +91,12 @@ class BCDCompNode : public App {
    * @param msg the request from the scheduler
    */
   virtual void Update(int time, Message* msg) = 0;
-
   /**
    * @brief Evaluate the progress
    *
    * @param prog the progress
    */
   virtual void Evaluate(BCDProgress* prog) = 0;
-
   /**
    * @brief Preprocesse the training data.
    *
@@ -156,11 +135,6 @@ class BCDServer : public BCDCompNode {
     }
   }
 
-  virtual void Run() {
-    Task task;
-    task.mutable_sgd()->set_cmd(BCDCall::REQUEST_WORKLOAD);
-    Submit(task, SchedulerID());
-  }
  protected:
   virtual void PreprocessData(int time, Message* request) {
     auto call = request->task.bcd();
@@ -222,6 +196,12 @@ class BCDWorker : public BCDCompNode {
     }
   }
   virtual ~BCDWorker() { }
+
+  virtual void Run() {
+    Task task;
+    task.mutable_sgd()->set_cmd(BCDCall::REQUEST_WORKLOAD);
+    Submit(task, SchedulerID());
+  }
 
   virtual void ProcessRequest(Message* request) {
     auto bcd = msg->task.bcd();

@@ -12,14 +12,20 @@ void BCDScheduler::ProcessRequest(Message* request) {
 }
 
 void BCDScheduler::ProcessResponse(Message* response) {
-  if (!response->task.has_bcd()) return;
-  if (response->task.bcd().cmd() == BCDConfig::LOAD_DATA) {
+  const auto& task = response->task;
+  if (!task.has_bcd()) return;
+
+  if (task.bcd().cmd() == BCDConfig::LOAD_DATA) {
     LoadDataResponse info;
-    CHECK(info.ParseFromString(response->task.msg()))
-        // LL << info.DebugString();
-        g_train_info_ = MergeExampleInfo(g_train_info_, info.example_info());
+    CHECK(info.ParseFromString(task.msg()));
+    // LL << info.DebugString();
+    g_train_info_ = MergeExampleInfo(g_train_info_, info.example_info());
     hit_cache_ += info.hit_cache();
     ++ load_data_;
+  } else if (task.bcd().cmd() == BCDCall::EVALUATE_PROGRESS) {
+    BCDProgress prog;
+    CHECK(prog.ParseFromString(task.msg()));
+    MergeProgress(task.bcd().iter(), prog);
   }
 }
 
@@ -119,21 +125,18 @@ void BCDScheduler::SaveModel(const DataConfig& data) {
   Wait(Submit(task, kServerGroup));
 }
 
+void BCDScheduler::MergeProgress(int iter, const BCDProgress& recv) {
+  auto& p = g_progress_[iter];
+  p.set_objective(p.objective() + recv.objective());
+  p.set_nnz_w(p.nnz_w() + recv.nnz_w());
 
-void BCDScheduler::MergeProgress(int iter) {
-    BCDProgress recv;
-    CHECK(recv.ParseFromString(exec_.activeMessage()->task.msg()));
-    auto& p = g_progress_[iter];
-    p.set_objective(p.objective() + recv.objective());
-    p.set_nnz_w(p.nnz_w() + recv.nnz_w());
-
-    if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
-    p.set_total_time(total_timer_.stop());
-    total_timer_.start();
-    p.set_relative_obj(iter==0 ? 1 : g_progress_[iter-1].objective()/p.objective() - 1);
-    p.set_violation(std::max(p.violation(), recv.violation()));
-    p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
-  }
+  if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
+  p.set_total_time(total_timer_.stop());
+  total_timer_.start();
+  p.set_relative_obj(iter==0 ? 1 : g_progress_[iter-1].objective()/p.objective() - 1);
+  p.set_violation(std::max(p.violation(), recv.violation()));
+  p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
+}
 
 string BCDScheduler::ShowTime(int iter) {
   char buf[500];
@@ -171,6 +174,29 @@ string BCDScheduler::ShowObjective(int iter) {
              iter, prog.objective(), prog.relative_obj(), (size_t)prog.nnz_w());
   }
   return string(buf);
+}
+
+void BCDCompNode::ProcessRequest(Message* request) {
+  int time = msg->task.time() * time_ratio_;
+  CHECK(msg->task.has_bcd());
+  switch (msg->task.bcd().cmd()) {
+    case BCDCall::PREPROCESS_DATA:
+      PreprocessData(time, request);
+      break;
+    case BCDCall::UPDATE_MODEL:
+      Update(time, request);
+      break;
+    case BCDCall::EVALUATE_PROGRESS:
+      BCDProgress prog; Evaluate(&prog);
+      string str; CHECK(prog.SerializeToString(&str));
+      Task res; res.set_msg(str);
+      res.mutable_bcd()->set_iter(msg->task.bcd().iter());
+      res.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
+      Reply(request, res);
+      break;
+    default:
+      break;
+  }
 }
 
 }  // namespace PS

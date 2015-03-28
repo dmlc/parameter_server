@@ -30,7 +30,6 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
       : BCDScheduler(conf.darlin()), conf_(conf) {
     data_assigner_.set(conf_.training_data(), FLAGS_num_workers);
   }
-
   virtual ~DarlinScheduler() { }
 
   virtual void Run() {
@@ -56,8 +55,9 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
     int max_iter = darlin.max_pass_of_data();
     auto pool = port(kCompGroup);
     // pick up a large enough time stamp to avoid any possible conflict
-    int time = std::max(10000, pool->time() + (int)fea_grp_.size() * time_ratio_);
+    int time = std::max(10000, 1000 + (int)fea_grp_.size() * time_ratio_);
     const int first_time = time + 1;
+
     for (int iter = 0; iter < max_iter; ++iter) {
       // pick up an updating order
       auto order = blk_order_;
@@ -93,17 +93,19 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
         }
         update.add_wait_time(wait_time);
 
-        time = pool->submit(update);
+        time = Submit(update, kCompGroup);
       }
 
       // evaluate the progress
-      Task eval;  eval.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
+      Task eval;
+      eval.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
+      eval.mutable_bcd()->set_iter(iter);
       if (time - tau >= first_time) {
         eval.add_wait_time(time - tau);
       }
-      time = pool->submitAndWait(
-          eval, [this, iter](){ mergeProgress(iter); });
-      showProgress(iter);
+      time = Submit(eval, kCompGroup);
+      Wait(time);
+      ShowProgress(iter);
 
       // update the kkt filter strategy
       Real vio = g_progress_[iter].violation();
@@ -115,7 +117,7 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
       Real rel = g_progress_[iter].relative_obj();
       if (rel > 0 && rel <= darlin.epsilon()) {
         if (reset_kkt_filter) {
-          LI << "Stopped: relative objective <= " << darlin.epsilon();
+          NOTICE("Stopped: relative objective <= %lf", darlin.epsilon());
           break;
         } else {
           reset_kkt_filter = true;
@@ -124,17 +126,16 @@ class DarlinScheduler : public BCDScheduler, DarlinCommon {
         reset_kkt_filter = false;
       }
       if (iter == max_iter - 1) {
-        LI << "Reached maximal " << max_iter << " data passes";
+        NOTICE("Reached maximal %d data passes", max_iter);
       }
     }
 
     // save model
     if (conf_.has_model_output()) {
-      saveModel(conf_.model_output());
+      SaveModel(conf_.model_output());
     }
   }
  protected:
-
   std::string ShowKKTFilter(int iter) {
     char buf[500];
     if (iter == -3) {
