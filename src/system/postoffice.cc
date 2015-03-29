@@ -336,7 +336,7 @@ void Postoffice::manageNode(Task& tk) {
         auto node = mng.node(i);
         yp().addNode(node);
         obj->exec().add(node);
-        for (auto c : yp().childern(obj->name())) {
+        for (auto c : yp().children(obj->name())) {
           auto child = yp().customer(c);
           if (child) child->exec().add(node);
         }
