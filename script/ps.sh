@@ -107,7 +107,7 @@ start_scheduler() {
     get_port $1
     # start scheduler
     Sch="\"role:SCHEDULER,hostname:'$1',port:$port,id:'H'\""
-    cmd="cd $(pwd) && $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"H\tscheduler\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes"
+    cmd="cd $(pwd) && env HEAPCHECK=strict $bin -my_node $Sch -scheduler $Sch -num_workers $worker -num_servers $server $arg & echo -e \"H\tscheduler\t$1:$port\t"'$!'"\" >> /tmp/ps-state/nodes"
     if [[ $local ]]; then
         eval $cmd
     else

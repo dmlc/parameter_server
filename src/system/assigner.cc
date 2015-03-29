@@ -7,7 +7,7 @@ void DataAssigner::set(const DataConfig& data, int num) {
   CHECK_GT(num, 0);
   CHECK_GT(data.replica(), 0);
   DataConfig files = searchFiles(data);
-  VLOG(1) << "find " << files.file_size() << "files: " << files.ShortDebugString();
+  VLOG(1) << "find " << files.file_size() << " files: " << files.ShortDebugString();
 
   // divide them
   parts_.resize(num);
@@ -22,11 +22,13 @@ void DataAssigner::set(const DataConfig& data, int num) {
       }
     }
   }
+  VLOG(1) << "divide into " << num  << " jobs";
 }
 
 bool DataAssigner::next(DataConfig *data) {
-  if (cur_i >= parts_.size()) return false;
-  *data = parts_[cur_i ++];
+  LL << this << " " << cur_i_;
+  if (cur_i_ >= parts_.size()) return false;
+  *data = parts_[cur_i_ ++];
   return true;
 }
 

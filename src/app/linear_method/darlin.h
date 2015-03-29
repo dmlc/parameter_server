@@ -15,6 +15,7 @@ class DarlinScheduler : public BCDScheduler {
   DarlinScheduler(const Config& conf)
       : BCDScheduler(conf.darlin()), conf_(conf) {
     data_assigner_.set(conf_.training_data(), FLAGS_num_workers);
+    // LL << &sys_;
   }
   virtual ~DarlinScheduler() { }
 
@@ -117,7 +118,7 @@ class DarlinScheduler : public BCDScheduler {
 
     // save model
     if (conf_.has_model_output()) {
-      SaveModel(conf_.model_output());
+      // SaveModel(conf_.model_output());
     }
   }
  protected:
