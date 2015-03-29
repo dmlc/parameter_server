@@ -285,7 +285,6 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
 
   virtual void PreprocessData(int time, Message* request) {
     BCDWorker<Real>::PreprocessData(time, request);
-    const BCDCall& call = request->task.bcd();
     // dual_ = exp(y.*(X_*w_))
     if (bcd_conf_.init_w().type() == ParamInitConfig::ZERO) {
       dual_.SetValue(1);  // an optimizatoin

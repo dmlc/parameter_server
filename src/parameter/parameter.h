@@ -11,8 +11,6 @@ class Parameter : public Customer {
 
   typedef std::initializer_list<int> Timestamps;
   typedef ::google::protobuf::RepeatedPtrField<FilterConfig> Filters;
-  // typedef std::initializer_list<FilterConfig> Filters;
-
   /**
    * @brief Creats a request task
    *
@@ -60,12 +58,12 @@ class Parameter : public Customer {
 
   /// @brief Set the values in "msg" into into my data strcuture, e.g..
   ///  my_val_[msg->key[0]] = msg->value(0)[0];
-  virtual void SetValue(Message* msg) = 0;
+  virtual void SetValue(const Message* msg) = 0;
 
   /// @brief the message contains the backup KV pairs sent by the master node of the key
   /// segment to its replica node. merge these pairs into my replica, say
   /// replica_[msg->sender] = ...
-  virtual void SetReplica(Message* msg) { }
+  virtual void SetReplica(const Message* msg) { }
 
   /// @brief retrieve the replica. a new server node replacing a dead server will first
   /// ask for the dead's replica node for the data

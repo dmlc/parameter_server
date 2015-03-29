@@ -6,27 +6,40 @@
 #include "util/crc32c.h"
 namespace PS {
 
-template<typename I, typename V> class Localizer;
-template<typename I, typename V> using LocalizerPtr = std::shared_ptr<Localizer<I,V>>;
-
-
+/**
+ * @brief Mapping a sparse matrix with general indices into continuous indices
+ * starting from 0
+ */
 template<typename I, typename V>
 class Localizer {
  public:
   Localizer() { }
+  ~Localizer() { }
+  /**
+   * @brief count unique items
+   *
+   * temporal results will be stored to accelerate RemapIndex().
+   *
+   * @param idx the item list in any order
+   * @param uniq_idx returns the sorted unique items
+   * @param idx_frq returns the according occurrence counts
+   */
+  template<typename C>
+  void CountUniqIndex(const SArray<I>& idx,
+                      SArray<I>* uniq_idx,
+                      SArray<C>* idx_frq);
 
-  // find the unique indeces with their number of occrus in *idx*
-  void countUniqIndex(const SArray<I>& idx, SArray<I>* uniq_idx) {
-    CountUniqIndex<char>(idx, uniq_idx, nullptr);
-  }
-  void CountUniqIndex(const MatrixPtr<V>&mat, SArray<I>* uniq_idx) {
-    CountUniqIndex<char>(mat, uniq_idx, nullptr);
-  }
-  template<typename C> void CountUniqIndex(
-      const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq);
-
-  template<typename C> void CountUniqIndex(
-      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq);
+  /**
+   * @brief count unique items in mat->index()
+   *
+   * @param mat should be a sparse matrix whose index has type I
+   * @param uniq_idx
+   * @param idx_frq
+   */
+  template<typename C>
+  void CountUniqIndex(const MatrixPtr<V>& mat,
+                      SArray<I>* uniq_idx,
+                      SArray<C>* idx_frq);
 
   // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
   // in *idx_dict* is dropped. Assume *idx_dict* is ordered
@@ -40,6 +53,9 @@ class Localizer {
       const SArray<I>& index, const SArray<V>& value,
       const SArray<I>& idx_dict) const;
 
+  /**
+   * @brief Clears the temporal results
+   */
   void Clear() { pair_.clear(); }
 
   size_t MemSize() {
@@ -98,13 +114,6 @@ void Localizer<I,V>::CountUniqIndex(
   }
   uniq_idx->push_back(curr);
   if (idx_frq) idx_frq->push_back((C)cnt);
-
-  // LL << pair_.size() << " " << idx.size() << " " << uniq_idx->size();
-  // LL << crc32c::Value((char*)uniq_idx->data(), uniq_idx->size()*sizeof(V));
-  // for debug
-  // index_.writeToFile("index");
-  // uniq_idx->writeToFile("uniq");
-  // idx_frq->writeToFile("cnt");
 }
 
 template<typename I, typename V>

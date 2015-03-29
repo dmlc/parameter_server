@@ -19,8 +19,6 @@ message Config {
   optional SGDConfig async_sgd = 17;
   optional BCDConfig darlin = 15;
 
-  repeated FilterConfig push_filter = 13;
-  repeated FilterConfig pull_filter = 14;
 }
 
 extend BCDConfig {
@@ -67,6 +65,9 @@ message SGDConfig {
   // filtered feature.
   optional float countmin_n = 8 [default = 1e8];
   optional int32 countmin_k = 7 [default = 2];
+
+  repeated FilterConfig push_filter = 13;
+  repeated FilterConfig pull_filter = 14;
 }
 
 message LossConfig {

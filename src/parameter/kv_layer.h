@@ -77,7 +77,7 @@ class  KVLayer : public Parameter {
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
                      std::vector<Message*>* msgs);
   virtual void GetValue(Message* msg);
-  virtual void SetValue(Message* msg);
+  virtual void SetValue(const Message* msg);
  protected:
   std::mutex mu_;
   std::unordered_map<int, SArray<V>> layer_;
@@ -94,7 +94,7 @@ int KVLayer<V, Updater>::Push(const Task& task, V* data, size_t size, bool zero_
     val.CopyFrom(data, size);
   }
   Message push(task, kServerGroup);
-  Range<Key>(0, size).to(push.task.mutable_key_range());
+  Range<Key>(0, size).To(push.task.mutable_key_range());
   push.add_value(val);
   return Parameter::Push(&push);
 }
@@ -109,7 +109,7 @@ int KVLayer<V, Updater>::Pull(
     layer_[id] = SArray<V>(data, size, false);
   }
   Message pull(task, kServerGroup);
-  Range<Key>(0, size).to(pull.task.mutable_key_range());
+  Range<Key>(0, size).To(pull.task.mutable_key_range());
   if (callback) pull.callback = callback;
   return Parameter::Pull(&pull);
 }
@@ -129,14 +129,14 @@ void KVLayer<V, Updater>::Slice(
       // a tiny layer, sent it to server k
       int k = (key * 991) % n;
       if (i == k) {
-        kr.to(mut_kr);
+        kr.To(mut_kr);
       } else {
-        Range<Key>(0,0).to(mut_kr);
+        Range<Key>(0,0).To(mut_kr);
         msg->valid = false;  // invalid msg will not be sent
       }
     } else {
       // evenly parititon the data into all server nodes
-      kr.evenDivide(n, i).to(mut_kr);
+      kr.EvenDivide(n, i).To(mut_kr);
     }
   }
 
@@ -176,7 +176,7 @@ void KVLayer<V, Updater>::GetValue(Message* msg) {
 }
 
 template <typename V, class Updater>
-void KVLayer<V, Updater>::SetValue(Message* msg) {
+void KVLayer<V, Updater>::SetValue(const Message* msg) {
   // Lock l(mu_);
   CHECK_EQ(msg->value.size(), 1);
   SArray<V> recv_data(msg->value[0]);

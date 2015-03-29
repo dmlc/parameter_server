@@ -54,7 +54,7 @@ class KVMap : public Parameter {
   }
 
   virtual void GetValue(Message* msg);
-  virtual void SetValue(Message* msg);
+  virtual void SetValue(const Message* msg);
 
  protected:
   int k_;
@@ -75,7 +75,7 @@ void KVMap<K,V,E,S>::GetValue(Message* msg) {
 }
 
 template <typename K, typename V, typename E, typename S>
-void KVMap<K,V,E,S>::SetValue(Message* msg) {
+void KVMap<K,V,E,S>::SetValue(const Message* msg) {
   SArray<K> key(msg->key);
   size_t n = key.size();
   CHECK_EQ(msg->value.size(), 1);

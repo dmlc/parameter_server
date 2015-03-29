@@ -220,11 +220,7 @@ class AsyncSGDWorker : public ISGDCompNode {
               << data.second->rows() << "-by-" << data.second->cols();
 
       // pull the weight
-      auto req = Parameter::Request(id);
-      // TODO
-      // for (int i = 0; i < conf_.pull_filter_size(); ++i) {
-      //   *req.add_filter() = conf_.pull_filter(i);
-      // }
+      auto req = Parameter::Request(id, -1, {}, sgd.pull_filter());
       model_.Pull(req, key, [this, id]() { ComputeGradient(id); });
     }
 
@@ -263,16 +259,7 @@ class AsyncSGDWorker : public ISGDCompNode {
     loss_->compute({Y, X, Xw.SMatrix()}, {grad.SMatrix()});
 
     // push the gradient
-    auto req = Parameter::Request(id);
-    // TODO
-    // for (int i = 0; i < conf_.push_filter_size(); ++i) {
-    //   // add filters
-    //   auto filter = conf_.push_filter(i);
-    //   if (filter.type() == FilterConfig::KEY_CACHING) {
-    //     filter.set_clear_cache_if_done(true);
-    //   }
-    //   *req.add_filter() = filter;
-    // }
+    auto req = Parameter::Request(id, -1, {}, conf_.async_sgd().push_filter());
     model_.Push(req, model_[id].key, grad);
     model_.clear(id);
 

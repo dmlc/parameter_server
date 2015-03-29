@@ -10,8 +10,8 @@ message ParamCall {
 
   optional TailKeyFilter tail_filter = 3;
 
-  optional bool insert_key = 5;
-  optional bool gather = 6;
+  // optional bool insert_key = 5;
+  // optional bool gather = 6;
 
   // it's a replica request
   optional bool replica = 10;
@@ -43,6 +43,6 @@ message TailKeyFilter {
   optional bool insert_count = 1;
   optional int32 freq_threshold = 2;
   optional bool query_value = 3;
-  optional int32 countmin_n = 4;
-  optional int32 countmin_k = 5;
+  optional int32 countmin_n = 4 [default = 1000000];
+  optional int32 countmin_k = 5 [default = 2];
 }

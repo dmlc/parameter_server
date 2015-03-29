@@ -32,7 +32,6 @@ void BCDScheduler::ProcessResponse(Message* response) {
 }
 
 void BCDScheduler::Run() {
-  WaitWorkersReady();
   LoadData();
   PreprocesseData();
   DivideFeatureBlocks();
@@ -40,6 +39,7 @@ void BCDScheduler::Run() {
 
 void BCDScheduler::LoadData() {
   // wait workers have load the data
+  WaitWorkersReady();
   auto load_time = tic();
   int n = sys_.manager().num_workers();
   while (load_data_ < n) usleep(500);
@@ -47,7 +47,7 @@ void BCDScheduler::LoadData() {
     CHECK_EQ(hit_cache_, n) << "clear the local caches";
     NOTICE("Hit local caches for the training data");
   }
-  NOTICE ("Loaded %lld examples in %g sec", g_train_info_.num_ex(), toc(load_time));
+  NOTICE ("Loaded %lu examples in %g sec", g_train_info_.num_ex(), toc(load_time));
 }
 
 void BCDScheduler::PreprocesseData() {

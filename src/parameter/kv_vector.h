@@ -2,6 +2,7 @@
 #include "ps.h"
 #include "parameter/parameter.h"
 #include "util/parallel_ordered_match.h"
+#include "filter/frequency_filter.h"
 namespace PS {
 // TODO doc, and filter
 /**
@@ -92,7 +93,7 @@ class KVVector : public Parameter {
     SliceKOFVMessage<K>(request, krs, msgs);
   }
   virtual void GetValue(Message* msg);
-  virtual void SetValue(Message* msg);
+  virtual void SetValue(const Message* msg);
   using Parameter::Push;
   using Parameter::Pull;
  protected:
@@ -103,13 +104,31 @@ class KVVector : public Parameter {
   std::unordered_map<int, Buffer> buffer_;  // <channel, Buffer>
 
   std::mutex mu_;  // protect the structure of data_ and buffer_
+
+  // filter tail keys
+  FreqencyFilter<Key, uint8> freq_filter_;
 };
 
 template <typename K, typename V>
-void KVVector<K,V>::SetValue(Message* msg) {
+void KVVector<K,V>::SetValue(const Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
+
+  // filter request
+  if (msg->task.param().has_tail_filter() && msg->task.request()) {
+    const auto& tail = msg->task.param().tail_filter();
+    CHECK(tail.insert_count());
+    CHECK_EQ(msg->value.size(), 1);
+    SArray<uint8> count(msg->value[0]);
+    CHECK_EQ(count.size(), recv_key.size());
+    if (freq_filter_.Empty()) {
+      freq_filter_.Resize(tail.countmin_n(), tail.countmin_k());
+    }
+    freq_filter_.InsertKeys(recv_key, count);
+    return;
+  }
+
   int chl = msg->task.key_channel();
   mu_.lock();
   auto& kv = data_[chl];
@@ -167,6 +186,15 @@ void KVVector<K,V>::GetValue(Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
+
+  // filter request
+  if (msg->task.param().has_tail_filter()) {
+    const auto& tail = msg->task.param().tail_filter();
+    CHECK(tail.has_freq_threshold());
+    msg->key = freq_filter_.QueryKeys(recv_key, tail.freq_threshold());
+    return;
+  }
+
   Lock l(mu_);
   auto& kv = data_[msg->task.key_channel()];
   CHECK_EQ(kv.key.size() * k_, kv.value.size());
@@ -195,9 +223,7 @@ template <typename K, typename V>
 int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
                         Message::Callback callback) {
   Lock l(mu_);
-  int chl = request.key_channel();
-  if (keys.empty() ) CHECK_EQ(data_.count(chl), 1) << "empty channel " << chl;
-  auto& kv = data_[chl];
+  auto& kv = data_[request.key_channel()];
   if (!keys.empty()) kv.key = keys;
   kv.value = SArray<V>(kv.key.size()*k_, 0);
 
