@@ -27,7 +27,7 @@ class YellowPages {
   void addRelation(const string& child, const string& parent) {
     relations_[parent].push_back(child);
   }
-  const std::vector<string>& childern(const string& parent) {
+  const std::vector<string>& children(const string& parent) {
     return relations_[parent];
   }
 
@@ -49,7 +49,7 @@ class YellowPages {
   std::map<NodeID, Node> nodes_;
   std::map<string, std::pair<Customer*, bool>> customers_;
 
-  // parent vs childern
+  // parent vs children
   std::unordered_map<string, std::vector<string>> relations_;
   Van van_;
 };
