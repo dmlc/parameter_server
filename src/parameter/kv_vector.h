@@ -74,8 +74,8 @@ class KVVector : public Parameter {
 
 
   int Push(const Task& request,
-           const SArray<K>& keys,     //
-           const SArray<V>& values) {
+           const SArray<K>& keys = SArray<K>(),     //
+           const SArray<V>& values = SArray<V>()) {
     return Push(request, keys, {values});
   }
 
@@ -93,7 +93,8 @@ class KVVector : public Parameter {
   }
   virtual void GetValue(Message* msg);
   virtual void SetValue(Message* msg);
-
+  using Parameter::Push;
+  using Parameter::Pull;
  protected:
   int k_;  // value entry size
   std::unordered_map<int, KVPairs> data_;  // <channel, KVPairs>
@@ -187,7 +188,7 @@ int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
   Message push(request, kServerGroup);
   push.set_key(kv.key);
   for (const auto& v : values) push.add_value(v);
-  return Parameter::Push(&push);
+  return Push(&push);
 }
 
 template <typename K, typename V>
@@ -203,7 +204,7 @@ int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
   Message pull(request, kServerGroup);
   pull.set_key(kv.key);
   if (callback) pull.callback = callback;
-  return Parameter::Pull(&pull);
+  return Pull(&pull);
 }
 
 }  // namespace PS

@@ -1,4 +1,5 @@
 #pragma once
+#include "ps.h"
 #include "util/split.h"
 #include "learner/bcd.h"
 #include "util/bitmap.h"
@@ -39,7 +40,7 @@ class DarlinScheduler : public BCDScheduler {
     // iterating
     int max_iter = darlin.max_pass_of_data();
     // pick up a large enough time stamp to avoid any possible conflict
-    int time = std::max(10000, 1000 + (int)fea_grp_.size() * this->time_ratio_);
+    int time = std::max(100000, 1000 + (int)fea_grp_.size() * 100);
     const int first_time = time + 1;
 
     for (int iter = 0; iter < max_iter; ++iter) {
@@ -169,15 +170,16 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
 
  protected:
   virtual void PreprocessData(int time, Message* request) {
-    BCDServer<Real>::PreprocessData(time, call);
+    BCDServer<Real>::PreprocessData(time, request);
     for (int grp : fea_grp_) {
-      size_t n = model_.key(grp).size();
+      size_t n = model_[grp].key.size();
       active_set_[grp].resize(n, true);
       delta_[grp].resize(n, bcd_conf_.GetExtension(delta_init_value));
     }
   }
 
-  virtual void updateModel(int time, const BCDCall& call) {
+  virtual void Update(int time, Message* request) {
+    const BCDCall& call = request->task.bcd();
     if (call.has_kkt_filter_threshold()) {
       kkt_filter_threshold_ = call.kkt_filter_threshold();
       violation_ = 0;
@@ -188,34 +190,56 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
     CHECK_EQ(call.fea_grp_size(), 1);
     int grp = call.fea_grp(0);
     Range<Key> g_key_range(call.key());
-    auto col_range = model_.find(grp, g_key_range);
+    auto col_range = model_[grp].key.FindRange(g_key_range);
 
     // none of my bussiness
-    if (model_.myKeyRange().setIntersection(g_key_range).empty()) return;
+    if (MyKeyRange().setIntersection(g_key_range).empty()) return;
 
     //  aggregate all workers' local gradients
-    model_.waitInMsg(kWorkerGroup, time);
+    model_.WaitReceivedRequest(time, kWorkerGroup);
 
     // update the weights
     if (!col_range.empty()) {
-      auto data = model_.received(time);
-      CHECK_EQ(col_range, data.first);
-      CHECK_EQ(data.second.size(), 2);
-
-      updateWeight(grp, col_range, data.second[0], data.second[1]);
+      auto data = model_.buffer(time);
+      CHECK_EQ(data.channel, grp);
+      CHECK_EQ(data.idx_range, col_range);
+      CHECK_EQ(data.values.size(), 2);
+      UpdateWeight(grp, col_range, data.values[0], data.values[1]);
     }
 
-    model_.finish(kWorkerGroup, time+1);
+    model_.FinishReceivedRequest(time+1, kWorkerGroup);
   }
 
-  void updateWeight(int grp, SizeR range, SArray<Real> G, SArray<Real> U) {
+  virtual void Evaluate(BCDProgress* prog) {
+    size_t nnz_w = 0;
+    size_t nnz_as = 0;
+    Real objv = 0;
+    for (int grp : fea_grp_) {
+      const auto& value = model_[grp].value;
+      for (Real w : value) {
+        if (kkt_filter_.marked(w) || w == 0) continue;
+        ++ nnz_w;
+        objv += fabs(w);
+      }
+      nnz_as += active_set_[grp].nnz();
+    }
+    prog->set_objective(objv * conf_.penalty().lambda(0));
+    prog->set_nnz_w(nnz_w);
+    prog->set_violation(violation_);
+    prog->set_nnz_active_set(nnz_as);
+  }
+
+  Config conf_;
+  Real violation_ = 0;
+ private:
+  void UpdateWeight(int grp, SizeR range, SArray<Real> G, SArray<Real> U) {
     CHECK_EQ(G.size(), range.size());
     CHECK_EQ(U.size(), range.size());
 
     Real eta = conf_.learning_rate().alpha();
     Real lambda = conf_.penalty().lambda(0);
     Real delta_max = bcd_conf_.GetExtension(delta_max_value);
-    auto& value = model_.value(grp);
+    auto& value = model_[grp].value;
     auto& active_set = active_set_[grp];
     auto& delta = delta_[grp];
     for (size_t i = 0; i < range.size(); ++i) {
@@ -245,32 +269,11 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
         d = - g_neg / u;
       }
       d = std::min(delta[k], std::max(-delta[k], d));
-      delta[k] = newDelta(delta_max, d);
+      delta[k] = Delta(delta_max, d);
       w += d;
     }
   }
 
-  virtual void evaluate(BCDProgress* prog) {
-    size_t nnz_w = 0;
-    size_t nnz_as = 0;
-    Real objv = 0;
-    for (int grp : fea_grp_) {
-      const auto& value = model_.value(grp);
-      for (Real w : value) {
-        if (kkt_filter_.marked(w) || w == 0) continue;
-        ++ nnz_w;
-        objv += fabs(w);
-      }
-      nnz_as += active_set_[grp].nnz();
-    }
-    prog->set_objective(objv * conf_.penalty().lambda(0));
-    prog->set_nnz_w(nnz_w);
-    prog->set_violation(violation_);
-    prog->set_nnz_active_set(nnz_as);
-  }
-
-  Config conf_;
-  Real violation_ = 0;
 };
 
 class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
@@ -280,22 +283,23 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
   virtual ~DarlinWorker() { }
  protected:
 
-  virtual void preprocessData(int time, const BCDCall& call) {
-    BCDWorker<Real>::preprocessData(time, call);
+  virtual void PreprocessData(int time, Message* request) {
+    BCDWorker<Real>::PreprocessData(time, request);
+    const BCDCall& call = request->task.bcd();
     // dual_ = exp(y.*(X_*w_))
-    if (bcd_conf_.init_w().type() == ParameterInitConfig::ZERO) {
-      dual_.setValue(1);  // an optimizatoin
+    if (bcd_conf_.init_w().type() == ParamInitConfig::ZERO) {
+      dual_.SetValue(1);  // an optimizatoin
     } else {
-      dual_.eigenArray() = exp(y_->value().eigenArray() * dual_.eigenArray());
+      dual_.EigenArray() = exp(y_->value().EigenArray() * dual_.EigenArray());
     }
     for (int grp : fea_grp_) {
-      size_t n = model_.key(grp).size();
+      size_t n = model_[grp].key.size();
       active_set_[grp].resize(n, true);
       delta_[grp].resize(n, bcd_conf_.GetExtension(delta_init_value));
     }
   }
 
-  virtual void ComputeGradient(int time, Message* msg) {
+  virtual void Update(int time, Message* msg) {
     auto call = msg->task.bcd();
     if (call.reset_kkt_filter()) {
       for (int grp : fea_grp_) active_set_[grp].fill(true);
@@ -354,7 +358,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
         if (thr_range.empty()) continue;
         auto gr = thr_range - col_range.begin();
         pool.add([this, grp, thr_range, gr, &G, &U]() {
-            ComputeGradient(grp, thr_range, G.segment(gr), U.segment(gr));
+            ComputeGradient(grp, thr_range, G.Segment(gr), U.Segment(gr));
           });
       }
       pool.startWorkers();
@@ -363,13 +367,9 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
     mu_.unlock();  // unlock the dual_
 
     // push the gradient into servers
-    Parameter::Fillters filters;
-    for (int i = 0; i < conf_.push_filter_size(); ++i) {
-      filters.push_back(conf_.push_filter(i));
-    }
-    Task req = Parameter::Request(grp, time, {}, filters, g_key_range);
-    int ts = model_.Push(req, model_[grp].key.Segment(col_range), {G,U});
-    CHECK_EQ(time, ts);
+    Task req = Parameter::Request(
+        grp, time, {}, bcd_conf_.comm_filter(), g_key_range);
+    model_.Push(req, model_[grp].key.Segment(col_range), {G,U});
   }
 
   /**
@@ -441,29 +441,25 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
       int time, Range<Key> g_key_range, int grp, SizeR col_range,
       Message* msg) {
     // pull the updated weight from the server
-    Parameter::Fillters filters;
-    for (int i = 0; i < conf_.pull_filter_size(); ++i) {
-      filters.push_back(conf_.pull_filter(i));
-    }
-    Task req = Parameter::Request(grp, time, {time-1}, filters, g_key_range);
-
+    Task req = Parameter::Request(
+        grp, time, {time-1}, bcd_conf_.comm_filter(), g_key_range);
     Message orig_req = *msg;
-    int ts = model_.Pull(
-        req, model_[grp].key.Segment(col_range), [this, time, grp, col_range, orig_req](){
+    model_.Pull(
+        req, model_[grp].key.Segment(col_range),
+        [this, time, grp, col_range, orig_req]() mutable {
           // once data pulled successfully, update dual_
           if (!col_range.empty()) {
             auto data = model_.buffer(time);
             CHECK_EQ(data.channel, grp);
             CHECK_EQ(data.idx_range, col_range);
             CHECK_EQ(data.values.size(), 1);
-            PpdateDual(grp, col_range, data.values[0]);
+            UpdateDual(grp, col_range, data.values[0]);
           }
 
           // mark the message finished, and reply the sender
           FinishReceivedRequest(orig_req.task.time(), orig_req.sender);
           Reply(&orig_req);
         });
-    CHECK_EQ(time, ts);
   }
 
   /**
@@ -474,7 +470,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
    * @param new_w new weight
    */
   void UpdateDual(int grp, SizeR col_range, SArray<Real> new_w) {
-    auto& cur_w = model_.value(grp);
+    auto& cur_w = model_[grp].value;
     auto& active_set = active_set_[grp];
     auto& delta = delta_[grp];
 
@@ -491,7 +487,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
         continue;
       }
       delta_w[i] = nw - cw;
-      delta[j] = newDelta(delta_max, delta_w[i]);
+      delta[j] = Delta(delta_max, delta_w[i]);
       cw = nw;
     }
 

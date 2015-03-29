@@ -179,11 +179,11 @@ class BCDServer : public BCDCompNode<V> {
       model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
     for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
-      // wait untill received all keys from workers
+      // wait rntill received all keys from workers
       model_.WaitReceivedRequest(time, kWorkerGroup);
       // initialize the weight
       auto& grp = model_[fea_grp_[i]];
-      grp.value.Resize(grp.key.size());
+      grp.value.resize(grp.key.size());
       grp.value.SetValue(bcd_conf_.init_w());
       model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
@@ -198,8 +198,8 @@ class BCDServer : public BCDCompNode<V> {
       }
       std::ofstream out(file); CHECK(out.good());
       for (int grp : fea_grp_) {
-        auto key = model_.key(grp);
-        auto value = model_.value(grp);
+        auto key = model_[grp].key;
+        auto value = model_[grp].value;
         CHECK_EQ(key.size(), value.size());
         // TODO use the model_file in msg
         for (size_t i = 0; i < key.size(); ++i) {
@@ -246,7 +246,7 @@ class BCDWorker : public BCDCompNode<V> {
       this->Reply(request, res);
     }
   }
- private:
+ protected:
   void LoadData(const DataConfig& data, ExampleInfo* info, int *hit_cache) {
     *hit_cache = DataCache("train", true);
     if (!(*hit_cache)) {
@@ -274,7 +274,7 @@ class BCDWorker : public BCDCompNode<V> {
 
       // wait if necessary to reduce memory usage
       if (i >= max_parallel) {
-        model_.Wait(pull_time[i-max_parallel], kServerGroup);
+        model_.Wait(pull_time[i-max_parallel]);
       }
     }
 
@@ -283,7 +283,7 @@ class BCDWorker : public BCDCompNode<V> {
     for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
       // wait if necessary
       if (!hit_cache && i >= grp_size - max_parallel) {
-        model_.Wait(pull_time[i], kServerGroup);
+        model_.Wait(pull_time[i]);
       }
       InitModel(time, fea_grp_[i], wait_dual[i]);
     }
@@ -300,7 +300,7 @@ class BCDWorker : public BCDCompNode<V> {
     }
     DataCache("train", false);
   }
-
+ private:
   int FilterTailFeatures(int time, int i) {
     int grp_size = fea_grp_.size();
     int grp = fea_grp_[i];
@@ -319,28 +319,33 @@ class BCDWorker : public BCDCompNode<V> {
     tail->set_insert_count(true);
     tail->set_countmin_k(bcd_conf_.countmin_k());
     tail->set_countmin_n((int)(uniq_key.size()*bcd_conf_.countmin_n_ratio()));
-    model_.Push(push, uniq_key, {key_cnt});
+    Message push_msg(push, kServerGroup);
+    push_msg.set_key(uniq_key);
+    push_msg.add_value(key_cnt);
+    model_.Push(&push_msg);
 
     // pull filtered keys after the servers have aggregated all counts
     Task pull = Parameter::Request(grp, time+2, {time+1}, bcd_conf_.comm_filter());
     tail = pull.mutable_param()->mutable_tail_filter();
     tail->set_freq_threshold(bcd_conf_.tail_feature_freq());
-    return model_.Pull(
-        pull, uniq_key, [this, grp, localizer, i, grp_size]() mutable {
-          // localize the training matrix
-          VLOG(1) << "remap index [" << i + 1 << "/" << grp_size << "]";
-          auto X = localizer->remapIndex(grp, model_[grp].key, &slot_reader_);
-          delete localizer;
-          slot_reader_.clear(grp);
-          if (!X) return;
-          VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
+    Message pull_msg(pull, kServerGroup);
+    pull_msg.set_key(uniq_key);
+    pull_msg.callback = [this, grp, localizer, i, grp_size]() mutable {
+      // localize the training matrix
+      VLOG(1) << "remap index [" << i + 1 << "/" << grp_size << "]";
+      auto X = localizer->remapIndex(grp, model_[grp].key, &slot_reader_);
+      delete localizer;
+      slot_reader_.clear(grp);
+      if (!X) return;
+      VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
 
-          VLOG(1) << "transpose to column major [" << i + 1 << "/" << grp_size << "]";
-          X = X->toColMajor();
-          VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
+      VLOG(1) << "transpose to column major [" << i + 1 << "/" << grp_size << "]";
+      X = X->toColMajor();
+      VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
 
-          { Lock l(mu_); X_[grp] = X; }
-        });
+      { Lock l(mu_); X_[grp] = X; }
+    };
+    return model_.Pull(&pull_msg);
   }
 
   void InitModel(int time, int grp, std::promise<void>& wait) {
@@ -384,6 +389,7 @@ class BCDWorker : public BCDCompNode<V> {
 
   SlotReader slot_reader_;
 
+ protected:
   // <slot id, feature matrix>
   std::unordered_map<int, MatrixPtr<V>> X_;
   // label

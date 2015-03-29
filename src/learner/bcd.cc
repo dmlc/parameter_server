@@ -47,7 +47,7 @@ void BCDScheduler::LoadData() {
     CHECK_EQ(hit_cache_, n) << "clear the local caches";
     NOTICE("Hit local caches for the training data");
   }
-  NOTICE ("Loaded %ld examples in %g sec", g_train_info_.num_ex(), toc(load_time));
+  NOTICE ("Loaded %lld examples in %g sec", g_train_info_.num_ex(), toc(load_time));
 }
 
 void BCDScheduler::PreprocesseData() {
