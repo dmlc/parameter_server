@@ -34,7 +34,7 @@ void RemoteNode::AddGroupNode(RemoteNode* rnode) {
   int pos = 0;
   Range<Key> kr(rnode->node.key());
   while (pos < group.size()) {
-    if (kr.inLeft(Range<Key>(group[pos]->node.key()))) {
+    if (kr.InLeft(Range<Key>(group[pos]->node.key()))) {
       break;
     }
     ++ pos;

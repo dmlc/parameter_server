@@ -8,7 +8,7 @@ namespace PS {
 // assign *node* with proper rank_id, key_range, etc..
 class NodeAssigner {
  public:
-  NodeAssigner(int num_servers, Range<Key> key_range = Range<Key>::all()) {
+  NodeAssigner(int num_servers, Range<Key> key_range = Range<Key>::All()) {
     num_servers_ = num_servers;
     key_range_ = key_range;
   }
@@ -18,13 +18,13 @@ class NodeAssigner {
     Range<Key> kr = key_range_;
     int rank = 0;
     if (node->role() == Node::SERVER) {
-      kr = key_range_.evenDivide(num_servers_, server_rank_);
+      kr = key_range_.EvenDivide(num_servers_, server_rank_);
       rank = server_rank_ ++;
     } else if (node->role() == Node::WORKER) {
       rank = worker_rank_ ++;
     }
     node->set_rank(rank);
-    kr.to(node->mutable_key());
+    kr.To(node->mutable_key());
   }
 
   void remove(const Node& node) {

@@ -127,14 +127,14 @@ class MinibatchReader {
     SArray<Key> uniq_key;
     SArray<uint8> key_cnt;
     Localizer<Key, V> localizer;
-    localizer.countUniqIndex(data[1], &uniq_key, &key_cnt);
+    localizer.CountUniqIndex(data[1], &uniq_key, &key_cnt);
 
     // filter keys
     filter_.InsertKeys(uniq_key, key_cnt);
     key = filter_.QueryKeys(uniq_key, key_freq_);
 
     // remap keys
-    X = localizer.remapIndex(key);
+    X = localizer.RemapIndex(key);
     return true;
   }
 

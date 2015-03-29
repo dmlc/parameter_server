@@ -271,7 +271,7 @@ template<typename V> class SArray {
   /// @brief read the segment [range.begin(), range.end()) from the binary file
   bool ReadFromFile(SizeR range, const string& file_name);
   bool ReadFromFile(const string& file_name) {
-    return ReadFromFile(SizeR::all(), file_name);
+    return ReadFromFile(SizeR::All(), file_name);
   }
   bool ReadFromFile(SizeR range, const DataConfig& file);
 

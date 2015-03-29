@@ -310,7 +310,7 @@ class BCDWorker : public BCDCompNode<V> {
     Localizer<Key, double> *localizer = new Localizer<Key, double>();
 
     VLOG(1) << "counting unique key [" << i + 1 << "/" << grp_size << "]";
-    localizer->countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
+    localizer->CountUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
     VLOG(1) << "finished counting [" << i + 1 << "/" << grp_size << "]";
 
     // push key and count to servers
@@ -333,7 +333,7 @@ class BCDWorker : public BCDCompNode<V> {
     pull_msg.callback = [this, grp, localizer, i, grp_size]() mutable {
       // localize the training matrix
       VLOG(1) << "remap index [" << i + 1 << "/" << grp_size << "]";
-      auto X = localizer->remapIndex(grp, model_[grp].key, &slot_reader_);
+      auto X = localizer->RemapIndex(grp, model_[grp].key, &slot_reader_);
       delete localizer;
       slot_reader_.clear(grp);
       if (!X) return;

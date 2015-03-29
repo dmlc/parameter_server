@@ -28,13 +28,13 @@ class Parameter : public Customer {
                       int ts = Message::kInvalidTime,
                       const Timestamps& wait = {},
                       const Filters& filters = Filters(),
-                      const Range<Key>& key_range = Range<Key>::all()) {
+                      const Range<Key>& key_range = Range<Key>::All()) {
     Task req; req.set_request(true);
     req.set_key_channel(channel);
     if (ts > Message::kInvalidTime) req.set_time(ts);
     for (int t : wait) req.add_wait_time(t);
     for (const auto& f : filters) *req.add_filter() = f;
-    key_range.to(req.mutable_key_range());
+    key_range.To(req.mutable_key_range());
     return req;
   }
 

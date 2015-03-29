@@ -13,24 +13,24 @@ class Range {
   Range() : begin_(0), end_(0) { }
 
   template<typename V>
-  Range(const Range<V>& other) { set(other.begin(), other.end()); }
+  Range(const Range<V>& other) { Set(other.begin(), other.end()); }
 
   template<typename V, typename W>
-  Range(V begin, W end) { set(begin, end); }
+  Range(V begin, W end) { Set(begin, end); }
 
-  Range(const PbRange& pb) { copyFrom(pb); }
+  Range(const PbRange& pb) { CopyFrom(pb); }
 
   template <typename V>
-  void operator=(const Range<V>& rhs) { set(rhs.begin(), rhs.end()); }
+  void operator=(const Range<V>& rhs) { Set(rhs.begin(), rhs.end()); }
 
   // construct from a protobuf range
-  void copyFrom(const PbRange& pb) { set(pb.begin(), pb.end()); }
+  void CopyFrom(const PbRange& pb) { Set(pb.begin(), pb.end()); }
 
   // fill a protobuf range
-  void to(PbRange* pb) const { pb->set_begin(begin_); pb->set_end(end_); }
+  void To(PbRange* pb) const { pb->set_begin(begin_); pb->set_end(end_); }
 
   template <typename V, typename W>
-  void set(V start, W end) {
+  void Set(V start, W end) {
     begin_ = static_cast<T>(start);
     end_ = static_cast<T>(end);
   }
@@ -57,36 +57,36 @@ class Range {
     return (begin_ <= static_cast<T>(v) && static_cast<T>(v) < end_);
   }
 
-  bool inLeft(const Range& other) const {
+  bool InLeft(const Range& other) const {
     return (begin_ <= other.begin_) ||
         (begin_ == other.begin_ && end_ <= other.end_);
   }
 
-  bool inRight(const Range& other) const {
-    return !inLeft(other);
+  bool InRight(const Range& other) const {
+    return !InLeft(other);
   }
 
   // project v into this range
-  template <typename V> V project(const V& v) const {
+  template <typename V> V Project(const V& v) const {
     return static_cast<V>(std::max(begin_, std::min(end_, static_cast<T>(v))));
   }
 
-  Range setIntersection(const Range& dest) const {
+  Range SetIntersection(const Range& dest) const {
     return Range(std::max(begin_, dest.begin_), std::min(end_, dest.end_));
   }
 
-  Range setUnion(const Range& dest) const {
+  Range SetUnion(const Range& dest) const {
     return Range(std::min(begin_, dest.begin_), std::max(end_, dest.end_));
   }
 
   // divide this range evenly into n ones, and return the i-th
-  Range evenDivide(size_t n, size_t i) const;
+  Range EvenDivide(size_t n, size_t i) const;
 
-  std::string toString() const {
+  std::string ToString() const {
     return ("["+std::to_string(begin_)+","+std::to_string(end_)+")");
   }
 
-  static Range all() {
+  static Range All() {
     CHECK_GT((T)-1, 0) << "it is a not unsigned integer";
     return Range(0, (T)-1);
   }
@@ -97,7 +97,7 @@ class Range {
 
 
 template<class T>
-Range<T> Range<T>::evenDivide(size_t n, size_t i) const {
+Range<T> Range<T>::EvenDivide(size_t n, size_t i) const {
   CHECK(valid());
   CHECK_GT(n, 0);
   CHECK_LT(i, n);
@@ -108,7 +108,7 @@ Range<T> Range<T>::evenDivide(size_t n, size_t i) const {
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Range<T>& obj) {
-  return (os << obj.toString());
+  return (os << obj.ToString());
 }
 
 } // namespace PS

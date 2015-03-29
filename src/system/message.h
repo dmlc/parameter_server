@@ -71,7 +71,7 @@ template <typename T> void Message::set_key(const SArray<T>& key) {
   if (has_key()) clear_key();
   task.set_has_key(true);
   this->key = SArray<char>(key);
-  if (!task.has_key_range()) Range<Key>::all().to(task.mutable_key_range());
+  if (!task.has_key_range()) Range<Key>::All().To(task.mutable_key_range());
 }
 
 template <typename T> void Message::add_value(const SArray<T>& value) {
@@ -115,19 +115,19 @@ template <typename K> void SliceKOFVMessage(
   Range<Key> msg_key_range(msg.task.key_range());
   for (int i = 0; i < n; ++i) {
     if (i == 0) {
-      K k = (K)msg_key_range.project(krs[0].begin());
+      K k = (K)msg_key_range.Project(krs[0].begin());
       pos[0] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
     } else {
       CHECK_EQ(krs[i-1].end(), krs[i].begin());
     }
-    K k = (K)msg_key_range.project(krs[i].end());
+    K k = (K)msg_key_range.Project(krs[i].end());
     pos[i+1] = std::lower_bound(key.begin(), key.end(), k) - key.begin();
   }
 
   // split the message according to *pos*
   for (int i = 0; i < n; ++i) {
     Message* ret = CHECK_NOTNULL((*rets)[i]);
-    if (krs[i].setIntersection(msg_key_range).empty()) {
+    if (krs[i].SetIntersection(msg_key_range).empty()) {
       // the remote node does not maintain this key range. mark this message as
       // valid, which will not be sent
       ret->valid = false;

@@ -87,7 +87,7 @@ void BCDScheduler::DivideFeatureBlocks() {
       n = std::max((int)std::ceil(nnz_per_row * bcd_conf_.feature_block_ratio()), 1);
     }
     for (int i = 0; i < n; ++i) {
-      auto block = Range<Key>(info.min_key(), info.max_key()).evenDivide(n, i);
+      auto block = Range<Key>(info.min_key(), info.max_key()).EvenDivide(n, i);
       if (block.empty()) continue;
       fea_blk_.push_back(std::make_pair(info.id(), block));
     }

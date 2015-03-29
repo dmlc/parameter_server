@@ -188,8 +188,8 @@ MatrixPtr<V> SArray<V>::SMatrix(size_t rows, size_t cols) {
   MatrixInfo info;
   info.set_type(MatrixInfo::DENSE);
   info.set_row_major(false);
-  SizeR(0, size_).to(info.mutable_row());
-  SizeR(0,1).to(info.mutable_col());
+  SizeR(0, size_).To(info.mutable_row());
+  SizeR(0,1).To(info.mutable_col());
   info.set_nnz(size_);
   info.set_sizeof_value(sizeof(V));
   return MatrixPtr<V>(new DenseMatrix<V>(info, *this));
@@ -197,7 +197,7 @@ MatrixPtr<V> SArray<V>::SMatrix(size_t rows, size_t cols) {
 
 template <typename V>
 bool SArray<V>::ReadFromFile(SizeR range, const DataConfig& data) {
-  if (range == SizeR::all()) {
+  if (range == SizeR::All()) {
     range = SizeR(0, File::size(data.file(0))/sizeof(V));
   }
   if (range.empty()) { clear(); return true; }

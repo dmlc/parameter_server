@@ -62,7 +62,7 @@ class DarlinScheduler : public BCDScheduler {
         }
         // block info
         auto blk = fea_blk_[order[i]];
-        blk.second.to(cmd->mutable_key());
+        blk.second.To(cmd->mutable_key());
         cmd->add_fea_grp(blk.first);
 
         // time stamp
@@ -193,7 +193,7 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
     auto col_range = model_[grp].key.FindRange(g_key_range);
 
     // none of my bussiness
-    if (MyKeyRange().setIntersection(g_key_range).empty()) return;
+    if (MyKeyRange().SetIntersection(g_key_range).empty()) return;
 
     //  aggregate all workers' local gradients
     model_.WaitReceivedRequest(time, kWorkerGroup);
@@ -354,7 +354,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
       ThreadPool pool(num_threads);
       int npart = num_threads * 1;  // could use a larger partition number
       for (int i = 0; i < npart; ++i) {
-        auto thr_range = col_range.evenDivide(npart, i);
+        auto thr_range = col_range.EvenDivide(npart, i);
         if (thr_range.empty()) continue;
         auto gr = thr_range - col_range.begin();
         pool.add([this, grp, thr_range, gr, &G, &U]() {
@@ -500,7 +500,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
       ThreadPool pool(FLAGS_num_threads);
       int npart = FLAGS_num_threads;
       for (int i = 0; i < npart; ++i) {
-        auto thr_range = row_range.evenDivide(npart, i);
+        auto thr_range = row_range.EvenDivide(npart, i);
         if (thr_range.empty()) continue;
         pool.add([this, grp, thr_range, col_range, delta_w]() {
             UpdateDual(grp, thr_range, col_range, delta_w);

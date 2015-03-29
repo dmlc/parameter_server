@@ -117,7 +117,7 @@ class SparseMatrix : public Matrix<V> {
     int num_tasks = rowMajor() ? num_threads * 10 : num_threads;
     for (int i = 0; i < num_tasks; ++i) {
       pool.add([this, x, y, row_range, num_tasks, i](){
-          rangeTimes(row_range.evenDivide(num_tasks, i), x, y);
+          rangeTimes(row_range.EvenDivide(num_tasks, i), x, y);
         });
     }
     pool.startWorkers();
@@ -160,7 +160,7 @@ MatrixPtr<V> SparseMatrix<I,V>::colBlock(SizeR range) const {
     // if (range.empty()) LL << range;
     auto new_offset = offset_.Segment(SizeR(range.begin(), range.end()+1));
     auto new_info = info_;
-    range.to(new_info.mutable_col());
+    range.To(new_info.mutable_col());
     new_info.set_nnz(new_offset.back() - new_offset.front());
     return MatrixPtr<V>(new SparseMatrix<I,V>(new_info, new_offset, index_, value_));
   }
@@ -175,7 +175,7 @@ MatrixPtr<V> SparseMatrix<I,V>::rowBlock(SizeR range) const {
   auto new_offset = offset_.Segment(SizeR(range.begin(), range.end()+1));
 
   auto new_info = info_;
-  range.to(new_info.mutable_row());
+  range.To(new_info.mutable_row());
   new_info.set_nnz(new_offset.back() - new_offset.front());
 
   return MatrixPtr<V>(new SparseMatrix<I,V>(new_info, new_offset, index_, value_));
@@ -198,7 +198,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
   {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
-      SizeR range = SizeR(0, inner_n).evenDivide(num_threads, i);
+      SizeR range = SizeR(0, inner_n).EvenDivide(num_threads, i);
       pool.add([this, range, &new_offset](){
           for (I k : index_) if (range.contains(k)) ++ new_offset[k+1];
         });
@@ -215,7 +215,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
   {
     ThreadPool pool(num_threads);
     for (int i = 0; i < num_threads; ++i) {
-      SizeR range = SizeR(0, inner_n).evenDivide(num_threads, i);
+      SizeR range = SizeR(0, inner_n).EvenDivide(num_threads, i);
       pool.add([this, range, &new_offset, &new_value, &new_index](){
           for (size_t i = 0; i < outerSize(); ++i) {
             if (offset_[i] == offset_[i+1]) continue;
@@ -291,7 +291,7 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
 //     int npart = num_threads * 4;
 
 //     for (int i = 0; i < npart; ++i) {
-//       auto thread_range = idx_map.range().evenDivide(npart, i);
+//       auto thread_range = idx_map.range().EvenDivide(npart, i);
 //       pool.add([this, thread_range, &idx_map, &new_index]() {
 //           // build the hash map, takes 50% time. the speed of unordered_map is
 //           // comparable to google::dense_hash_map (tested in gcc4.8).
@@ -342,11 +342,11 @@ MatrixPtr<V> SparseMatrix<I,V>::alterStorage() const {
 //   info.set_nnz(new_index.size());
 //   SizeR local(0, idx_map.size());
 //   if (rowMajor()) {
-//     SizeR(0, curr_o).to(info.mutable_row());
-//     local.to(info.mutable_col());
+//     SizeR(0, curr_o).To(info.mutable_row());
+//     local.To(info.mutable_col());
 //   } else {
-//     SizeR(0, curr_o).to(info.mutable_col());
-//     local.to(info.mutable_row());
+//     SizeR(0, curr_o).To(info.mutable_col());
+//     local.To(info.mutable_row());
 //   }
 //   // LL << curr_o << " " << local.end() << " " << curr_j;
 //   return MatrixPtr<V>(
@@ -423,7 +423,7 @@ string SparseMatrix<I,V>::debugString() const {
   //       SizeR range(0, rows());
   //       for (int i = 0; i < npart; ++i) {
   //         pool.Add([this, x, y, range, npart, i](){
-  //             timesRowMajor(range.evenDivide(npart, i), x, y);
+  //             timesRowMajor(range.EvenDivide(npart, i), x, y);
   //           });
   //       }
   //     } else {
@@ -435,7 +435,7 @@ string SparseMatrix<I,V>::debugString() const {
   //           yp = ys.back().data();
   //         }
   //         pool.Add([this, x, yp, range, npart, i](){
-  //             timesColMajor(range.evenDivide(npart, i), x, yp);
+  //             timesColMajor(range.EvenDivide(npart, i), x, yp);
   //           });
   //       }
   //     }
@@ -512,9 +512,9 @@ string SparseMatrix<I,V>::debugString() const {
 //   info.set_sizeof_index(sizeof(uint32));
 //   SizeR local(0, key_map->size());
 //   if (rowMajor())
-//     local.to(info.mutable_col());
+//     local.To(info.mutable_col());
 //   else
-//     local.to(info.mutable_row());
+//     local.To(info.mutable_row());
 
 //   return MatrixPtr<V>(new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
 // }
@@ -539,7 +539,7 @@ string SparseMatrix<I,V>::debugString() const {
 //   //   // int npart = 20;
 
 //   //   for (int i = 0; i < npart; ++i) {
-//   //     auto thread_range = key_map->range().evenDivide(npart, i);
+//   //     auto thread_range = key_map->range().EvenDivide(npart, i);
 //   //     pool.add([this, thread_range, key_map, &new_index]() {
 //   //         // build the hash map, takes 40% time. the speed of unordered_map is
 //   //         // comparable to google::dense_hash_map (tested in gcc4.8).
@@ -565,9 +565,9 @@ string SparseMatrix<I,V>::debugString() const {
 //   // info.set_sizeof_index(sizeof(uint32));
 //   // SizeR local(0, key_map->size());
 //   // if (rowMajor())
-//   //   local.to(info.mutable_col());
+//   //   local.To(info.mutable_col());
 //   // else
-//   //   local.to(info.mutable_row());
+//   //   local.To(info.mutable_row());
 
 //   // return MatrixPtr<V>(
 //   //     new SparseMatrix<uint32, V>(info, offset_, new_index, value_));
