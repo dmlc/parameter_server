@@ -82,6 +82,7 @@ message BCDCall {
   repeated int32 fea_grp = 8;
   optional bool hit_cache = 9;
   optional DataConfig data = 10;
+  optional int32 time = 12;
 }
 
 

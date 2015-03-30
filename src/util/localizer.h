@@ -62,10 +62,12 @@ class Localizer {
     return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
   }
  private:
+#pragma pack(push)
 #pragma pack(4)
   struct Pair {
     I k; uint32 i;
   };
+#pragma pack(pop)
   SArray<Pair> pair_;
   SparseMatrixPtr<I,V> mat_;
 };

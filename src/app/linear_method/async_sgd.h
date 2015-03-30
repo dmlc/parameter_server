@@ -221,6 +221,7 @@ class AsyncSGDWorker : public ISGDCompNode {
 
       // pull the weight
       auto req = Parameter::Request(id, -1, {}, sgd.pull_filter());
+      model_[id].key = key;
       model_.Pull(req, key, [this, id]() { ComputeGradient(id); });
     }
 

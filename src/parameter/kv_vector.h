@@ -75,14 +75,14 @@ class KVVector : public Parameter {
 
 
   int Push(const Task& request,
-           const SArray<K>& keys = SArray<K>(),     //
-           const SArray<V>& values = SArray<V>()) {
+           const SArray<K>& keys,     //
+           const SArray<V>& values) {
     return Push(request, keys, {values});
   }
 
   int Push(const Task& request,
            const SArray<K>& keys,
-           const std::initializer_list<SArray<V>>& values);
+           const std::initializer_list<SArray<V>>& values = {});
 
   int Pull(const Task& request, const SArray<K>& keys,
            Message::Callback callback = Message::Callback());
@@ -151,6 +151,8 @@ void KVVector<K,V>::SetValue(const Message* msg) {
       // write the received value into kv.value directly
       CHECK_EQ(i, 0) << " can only receive one value";
       CHECK_EQ(recv_data.size(), recv_key.size() * k_);
+      if (kv.value.empty())
+        kv.value = SArray<V>(kv.key.size() * k_, 0);
       CHECK_EQ(kv.key.size() * k_, kv.value.size());
 
       size_t n = ParallelOrderedMatch(recv_key, recv_data, kv.key, &kv.value, k_);
@@ -210,25 +212,17 @@ void KVVector<K,V>::GetValue(Message* msg) {
 template <typename K, typename V>
 int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
                         const std::initializer_list<SArray<V>>& values) {
-  Lock l(mu_);
-  auto& kv = data_[request.key_channel()];
-  if (!keys.empty()) kv.key = keys;
   Message push(request, kServerGroup);
-  push.set_key(kv.key);
-  for (const auto& v : values) push.add_value(v);
+  push.set_key(keys);
+  for (const auto& v : values) if (!v.empty()) push.add_value(v);
   return Push(&push);
 }
 
 template <typename K, typename V>
 int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
                         Message::Callback callback) {
-  Lock l(mu_);
-  auto& kv = data_[request.key_channel()];
-  if (!keys.empty()) kv.key = keys;
-  kv.value = SArray<V>(kv.key.size()*k_, 0);
-
   Message pull(request, kServerGroup);
-  pull.set_key(kv.key);
+  pull.set_key(keys);
   if (callback) pull.callback = callback;
   return Pull(&pull);
 }

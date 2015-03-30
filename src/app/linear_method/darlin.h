@@ -15,7 +15,6 @@ class DarlinScheduler : public BCDScheduler {
   DarlinScheduler(const Config& conf)
       : BCDScheduler(conf.darlin()), conf_(conf) {
     data_assigner_.set(conf_.training_data(), FLAGS_num_workers);
-    // LL << &sys_;
   }
   virtual ~DarlinScheduler() { }
 
@@ -40,10 +39,12 @@ class DarlinScheduler : public BCDScheduler {
 
     // iterating
     int max_iter = darlin.max_pass_of_data();
-    // pick up a large enough time stamp to avoid any possible conflict
-    int time = std::max(100000, 1000 + (int)fea_grp_.size() * 100);
-    const int first_time = time + 1;
 
+    // algo time
+    int time = exec_.time();
+    const int first_time = time + 1;
+    // model time
+    int model_time = fea_grp_.size() * 6;
     for (int iter = 0; iter < max_iter; ++iter) {
       // pick up an updating order
       auto order = blk_order_;
@@ -56,6 +57,8 @@ class DarlinScheduler : public BCDScheduler {
         Task update;
         auto cmd = update.mutable_bcd();
         cmd->set_cmd(BCDCall::UPDATE_MODEL);
+        cmd->set_time(model_time);
+        model_time += 3;
         // kkt filter
         if (i == 0) {
           cmd->set_kkt_filter_threshold(kkt_filter_threshold_);

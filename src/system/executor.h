@@ -39,6 +39,7 @@ class Executor {
   // the last received response
   inline std::shared_ptr<Message> last_response() { return last_response_; }
 
+  int time() { Lock l(node_mu_); return time_; }
   // node management
   void AddNode(const Node& node);
   void RemoveNode(const Node& node);
