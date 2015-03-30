@@ -25,7 +25,7 @@ class BCDScheduler : public App {
     CHECK(request->task.has_bcd());
     auto bcd = request->task.bcd();
     if (bcd.cmd() == BCDCall::REQUEST_WORKLOAD) {
-      Task req;
+      Task req; req.mutable_bcd()->set_cmd(BCDCall::LOAD_DATA);
       CHECK(data_assigner_.next(req.mutable_bcd()->mutable_data()));
       Submit(req, request->sender);
     }

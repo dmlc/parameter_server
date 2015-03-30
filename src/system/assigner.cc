@@ -26,7 +26,6 @@ void DataAssigner::set(const DataConfig& data, int num) {
 }
 
 bool DataAssigner::next(DataConfig *data) {
-  LL << this << " " << cur_i_;
   if (cur_i_ >= parts_.size()) return false;
   *data = parts_[cur_i_ ++];
   return true;

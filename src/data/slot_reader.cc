@@ -34,10 +34,10 @@ int SlotReader::Read(ExampleInfo* info) {
     num_ex_.resize(data_.file_size());
   }
   {
-    for (size_t i = 0; i < data_.file_size(); ++i) {
-      VLOG(1) << "I will load data file [" << i + 1 << "/" <<
-          data_.file_size() << "] [" << data_.file(i) << "]";
-    }
+    // for (size_t i = 0; i < data_.file_size(); ++i) {
+    //   VLOG(1) << "I will load data file [" << i + 1 << "/" <<
+    //       data_.file_size() << "] [" << data_.file(i) << "]";
+    // }
 
     ThreadPool pool(FLAGS_num_threads);
     for (int i = 0; i < data_.file_size(); ++i) {
