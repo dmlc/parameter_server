@@ -27,7 +27,15 @@ using caffe::caffe_add;
 template <typename V>
 class VVListener{
 public:
+  // before value is about to change
+//  virtual void vectorChanging(VVector<V>* data) = 0;
+  // after value is set
   virtual void vectorChanged(VVector<V>* data) = 0;
+  // before someone is requesting this vector
+  virtual void vectorGetting(VVector<V>* data) = 0;
+  //after value got from this vector
+//  virtual void vectorGot(VVector<V>* data) = 0;
+
   virtual ~VVListener() {};
 };
 
@@ -38,6 +46,7 @@ class VVector : public SharedParameter<uint8> {
       SharedParameter<uint8>(my_name, parent_name), val_entry_size_(k) {
     this->listener = listener;
     this->readonly = readonly;
+    this->resizable = false;
   }
   // VVector() : val_entry_size_(1) { }
   // VVector(int k) : val_entry_size_(k) { }
@@ -54,6 +63,9 @@ class VVector : public SharedParameter<uint8> {
   int valueEntrySize() const { return val_entry_size_; }
 
   int vcount() {return this->val_.size();}
+
+  void setResizable(bool resize) { this->resizable = resize; }
+  bool isResizable() { return resizable; }
 
   int totalSize() {
     int sum = 0;
@@ -76,6 +88,7 @@ class VVector : public SharedParameter<uint8> {
 
   VVListener<V>* listener;
   bool readonly;
+  bool resizable;
 };
 
 template <typename V>
@@ -94,10 +107,12 @@ void VVector<V>::setValue(const MessagePtr& msg) {
           CHECK(my_val.empty());
         } else {
           LL << "VVector::setValue before caffe_add";
-          caffe::caffe_add(recv_val.size(), recv_val.data(), my_val.data(), my_val.data());
+          SArray<V> key = {0};
+          parallelUnion(key, my_val, key, recv_val, &key, &new_val);
+          my_val = new_val;
         }
       } else {
-        CHECK_EQ(my_val.size(), recv_val.size()) << "VVector only support receiving whole VVector";
+        CHECK(isResizable() || my_val.size() == recv_val.size()) << "VVector only support receiving whole VVector";
         my_val.copyFrom(recv_val);
       }
   }
@@ -109,6 +124,9 @@ void VVector<V>::setValue(const MessagePtr& msg) {
 
 template <typename V>
 void VVector<V>::getValue(const MessagePtr& msg) {
+  if(listener){
+    listener->vectorGetting(this);
+  }
 //  LL << "VVector::getValue received";
   // get the data
   msg->clearValue();

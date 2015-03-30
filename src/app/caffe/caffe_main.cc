@@ -66,10 +66,11 @@ Solver<float>* initCaffeSolver(){
   return solver;
 }
 
-#define V_WEIGHT "w"
-#define V_DIFF "d"
+#define V_WEIGHT "weight"
+#define V_DIFF "diff"
+#define V_SOLVER "solver"
 namespace PS {
-class CaffeServer : public App, public VVListener<float> {
+class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
   CaffeServer(const string& name, const string& conf) : App(name) { }
   virtual ~CaffeServer() { }
@@ -81,15 +82,17 @@ class CaffeServer : public App, public VVListener<float> {
 
     // initialize the weight at server
     int total_weight = 0;
-    weights = new VVector<float>(V_WEIGHT, true);
+    weights = new VVector<float>(V_WEIGHT, true, this);
     diffs = new VVector<float>(V_DIFF, false, this);
+    solver_states = new VVector<char>(V_SOLVER, true, this);
+
     for (int i = 0; i < solver->net()->params().size();i++){
-	auto blob = solver->net()->params()[i];
-	weights->value(i).reset(blob->mutable_cpu_data(), blob->count(), false);
-	Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
-	diffBlobs.push_back(newBlob);
-	diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
-	total_weight += blob->data()->size();
+      auto blob = solver->net()->params()[i];
+      weights->value(i).reset(blob->mutable_cpu_data(), blob->count(), false);
+      Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      diffBlobs.push_back(newBlob);
+      diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
+      total_weight += blob->data()->size();
     }
 
     LL << "total weight size:" << total_weight;
@@ -121,14 +124,14 @@ class CaffeServer : public App, public VVListener<float> {
     while(true){
 //    LL << "server looping: iter " << solver->iter() << " vs test " << nextTest << " vs snapshot " << nextSnapshot;
       if (needTest && solver->iter() >= nextTest) {
-	nextTest = solver->iter() - solver->iter() % param.test_interval() + param.test_interval();
-	//test too slow!! on CPU!! a waste if on GPU!!
-//	testPhase();
+        nextTest = solver->iter() - solver->iter() % param.test_interval() + param.test_interval();
+        // test too slow!! on CPU!! a waste if on GPU!!
+//	    testPhase();
       }
-      //no loss to display at server
+      // no loss to display at server
       if (needSnapshot && solver->iter() >= nextSnapshot) {
-	nextSnapshot = solver->iter() - solver->iter() % param.snapshot() + param.snapshot();
-	snapshotPhase();
+        nextSnapshot = solver->iter() - solver->iter() % param.snapshot() + param.snapshot();
+        snapshotPhase();
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -139,10 +142,6 @@ class CaffeServer : public App, public VVListener<float> {
     if (sgd.cmd() == SGDCall::UPDATE_MODEL) { // sync param to memory
     {
       Lock l(mu_solver);
-      for (int i = 0; i < solver->net()->params().size();i++){
-        auto blob = solver->net()->params()[i];
-        blob->cpu_data();
-      }
     }
     }
   }
@@ -167,6 +166,7 @@ class CaffeServer : public App, public VVListener<float> {
       }
 */
     }
+
 //    LL<< "got diff[" << first<<",...,"<<last<<"]/[" << firstv << ",...," << lastv <<"]";
 
     solver->ComputeUpdateValue();
@@ -175,9 +175,52 @@ class CaffeServer : public App, public VVListener<float> {
     solver->stepEnd();
 
  }
+  void vectorChanged(VVector<char>* data){
+    CHECK(false) << "shouldn't be any VVector<char> change: "<< data->name();
+  }
+
+  void vectorGetting(VVector<float>* data){
+    Lock l(mu_solver);
+    float first, last;
+    if (data == this->weights){
+      // need to sync to CPU
+      for (int i = 0; i < solver->net()->params().size();i++){
+        auto blob = solver->net()->params()[i];
+        blob->cpu_data();
+        if (i==0) {
+          first = blob->cpu_data()[0];
+        } else if (i == solver->net()->params().size() - 1 ) {
+          last = blob->cpu_data()[blob->count()-1];
+        }
+      }
+      LL << "weight synced: ["<<first<<","<<last<<"]";
+    } else {
+      CHECK(false) << "some one is getting none-gettable! " << data->name();
+    }
+  }
+
+  void vectorGetting(VVector<char>* data){
+    LL << "getting char: "<< data->name();
+    Lock l(mu_solver);
+    if (data == this->solver_states){
+      // need to serialize solver state into solver_states
+      caffe::SolverState state;
+      this->solver->SnapshotSolverState(&state);
+      state.set_iter(solver->iter());
+      state.set_current_step(solver->current_step());
+      string buf;
+      state.SerializeToString(&buf);
+      solver_states->value(0).resize( buf.size() );
+      memcpy(solver_states->value(0).data(), buf.data(), buf.size());
+      LL << "server solver state saved, history:" << state.history_size() << ", total:" << buf.size();
+    } else {
+      CHECK(false) << "some one is getting none-gettable! " << data->name();
+    }
+  }
 
 
  private:
+  VVector<char> *solver_states; // individual data ptr, solver state to initialize workers
   VVector<float> *weights; //share data ptr with solver->net->params->cpu_data
   VVector<float> *diffs; //individual data ptr with diffBlobs
   std::vector<Blob<float>*> diffBlobs;
@@ -197,6 +240,8 @@ private:
   std::mutex mu_weight; // protect write to weight_ready and weights
   volatile bool weight_ready;
   std::mutex mu_diff;  //protect write to diffs
+
+  VVector<char> *solver_states; // individual data ptr, solver state to initialize workers
 
   VVector<float> *weights;// individual data ptr, same order/size as solver->net->params
   VVector<float> *diffs;// for accumulated diff, share memory with diffBlobs
@@ -237,6 +282,10 @@ public:
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
     diffs = new VVector<float>(V_DIFF);
+    solver_states = new VVector<char>(V_SOLVER);
+    solver_states->value(0) = {};
+    solver_states->setResizable(true);
+
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       weights->value(i).resize(blob->count());
@@ -246,22 +295,32 @@ public:
     }
 
     //initial pull from server
+    pullSolverState();
     pullWeight();
     swapWeight();
 
     // start pusher/puller
-    pusher = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pusherMain, this));
-    puller = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pullerMain, this));
-
+    if( FLAGS_pushstep != 0){
+      pusher = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pusherMain, this));
+    }
+    if( FLAGS_pullstep != 0){
+      puller = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pullerMain, this));
+    }
     // start training loop
     int iter = solver->param().max_iter() - solver->iter();
     LL << "start training loop";
     for (int i = 0; i < iter; i++) {
 	//solver->OneStep()
+      if(FLAGS_pullstep == 0){
+        pullWeight();
+      }
       swapWeight();
       solver->testPhase();
       solver->forwardBackwardPhase();
       this->accumulateDiff();
+      if(FLAGS_pushstep == 0){
+        pushDiff();
+      }
       solver->displayPhase();
       solver->ComputeUpdateValue();
       solver->net()->Update();
@@ -346,17 +405,17 @@ public:
     msg->key = {0};
     msg->task.set_key_channel(0);
     for(int i = 0; i < diffs->vcount();i++){
-	auto acc = diffBlobs[i];
-	acc->cpu_diff(); // sync to cpu
-	auto diff = diffs->value(i);
-	CHECK_EQ(acc->cpu_diff(), diff.data());
-	msg->addValue(diff);
+      auto acc = diffBlobs[i];
+      acc->cpu_diff(); // sync to cpu
+      auto diff = diffs->value(i);
+      CHECK_EQ(acc->cpu_diff(), diff.data());
+      msg->addValue(diff);
     }
     int push_time = diffs->push(msg);
     diffs->waitOutMsg(kServerGroup, push_time);
     //clear previous diff
     for(auto acc : diffBlobs){
-	memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
+      memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
     }
   }
 
@@ -385,16 +444,34 @@ public:
   }
 
   /**
+   * by main
+   */
+  void pullSolverState() {
+    MessagePtr msg(new Message(kServerGroup));
+    msg->key = {0};
+    int pull_time = solver_states->pull(msg);
+    solver_states->waitOutMsg(kServerGroup, pull_time);
+    Lock l(mu_weight);
+    SArray<char>src = solver_states->value(0);
+    LL << "solver state got: " << src.size();
+    caffe::SolverState state;
+    state.ParseFromArray((const void *)src.data(), src.size() );
+    solver->RestoreSolverState(state);
+    solver->setIter(state.iter());
+    solver->setCurrentStep(state.current_step());
+  }
+
+  /**
    * by puller (except the initial pull), synchronized
    */
   void pullWeight(){
-    Task task;
-    task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
-    port(kServerGroup)->submitAndWait(task);
+//    Task task;
+//    task.mutable_sgd()->set_cmd(SGDCall::UPDATE_MODEL);
+//    port(kServerGroup)->submitAndWait(task);
 
     Lock l(mu_weight);
     if(weight_ready){
-	return;
+      return;
     }
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
