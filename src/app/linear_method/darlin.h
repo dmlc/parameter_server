@@ -194,11 +194,17 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
     CHECK_EQ(call.fea_grp_size(), 1);
     int grp = call.fea_grp(0);
     Range<Key> g_key_range(call.key());
+
     auto col_range = model_[grp].key.FindRange(g_key_range);
 
     // none of my bussiness
-    if (MyKeyRange().SetIntersection(g_key_range).empty()) return;
+    if (MyKeyRange().SetIntersection(g_key_range).empty()) {
+      VLOG(1) << "ignore group " << grp;
+      return;
+    }
 
+    VLOG(1) << "updating group " << grp << ", global key "
+            << g_key_range << ", local index " << col_range;
     //  aggregate all workers' local gradients
     model_.WaitReceivedRequest(time, kWorkerGroup);
 
@@ -212,6 +218,7 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
     }
 
     model_.FinishReceivedRequest(time+1, kWorkerGroup);
+    VLOG(1) << "updated group " << grp;
   }
 
   virtual void Evaluate(BCDProgress* prog) {
@@ -342,6 +349,8 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
    */
   void ComputeAndPushGradient(
       int time, Range<Key> g_key_range, int grp, SizeR col_range) {
+    VLOG(1) << "compute gradient group " << grp << ", global key "
+            << g_key_range << ", local index " << col_range;
     // first-order gradient
     SArray<Real> G(col_range.size(), 0);
     // the upper bound of the diagnal second-order gradient
@@ -450,6 +459,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
     model_.Pull(
         req, model_[grp].key.Segment(col_range),
         [this, time, grp, col_range, orig_req]() mutable {
+          VLOG(1) << "pulled weight group " << grp << ", local index " << col_range;
           // once data pulled successfully, update dual_
           if (!col_range.empty()) {
             auto data = model_.buffer(time);

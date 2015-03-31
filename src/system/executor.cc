@@ -19,7 +19,11 @@ Executor::Executor(Customer& obj) : obj_(obj), sys_(Postoffice::instance()) {
 Executor::~Executor() {
   if (done_) return;
   done_ = true;
-  dag_cond_.notify_all();  // wake thread_
+
+  // wake thread_
+  { Lock l(msg_mu_); }
+  dag_cond_.notify_all();
+
   thread_->join();
   delete thread_;
 }
@@ -40,10 +44,25 @@ bool Executor::CheckFinished(RemoteNode* rnode, int timestamp, bool sent) {
   }
   return false;
 }
+int Executor::NumFinished(RemoteNode* rnode, int timestamp, bool sent) {
+  CHECK(rnode);
+  if (timestamp < 0 || !rnode->alive) return 0;
+  auto& tracker = sent ? rnode->sent_req_tracker : rnode->recv_req_tracker;
+  if (rnode->node.role() == Node::GROUP) {
+    int fin = 0;
+    for (auto r : rnode->group) {
+      auto& r_tracker = sent ? r->sent_req_tracker : r->recv_req_tracker;
+      if (r->alive && r_tracker.IsFinished(timestamp)) ++ fin;
+    }
+    return fin;
+  } else {
+    return tracker.IsFinished(timestamp);
+  }
+}
 
 void Executor::WaitSentReq(int timestamp) {
   std::unique_lock<std::mutex> lk(node_mu_);
-  VLOG(2) << obj_.id() << ": wait sent request " << timestamp;
+  VLOG(1) << obj_.id() << ": wait sent request " << timestamp;
   const NodeID& recver = sent_reqs_[timestamp].recver;
   CHECK(recver.size());
   auto rnode = GetRNode(recver);
@@ -54,7 +73,7 @@ void Executor::WaitSentReq(int timestamp) {
 
 void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
-  VLOG(2) << obj_.id() << ": wait received request "
+  VLOG(1) << obj_.id() << ": wait request "
           << timestamp << " from " << sender;
   auto rnode = GetRNode(sender);
   recv_req_cond_.wait(lk, [this, rnode, timestamp] {
@@ -62,9 +81,14 @@ void Executor::WaitRecvReq(int timestamp, const NodeID& sender) {
     });
 }
 
+int Executor::QueryRecvReq(int timestamp, const NodeID& sender) {
+  Lock l(node_mu_);
+  return NumFinished(GetRNode(sender), timestamp, false);
+}
+
 void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
   std::unique_lock<std::mutex> lk(node_mu_);
-  VLOG(2) << obj_.id() << ": finish received request "
+  VLOG(1) << obj_.id() << ": finish request "
           << timestamp << " from " << sender;
   auto rnode = GetRNode(sender);
   rnode->recv_req_tracker.Finish(timestamp);
@@ -75,6 +99,8 @@ void Executor::FinishRecvReq(int timestamp, const NodeID& sender) {
   }
   lk.unlock();
   recv_req_cond_.notify_all();
+
+  { Lock lk(msg_mu_); }
   dag_cond_.notify_all();
 }
 
@@ -142,6 +168,7 @@ void Executor::Reply(Message* request, Message* response) {
 
 bool Executor::PickActiveMsg() {
   std::unique_lock<std::mutex> lk(msg_mu_);
+  VLOG(1) << obj_.id() << ": try to pick a message";
   auto it = recv_msgs_.begin();
   while (it != recv_msgs_.end()) {
     bool process = true;
@@ -185,16 +212,16 @@ bool Executor::PickActiveMsg() {
       active_msg_ = std::shared_ptr<Message>(msg);
       recv_msgs_.erase(it);
       rnode->DecodeMessage(active_msg_.get());
-      VLOG(2) << obj_.id() << " picks a messge in [" <<
-          recv_msgs_.size() << "]. sent from " << msg->sender <<
-          ": " << msg->ShortDebugString();
+      VLOG(1) << obj_.id() << ": pick a messge in ["
+              << recv_msgs_.size()+1 << "] from " << msg->sender
+              << ": " << msg->ShortDebugString();
       return true;
     }
   }
 
   // sleep until received a new message or another message been marked as
   // finished.
-  VLOG(2) << obj_.id() << " picks nothing. msg buffer size "
+  VLOG(1) << obj_.id() << ": pick nothing. msg buffer size "
           << recv_msgs_.size();
   dag_cond_.wait(lk);
   return false;
@@ -220,7 +247,7 @@ void Executor::ProcessActiveMsg() {
     last_response_ = active_msg_;
     obj_.ProcessResponse(active_msg_.get());
 
-    std::unique_lock<std::mutex> lk(msg_mu_);
+    std::unique_lock<std::mutex> lk(node_mu_);
     // mark as finished
     auto rnode = GetRNode(active_msg_->sender);
     rnode->sent_req_tracker.Finish(ts);
@@ -246,18 +273,22 @@ void Executor::ProcessActiveMsg() {
       }
     }
     lk.unlock();
-    sent_req_cond_.notify_all();
+
     if (it->second.callback) {
       // run the callback, and then empty it
       it->second.callback();
       it->second.callback = Message::Callback();
     }
+
+    sent_req_cond_.notify_all();
   }
 }
 
 void Executor::Accept(Message* msg) {
-  Lock l(msg_mu_);
-  recv_msgs_.push_back(msg);
+  {
+    Lock l(msg_mu_);
+    recv_msgs_.push_back(msg);
+  }
   dag_cond_.notify_one();
 }
 

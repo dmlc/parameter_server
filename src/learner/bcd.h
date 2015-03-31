@@ -184,7 +184,7 @@ class BCDServer : public BCDCompNode<V> {
       model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
     for (int i = 0; i < grp_size; ++i, time += 3) {
-      // wait rntill received all keys from workers
+      // wait until received all keys from workers
       model_.WaitReceivedRequest(time, kWorkerGroup);
       // initialize the weight
       auto& grp = model_[fea_grp_[i]];
@@ -192,6 +192,7 @@ class BCDServer : public BCDCompNode<V> {
       grp.value.SetValue(bcd_conf_.init_w());
       model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
+    model_.ClearFilter();
   }
 
   void SaveModel(const DataConfig& output) {

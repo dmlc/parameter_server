@@ -54,6 +54,8 @@ class Customer {
     sys_.manager().RemoveCustomer(id_);
   }
 
+  ///////// As a sender /////////
+
   /**
    * @brief Submits a request to the customer with the same id in node #recver
    *
@@ -121,6 +123,25 @@ class Customer {
                      std::vector<Message*>* msgs) { }
 
   /**
+   * @brief A user-defined function, which processes a request message received from "request->sender"
+   *
+   * It which will be called by the executor's processing thread once the time
+   * dependencies specified in "request->task" have been satisfied.
+   *
+   * @param request the received request
+   */
+  virtual void ProcessRequest(Message* request) { }
+
+  /**
+   * @brief Returns the last received request.
+   */
+  inline std::shared_ptr<Message> LastRequest() {
+    return exec_.last_request();
+  }
+
+  ///////// As a receiver /////////
+
+  /**
    * @brief A user-defined function, which processes a response message received from "response->sender"
    *
    * It be called by the executor's processing thread.
@@ -134,26 +155,14 @@ class Customer {
     return exec_.last_response();
   }
 
-
   /**
-   * @brief A user-defined function, which processes a request message received from "request->sender"
+   * @brief Wait until the a received request is processed at this node or the
+   * sender is dead. If the sender is a node group, then wait for each alive
+   * node in this node group.
    *
-   * It which will be called by the executor's processing thread once the time
-   * dependencies specified in "request->task" have been satisfied.
-   *
-   * @param request the received request
+   * @param timestamp
+   * @param sender
    */
-  virtual void ProcessRequest(Message* request) { }
-
-  /// Returns the last received request.
-  inline std::shared_ptr<Message> LastRequest() {
-    return exec_.last_request();
-  }
-
-
-  /// Wait until the request task/message with "timestamp" received from "sender" is
-  /// processed at this node or "sender" is dead. If "sender" is a node group,
-  /// then wait for each alive node in this node group.
   inline void WaitReceivedRequest(int timestamp, const NodeID& sender) {
     exec_.WaitRecvReq(timestamp, sender);
   }
@@ -189,23 +198,49 @@ class Customer {
     exec_.FinishRecvReq(timestamp, sender);
   }
 
+  /**
+   * @brief Returns the number of finished requests on a particular timestamp this node received.
+   *
+   * @param timestamp
+   * @param sender
+   *
+   * @return
+   */
+  inline int NumDoneReceivedRequest(int timestamp, const NodeID& sender) {
+    return exec_.QueryRecvReq(timestamp, sender);
+  }
 
-  /// Replies the request message "msg" received from msg->sender with
-  /// "reply". In default, "reply" is an empty ack message.
+  /**
+   * @brief Replies the request message with a response. In default, response is
+   * an empty ack message.
+   *
+   * @param request
+   * @param response
+   */
   void Reply(Message* request, Task response = Task()) {
     Message* msg = new Message(response);
     Reply(request, msg);
   }
 
-  /// the system will DELETE response, so do not delete it.
+
+  /**
+   * @brief Reply the request message with a response message.
+   *
+   * @param request
+   * @param response the system will DELETE response, so do not DELETE it.
+   */
   void Reply(Message* request, Message* response) {
     exec_.Reply(request, response);
   }
 
-  /// Returns the unique ID of this customer
+  /**
+   * @brief  Returns the unique ID of this customer
+   */
   int id() const { return id_; }
 
-  /// Returns the executor of this customer.
+  /**
+   * @brief Returns the executor of this customer. DEPRECATED
+   */
   Executor* executor() { return &exec_; }
 
  protected:

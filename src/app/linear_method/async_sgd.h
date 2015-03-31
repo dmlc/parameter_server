@@ -261,8 +261,8 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // push the gradient
     auto req = Parameter::Request(id, -1, {}, conf_.async_sgd().push_filter());
-    model_.Push(req, model_[id].key, grad);
-    model_.clear(id);
+    model_.Push(req, model_[id].key, {grad});
+    model_.Clear(id);
 
     ++ processed_batch_;
   }

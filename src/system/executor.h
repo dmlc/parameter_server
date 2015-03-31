@@ -33,6 +33,7 @@ class Executor {
   void WaitSentReq(int timestamp);
   void WaitRecvReq(int timestamp, const NodeID& sender);
   void FinishRecvReq(int timestamp, const NodeID& sender);
+  int QueryRecvReq(int timestamp, const NodeID& sender);
 
   // the last received request
   inline std::shared_ptr<Message> last_request() { return last_request_; }
@@ -76,6 +77,7 @@ class Executor {
   }
 
   inline bool CheckFinished(RemoteNode* rnode, int timestamp, bool sent);
+  inline int NumFinished(RemoteNode* rnode, int timestamp, bool sent);
 
   std::vector<NodeID> GroupIDs() {
    std::vector<NodeID> ids = {

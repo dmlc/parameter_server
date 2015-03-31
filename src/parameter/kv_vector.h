@@ -56,7 +56,7 @@ class KVVector : public Parameter {
   KVPairs& operator[] (int chl) { Lock l(mu_); return data_[chl]; }
 
   /// Clears both key and value at channel "chl"
-  void clear(int chl) {
+  void Clear(int chl) {
     Lock l(mu_); data_[chl].key.clear(); data_[chl].value.clear();
   }
 
@@ -69,16 +69,18 @@ class KVVector : public Parameter {
 
   Buffer buffer(int timestamp) { Lock l(mu_); return buffer_[timestamp]; }
 
-  void clear_buffer(int timestamp) {
+  void ClearBuffer(int timestamp) {
     for (auto& v : buffer_[timestamp].values) v.clear();
   }
 
+  void ClearFilter() { freq_filter_.clear(); }
 
-  int Push(const Task& request,
-           const SArray<K>& keys,     //
-           const SArray<V>& values) {
-    return Push(request, keys, {values});
-  }
+
+  // int Push(const Task& request,
+  //          const SArray<K>& keys,     //
+  //          const SArray<V>& values) {
+  //   return Push(request, keys, {values});
+  // }
 
   int Push(const Task& request,
            const SArray<K>& keys,
@@ -105,8 +107,8 @@ class KVVector : public Parameter {
 
   std::mutex mu_;  // protect the structure of data_ and buffer_
 
-  // filter tail keys
-  FreqencyFilter<Key, uint8> freq_filter_;
+  // <channel, filter tail keys>
+  std::unordered_map<int, FreqencyFilter<Key, uint8>> freq_filter_;
 };
 
 template <typename K, typename V>
@@ -114,6 +116,7 @@ void KVVector<K,V>::SetValue(const Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
+  int chl = msg->task.key_channel();
 
   // filter request
   if (msg->task.param().has_tail_filter() && msg->task.request()) {
@@ -122,14 +125,15 @@ void KVVector<K,V>::SetValue(const Message* msg) {
     CHECK_EQ(msg->value.size(), 1);
     SArray<uint8> count(msg->value[0]);
     CHECK_EQ(count.size(), recv_key.size());
-    if (freq_filter_.Empty()) {
-      freq_filter_.Resize(tail.countmin_n(), tail.countmin_k());
+    auto& filter = freq_filter_[chl];
+    if (filter.Empty()) {
+      double w = (double)std::max(sys_.manager().num_workers(), 1);
+      filter.Resize(w / log(w+1) * tail.countmin_n(), tail.countmin_k());
     }
-    freq_filter_.InsertKeys(recv_key, count);
+    filter.InsertKeys(recv_key, count);
     return;
   }
 
-  int chl = msg->task.key_channel();
   mu_.lock();
   auto& kv = data_[chl];
   mu_.unlock();
@@ -188,17 +192,19 @@ void KVVector<K,V>::GetValue(Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
   if (recv_key.empty()) return;
+  int chl = msg->task.key_channel();
 
   // filter request
   if (msg->task.param().has_tail_filter()) {
     const auto& tail = msg->task.param().tail_filter();
     CHECK(tail.has_freq_threshold());
-    msg->key = freq_filter_.QueryKeys(recv_key, tail.freq_threshold());
+    auto& filter = freq_filter_[chl];
+    msg->key = filter.QueryKeys(recv_key, tail.freq_threshold());
     return;
   }
 
   Lock l(mu_);
-  auto& kv = data_[msg->task.key_channel()];
+  auto& kv = data_[chl];
   CHECK_EQ(kv.key.size() * k_, kv.value.size());
 
   // get the data
