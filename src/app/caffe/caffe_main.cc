@@ -1,16 +1,20 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <google/protobuf/io/coded_stream.h>
 
 #include "ps.h"
 #include "system/app.h"
 #include "parameter/v_vector.h"
 #include "parameter/kv_vector.h"
 #include "caffe/caffe.hpp"
+#include "caffe/util/math_functions.hpp"
 using caffe::Blob;
 using caffe::Solver;
 using caffe::SolverParameter;
 using caffe::Caffe;
+using caffe::caffe_scal;
+using google::protobuf::io::CodedInputStream;
 
 // caffe cmd flags
 
@@ -157,6 +161,11 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
       float* dest = blob->mutable_cpu_diff();
       auto src = diffs->value(i);
       memcpy(dest, src.data(), blob->diff()->size());
+
+      //scale down?
+      if(FLAGS_pushstep != 0){
+        caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), dest);
+      }
 /*      if(i==0){
 	  first=blob->cpu_diff()[0];
 	  firstv = src[0];
@@ -455,7 +464,10 @@ public:
     SArray<char>src = solver_states->value(0);
     LL << "solver state got: " << src.size();
     caffe::SolverState state;
-    state.ParseFromArray((const void *)src.data(), src.size() );
+    CodedInputStream cis((const uint8*) src.data(), src.size());
+    cis.SetTotalBytesLimit(INT_MAX, 536870912);
+    state.ParseFromCodedStream(&cis);
+
     solver->RestoreSolverState(state);
     solver->setIter(state.iter());
     solver->setCurrentStep(state.current_step());
