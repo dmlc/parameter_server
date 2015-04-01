@@ -27,6 +27,9 @@ DEFINE_string(model, "",
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 
+DEFINE_bool(fb_only, true,
+    "Optional; workers only ForwardBackward.");
+
 // client puller / pusher flags
 
 DEFINE_int32(pullstep, 4,
@@ -68,6 +71,16 @@ Solver<float>* initCaffeSolver(){
   }
 
   return solver;
+}
+
+caffe::Net<float>* initCaffeNet(){
+  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+
+  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
+
+  std::string net_path = solver_param.net();
+
+  return NULL;// todo
 }
 
 #define V_WEIGHT "weight"
@@ -331,15 +344,18 @@ public:
         pushDiff();
       }
       solver->displayPhase();
-      solver->ComputeUpdateValue();
-      solver->net()->Update();
-      solver->snapshotPhase();
+      // bypass all of them
+      if(!FLAGS_fb_only){
+        solver->ComputeUpdateValue();
+        solver->net()->Update();
+        solver->snapshotPhase();
+      }
       solver->stepEnd();
       stepEnd();
     }
     // If we haven't already, save a snapshot after optimization, unless
     // overridden by setting snapshot_after_train := false
-    if (solver->param().snapshot_after_train()
+    if (!FLAGS_fb_only && solver->param().snapshot_after_train()
         && (!solver->param().snapshot() || solver->iter() % solver->param().snapshot() != 0)) {
       solver->Snapshot();
     }
@@ -435,18 +451,18 @@ public:
     {
       Lock l(mu_diff);
       for(int i = 0; i < solver->net()->params().size(); i++){
-	auto acc = diffBlobs[i];
-	auto blob = solver->net()->params()[i];
-	switch (Caffe::mode()) {
-	case Caffe::CPU:
-	  caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
-	  break;
-	case Caffe::GPU:
-	  caffe::caffe_gpu_add(acc->count(), blob->gpu_diff(), acc->gpu_diff(), acc->mutable_gpu_diff());
-	  break;
-	default:
-	  LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-	}
+        auto acc = diffBlobs[i];
+        auto blob = solver->net()->params()[i];
+        switch (Caffe::mode()) {
+          case Caffe::CPU:
+            caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
+            break;
+          case Caffe::GPU:
+            caffe::caffe_gpu_add(acc->count(), blob->gpu_diff(), acc->gpu_diff(), acc->mutable_gpu_diff());
+            break;
+          default:
+            LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+        }
       }
     }
     diffEnd();
