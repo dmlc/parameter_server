@@ -51,11 +51,12 @@ class AsyncSGDServer : public ISGDCompNode {
       model->set_state(state);
       model_ = model;
     } else {
-      // if (conf_.async_sgd().ada_grad()) {
-      //   model_ = new KVStore<Key, V, SGDEntry<V>, SGDState<V>>();
-      // } else {
+      if (conf_.async_sgd().ada_grad()) {
+        model_ = new KVMap<Key, V, AdaGradEntry, SGDState>();
+      } else {
+        CHECK(false);
       //   model_ = new KVStore<Key, V, AdaGradEntry<V>, SGDState<V>>();
-      // }
+      }
     }
   }
 
@@ -142,16 +143,48 @@ class AsyncSGDServer : public ISGDCompNode {
       V sigma = (sqrt_n_new - sqrt_n) / st->lr->alpha();
       z += grad  - sigma * w;
       sqrt_n = sqrt_n_new;
-
-      // update status
       V eta = st->lr->eval(sqrt_n);
       w = st->h->proximal(-z*eta, eta);
+
+      // update status
       st->UpdateWeight(w, w_old);
     }
 
     void Get(V* data, void* state) { *data = w; }
   };
 
+  /**
+   * @brief An entry for adaptive gradient
+   */
+  struct AdaGradEntry {
+    void Set(const V* data, void* state) {
+      SGDState* st = (SGDState*) state;
+      // update model
+      V grad = *data;
+      sum_sq_grad += grad * grad;
+      V eta = st->lr->eval(sqrt(sum_sq_grad));
+      V w_old = weight;
+      weight = st->h->proximal(weight - eta * grad, eta);
+
+      // update status
+      st->UpdateWeight(weight, w_old);
+    }
+
+    void Get(V* data, void* state) { *data = weight; }
+    V weight = 0;
+    V sum_sq_grad = 0;
+  };
+
+  // /**
+  //  * @brief An entry for standard gradient desecent
+  //  */
+  // struct SGDEntry {
+  //   void Set(const V* data, void* state) {
+  //     // TODO
+  //   }
+  //   void Get(V* data, void* state) { *data = weight; }
+  //   V weight = 0;
+  // };
 };
 
 /**
@@ -256,10 +289,8 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // push the gradient
     auto req = Parameter::Request(id, -1, {}, conf_.async_sgd().push_filter());
-    model_.Push(req, model_[id].key, {grad});
+    model_.Push(req, model_[id].key, {grad}, [this](){ ++ processed_batch_; });
     model_.Clear(id);
-
-    ++ processed_batch_;
   }
 
 private:
@@ -278,33 +309,3 @@ private:
 
 } // namespace LM
 } // namespace PS
-
-// template <typename V>
-// struct AdaGradEntry {
-//   void get(V const* data, SGDState<V>* state) {
-//     // update model
-//     V grad = *data;
-//     sum_sq_grad += grad * grad;
-//     // state->update(weight, grad, sqrt(sum_sq_grad));
-//     // TODO
-//   }
-
-//   void put(V* data, SGDState<V>* state) {
-//     *data = weight;
-//   }
-//   V weight = 0;
-//   V sum_sq_grad = 0;
-// };
-
-// template <typename V>
-// struct SGDEntry {
-//   void get(V const* data, SGDState<V>* state) {
-//     // V grad = *((V*)data);
-//     // state->update(weight, grad);
-//     // TODO
-//   }
-//   void put(V* data, SGDState<V>* state) {
-//     *data = weight;
-//   }
-//   V weight = 0;
-// };

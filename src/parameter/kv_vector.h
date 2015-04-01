@@ -77,10 +77,11 @@ class KVVector : public Parameter {
 
   int Push(const Task& request,
            const SArray<K>& keys,
-           const std::initializer_list<SArray<V>>& values = {});
+           const std::initializer_list<SArray<V>>& values = {},
+           const Message::Callback& callback = Message::Callback());
 
   int Pull(const Task& request, const SArray<K>& keys,
-           Message::Callback callback = Message::Callback());
+           const Message::Callback& callback = Message::Callback());
 
 
   virtual void Slice(const Message& request, const std::vector<Range<Key>>& krs,
@@ -222,16 +223,18 @@ void KVVector<K,V>::GetValue(Message* msg) {
 
 template <typename K, typename V>
 int KVVector<K,V>::Push(const Task& request, const SArray<K>& keys,
-                        const std::initializer_list<SArray<V>>& values) {
+                        const std::initializer_list<SArray<V>>& values,
+                        const Message::Callback& callback) {
   Message push(request, kServerGroup);
   push.set_key(keys);
   for (const auto& v : values) if (!v.empty()) push.add_value(v);
+  if (callback) push.callback = callback;
   return Push(&push);
 }
 
 template <typename K, typename V>
 int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
-                        Message::Callback callback) {
+                        const Message::Callback& callback) {
   Message pull(request, kServerGroup);
   pull.set_key(keys);
   if (callback) pull.callback = callback;

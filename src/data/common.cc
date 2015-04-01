@@ -7,7 +7,7 @@ namespace PS {
 DEFINE_string(input, "stdin", "stdin or a filename");
 DEFINE_string(output, "stdout", "stdout or a filename");
 DEFINE_string(format, "none", "proto, pserver, libsvm, vw, adfea, or others");
-
+DEFINE_uint64(hash_kernel, 0, "hash kernel size");
 DECLARE_bool(verbose);
 
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix) {
