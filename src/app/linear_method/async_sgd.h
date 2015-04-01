@@ -1,7 +1,6 @@
 /**
  * @file   async_sgd.h
  * @brief  Asynchronous stochastic gradient descent to solve linear methods.
- *
  */
 #pragma once
 #include <random>
@@ -19,7 +18,6 @@ namespace LM {
 
 /**
  * @brief The scheduler node
- *
  */
 class AsyncSGDScheduler : public ISGDScheduler {
  public:
@@ -40,7 +38,6 @@ class AsyncSGDScheduler : public ISGDScheduler {
 
 /**
  * @brief A server node
- *
  */
 template <typename V>
 class AsyncSGDServer : public ISGDCompNode {
@@ -87,7 +84,6 @@ class AsyncSGDServer : public ISGDCompNode {
 
   /**
    * @brief Progress state
-   *
    */
   struct SGDState {
     SGDState() { }
@@ -131,7 +127,6 @@ class AsyncSGDServer : public ISGDCompNode {
 
   /**
    * @brief An entry for FTRL
-   *
    */
   struct FTRLEntry {
     V w = 0;  // not necessary to store w, because it can be computed from z
@@ -161,7 +156,6 @@ class AsyncSGDServer : public ISGDCompNode {
 
 /**
  * @brief A worker node
- *
  */
 template <typename V>
 class AsyncSGDWorker : public ISGDCompNode {
@@ -195,7 +189,7 @@ class AsyncSGDWorker : public ISGDCompNode {
 
  private:
   /**
-   * @brief process a data file
+   * @brief Process a file
    *
    * @param load
    */
@@ -230,6 +224,7 @@ class AsyncSGDWorker : public ISGDCompNode {
   }
 
   /**
+   * @brief Compute gradient
    *
    * @param id minibatch id
    */
@@ -283,36 +278,6 @@ private:
 
 } // namespace LM
 } // namespace PS
-
-// auto we = w.EigenArray();
-// auto ge = grad.EigenArray();
-// LL << we.minCoeff() << " " << we.maxCoeff() << " "
-//    << w.mean() << " " << w.std() << " "
-//    << ge.minCoeff() << " " << ge.maxCoeff() << " "
-//    << grad.mean() << " " << grad.std();
-
-// // project value into [-bound, bound]
-// template <typename V>
-// V project(V value, V bound) {
-//   return (value > bound ? bound : (value < - bound ? - bound : value));
-// }
-
-
-// V n1 = 0, n2 = 0;
-// // add noise to gradient
-// V std = (V)conf_.async_sgd().noise_std();
-// if (std > 0) {
-//   std::default_random_engine generator;
-//   std::normal_distribution<V> distribution(0, std);
-//   for (auto& g : grad) {
-//     n1 += g * g;
-//     V s =  distribution(generator);
-//     n2 += s * s;
-//     g += s;
-//   }
-//   LL << sqrt(n1) << " " << sqrt(n2);
-// }
-// // LL <<  w.vec().norm() << " " << grad.vec().norm() << " " << auc << " " << objv;
 
 // template <typename V>
 // struct AdaGradEntry {

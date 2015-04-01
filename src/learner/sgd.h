@@ -17,7 +17,6 @@ namespace PS {
 
 /**
  * @brief The base class of a scheduler node
- *
  */
 class ISGDScheduler : public App {
  public:
@@ -46,7 +45,6 @@ class ISGDScheduler : public App {
 
 /**
  * @brief The base class of a computation node
- *
  */
 class ISGDCompNode : public App {
  public:
@@ -94,7 +92,6 @@ class MinibatchReader {
 
   /**
    * @brief Start the reader thread
-   *
    */
   void Start() {
     data_prefetcher_.startProducer(
