@@ -75,13 +75,6 @@ class KVVector : public Parameter {
 
   void ClearFilter() { freq_filter_.clear(); }
 
-
-  // int Push(const Task& request,
-  //          const SArray<K>& keys,     //
-  //          const SArray<V>& values) {
-  //   return Push(request, keys, {values});
-  // }
-
   int Push(const Task& request,
            const SArray<K>& keys,
            const std::initializer_list<SArray<V>>& values = {});
@@ -115,6 +108,7 @@ template <typename K, typename V>
 void KVVector<K,V>::SetValue(const Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
+  VLOG(1) << "SetValue: received " << recv_key.size() << " keys from " << msg->sender;
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
 
@@ -128,7 +122,10 @@ void KVVector<K,V>::SetValue(const Message* msg) {
     auto& filter = freq_filter_[chl];
     if (filter.Empty()) {
       double w = (double)std::max(sys_.manager().num_workers(), 1);
-      filter.Resize(w / log(w+1) * tail.countmin_n(), tail.countmin_k());
+      int n = w / log(w+1) * tail.countmin_n();
+      int k = tail.countmin_k();
+      filter.Resize(n, k);
+      VLOG(1) << "resize " << chl << " into n=" << n << ", k=" << k;
     }
     filter.InsertKeys(recv_key, count);
     return;
@@ -143,6 +140,7 @@ void KVVector<K,V>::SetValue(const Message* msg) {
     kv.key = kv.key.SetUnion(recv_key);
     // clear the values, because they are not matched any more
     kv.value.clear();
+    VLOG(1) << "merge keys, now the key size is " << kv.key.size();
     return;
   } else if (kv.key.empty()) {
     LOG(ERROR) << "empty keys at channel " << msg->task.key_channel();
@@ -155,12 +153,15 @@ void KVVector<K,V>::SetValue(const Message* msg) {
       // write the received value into kv.value directly
       CHECK_EQ(i, 0) << " can only receive one value";
       CHECK_EQ(recv_data.size(), recv_key.size() * k_);
-      if (kv.value.empty())
+      if (kv.value.empty()) {
         kv.value = SArray<V>(kv.key.size() * k_, 0);
+      }
       CHECK_EQ(kv.key.size() * k_, kv.value.size());
 
-      size_t n = ParallelOrderedMatch(recv_key, recv_data, kv.key, &kv.value, k_);
+      size_t n = ParallelOrderedMatch(
+          recv_key, recv_data, kv.key, &kv.value, k_, AssignOpType::PLUS);
       CHECK_EQ(n, recv_key.size() * k_);
+      VLOG(1) << "matched " << n << " keys";
     } else {
       // match the received value, then save it
       mu_.lock();
@@ -181,8 +182,10 @@ void KVVector<K,V>::SetValue(const Message* msg) {
       }
       size_t k = recv_data.size() / recv_key.size();  // not necessary == k_
       size_t n = ParallelOrderedMatch(
-          recv_key, recv_data, kv.key.Segment(buf.idx_range), &buf.values[i], k);
+          recv_key, recv_data, kv.key.Segment(buf.idx_range), &buf.values[i], k,
+          AssignOpType::PLUS);
       CHECK_LE(n, recv_key.size() * k);
+      VLOG(1) << "matched " << n << " keys";
     }
   }
 }
@@ -191,6 +194,7 @@ template <typename K, typename V>
 void KVVector<K,V>::GetValue(Message* msg) {
   // do check
   SArray<K> recv_key(msg->key);
+  VLOG(1) << "GetValue: received " << recv_key.size() << " keys from " << msg->sender;
   if (recv_key.empty()) return;
   int chl = msg->task.key_channel();
 
@@ -211,6 +215,7 @@ void KVVector<K,V>::GetValue(Message* msg) {
   SArray<V> val;
   size_t n = ParallelOrderedMatch(kv.key, kv.value, recv_key, &val, k_);
   CHECK_LE(n, recv_key.size() * k_);
+  VLOG(1) << "matched " << n << " keys";
   msg->clear_value();
   msg->add_value(val);
 }

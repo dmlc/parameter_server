@@ -4,6 +4,7 @@
 #include "util/parallel_sort.h"
 #include "data/slot_reader.h"
 #include "util/crc32c.h"
+#include <limits>
 namespace PS {
 
 /**
@@ -25,9 +26,8 @@ class Localizer {
    * @param idx_frq returns the according occurrence counts
    */
   template<typename C>
-  void CountUniqIndex(const SArray<I>& idx,
-                      SArray<I>* uniq_idx,
-                      SArray<C>* idx_frq);
+  void CountUniqIndex(
+      const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq);
 
   /**
    * @brief count unique items in mat->index()
@@ -37,21 +37,35 @@ class Localizer {
    * @param idx_frq
    */
   template<typename C>
-  void CountUniqIndex(const MatrixPtr<V>& mat,
-                      SArray<I>* uniq_idx,
-                      SArray<C>* idx_frq);
+  void CountUniqIndex(
+      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
+    mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
+    CountUniqIndex(mat_->index(), uniq_idx, idx_frq);
+  }
 
-  // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
-  // in *idx_dict* is dropped. Assume *idx_dict* is ordered
-  MatrixPtr<V> RemapIndex(int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
-
-  // valid only if used countUniqIndex(mat, ...) before
-  MatrixPtr<V> RemapIndex(const SArray<I>& idx_dict);
-
+  /**
+   * @brief Remaps the index.
+   *
+   * @param grp_id slot id
+   * @param idx_dict the index dictionary. Any index does not exists in this
+   * dictionary is dropped.
+   * @param reader slot reader
+   *
+   * @return a matrix with index mapped: idx_dict[i] -> i.
+   */
   MatrixPtr<V> RemapIndex(
-      const MatrixInfo& info, const SArray<size_t>& offset,
-      const SArray<I>& index, const SArray<V>& value,
-      const SArray<I>& idx_dict) const;
+      int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
+
+  /**
+   * @brief Remaps the index. It's valid only if called CountUniqIndex(const
+  MatrixPtr<V>&) before.
+   *
+   * @param idx_dict the index dictionary. Any index does not exists in this
+   * dictionary is dropped.
+   *
+   * @return a matrix with index mapped: idx_dict[i] -> i.
+   */
+  MatrixPtr<V> RemapIndex(const SArray<I>& idx_dict);
 
   /**
    * @brief Clears the temporal results
@@ -62,6 +76,11 @@ class Localizer {
     return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
   }
  private:
+  MatrixPtr<V> RemapIndex(
+      const MatrixInfo& info, const SArray<size_t>& offset,
+      const SArray<I>& index, const SArray<V>& value,
+      const SArray<I>& idx_dict) const;
+
 #pragma pack(push)
 #pragma pack(4)
   struct Pair {
@@ -71,14 +90,6 @@ class Localizer {
   SArray<Pair> pair_;
   SparseMatrixPtr<I,V> mat_;
 };
-
-template<typename I, typename V>
-template<typename C>
-void Localizer<I,V>::CountUniqIndex(
-     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
-  mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
-  CountUniqIndex(mat_->index(), uniq_idx, idx_frq);
-}
 
 
 
@@ -97,25 +108,33 @@ void Localizer<I,V>::CountUniqIndex(
     pair_[i].k = idx[i];
     pair_[i].i = i;
   }
-  parallelSort(&pair_, FLAGS_num_threads, [](const Pair& a, const Pair& b) {
-      return a.k < b.k; });
+  ParallelSort(&pair_, FLAGS_num_threads,
+               [](const Pair& a, const Pair& b) {return a.k < b.k; });
 
   uniq_idx->clear();
   if (idx_frq) idx_frq->clear();
 
+  uint32 cnt_max = static_cast<uint32>(std::numeric_limits<C>::max());
   I curr = pair_[0].k;
   uint32 cnt = 0;
   for (const Pair& v : pair_) {
     if (v.k != curr) {
       uniq_idx->push_back(curr);
       curr = v.k;
-      if (idx_frq) idx_frq->push_back((C)cnt);
+      if (idx_frq) {
+        C c_cnt = static_cast<C>(std::min(cnt, cnt_max));
+        idx_frq->push_back(c_cnt);
+      }
       cnt = 0;
     }
     ++ cnt;
   }
+
   uniq_idx->push_back(curr);
-  if (idx_frq) idx_frq->push_back((C)cnt);
+  if (idx_frq) {
+    C c_cnt = static_cast<C>(std::min(cnt, cnt_max));
+    idx_frq->push_back(c_cnt);
+  }
 }
 
 template<typename I, typename V>

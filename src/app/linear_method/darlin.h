@@ -283,6 +283,9 @@ class DarlinServer : public BCDServer<Real>, public DarlinCompNode {
       delta[k] = Delta(delta_max, d);
       w += d;
     }
+    // LL << "G: " << G;
+    // LL << "U: " << U;
+    // LL << "model: " << value;
   }
 
 };
@@ -378,6 +381,9 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
     busy_timer_.stop();
     mu_.unlock();  // unlock the dual_
 
+    // LL << "model: " << model_[grp].value;
+    // LL << "G: " << G;
+    // LL << "U: " << U;
     // push the gradient into servers
     Task req = Parameter::Request(
         grp, time, {}, bcd_conf_.comm_filter(), g_key_range);
