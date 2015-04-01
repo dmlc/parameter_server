@@ -111,7 +111,7 @@ int Executor::Submit(Message* msg) {
 
   // timestamp and other flags
   int ts = msg->task.has_time() ? msg->task.time() : time_ + 1;
-  CHECK_LT(time_, ts) << my_node_.id() << " has a newer timestamp";
+  // CHECK_LT(time_, ts) << my_node_.id() << " has a newer timestamp";
   msg->task.set_time(ts);
   msg->task.set_request(true);
   msg->task.set_customer_id(obj_.id());
@@ -168,7 +168,7 @@ void Executor::Reply(Message* request, Message* response) {
 
 bool Executor::PickActiveMsg() {
   std::unique_lock<std::mutex> lk(msg_mu_);
-  VLOG(1) << obj_.id() << ": try to pick a message";
+  // VLOG(1) << obj_.id() << ": try to pick a message";
   auto it = recv_msgs_.begin();
   while (it != recv_msgs_.end()) {
     bool process = true;
@@ -209,12 +209,14 @@ bool Executor::PickActiveMsg() {
       }
     }
     if (process) {
+      VLOG(1) << obj_.id() << ": pick the "
+              << std::distance(recv_msgs_.begin(), it) << "-th messge in ["
+              << recv_msgs_.size() << "] from " << msg->sender
+              << ": " << msg->ShortDebugString();
+
       active_msg_ = std::shared_ptr<Message>(msg);
       recv_msgs_.erase(it);
       rnode->DecodeMessage(active_msg_.get());
-      VLOG(1) << obj_.id() << ": pick a messge in ["
-              << recv_msgs_.size()+1 << "] from " << msg->sender
-              << ": " << msg->ShortDebugString();
       return true;
     }
   }
@@ -288,6 +290,7 @@ void Executor::Accept(Message* msg) {
   {
     Lock l(msg_mu_);
     recv_msgs_.push_back(msg);
+    // VLOG(1) << obj_.id() << ": accept " << msg->ShortDebugString();
   }
   dag_cond_.notify_one();
 }

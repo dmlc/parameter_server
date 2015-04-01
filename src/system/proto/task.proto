@@ -38,6 +38,10 @@ message Task {
   // filters applied to the data
   repeated FilterConfig filter = 12;
 
+  // if true, the tasks will be packed into a single one during sending
+  optional bool more = 16 [default = false];
+  repeated Task task = 15;
+
   // the place to store a small amount of data
   optional bytes msg = 17;
 

@@ -60,6 +60,34 @@ void Postoffice::Send() {
   }
 }
 
+void Postoffice::Queue(Message* msg) {
+  if (!msg->task.has_more()) {
+    sending_queue_.push(msg);
+  } else {
+    // do pack
+    CHECK(msg->task.request());
+    CHECK(msg->task.has_customer_id());
+    CHECK(!msg->has_data()) << " don't know how to pack data";
+    Lock lk(pack_mu_);
+    auto key = std::make_pair(msg->recver, msg->task.customer_id());
+    auto& value = pack_[key];
+    value.push_back(msg);
+
+    if (!msg->task.more()) {
+      // it's the final message, pack and send
+      Message* pack_msg = new Message();
+      pack_msg->recver = msg->recver;
+      for (auto m : value) {
+        m->task.clear_more();
+        *pack_msg->task.add_task() = m->task;
+        delete m;
+      }
+      value.clear();
+      sending_queue_.push(pack_msg);
+    }
+  }
+}
+
 void Postoffice::Recv() {
   while (true) {
     // receive a message
@@ -69,19 +97,37 @@ void Postoffice::Recv() {
     if (FLAGS_report_interval > 0) {
       perf_monitor_.increaseInBytes(recv_bytes);
     }
-    if (!msg->task.request()) manager_.AddResponse(msg);
 
-    // process this message
-    if (msg->task.control()) {
-      bool ret = manager_.Process(msg);
+    if (msg->task.task_size()) {
+      // packed task
+      CHECK(!msg->has_data());
+      for (int i = 0; i < msg->task.task_size(); ++i) {
+        Message* unpack_msg = new Message();
+        unpack_msg->recver = msg->recver;
+        unpack_msg->sender = msg->sender;
+        unpack_msg->task = msg->task.task(i);
+        if (!Process(unpack_msg)) break;
+      }
       delete msg;
-      if (!ret) break;
     } else {
-      int id = msg->task.customer_id();
-      // let the executor to delete "msg"
-      manager_.customer(id)->executor()->Accept(msg);
+      if (!Process(msg)) break;
     }
   }
+}
+
+bool Postoffice::Process(Message* msg) {
+  if (!msg->task.request()) manager_.AddResponse(msg);
+  // process this message
+  if (msg->task.control()) {
+    bool ret = manager_.Process(msg);
+    delete msg;
+    return ret;
+  } else {
+    int id = msg->task.customer_id();
+    // let the executor to delete "msg"
+    manager_.customer(id)->executor()->Accept(msg);
+  }
+  return true;
 }
 
 

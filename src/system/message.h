@@ -33,6 +33,7 @@ struct Message {
   // clear both keys and values
   void clear_data() { clear_key(); clear_value(); }
 
+  bool has_data() { return key.size() > 0 || value.size() > 0; }
   // memory size in bytes
   size_t mem_size();
 

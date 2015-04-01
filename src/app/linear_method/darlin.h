@@ -42,7 +42,7 @@ class DarlinScheduler : public BCDScheduler {
 
     // algo time
     int time = exec_.time();
-    const int first_time = time + 1;
+    int first_time = time;
     // model time
     int model_time = fea_grp_.size() * 6;
     for (int iter = 0; iter < max_iter; ++iter) {
@@ -55,6 +55,7 @@ class DarlinScheduler : public BCDScheduler {
       // iterating on feature blocks
       for (int i = 0; i < order.size(); ++i) {
         Task update;
+        update.set_more(true);
         auto cmd = update.mutable_bcd();
         cmd->set_cmd(BCDCall::UPDATE_MODEL);
         cmd->set_time(model_time);
@@ -71,27 +72,24 @@ class DarlinScheduler : public BCDScheduler {
 
         // time stamp
         update.set_time(time+1);
-        int wait_time = time - tau;
+
         // force zero delay for important feature blocks
         if (iter == 0 && i < prior_blk_order_.size()) {
-          wait_time = time;
+          AddWaitTime(0, first_time, &update);
+          first_time = time;
+        } else {
+          AddWaitTime(tau, first_time, &update);
         }
-        // make sure leading UPDATE_MODEL tasks could be picked up by workers
-        if (wait_time < first_time) {
-          wait_time = Message::kInvalidTime;
-        }
-        update.add_wait_time(wait_time);
 
         time = Submit(update, kCompGroup);
       }
 
       // evaluate the progress
       Task eval;
+      eval.set_more(false);
       eval.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
       eval.mutable_bcd()->set_iter(iter);
-      if (time - tau >= first_time) {
-        eval.add_wait_time(time - tau);
-      }
+      AddWaitTime(tau, first_time, &eval);
       time = Submit(eval, kCompGroup);
       Wait(time);
       ShowProgress(iter);
@@ -145,6 +143,15 @@ class DarlinScheduler : public BCDScheduler {
     for (int i = s; i <= iter; ++i) {
       string str = ShowObjective(i) + ShowKKTFilter(i) + ShowTime(i);
       NOTICE("%s", str.c_str());
+    }
+  }
+
+  void AddWaitTime(int tau, int first, Task* task) {
+    int cur = task->time();
+    for (int t = std::max(first, cur - 2 * tau -1);
+         t < std::max(first+1, cur - tau);
+         ++t) {
+      task->add_wait_time(t);
     }
   }
 
