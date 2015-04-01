@@ -117,6 +117,9 @@ class DarlinScheduler : public BCDScheduler {
       }
     }
 
+    // for (int t = std::max(0, time - tau * 2); t < time; ++t) Wait(t);
+    for (int t = first_time; t < time; ++t) Wait(t);
+
     // save model
     if (conf_.has_model_output()) {
       // SaveModel(conf_.model_output());

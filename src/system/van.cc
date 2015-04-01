@@ -13,6 +13,7 @@ DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'",
 DEFINE_int32(bind_to, 0, "binding port");
 DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
+DEFINE_bool(local, false, "run in local");
 
 DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
@@ -88,7 +89,9 @@ void Van::Bind() {
     CHECK(my_node_.has_port()) << my_node_.ShortDebugString();
     addr += std::to_string(my_node_.port());
   }
-  // addr = "ipc:///tmp/" + my_node_.id();
+  if (FLAGS_local) {
+    addr = "ipc:///tmp/" + my_node_.id();
+  }
   CHECK(zmq_bind(receiver_, addr.c_str()) == 0)
       << "bind to " << addr << " failed: " << zmq_strerror(errno);
 
@@ -128,7 +131,9 @@ bool Van::Connect(const Node& node) {
 
   // connect
   string addr = "tcp://" + node.hostname() + ":" + std::to_string(node.port());
-  // addr = "ipc:///tmp/" + node.id();
+  if (FLAGS_local) {
+    addr = "ipc:///tmp/" + node.id();
+  }
   if (zmq_connect(sender, addr.c_str()) != 0) {
     LOG(WARNING) << "connect to " + addr + " failed: " + zmq_strerror(errno);
     return false;
