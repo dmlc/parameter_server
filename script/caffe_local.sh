@@ -28,7 +28,7 @@ silence=">/dev/null 2>/dev/null"
 
 # start the scheduler
 Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8001,id:'H'"
-${bin} -my_node ${Sch} -scheduler ${Sch} ${arg} >/dev/null 2>/dev/null &
+${bin} -my_node ${Sch} -scheduler ${Sch} ${arg}  &
 
 # start servers
 for ((i=0; i<${num_servers}; ++i)); do
@@ -48,7 +48,7 @@ for ((i=0; i<${num_workers}; ++i)); do
     N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'${id}'"
     # HEAPPROFILE=/tmp/W${i} \
     # CPUPROFILE=/tmp/W${i} \
-    cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &
+    cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --pullstep=2 --pushstep=2 --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &
 done
 
 wait
