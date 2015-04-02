@@ -31,7 +31,7 @@ class Parameter : public Customer {
     req.set_key_channel(channel);
     if (ts > Message::kInvalidTime) req.set_time(ts);
     for (int t : wait) req.add_wait_time(t);
-    for (const auto& f : filters) *req.add_filter() = f;
+    for (const auto& f : filters) req.add_filter()->CopyFrom(f);
     key_range.To(req.mutable_key_range());
     return req;
   }
@@ -47,6 +47,8 @@ class Parameter : public Customer {
     msg->task.mutable_param()->set_push(false);
     return Submit(msg);
   }
+
+  virtual void WriteToFile(std::string file) { }
 
   virtual void ProcessRequest(Message* request);
   virtual void ProcessResponse(Message* response);

@@ -69,8 +69,8 @@ class AsyncSGDServer : public ISGDCompNode {
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + MyNodeID();
-      // CHECK_NOTNULL(model_)->writeToFile(file);
-      // LI << MyNodeID() << " written the model to " << file;
+      CHECK_NOTNULL(model_)->WriteToFile(file);
+      LOG(INFO) << MyNodeID() << " written the model to " << file;
     }
   }
 

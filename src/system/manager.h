@@ -67,6 +67,7 @@ class Manager {
 
   // nodes
   std::map<NodeID, Node> nodes_;
+  std::mutex nodes_mu_;
   int num_workers_ = 0;
   int num_servers_ = 0;
   int num_active_nodes_ = 0;

@@ -1,8 +1,7 @@
 #include "ps.h"
-// #include "app/linear_method/linear.h"
 #include "app/linear_method/async_sgd.h"
 #include "app/linear_method/darlin.h"
-// #include "app/linear_method/model_evaluation.h"
+#include "app/linear_method/model_evaluation.h"
 
 namespace PS {
 App* App::Create(const string& conf_str) {
@@ -33,7 +32,7 @@ App* App::Create(const string& conf_str) {
       app = new AsyncSGDServer<Real>(conf);
     }
   } else if (conf.has_validation_data()) {
-    // app = new ModelEvaluation(conf);
+    app = new ModelEvaluation(conf);
   }
   CHECK(app) << "fail to create " << conf.ShortDebugString()
              << " at " << MyNode().ShortDebugString();

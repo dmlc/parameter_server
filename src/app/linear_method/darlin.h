@@ -4,7 +4,6 @@
 #include "learner/bcd.h"
 #include "util/bitmap.h"
 #include "filter/sparse_filter.h"
-#include "app/linear_method/linear.h"
 namespace PS {
 DECLARE_int32(num_workers);
 namespace LM {

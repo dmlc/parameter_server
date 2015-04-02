@@ -2,6 +2,7 @@
 #include "filter/compressing.h"
 #include "filter/key_caching.h"
 #include "filter/fixing_float.h"
+#include "filter/add_noise.h"
 
 namespace PS {
 
@@ -13,6 +14,8 @@ Filter* Filter::create(const FilterConfig& conf) {
       return new CompressingFilter();
     case FilterConfig::FIXING_FLOAT:
       return new FixingFloatFilter();
+    case FilterConfig::NOISE:
+      return new AddNoiseFilter();
     default:
       CHECK(false) << "unknow filter type";
   }

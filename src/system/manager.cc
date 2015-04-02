@@ -30,7 +30,7 @@ void Manager::Init(char* argv0) {
 
   if (IsScheduler()) {
     if (!FLAGS_logtostderr) {
-      NOTICE("Staring system... logs are saved in %s/%s.log.*",
+      NOTICE("Staring system. Logging into %s/%s.log.*",
              FLAGS_log_dir.c_str(), basename(argv0));
     }
 
@@ -166,6 +166,7 @@ bool Manager::Process(Message* msg) {
 
 void Manager::AddNode(const Node& node) {
   // add to system
+  nodes_mu_.lock();
   if (nodes_.find(node.id()) == nodes_.end()) {
     if (!IsScheduler()) {
       // the scheduler has already connect this node when processing REQUEST_APP
@@ -176,6 +177,7 @@ void Manager::AddNode(const Node& node) {
     ++ num_active_nodes_;
   }
   nodes_[node.id()] = node;
+  nodes_mu_.unlock();
 
   // add to app
   for (auto& it : customers_) {
@@ -207,6 +209,7 @@ void Manager::AddNode(const Node& node) {
 
 
 void Manager::RemoveNode(const NodeID& node_id) {
+  nodes_mu_.lock();
   auto it = nodes_.find(node_id);
   if (it == nodes_.end()) return;
   Node node = it->second;
@@ -215,6 +218,7 @@ void Manager::RemoveNode(const NodeID& node_id) {
   if (node.role() == Node::SERVER) -- num_servers_;
   -- num_active_nodes_;
   nodes_.erase(it);
+  nodes_mu_.unlock();
 
   // TODO use *replace* for server
   // TODO remove from customers
@@ -308,6 +312,11 @@ void Manager::AddCustomer(Customer* obj) {
   CHECK_EQ(customers_.count(obj->id()), 0)
       << obj->id() << " already exists";
   customers_[obj->id()] = std::make_pair(obj, false);
+  nodes_mu_.lock();
+  for (const auto& it : nodes_) {
+    obj->executor()->AddNode(it.second);
+  }
+  nodes_mu_.unlock();
 }
 
 void Manager::RemoveCustomer(int id) {

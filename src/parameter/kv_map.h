@@ -56,6 +56,8 @@ class KVMap : public Parameter {
   virtual void GetValue(Message* msg);
   virtual void SetValue(const Message* msg);
 
+  virtual void WriteToFile(std::string file);
+
  protected:
   int k_;
   S state_;
@@ -86,6 +88,19 @@ void KVMap<K,V,E,S>::SetValue(const Message* msg) {
     data_[key[i]].Set(val.data() + i * k_, &state_);
   }
   state_.Update();
+}
+
+template <typename K, typename V, typename E, typename S>
+void KVMap<K,V,E,S>::WriteToFile(std::string file) {
+  if (!dirExists(getPath(file))) {
+    createDir(getPath(file));
+  }
+  std::ofstream out(file); CHECK(out.good());
+  V v;
+  for (auto& e : data_) {
+    e.second.Get(&v, &state_);
+    if (v != 0) out << e.first << "\t" << v << std::endl;
+  }
 }
 
 

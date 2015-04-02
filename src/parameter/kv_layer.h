@@ -128,7 +128,7 @@ void KVLayer<V, Updater>::Slice(
     if (kr.size() < partition_thr_) {
       // a tiny layer, sent it to server k
       int k = (key * 991) % n;
-      if (i == k) {
+      if ((int)i == k) {
         kr.To(mut_kr);
       } else {
         Range<Key>(0,0).To(mut_kr);

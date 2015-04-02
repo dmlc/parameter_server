@@ -24,7 +24,7 @@ Executor::~Executor() {
   { Lock l(msg_mu_); }
   dag_cond_.notify_all();
 
-  thread_->join();
+  CHECK_NOTNULL(thread_)->join();
   delete thread_;
 }
 
@@ -301,6 +301,7 @@ void Executor::ReplaceNode(const Node& old_node, const Node& new_node) {
 }
 
 void Executor::RemoveNode(const Node& node) {
+  VLOG(1) << obj_.id() << "remove node: " << node.ShortDebugString();
   auto id = node.id();
   if (nodes_.find(id) == nodes_.end()) return;
   auto r = GetRNode(id);
@@ -313,6 +314,7 @@ void Executor::RemoveNode(const Node& node) {
 
 void Executor::AddNode(const Node& node) {
   Lock l(node_mu_);
+  VLOG(1) << obj_.id() << "add node: " << node.ShortDebugString();
   // add "node"
   if (node.id() == my_node_.id()) {
     my_node_ = node;

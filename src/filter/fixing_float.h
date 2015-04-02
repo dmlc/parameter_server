@@ -23,19 +23,22 @@ class FixingFloatFilter : public Filter {
   // decode / encode a message
   void convert(Message* msg, bool encode) {
     auto filter_conf = CHECK_NOTNULL(find(FilterConfig::FIXING_FLOAT, msg));
+    if (filter_conf->num_bytes() == 0) return;
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
     int k = 0;
     for (int i = 0; i < n; ++i) {
+      if (msg->value[i].size() == 0) continue;
       auto type = msg->task.value_type(i);
+      if (filter_conf->fixed_point_size() <= k) {
+        filter_conf->add_fixed_point();
+      }
       if (type == DataType::FLOAT) {
-        CHECK_GT(filter_conf->fixed_point_size(), k);
         msg->value[i] = convert<float>(
             msg->value[i], encode, filter_conf->num_bytes(),
             filter_conf->mutable_fixed_point(k++));
       }
       if (type == DataType::DOUBLE) {
-        CHECK_GT(filter_conf->fixed_point_size(), k);
         msg->value[i] = convert<double>(
             msg->value[i], encode, filter_conf->num_bytes(),
             filter_conf->mutable_fixed_point(k++));

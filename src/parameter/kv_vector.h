@@ -46,27 +46,28 @@ class KVVector : public Parameter {
   }
   virtual ~KVVector() { }
 
-  /// n key-value pairs stored by arrays
+  /// @brief n key-value pairs stored by arrays
   struct KVPairs {
     SArray<K> key;    // [key_0,  ..., key_n]
     SArray<V> value;  // [val_00, ..., val_0k, ..., val_n0, ..., val_nk]
   };
 
-  /// Returns the key-vale pairs in channel "chl"
+  /// @brief Returns the key-vale pairs in channel "chl"
   KVPairs& operator[] (int chl) { Lock l(mu_); return data_[chl]; }
 
-  /// Clears both key and value at channel "chl"
+  /// @brief Clears both key and value at channel "chl"
   void Clear(int chl) {
     Lock l(mu_); data_[chl].key.clear(); data_[chl].value.clear();
   }
 
-  /// buffered
+  /// @brief buffer for received data
   struct Buffer {
     int channel;
     SizeR idx_range;
     std::vector<SArray<V>> values;
   };
 
+  /// @brief Returns the buffered data on timestamp
   Buffer buffer(int timestamp) { Lock l(mu_); return buffer_[timestamp]; }
 
   void ClearBuffer(int timestamp) {
@@ -75,11 +76,30 @@ class KVVector : public Parameter {
 
   void ClearFilter() { freq_filter_.clear(); }
 
+  /**
+   * @brief Push data into servers
+   *
+   * @param request
+   * @param keys  n keys
+   * @param values a list of n values
+   * @param callback called when responses of this request is received
+   *
+   * @return the timestamp
+   */
   int Push(const Task& request,
            const SArray<K>& keys,
            const std::initializer_list<SArray<V>>& values = {},
            const Message::Callback& callback = Message::Callback());
 
+  /**
+   * @brief Pull data from servers
+   *
+   * @param request
+   * @param keys n keys
+   * @param callback called when responses of this request is received
+   *
+   * @return the timestamp
+   */
   int Pull(const Task& request, const SArray<K>& keys,
            const Message::Callback& callback = Message::Callback());
 
