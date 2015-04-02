@@ -29,6 +29,8 @@ DEFINE_string(snapshot, "",
 
 DEFINE_bool(fb_only, true,
     "Optional; workers only ForwardBackward.");
+DEFINE_bool(synced, false,
+    "Optional. pull/push synced with Forward");
 
 // client puller / pusher flags
 
@@ -320,12 +322,9 @@ public:
     pullSolverState();
     pullWeight();
     swapWeight();
-
+    if(!FLAGS_synced){
     // start pusher/puller
-    if( FLAGS_pushstep != 0){
       pusher = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pusherMain, this));
-    }
-    if( FLAGS_pullstep != 0){
       puller = std::unique_ptr<std::thread>(new std::thread(&CaffeWorker::pullerMain, this));
     }
     // start training loop
@@ -333,14 +332,14 @@ public:
     LL << "start training loop";
     for (int i = 0; i < iter; i++) {
 	//solver->OneStep()
-      if(FLAGS_pullstep == 0){
+      if(FLAGS_synced && tickStep % FLAGS_pullstep == 0){
         pullWeight();
       }
       swapWeight();
       solver->testPhase();
       solver->forwardBackwardPhase();
       this->accumulateDiff();
-      if(FLAGS_pushstep == 0){
+      if(FLAGS_synced && tickDiff % FLAGS_pushstep == 0){
         pushDiff();
       }
       solver->displayPhase();
@@ -382,7 +381,9 @@ public:
   void diffEnd(){
     tickDiff++;
   }
-
+  /**
+   * for puller counting
+   */
   void stepEnd(){
     tickStep++;
   }
