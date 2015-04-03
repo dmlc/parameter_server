@@ -3,20 +3,15 @@
 #include "system/customer.h"
 namespace PS {
 
-DEFINE_int32(num_servers, 0, "number of servers");
-DEFINE_int32(num_workers, 0, "number of clients");
-DEFINE_int32(num_threads, 2, "number of computational threads");
-DEFINE_int32(num_replicas, 0, "number of replicas per server node");
+DECLARE_int32(num_servers);
+DECLARE_int32(num_workers);
+DECLARE_int32(num_replicas);
+DECLARE_int32(report_interval);
 
 DEFINE_string(app_conf, "", "the string configuration of app");
 DEFINE_string(app_file, "", "the configuration file of app");
 
-DECLARE_int32(report_interval);
-
-DEFINE_bool(verbose, false, "");
-
 Manager::Manager() {}
-
 Manager::~Manager() {
   for (auto& it : customers_) {
     if (it.second.second) delete it.second.first;
@@ -26,7 +21,8 @@ Manager::~Manager() {
 }
 
 void Manager::Init(char* argv0) {
-  van_.Init(argv0);
+  env_.Init(argv0);
+  van_.Init();
 
   if (IsScheduler()) {
     if (!FLAGS_logtostderr) {

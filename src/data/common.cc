@@ -124,12 +124,10 @@ DataConfig searchFiles(const DataConfig& config) {
     auto files = readFilenamesInDirectory(dir);
 
     // list all files found in dir
-    if (FLAGS_verbose) {
-      size_t file_idx = 1;
-      for (const auto& file : files) {
-        LI << "All files found in [" << dir.file(0) << "]; [" <<
+    size_t file_idx = 1;
+    for (const auto& file : files) {
+      VLOG(1) << "All files found in [" << dir.file(0) << "]; [" <<
           file_idx++ << "/" << files.size() << "] [" << file << "]";
-      }
     }
 
     for (auto& f : files) {
@@ -140,12 +138,10 @@ DataConfig searchFiles(const DataConfig& config) {
     }
 
     // list all matched files
-    if (FLAGS_verbose) {
-      size_t file_idx = 1;
-      for (const auto& file : matched_files) {
-        LI << "All matched files [" << file_idx++ << "/" << matched_files.size() <<
+    file_idx = 1;
+    for (const auto& file : matched_files) {
+      VLOG(1) << "All matched files [" << file_idx++ << "/" << matched_files.size() <<
           "] [" << file << "]";
-      }
     }
   }
   // remove duplicate files

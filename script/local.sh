@@ -17,7 +17,7 @@ arg="-num_servers ${num_servers} -num_workers ${num_workers} -log_dir log $@" #"
 
 # killall -q $(basename ${bin})
 # killall -q ${bin}
-
+HEAPCHECK=draconian
 # start the scheduler
 Sch="role:SCHEDULER,hostname:'127.0.0.1',port:8001,id:'H'"
 ${bin} -my_node ${Sch} -scheduler ${Sch} ${arg} &

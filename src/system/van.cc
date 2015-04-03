@@ -3,21 +3,17 @@
 #include <zmq.h>
 #include <libgen.h>
 #include "util/shared_array_inl.h"
-#include "util/local_machine.h"
 #include "system/manager.h"
 #include "system/postoffice.h"
 namespace PS {
 
-DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
-DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
 DEFINE_int32(bind_to, 0, "binding port");
-DEFINE_int32(my_rank, -1, "my rank among MPI peers");
-DEFINE_string(interface, "", "network interface");
 DEFINE_bool(local, false, "run in local");
 
+DECLARE_string(my_node);
+DECLARE_string(scheduler);
 DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
-
 
 Van::~Van() {
   Statistic();
@@ -26,33 +22,9 @@ Van::~Van() {
   zmq_ctx_destroy(context_);
 }
 
-void Van::Init(char* argv0) {
+void Van::Init() {
   scheduler_ = ParseNode(FLAGS_scheduler);
-  if (FLAGS_my_rank < 0) {
-    my_node_ = ParseNode(FLAGS_my_node);
-  } else {
-    my_node_ = AssembleMyNode();
-  }
-
-  // the earliest time I can get my_node_.id(), so put the log setup here
-  // before logging anything
-  if (FLAGS_log_dir.empty()) FLAGS_log_dir = "/tmp";
-
-  if (!dirExists(FLAGS_log_dir)) { createDir(FLAGS_log_dir); }
-
-  // change the hostname in default log filename to node id
-  string logfile = FLAGS_log_dir + "/" + string(basename(argv0))
-                   + "." + my_node_.id() + ".log.";
-  google::SetLogDestination(google::INFO, (logfile+"INFO.").c_str());
-  google::SetLogDestination(google::WARNING, (logfile+"WARNING.").c_str());
-  google::SetLogDestination(google::ERROR, (logfile+"ERROR.").c_str());
-  google::SetLogDestination(google::FATAL, (logfile+"FATAL.").c_str());
-  google::SetLogSymlink(google::INFO, "");
-  google::SetLogSymlink(google::WARNING, "");
-  google::SetLogSymlink(google::ERROR, "");
-  google::SetLogSymlink(google::FATAL, "");
-  FLAGS_logbuflevel = -1;
-
+  my_node_ = ParseNode(FLAGS_my_node);
   LOG(INFO) << "I'm [" << my_node_.ShortDebugString() << "]";
 
   context_ = zmq_ctx_new();
@@ -283,51 +255,20 @@ void Van::Statistic() {
 }
 
 Node Van::ParseNode(const string& node_str) {
-  Node node; CHECK(
-      google::protobuf::TextFormat::ParseFromString(node_str, &node));
+  Node node;
+  CHECK(google::protobuf::TextFormat::ParseFromString(node_str, &node));
   if (!node.has_id()) {
-    node.set_id(node.hostname() + ":" + std::to_string(node.port()));
+    string str = node.hostname() + ":" + std::to_string(node.port());
+    if (node.role() == Node::SCHEDULER) {
+      str = "H";
+    } else if (node.role() == Node::WORKER) {
+      str = "W_" + str;
+    } else if (node.role() == Node::SERVER) {
+      str = "S_" + str;
+    }
+    node.set_id(str);
   }
   return node;
-}
-
-Node Van::AssembleMyNode() {
-  if (0 == FLAGS_my_rank) {
-    return scheduler_;
-  }
-
-  Node ret_node;
-  // role and id
-  if (FLAGS_my_rank <= FLAGS_num_workers) {
-    ret_node.set_role(Node::WORKER);
-    ret_node.set_id("W" + std::to_string(FLAGS_my_rank - 1));
-  } else if (FLAGS_my_rank <= FLAGS_num_workers + FLAGS_num_servers) {
-    ret_node.set_role(Node::SERVER);
-    ret_node.set_id("S" + std::to_string(FLAGS_my_rank - FLAGS_num_workers - 1));
-  } else {
-    ret_node.set_role(Node::UNUSED);
-    ret_node.set_id("U" + std::to_string(
-      FLAGS_my_rank - FLAGS_num_workers - FLAGS_num_servers - 1));
-  }
-
-  // IP, port and interface
-  string ip;
-  string interface = FLAGS_interface;
-  unsigned short port;
-
-  if (interface.empty()) {
-    LocalMachine::pickupAvailableInterfaceAndIP(interface, ip);
-  } else {
-    ip = LocalMachine::IP(interface);
-  }
-  CHECK(!ip.empty()) << "failed to got ip";
-  CHECK(!interface.empty()) << "failed to got the interface";
-  port = LocalMachine::pickupAvailablePort();
-  CHECK_NE(port, 0) << "failed to get port";
-  ret_node.set_hostname(ip);
-  ret_node.set_port(static_cast<int32>(port));
-
-  return ret_node;
 }
 
 void Van::Monitor() {
@@ -366,9 +307,9 @@ void Van::Monitor() {
 
 } // namespace PS
 
-  // check whether I could connect to a specified node
-  // bool connected(const Node& node);
 
+// check whether I could connect to a specified node
+// bool connected(const Node& node);
 // bool Van::connected(const Node& node) {
 //   auto it = senders_.find(node.id());
 //   return it != senders_.end();

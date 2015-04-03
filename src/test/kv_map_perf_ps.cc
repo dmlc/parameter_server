@@ -44,10 +44,10 @@ class Worker : public App {
       cf.set_std(1);
       val.SetValue(cf);
 
-      int ts = vec_.Push(Parameter::Request(i), key, val);
+      int ts = vec_.Push(Parameter::Request(i), key, {val});
       vec_.Wait(vec_.Pull(Parameter::Request(i, ts+1, {ts}), key));
       CHECK_EQ(vec_[i].value.size(), key.size());
-      vec_.clear(i);
+      vec_.Clear(i);
       bytes += key.size() * (sizeof(K) + sizeof(V)) * 2;
     }
 

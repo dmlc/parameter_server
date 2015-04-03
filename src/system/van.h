@@ -4,14 +4,17 @@
 #include "system/message.h"
 namespace PS {
 
-// Van sends (receives) packages to (from) a node
-// The current implementation uses ZeroMQ
+/**
+ * @brief Van sends (receives) packages to (from) a node The current
+ * implementation uses ZeroMQ
+ *
+ */
 class Van {
  public:
   Van() { }
   ~Van();
 
-  void Init(char*);
+  void Init();
 
   void Disconnect(const Node&  node);
   bool Connect(const Node&  node);
@@ -19,15 +22,15 @@ class Van {
   bool Send(Message* msg, size_t* send_bytes);
   bool Recv(Message* msg, size_t* recv_bytes);
 
+  static Node ParseNode(const string& node_str);
+
   Node& my_node() { return my_node_; }
   Node& scheduler() { return scheduler_; };
  private:
   // bind to my port
   void Bind();
 
-  Node ParseNode(const string& node_str);
 
-  Node AssembleMyNode();
   bool IsScheduler() { return my_node_.role() == Node::SCHEDULER; }
   // for scheduler: monitor the liveness of all other nodes
   // for other nodes: monitor the liveness of the scheduler

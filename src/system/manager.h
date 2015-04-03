@@ -3,6 +3,7 @@
 #include "system/proto/node.pb.h"
 #include "system/proto/task.pb.h"
 #include "system/van.h"
+#include "system/env.h"
 #include "system/assigner.h"
 namespace PS {
 
@@ -86,6 +87,7 @@ class Manager {
   int time_ = 0;
 
   Van van_;
+  Env env_;
 
   DISALLOW_COPY_AND_ASSIGN(Manager);
 };

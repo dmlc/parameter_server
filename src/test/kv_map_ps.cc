@@ -32,7 +32,7 @@ class Worker : public App {
     }
     SArray<V> val = {1, 1, 1, 1};
 
-    vec_.Wait(vec_.Push(Parameter::Request(0), key, val));
+    vec_.Wait(vec_.Push(Parameter::Request(0), key, {val}));
     vec_.Wait(vec_.Pull(Parameter::Request(0), key));
 
     std::cout << MyNodeID() << ": pulled value in channel 0 " << vec_[0].value
