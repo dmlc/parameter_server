@@ -34,6 +34,7 @@ message Task {
   // data type
   optional DataType key_type = 13;
   repeated DataType value_type = 14;
+  repeated int32 data_size = 10;
 
   // filters applied to the data
   repeated FilterConfig filter = 12;

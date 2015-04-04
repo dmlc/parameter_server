@@ -17,6 +17,9 @@ DECLARE_int32(num_servers);
 
 Van::~Van() {
   Statistic();
+  LOG(INFO) << num_call_ << " " << cp_time_;
+
+
   for (auto& it : senders_) zmq_close(it.second);
   zmq_close(receiver_);
   zmq_ctx_destroy(context_);
@@ -97,7 +100,6 @@ bool Van::Connect(const Node& node) {
   string my_id = my_node_.id(); // address(my_node_);
   zmq_setsockopt (sender, ZMQ_IDENTITY, my_id.data(), my_id.size());
 
-  // TODO is it useful?
   // uint64_t hwm = 5000000;
   // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
@@ -129,43 +131,59 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
   void *socket = it->second;
 
   // double check
+  msg->task.clear_data_size();
   bool has_key = !msg->key.empty();
   if (has_key) {
     msg->task.set_has_key(has_key);
+    msg->task.add_data_size(msg->key.size());
   } else {
     msg->task.clear_has_key();
   }
+  for (const auto& v : msg->value) msg->task.add_data_size(v.size());
   int n = has_key + msg->value.size();
 
-  // send task
   size_t data_size = 0;
-  string str;
-  CHECK(msg->task.SerializeToString(&str))
+
+  // send task
+  size_t task_size = msg->task.ByteSize();
+  char* task_buf = new char[task_size+5];
+  CHECK(msg->task.SerializeToArray(task_buf, task_size))
       << "failed to serialize " << msg->task.ShortDebugString();
+
   int tag = ZMQ_SNDMORE;
   if (n == 0) tag = 0; // ZMQ_DONTWAIT;
+  zmq_msg_t task_msg;
+  zmq_msg_init_data(&task_msg, task_buf, task_size, FreeData, NULL);
+
   while (true) {
-    if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
-    if (errno == EINTR) continue;  // may be interupted by google profiler
+    if (zmq_msg_send(&task_msg, socket, tag) == task_size) break;
+    if (errno == EINTR) continue;  // may be interupted by profiler
     LOG(WARNING) << "failed to send message to node [" << id
                  << "] errno: " << zmq_strerror(errno);
     return false;
   }
-  data_size += str.size();
+  data_size += task_size;
 
+  auto tv = hwtic();
   // send data
   for (int i = 0; i < n; ++i) {
-    const auto& raw = (has_key && i == 0) ? msg->key : msg->value[i-has_key];
+    SArray<char>* data = new SArray<char>(
+        (has_key && i == 0) ? msg->key : msg->value[i-has_key]);
+    zmq_msg_t data_msg;
+    zmq_msg_init_data(&data_msg, data->data(), data->size(), FreeData, data);
     if (i == n - 1) tag = 0; // ZMQ_DONTWAIT;
     while (true) {
-      if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
-      if (errno == EINTR) continue;  // may be interupted by google profiler
+      if (zmq_msg_send(&data_msg, socket, tag) == data->size()) break;
+      if (errno == EINTR) continue;  // may be interupted by profiler
       LOG(WARNING) << "failed to send message to node [" << id
                    << "] errno: " << zmq_strerror(errno);
       return false;
     }
-    data_size += raw.size();
+    data_size += data->size();
   }
+  cp_time_ += hwtoc(tv);
+
+  // LOG_EVERY_N(INFO, 10000) << num_call_ << " " << cp_time_;
 
   // statistics
   *send_bytes += data_size;
@@ -191,7 +209,9 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       LOG(WARNING) << "failed to receive message. errno: "
                    << zmq_strerror(errno);
       return false;
-   }
+    }
+
+
     char* buf = (char *)zmq_msg_data(&zmsg);
     CHECK(buf != NULL);
     size_t size = zmq_msg_size(&zmsg);
@@ -203,9 +223,11 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       msg->recver = my_node_.id();
     } else if (i == 1) {
       // task
-      CHECK(msg->task.ParseFromString(std::string(buf, size)))
+      // auto tv = hwtic();
+      CHECK(msg->task.ParseFromArray(buf, size))
           << "parse string from " << sender << " I'm " << my_node_.id() << " "
           << size;
+      // time_ += hwtoc(tv);
       if (IsScheduler() && msg->task.control() &&
           msg->task.ctrl().cmd() == Control::REQUEST_APP) {
         // it is the first time the scheduler receive message from the
@@ -231,6 +253,10 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       }
     }
     zmq_msg_close(&zmsg);
+
+    // call_ ++;
+    // LOG_EVERY_N(INFO, 10000) << call_ << " " << time_;
+
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
