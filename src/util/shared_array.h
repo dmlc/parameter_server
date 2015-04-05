@@ -224,6 +224,7 @@ template<typename V> class SArray {
   }
   V* data() const { return data_; }
   const std::shared_ptr<void>& pointer() const { return ptr_; }
+  std::shared_ptr<void>& pointer() { return ptr_; }
 
   /// @brief the number of non-zero entries
   size_t nnz() const;

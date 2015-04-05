@@ -66,7 +66,8 @@ class Van {
   std::thread* monitor_thread_;
 
   // debug performance
-  double cp_time_ = 0;
+  double send_time_ = 0;
+  double recv_time_ = 0;
   int num_call_ = 0;
 };
 

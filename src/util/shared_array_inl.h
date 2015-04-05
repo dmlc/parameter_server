@@ -6,7 +6,7 @@
 
 namespace PS {
 
-static double sarray_time;
+// static double sarray_time;
 template <typename V>
 void SArray<V>::resize(size_t n) {
   if (capacity_ >= n) { size_ = n; return; }
