@@ -35,21 +35,16 @@ clean:
 ps: $(PS_LIB) $(PS_MAIN) $(TEST_MAIN)
 
 # PS system
-sys_dir		= $(addprefix src/, util data system filter learner parameter)
-sys_srcs	= $(wildcard $(patsubst %, %/*.cc, $(sys_dir)))
-sys_protos	= $(wildcard $(patsubst %, %/proto/*.proto, $(sys_dir)))
-sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
-			  $(patsubst src/%.cc, build/%.o, $(sys_srcs))
+ps_srcs	= $(wildcard src/*.cc src/*/*.cc)
+ps_protos	= $(wildcard src/proto/*.proto)
+ps_objs	= $(patsubst src/%.proto, build/%.pb.o, $(ps_protos)) \
+			  $(patsubst src/%.cc, build/%.o, $(ps_srcs))
 
-build/libps.a: $(patsubst %.proto, %.pb.h, $(sys_protos)) $(sys_objs)
+build/libps.a: $(patsubst %.proto, %.pb.h, $(ps_protos)) $(ps_objs)
 	ar crv $@ $(filter %.o, $?)
 
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
-
-# applications
-build/linear: $(addprefix build/app/linear_method/, proto/linear.pb.o main.o) $(PS_LIB)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 # general rules
 build/%.o: src/%.cc

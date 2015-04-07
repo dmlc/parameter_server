@@ -1,5 +1,5 @@
 #pragma once
-#include "util/proto/range.pb.h"
+#include "proto/range.pb.h"
 
 namespace ps {
 

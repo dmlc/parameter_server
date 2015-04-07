@@ -1,8 +1,8 @@
 #pragma once
 #include "util/common.h"
 #include "util/shared_array.h"
-#include "system/proto/task.pb.h"
-#include "filter/proto/filter.pb.h"
+#include "proto/task.pb.h"
+#include "proto/filter.pb.h"
 namespace ps {
 
 // The message communicated between nodes. It conntains all argument and data

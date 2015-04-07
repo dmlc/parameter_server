@@ -1,5 +1,5 @@
 #pragma once
-#include "util/proto/assign_op.pb.h"
+proto/assign_op.pb.h"
 #include "glog/logging.h"
 namespace ps {
 // The cost of the switch is minimal. Once "op" is a constant, the compiler will

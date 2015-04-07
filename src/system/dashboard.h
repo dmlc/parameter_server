@@ -1,6 +1,6 @@
 #pragma once
 #include "system/message.h"
-#include "system/proto/heartbeat.pb.h"
+#include "proto/heartbeat.pb.h"
 
 namespace ps {
 

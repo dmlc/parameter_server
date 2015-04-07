@@ -1,4 +1,4 @@
-package PS;
+package ps;
 import "proto/range.proto";
 
 message DataConfig {

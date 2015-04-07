@@ -1,5 +1,5 @@
 package ps;
-import "util/proto/assign_op.proto";
+import "proto/assign_op.proto";
 
 message ParamCall {
   // push or pull

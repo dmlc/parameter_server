@@ -1,8 +1,8 @@
 #pragma once
 #include "util/common.h"
 #include "util/range.h"
-#include "system/proto/node.pb.h"
-#include "data/proto/data.pb.h"
+#include "proto/node.pb.h"
+#include "proto/data.pb.h"
 namespace ps {
 
 // assign *node* with proper rank_id, key_range, etc..

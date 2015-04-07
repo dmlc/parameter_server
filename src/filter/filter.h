@@ -1,6 +1,6 @@
 #pragma once
 #include "system/message.h"
-#include "filter/proto/filter.pb.h"
+#include "proto/filter.pb.h"
 #include "util/shared_array_inl.h"
 
 namespace ps {

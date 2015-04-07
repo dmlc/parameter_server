@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
-#include "system/proto/node.pb.h"
-#include "system/proto/task.pb.h"
+#include "proto/node.pb.h"
+#include "proto/task.pb.h"
 #include "system/van.h"
 #include "system/env.h"
 #include "system/assigner.h"

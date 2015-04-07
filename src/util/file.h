@@ -110,7 +110,7 @@ bool writeProtoToFile(const GProto& proto, const std::string& file_name);
 void writeProtoToFileOrDie(const GProto& proto, const std::string& file_name);
 
 // return the hadoop fs command
-// std::string hadoopFS(const HDFSConfig& conf);
+std::string hadoopFS(const HDFSConfig& conf);
 
 // operations about directories, may create class Directory
 bool dirExists(const std::string& dir);

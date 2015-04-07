@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include "system/proto/node.pb.h"
+#include "proto/node.pb.h"
 #include "system/message.h"
 namespace ps {
 

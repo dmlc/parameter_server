@@ -1,6 +1,4 @@
 #pragma once
-#include "util/shared_array.h"
-#include "util/dense_matrix.h"
 #include <random>
 #include "snappy.h"
 
@@ -189,18 +187,18 @@ bool SArray<V>::ReadFromFile(SizeR range, const string& file_name) {
   return ReadFromFile(range, data);
 }
 
-template <typename V>
-MatrixPtr<V> SArray<V>::SMatrix(size_t rows, size_t cols) {
-  // TODO rows and cols
-  MatrixInfo info;
-  info.set_type(MatrixInfo::DENSE);
-  info.set_row_major(false);
-  SizeR(0, size_).To(info.mutable_row());
-  SizeR(0,1).To(info.mutable_col());
-  info.set_nnz(size_);
-  info.set_sizeof_value(sizeof(V));
-  return MatrixPtr<V>(new DenseMatrix<V>(info, *this));
-}
+// template <typename V>
+// MatrixPtr<V> SArray<V>::SMatrix(size_t rows, size_t cols) {
+//   // TODO rows and cols
+//   MatrixInfo info;
+//   info.set_type(MatrixInfo::DENSE);
+//   info.set_row_major(false);
+//   SizeR(0, size_).To(info.mutable_row());
+//   SizeR(0,1).To(info.mutable_col());
+//   info.set_nnz(size_);
+//   info.set_sizeof_value(sizeof(V));
+//   return MatrixPtr<V>(new DenseMatrix<V>(info, *this));
+// }
 
 template <typename V>
 bool SArray<V>::ReadFromFile(SizeR range, const DataConfig& data) {

@@ -3,8 +3,8 @@
 #include "util/common.h"
 #include "util/local_machine.h"
 #include "util/file.h"
-#include "data/common.h"
-#include "system/proto/node.pb.h"
+// #include "data/common.h"
+#include "proto/node.pb.h"
 namespace ps {
 
 DEFINE_int32(num_servers, 0, "number of servers");

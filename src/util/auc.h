@@ -1,6 +1,6 @@
 #pragma once
 #include "util/shared_array.h"
-// #include "util/proto/evaluation.pb.h"
+proto/evaluation.pb.h"
 
 namespace ps {
 

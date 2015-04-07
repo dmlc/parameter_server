@@ -4,11 +4,10 @@
 #include "util/file.h"
 #include "util/range.h"
 #include "Eigen/Core"
-#include "data/proto/data.pb.h"
-#include "parameter/proto/param.pb.h"
+#include "proto/data.pb.h"
+#include "proto/param.pb.h"
 namespace ps {
 
-template<typename V> class Matrix;
 /**
  * @brief Shared array
  *
@@ -232,35 +231,35 @@ template<typename V> class SArray {
   /// @brief Compare values
   template <typename W> bool operator==(const SArray<W> &rhs) const;
 
-  /// @brief return an Eigen3 vector, zero-copy
-  typedef Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1> > EVecMap;
-  EVecMap EigenVector() const { return EVecMap(data(), size()); }
-  EVecMap vec() const { return EVecMap(data(), size()); }
+  // /// @brief return an Eigen3 vector, zero-copy
+  // typedef Eigen::Map<Eigen::Matrix<V, Eigen::Dynamic, 1> > EVecMap;
+  // EVecMap EigenVector() const { return EVecMap(data(), size()); }
+  // EVecMap vec() const { return EVecMap(data(), size()); }
 
-  /// @brief return an Eigen3 array, zero-copy
-  typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, 1> > EArrayMap;
-  EArrayMap EigenArray() const { return EArrayMap(data(), size()); }
-  EArrayMap arr() const { return EArrayMap(data(), size()); }
+  // /// @brief return an Eigen3 array, zero-copy
+  // typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, 1> > EArrayMap;
+  // EArrayMap EigenArray() const { return EArrayMap(data(), size()); }
+  // EArrayMap arr() const { return EArrayMap(data(), size()); }
 
-  /// @brief return an Eigen3 matrix, zero-copy
-  typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, Eigen::Dynamic> > EMatMap;
-  EMatMap EigenMatrix(int k) const {
-    CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
-  }
-  EMatMap mat(int k) const {
-    CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
-  }
+  // /// @brief return an Eigen3 matrix, zero-copy
+  // typedef Eigen::Map<Eigen::Array<V, Eigen::Dynamic, Eigen::Dynamic> > EMatMap;
+  // EMatMap EigenMatrix(int k) const {
+  //   CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
+  // }
+  // EMatMap mat(int k) const {
+  //   CHECK_EQ(size()%k, 0); return EArrayMap(data(), size()/k, k);
+  // }
 
 
-  double Sum() const { return EigenArray().sum(); }
-  double Mean() const { return empty() ? 0 : Sum() / (double)size(); }
-  double Std() const {
-    return empty() ? 0 :
-        (EigenArray() - Mean()).matrix().norm() / sqrt((double)size());
-  }
+  // double Sum() const { return EigenArray().sum(); }
+  // double Mean() const { return empty() ? 0 : Sum() / (double)size(); }
+  // double Std() const {
+  //   return empty() ? 0 :
+  //       (EigenArray() - Mean()).matrix().norm() / sqrt((double)size());
+  // }
 
-  /// @brief convert to a dense matrix, zero-copy
-  std::shared_ptr<Matrix<V>> SMatrix(size_t rows = -1, size_t cols = -1);
+  // /// @brief convert to a dense matrix, zero-copy
+  // std::shared_ptr<Matrix<V>> SMatrix(size_t rows = -1, size_t cols = -1);
 
   /// @brief  Return the compressed array by snappy
   SArray<char> CompressTo() const;

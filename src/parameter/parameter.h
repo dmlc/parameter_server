@@ -1,6 +1,6 @@
 #pragma once
 #include "system/customer.h"
-#include "parameter/proto/param.pb.h"
+#include "proto/param.pb.h"
 namespace ps {
 
 /// The base class of shared parameters
