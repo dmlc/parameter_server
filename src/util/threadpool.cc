@@ -1,6 +1,6 @@
 #include "util/threadpool.h"
 
-namespace PS {
+namespace ps {
 
 ThreadPool::~ThreadPool() {
   if (!started_) return;
@@ -56,4 +56,4 @@ void ThreadPool::add(const Task& task) {
   if (started_) cv_.notify_all();
 }
 
-}  // namespace PS
+}  // namespace ps

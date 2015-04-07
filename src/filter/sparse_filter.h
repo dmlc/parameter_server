@@ -1,6 +1,6 @@
 #pragma once
 #include "filter/filter.h"
-namespace PS {
+namespace ps {
 
 class SparseFilter : public Filter {
  public:
@@ -23,4 +23,4 @@ class SparseFilter : public Filter {
   double double_v_;
 };
 
-} // namespace PS
+} // namespace ps

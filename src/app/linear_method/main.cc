@@ -3,7 +3,7 @@
 #include "app/linear_method/darlin.h"
 #include "app/linear_method/model_evaluation.h"
 
-namespace PS {
+namespace ps {
 App* App::Create(const string& conf_str) {
   using namespace LM;
   // parse config
@@ -38,7 +38,7 @@ App* App::Create(const string& conf_str) {
              << " at " << MyNode().ShortDebugString();
   return app;
 }
-} // namespace PS
+} // namespace ps
 
 int main(int argc, char *argv[]) {
   PS::RunSystem(argc, argv);

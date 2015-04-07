@@ -1,6 +1,6 @@
 #include "ps.h"
 #include "parameter/parameter.h"
-namespace PS {
+namespace ps {
 
 void Parameter::ProcessRequest(Message* request) {
   const auto& call = request->task.param();
@@ -48,4 +48,4 @@ void Parameter::ProcessResponse(Message* response) {
   }
 }
 
-}  // namespace PS
+}  // namespace ps

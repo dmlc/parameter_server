@@ -3,7 +3,7 @@
 #include "filter/proto/filter.pb.h"
 #include "util/shared_array_inl.h"
 
-namespace PS {
+namespace ps {
 
 // A filter should be thread safe
 class Filter {

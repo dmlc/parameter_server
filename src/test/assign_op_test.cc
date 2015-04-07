@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "util/assign_op.h"
-using namespace PS;
+using namespace ps;
 // evaluation the performance of assignop comparing to the plain version
 
 size_t n = 1000000000;

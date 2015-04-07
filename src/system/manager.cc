@@ -1,7 +1,7 @@
 #include "system/manager.h"
 #include "system/postoffice.h"
 #include "system/customer.h"
-namespace PS {
+namespace ps {
 
 DECLARE_int32(num_servers);
 DECLARE_int32(num_workers);
@@ -328,4 +328,4 @@ int Manager::NextCustomerID() {
   return id;
 }
 
-} // namespace PS
+} // namespace ps

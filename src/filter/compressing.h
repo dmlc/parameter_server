@@ -1,7 +1,7 @@
 #pragma once
 #include "filter/filter.h"
 
-namespace PS {
+namespace ps {
 
 class CompressingFilter : public Filter {
  public:
@@ -37,4 +37,4 @@ class CompressingFilter : public Filter {
   }
 };
 
-} // namespace PS
+} // namespace ps

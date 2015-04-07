@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "data/proto/example.pb.h"
 #include "data/proto/data.pb.h"
-namespace PS {
+namespace ps {
 
 // the maximal allowed slot id
 static const int kSlotIDmax = 4096;
@@ -21,4 +21,4 @@ class InfoParser {
   SlotInfo slot_info_[kSlotIDmax];
 };
 
-} // namespace PS
+} // namespace ps

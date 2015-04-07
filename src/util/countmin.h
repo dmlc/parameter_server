@@ -2,7 +2,7 @@
 #include "util/sketch.h"
 #include <math.h>
 #include "util/shared_array_inl.h"
-namespace PS {
+namespace ps {
 
 template <typename K, typename V>
 class CountMin : public Sketch {
@@ -47,4 +47,4 @@ class CountMin : public Sketch {
   V v_max_ = 0;
 };
 
-} // namespace PS
+} // namespace ps

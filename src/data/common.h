@@ -4,7 +4,7 @@
 #include "data/proto/data.pb.h"
 #include "util/proto/matrix.pb.h"
 
-namespace PS {
+namespace ps {
 
 DECLARE_string(input);
 DECLARE_string(output);
@@ -31,4 +31,4 @@ MatrixInfo readMatrixInfo(
 DataConfig shuffleFiles(const DataConfig& data);
 
 
-} // namespace PS
+} // namespace ps

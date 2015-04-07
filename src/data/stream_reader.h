@@ -8,7 +8,7 @@
 #include "util/filelinereader.h"
 #include "util/recordio.h"
 #include "util/sparse_matrix.h"
-namespace PS {
+namespace ps {
 DECLARE_uint64(hash_kernel);
 
 template<typename V>
@@ -214,4 +214,4 @@ bool StreamReader<V>::readMatrices(
 }
 
 
-} // namespace PS
+} // namespace ps

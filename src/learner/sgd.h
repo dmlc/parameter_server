@@ -13,7 +13,7 @@
 #include "util/localizer.h"
 #include "filter/frequency_filter.h"
 #include "learner/workload_pool.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief The base class of a scheduler node
@@ -143,4 +143,4 @@ class MinibatchReader {
   ProducerConsumer<MatrixPtrList<V>> data_prefetcher_;
 };
 
-} // namespace PS
+} // namespace ps

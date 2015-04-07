@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "data/slot_reader.h"
 
-using namespace PS;
+using namespace ps;
 
 TEST(SlotReader, read) {
   DataConfig cache, dc;

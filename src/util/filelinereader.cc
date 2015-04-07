@@ -8,7 +8,7 @@
 #include "glog/logging.h"
 #include "util/common.h"
 
-namespace PS {
+namespace ps {
 
 DEFINE_int32(line_limit, 0,
   "line number limit that one data file could read");
@@ -48,4 +48,4 @@ void FileLineReader::Reload() {
 }
 
 
-}  // namespace PS
+}  // namespace ps

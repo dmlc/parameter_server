@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-using namespace PS;
+using namespace ps;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vec;
 typedef SparseMatrixPtr<uint64, double> SpMat;
 

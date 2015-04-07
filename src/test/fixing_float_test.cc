@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "filter/fixing_float.h"
 
-using namespace PS;
+using namespace ps;
 
 TEST(FIXING_FLOAT, EncodeDecode) {
   MessagePtr msg(new Message());

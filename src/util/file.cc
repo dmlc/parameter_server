@@ -16,7 +16,7 @@
 #endif // USE_S3
 
 // TODO read and write gz files, see zlib.h. evaluate the performace gain
-namespace PS {
+namespace ps {
 
 DECLARE_bool(verbose);
 
@@ -420,4 +420,4 @@ bool createDir(const std::string& dir) {
   return mkdir(dir.c_str(), 0755) == 0;
 }
 
-} // namespace PS
+} // namespace ps

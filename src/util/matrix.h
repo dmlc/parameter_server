@@ -6,7 +6,7 @@
 #include "util/range.h"
 #include "util/shared_array.h"
 
-namespace PS {
+namespace ps {
 
 // multi-threaded memory efficient matrix class
 template<typename V> class Matrix;
@@ -125,4 +125,4 @@ class Matrix {
 };
 
 
-}  // namespace PS
+}  // namespace ps

@@ -1,7 +1,7 @@
 #include <chrono>
 #include "system/heartbeat_info.h"
 
-namespace PS {
+namespace ps {
 HeartbeatInfo::HeartbeatInfo() :
   timers_(static_cast<size_t>(HeartbeatInfo::TimerType::NUM)),
   in_bytes_(0),
@@ -160,4 +160,4 @@ void HeartbeatInfo::init(const string& interface, const string& hostname) {
   get();
 }
 
-}; // namespace PS
+}; // namespace ps

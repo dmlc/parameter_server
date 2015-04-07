@@ -7,7 +7,7 @@ DEFINE_int32(m, 100, "");
 DEFINE_int32(k, 2, "");
 TEST(BloomFilter, Speed) {
 
-using namespace PS;
+using namespace ps;
   // see src/test/prepare_test_data to get the data
   SArray<Key> key1; key1.readFromFile("../data/test/key.1");
   SArray<Key> key2; key2.readFromFile("../data/test/key.3");

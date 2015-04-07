@@ -1,4 +1,4 @@
-package PS;
+package ps;
 
 // assignment operators: http://en.cppreference.com/w/cpp/language/operator_assignment
 enum AssignOpType {

@@ -4,7 +4,7 @@
 #include "system/van.h"
 #include "system/postoffice.h"
 #include "filter/filter.h"
-namespace PS {
+namespace ps {
 
 // The presentation of a remote node used by Executor. It's not thread
 // safe, do not use them directly.
@@ -65,4 +65,4 @@ struct RemoteNode {
 };
 
 
-} // namespace PS
+} // namespace ps

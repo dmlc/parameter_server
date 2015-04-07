@@ -3,7 +3,7 @@
 #include "util/file.h"
 // #include <omp.h>
 
-namespace PS {
+namespace ps {
 
 DEFINE_int32(report_interval, 0,
   "Servers/Workers report running status to the scheduler "
@@ -131,4 +131,4 @@ bool Postoffice::Process(Message* msg) {
 }
 
 
-} // namespace PS
+} // namespace ps

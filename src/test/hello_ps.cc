@@ -1,5 +1,5 @@
 #include "ps.h"
-namespace PS {
+namespace ps {
 
 class Server : public App {
  public:
@@ -39,7 +39,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

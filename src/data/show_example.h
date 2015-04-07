@@ -3,7 +3,7 @@
 #include "data/common.h"
 #include "util/recordio.h"
 #include "proto/example.pb.h"
-namespace PS {
+namespace ps {
 
 DEFINE_int32(n, 3, "show the first *n* instances in text format");
 
@@ -17,4 +17,4 @@ static void showExample() {
   }
 }
 
-} // namespace PS
+} // namespace ps

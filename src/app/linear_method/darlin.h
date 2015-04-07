@@ -4,7 +4,7 @@
 #include "learner/bcd.h"
 #include "util/bitmap.h"
 #include "filter/sparse_filter.h"
-namespace PS {
+namespace ps {
 DECLARE_int32(num_workers);
 namespace LM {
 typedef double Real;
@@ -585,4 +585,4 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
 };
 
 } // namespace LM
-} // namespace PS
+} // namespace ps

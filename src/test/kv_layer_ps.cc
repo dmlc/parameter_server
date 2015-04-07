@@ -3,7 +3,7 @@
  */
 #include "ps.h"
 #include "parameter/kv_layer.h"
-namespace PS {
+namespace ps {
 typedef uint64 K;  // key type
 typedef int V;     // value type
 
@@ -70,7 +70,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

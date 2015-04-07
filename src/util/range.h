@@ -1,7 +1,7 @@
 #pragma once
 #include "util/proto/range.pb.h"
 
-namespace PS {
+namespace ps {
 
 template<class T> class Range;
 typedef Range<size_t> SizeR;
@@ -111,12 +111,12 @@ std::ostream& operator<<(std::ostream& os, const Range<T>& obj) {
   return (os << obj.ToString());
 }
 
-} // namespace PS
+} // namespace ps
 
 namespace std {
 template<typename T>
-struct hash<PS::Range<T> > {
-  std::size_t operator()(PS::Range<T> const& s) const {
+struct hash<ps::Range<T> > {
+  std::size_t operator()(ps::Range<T> const& s) const {
     // return std::hash<std::pair<T,T> >()(std::make_pair(s.begin(), s.end()));
     // return (std::hash<T>(s.begin()) ^ (std::hash<T>(s.end()) << 1));
     return (size_t)(s.begin() ^ s.end() << 1);  // TODO why << 1?
@@ -124,8 +124,8 @@ struct hash<PS::Range<T> > {
 };
 
 template<typename T>
-struct hash<std::pair<int, PS::Range<T>>> {
-  std::size_t operator()(std::pair<int, PS::Range<T>> const& s) const {
+struct hash<std::pair<int, ps::Range<T>>> {
+  std::size_t operator()(std::pair<int, ps::Range<T>> const& s) const {
     return (s.first ^ s.second.begin() ^ s.second.end());
   }
 };

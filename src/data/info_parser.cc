@@ -1,5 +1,5 @@
 #include "data/info_parser.h"
-namespace PS {
+namespace ps {
 
 void InfoParser::clear() {
   for (int i = 0; i < kSlotIDmax; ++i) slot_info_[i].Clear();
@@ -48,4 +48,4 @@ ExampleInfo InfoParser::info() {
   }
   return info_;
 }
-} // namespace PS
+} // namespace ps

@@ -2,7 +2,7 @@
 #include "system/customer.h"
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
-namespace PS {
+namespace ps {
 namespace LM {
 
 class ModelEvaluation : public App {
@@ -74,4 +74,4 @@ void ModelEvaluation::Run() {
 }
 
 } // namespace LM
-} // namespace PS
+} // namespace ps

@@ -6,7 +6,7 @@ DEFINE_int32(data_size, 1000,
               "data in KB sent from a worker to a server");
 DEFINE_bool(server_aggregation, false,
             "servers will aggregate the data from servs if true");
-namespace PS {
+namespace ps {
 
 class Server : public App {
  public:
@@ -52,7 +52,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

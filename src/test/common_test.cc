@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "util/resource_usage.h"
 #include "util/threadsafe_queue.h"
-using namespace PS;
+using namespace ps;
 
 std::shared_ptr<int> p(new int());
 inline void fun1(std::shared_ptr<int> a) {

@@ -4,7 +4,7 @@
 #include "ps.h"
 #include "parameter/kv_layer.h"
 #include "util/resource_usage.h"
-namespace PS {
+namespace ps {
 typedef int V;     // value type
 
 class Updater {
@@ -75,7 +75,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

@@ -4,7 +4,7 @@
 // #include <string>
 // #include "glog/logging.h"
 
-// namespace PS {
+// namespace ps {
 // const int RecordWriter::kMagicNumber = 0x3ed7230a;
 
 // std::string RecordWriter::Compress(std::string const& s) const {
@@ -38,4 +38,4 @@
 //   CHECK_LE(result_size, static_cast<unsigned long>(output_size));  // NOLINT
 // }
 
-// }  // namespace PS
+// }  // namespace ps

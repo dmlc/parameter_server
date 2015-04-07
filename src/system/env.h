@@ -1,5 +1,5 @@
 #pragma once
-namespace PS {
+namespace ps {
 
 /**
  * @brief  Setups environment
@@ -17,4 +17,4 @@ class Env {
 
 };
 
-}  // namespace PS
+}  // namespace ps

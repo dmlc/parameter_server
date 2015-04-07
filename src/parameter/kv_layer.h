@@ -1,7 +1,7 @@
 #pragma once
 #include "ps.h"
 #include "parameter/parameter.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief the default updater for KVLayer
@@ -209,4 +209,4 @@ void KVLayer<V, Updater>::SetValue(const Message* msg) {
   }
 }
 
-}  // namespace PS
+}  // namespace ps

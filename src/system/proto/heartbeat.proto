@@ -1,4 +1,4 @@
-package PS;
+package ps;
 
 message HeartbeatReport {
   optional int32 task_id = 1 [default = 0];

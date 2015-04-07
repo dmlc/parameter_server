@@ -14,7 +14,7 @@
 #include "util/shared_array.h"
 #include "util/range.h"
 
-namespace PS {
+namespace ps {
 template<typename I, typename V> class SparseMatrix;
 template<typename I, typename V>
 using SparseMatrixPtr = std::shared_ptr<SparseMatrix<I, V>>;
@@ -371,7 +371,7 @@ string SparseMatrix<I,V>::debugString() const {
   return ss.str();
 }
 
-} // namespace PS
+} // namespace ps
 
 
   //// version 2

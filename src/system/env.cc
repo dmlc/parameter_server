@@ -5,7 +5,7 @@
 #include "util/file.h"
 #include "data/common.h"
 #include "system/proto/node.pb.h"
-namespace PS {
+namespace ps {
 
 DEFINE_int32(num_servers, 0, "number of servers");
 DEFINE_int32(num_workers, 0, "number of clients");
@@ -117,4 +117,4 @@ void Env::AssembleMyNode() {
 
 
 
-}  // namespace PS
+}  // namespace ps

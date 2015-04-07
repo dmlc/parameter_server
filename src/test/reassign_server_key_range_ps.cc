@@ -5,7 +5,7 @@
 
 // build: make build/reassign_server_key_range
 // test: script/local.sh build/reassign_server_key_range 3 3
-namespace PS {
+namespace ps {
 class Root : public App {
  public:
   Root() : App() { }
@@ -47,7 +47,7 @@ App* App::create(const string& name, const string& conf) {
   }
 }
 
-} // namespace PS
+} // namespace ps
 
 int main(int argc, char *argv[]) {
   auto& sys = PS::Postoffice::instance();

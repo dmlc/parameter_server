@@ -1,4 +1,4 @@
-package PS;
+package ps;
 
 message AUCData {
   repeated int64 tp_key = 1;

@@ -1,7 +1,7 @@
 #include "learner/bcd.h"
 #include "util/resource_usage.h"
 #include "util/split.h"
-namespace PS {
+namespace ps {
 
 void BCDScheduler::ProcessRequest(Message* request) {
   CHECK(request->task.has_bcd());
@@ -174,4 +174,4 @@ string BCDScheduler::ShowObjective(int iter) {
   return string(buf);
 }
 
-}  // namespace PS
+}  // namespace ps

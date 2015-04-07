@@ -1,7 +1,7 @@
 #pragma once
 #include "system/remote_node.h"
 #include "system/message.h"
-namespace PS {
+namespace ps {
 
 const static NodeID kGroupPrefix  = "all_";
 // all server nodes
@@ -103,7 +103,7 @@ class Executor {
   std::thread* thread_ = nullptr;
 };
 
-} // namespace PS
+} // namespace ps
 
   // bool IsGroupID(const NodeID& node_id) {
   //   return node_id.compare(

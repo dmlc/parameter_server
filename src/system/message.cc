@@ -1,5 +1,5 @@
 #include "system/message.h"
-namespace PS {
+namespace ps {
 
 // Message::Message(const NodeID& dest, int time, int wait_time)
 //     : recver(dest) {
@@ -46,4 +46,4 @@ std::string Message::DebugString() const {
 }
 
 
-} // namespace PS
+} // namespace ps

@@ -5,7 +5,7 @@
 #include "util/integral_types.h"
 // #include "util/common.h"
 
-namespace PS {
+namespace ps {
 
 // return true if success
 
@@ -44,4 +44,4 @@ inline bool strtou64(const std::string& str, uint64* num) {
   return strtou64(str.c_str(), num);
 }
 
-} // namespace PS
+} // namespace ps

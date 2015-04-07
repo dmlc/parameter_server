@@ -25,4 +25,4 @@ EXTRA_CFLAGS =
 # io option
 USE_S3 = 0
 
-all: ps build/linear
+all: ps

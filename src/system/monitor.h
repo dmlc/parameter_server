@@ -5,7 +5,7 @@
  */
 #pragma once
 #include "system/customer.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief The master of the monitor, which collects reports from slavers and
@@ -96,4 +96,4 @@ class MonitorSlaver : public Customer {
   NodeID master_;
 };
 
-} // namespace PS
+} // namespace ps

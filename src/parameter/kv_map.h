@@ -1,7 +1,7 @@
 #pragma once
 #include "ps.h"
 #include "parameter/parameter.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief Default entry type for KVMap
@@ -104,4 +104,4 @@ void KVMap<K,V,E,S>::WriteToFile(std::string file) {
 }
 
 
-}  // namespace PS
+}  // namespace ps

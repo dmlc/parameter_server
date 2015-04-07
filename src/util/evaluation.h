@@ -3,7 +3,7 @@
 #include "util/shared_array.h"
 #include "util/parallel_sort.h"
 
-namespace PS {
+namespace ps {
 
 // evaluation in a single machine
 template <typename V>
@@ -62,4 +62,4 @@ V Evaluation<V>::accuracy(const SArray<V>& label, const SArray<V>& predict, V th
   return acc > 0.5 ? acc : 1 - acc;
 }
 
-} // namespace PS
+} // namespace ps

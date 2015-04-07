@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 
-namespace PS {
+namespace ps {
 namespace crc32c {
 
 static const uint32_t table0_[256] = {

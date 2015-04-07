@@ -9,7 +9,7 @@
 #include <ratio>
 #include <chrono>
 
-namespace PS {
+namespace ps {
 
 using std::chrono::system_clock;
 static system_clock::time_point tic() {
@@ -131,7 +131,7 @@ class ResUsage {
   }
 };
 
-} // namespace PS
+} // namespace ps
 
 // struct timeval tv; gettimeofday(&tv, NULL);
 // time_t ts = (time_t)(tv.tv_sec);

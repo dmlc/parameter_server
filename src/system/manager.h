@@ -5,7 +5,7 @@
 #include "system/van.h"
 #include "system/env.h"
 #include "system/assigner.h"
-namespace PS {
+namespace ps {
 
 class App;
 class Customer;
@@ -92,4 +92,4 @@ class Manager {
   DISALLOW_COPY_AND_ASSIGN(Manager);
 };
 
-} // namespace PS
+} // namespace ps

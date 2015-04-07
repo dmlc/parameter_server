@@ -1,5 +1,5 @@
 #include "learner/sgd.h"
-namespace PS {
+namespace ps {
 
 ISGDScheduler::~ISGDScheduler() {
   // core dump when delete workload_pool_;
@@ -93,4 +93,4 @@ void ISGDScheduler::MergeProgress(const SGDProgress& src, SGDProgress* dst) {
       dst->num_examples_processed() + old.num_examples_processed());
 }
 
-} // namespace PS
+} // namespace ps

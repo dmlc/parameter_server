@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "util/countmin.h"
-using namespace PS;
+using namespace ps;
 
 TEST(xx, xx) {
   std::shared_ptr<int> p(new int());

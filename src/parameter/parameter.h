@@ -1,7 +1,7 @@
 #pragma once
 #include "system/customer.h"
 #include "parameter/proto/param.pb.h"
-namespace PS {
+namespace ps {
 
 /// The base class of shared parameters
 class Parameter : public Customer {
@@ -76,4 +76,4 @@ class Parameter : public Customer {
   virtual void Recover(Message* msg) { }
 };
 
-}  // namespace PS
+}  // namespace ps

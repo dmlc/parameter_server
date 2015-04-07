@@ -1,7 +1,7 @@
 #pragma once
 #include "util/shared_array.h"
 #include "util/assign_op.h"
-namespace PS {
+namespace ps {
 
 // the implementation, see comments bellow
 template <typename K, typename V>
@@ -111,4 +111,4 @@ void ParallelUnion(
   CHECK_EQ(n2, key2.size());
 }
 
-} // namespace PS
+} // namespace ps

@@ -4,7 +4,7 @@
 #include "util/resource_usage.h"
 #include "util/common.h"
 
-namespace PS {
+namespace ps {
 class HeartbeatInfo {
 public:
   enum class TimerType : unsigned char {
@@ -86,4 +86,4 @@ private:
   std::mutex mu_;
   size_t cpu_core_number_;
 }; // class Heartbeatinfo
-}; // namespace PS
+}; // namespace ps

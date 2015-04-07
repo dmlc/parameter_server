@@ -6,7 +6,7 @@
  */
 #pragma once
 #include "util/shared_array.h"
-namespace PS {
+namespace ps {
 
 namespace  {
 /// @brief the thread function
@@ -40,4 +40,4 @@ void ParallelSort(SArray<T>* arr, int num_threads, const Fn& cmp) {
   ParallelSort(arr->data(), arr->size(), grainsize, cmp);
 }
 
-} // namespace PS
+} // namespace ps

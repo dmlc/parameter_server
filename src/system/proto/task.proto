@@ -1,4 +1,4 @@
-package PS;
+package ps;
 import "util/proto/range.proto";
 import "data/proto/data.proto";
 import "system/proto/node.proto";

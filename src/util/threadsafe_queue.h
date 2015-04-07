@@ -2,7 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
-namespace PS {
+namespace ps {
 
 // TODO the code style is inconsistent with others
 template<typename T> class ThreadsafeQueue {
@@ -47,7 +47,7 @@ template<typename T> class ThreadsafeQueue {
   std::condition_variable data_cond;
 };
 
-} // namespace PS
+} // namespace ps
 
   // std::shared_ptr<T> wait_and_pop() {
   //   std::unique_lock<std::mutex> lk(mut);

@@ -2,7 +2,7 @@
 
 #include "util/common.h"
 
-namespace PS {
+namespace ps {
 class Bitmap;
 typedef std::shared_ptr<Bitmap> BitmapPtr;
 
@@ -96,4 +96,4 @@ class Bitmap {
 
 };
 
-} // namespace PS
+} // namespace ps

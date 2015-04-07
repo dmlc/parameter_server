@@ -1,5 +1,5 @@
 #pragma once
-namespace PS {
+namespace ps {
 
 void textToProto() {
   // TODO
@@ -38,4 +38,4 @@ void textToProto() {
   // }
 }
 
-} // namespace PS
+} // namespace ps

@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include "util/file.h"
-namespace PS {
+namespace ps {
 
 namespace {
 static const int kMagicNumber = 0x3ed7230a;
@@ -76,4 +76,4 @@ class RecordReader {
   File* file_;
 };
 
-}  // namespace PS
+}  // namespace ps

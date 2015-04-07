@@ -1,4 +1,4 @@
-namespace PS {
+namespace ps {
 
 // DISALLOW_COPY_AND_ASSIGN disallows the copy and operator= functions.
 // It goes in the private: declarations in a class.
@@ -12,4 +12,4 @@ namespace PS {
     return e;                                  \
   }
 
-} // namespace PS
+} // namespace ps

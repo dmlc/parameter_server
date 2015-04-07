@@ -1,6 +1,6 @@
 #include "system/assigner.h"
 #include "data/common.h"
-namespace PS {
+namespace ps {
 
 void DataAssigner::set(const DataConfig& data, int num) {
   // search all files
@@ -31,4 +31,4 @@ bool DataAssigner::next(DataConfig *data) {
   return true;
 }
 
-} // namespace PS
+} // namespace ps

@@ -1,7 +1,7 @@
 #include "system/executor.h"
 #include "system/customer.h"
 #include <thread>
-namespace PS {
+namespace ps {
 
 Executor::Executor(Customer& obj) : obj_(obj), sys_(Postoffice::instance()) {
   my_node_ = Postoffice::instance().manager().van().my_node();
@@ -374,4 +374,4 @@ void Executor::AddNode(const Node& node) {
   }
 }
 
-} // namespace PS
+} // namespace ps

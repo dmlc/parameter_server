@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "data/proto/example.pb.h"
 #include "data/proto/data.pb.h"
-namespace PS {
+namespace ps {
 
 // parse an example from various text formats into the protobuf format,
 // e.g. proto/example.proto

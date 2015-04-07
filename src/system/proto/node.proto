@@ -1,4 +1,4 @@
-package PS;
+package ps;
 import "util/proto/range.proto";
 
 message Node {

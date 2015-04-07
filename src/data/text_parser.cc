@@ -3,7 +3,7 @@
 #include "util/strtonum.h"
 #include "util/murmurhash3.h"
 
-namespace PS {
+namespace ps {
 
 // TODO better name,
 DEFINE_bool(shuffle_fea_id, false,

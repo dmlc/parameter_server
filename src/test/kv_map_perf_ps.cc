@@ -7,7 +7,7 @@
 #include "parameter/kv_vector.h"
 #include "util/shared_array_inl.h"
 #include "util/resource_usage.h"
-namespace PS {
+namespace ps {
 DEFINE_int32(n, 10, "repeat n times");
 
 typedef uint64 K;  // key
@@ -65,7 +65,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

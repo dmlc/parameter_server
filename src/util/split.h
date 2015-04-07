@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
 
-namespace PS {
+namespace ps {
 
 // split a std::string using a character delimiter. if skip_empty == true,
 // split("one:two::three", ':'); will return 4 items
@@ -27,4 +27,4 @@ inline std::string join(const std::vector<std::string> &elems, const string& del
   return str;
 }
 
-} // namespace PS
+} // namespace ps

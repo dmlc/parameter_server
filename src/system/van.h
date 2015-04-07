@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "system/proto/node.pb.h"
 #include "system/message.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief Van sends (receives) packages to (from) a node The current
@@ -71,4 +71,4 @@ class Van {
   int num_call_ = 0;
 };
 
-} // namespace PS
+} // namespace ps

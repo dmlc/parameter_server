@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "util/matrix.h"
 #include "app/linear_method/proto/linear.pb.h"
-namespace PS {
+namespace ps {
 namespace LM {
 
 /**
@@ -91,7 +91,7 @@ Penalty<T>* createPenalty(const PenaltyConfig& conf) {
 }
 
 } // namespace LM
-} // namespace PS
+} // namespace ps
 
 // // lambda * ||w||_p^P = lambda * \sum_i w_i^p
 // // TODO infinity

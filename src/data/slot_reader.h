@@ -2,7 +2,7 @@
 #include "util/shared_array_inl.h"
 #include "proto/example.pb.h"
 #include "data/common.h"
-namespace PS {
+namespace ps {
 
 // read all slots in *data* with multithreadd, save them into *cache*.
 class SlotReader {
@@ -62,4 +62,4 @@ template<typename V> SArray<V> SlotReader::value(int slot_id) const {
   return val;
 }
 
-} // namespace PS
+} // namespace ps

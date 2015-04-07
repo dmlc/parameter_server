@@ -2,7 +2,7 @@
 
 #include "util/matrix.h"
 
-namespace PS {
+namespace ps {
 
 template<typename V>
 class DenseMatrix : public Matrix<V> {
@@ -105,4 +105,4 @@ MatrixPtr<V> DenseMatrix<V>::alterStorage() const {
 
 
 
-} // namespace PS
+} // namespace ps

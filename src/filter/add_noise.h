@@ -1,6 +1,6 @@
 #pragma once
 #include "filter/filter.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief Add noise
@@ -37,4 +37,4 @@ class AddNoiseFilter : public Filter {
 
 };
 
-}  // namespace PS
+}  // namespace ps

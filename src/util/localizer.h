@@ -5,7 +5,7 @@
 #include "data/slot_reader.h"
 #include "util/crc32c.h"
 #include <limits>
-namespace PS {
+namespace ps {
 
 /**
  * @brief Mapping a sparse matrix with general indices into continuous indices
@@ -220,4 +220,4 @@ MatrixPtr<V> Localizer<I, V>::RemapIndex(
   return MatrixPtr<V>(new SparseMatrix<uint32, V>(new_info, new_offset, new_index, new_value));
 }
 
-} // namespace PS
+} // namespace ps

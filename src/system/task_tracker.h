@@ -5,7 +5,7 @@
 #include <set>
 #include "glog/logging.h"
 
-namespace PS {
+namespace ps {
 
 // track a task by using its timestamp, thread safe
 class TaskTracker {
@@ -54,4 +54,4 @@ class TaskTracker {
   std::map<int, bool> task_;
 };
 
-} // namespace PS
+} // namespace ps

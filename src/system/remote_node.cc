@@ -2,7 +2,7 @@
 #include "system/customer.h"
 #include "util/crc32c.h"
 #include "util/shared_array_inl.h"
-namespace PS {
+namespace ps {
 
 Filter* RemoteNode::FindFilterOrCreate(const FilterConfig& conf) {
   int id = conf.type();
@@ -55,4 +55,4 @@ void RemoteNode::RemoveGroupNode(RemoteNode* rnode) {
   }
 }
 
-} // namespace PS
+} // namespace ps

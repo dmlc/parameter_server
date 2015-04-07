@@ -1,4 +1,4 @@
-package PS;
+package ps;
 import "data/proto/data.proto";
 
 message Workload {

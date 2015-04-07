@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "data/stream_reader.h"
 
-using namespace PS;
+using namespace ps;
 
 // TEST(StreamReader, read_proto) {
 //   DataConfig dc;

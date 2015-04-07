@@ -3,7 +3,7 @@
 #include "parameter/parameter.h"
 #include "util/parallel_ordered_match.h"
 #include "filter/frequency_filter.h"
-namespace PS {
+namespace ps {
 // TODO doc, and filter
 /**
  * @brief Key-value vectors.
@@ -261,4 +261,4 @@ int KVVector<K,V>::Pull(const Task& request, const SArray<K>& keys,
   return Pull(&pull);
 }
 
-}  // namespace PS
+}  // namespace ps

@@ -2,7 +2,7 @@
 #include "data/common.h"
 #include "util/file.h"
 
-namespace PS {
+namespace ps {
 
 DEFINE_string(input, "stdin", "stdin or a filename");
 DEFINE_string(output, "stdout", "stdout or a filename");
@@ -180,7 +180,7 @@ DataConfig shuffleFiles(const DataConfig& data) {
   return ret;
 }
 
-} // namespace PS
+} // namespace ps
 
 
 

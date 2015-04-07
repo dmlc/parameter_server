@@ -1,7 +1,7 @@
 #include "system/dashboard.h"
 #include <iomanip>
 
-namespace PS {
+namespace ps {
 
 bool NodeIDCmp::operator()(const NodeID& a, const NodeID& b) {
   string a_primary, a_secondary;
@@ -127,4 +127,4 @@ string Dashboard::report(const NodeID& node, const HeartbeatReport& report) {
   return ss.str();
 }
 
-} // namespace PS
+} // namespace ps

@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace PS {
+namespace ps {
 namespace crc32c {
 
 // Return the crc32c of concat(A, data[0,n-1]) where init_crc is the

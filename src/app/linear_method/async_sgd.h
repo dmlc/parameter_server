@@ -13,7 +13,7 @@
 #include "app/linear_method/proto/linear.pb.h"
 #include "app/linear_method/loss.h"
 #include "app/linear_method/penalty.h"
-namespace PS {
+namespace ps {
 namespace LM {
 
 /**
@@ -308,4 +308,4 @@ private:
 };
 
 } // namespace LM
-} // namespace PS
+} // namespace ps

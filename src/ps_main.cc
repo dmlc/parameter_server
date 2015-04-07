@@ -1,5 +1,5 @@
 #include "ps.h"
-namespace PS {
+namespace ps {
 
 App* App::Create(const string& conf) {
   auto my_role = MyNode().role();
@@ -8,14 +8,14 @@ App* App::Create(const string& conf) {
   }
   return new App();
 }
-} // namespace PS
+} // namespace ps
 
 int main(int argc, char *argv[]) {
-  auto& sys = PS::Postoffice::instance();
+  auto& sys = ps::Postoffice::instance();
   sys.Run(&argc, &argv);
 
   int ret = 0;
-  if (PS::MyNode().role() == PS::Node::WORKER) {
+  if (ps::MyNode().role() == ps::Node::WORKER) {
     ret = WorkerNodeMain(argc, argv);
   }
 

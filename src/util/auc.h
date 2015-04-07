@@ -2,7 +2,7 @@
 #include "util/shared_array.h"
 // #include "util/proto/evaluation.pb.h"
 
-namespace PS {
+namespace ps {
 
 // distributed auc
 class AUC {
@@ -102,4 +102,4 @@ class AUC {
 
 };
 
-} // namespace PS
+} // namespace ps

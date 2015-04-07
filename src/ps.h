@@ -14,7 +14,7 @@
 // but file is a commandline argument
 int WorkerNodeMain(int argc, char *argv[]);
 
-namespace PS {
+namespace ps {
 
 // Return an instance of a server node. This node is started with "-app_file
 // app.conf -app_conf 'key: value'", then conf has both the content of file "app.conf"
@@ -56,20 +56,20 @@ inline int RankSize() {
 
 // Wait until all FLAGS_num_servers servers are ready.
 inline void WaitServersReady() {
-  PS::Postoffice::instance().manager().WaitServersReady();
+  ps::Postoffice::instance().manager().WaitServersReady();
 }
 
 // Wait until all FLAGS_num_workers workers are ready.
 inline void WaitWorkersReady() {
-  PS::Postoffice::instance().manager().WaitWorkersReady();
+  ps::Postoffice::instance().manager().WaitWorkersReady();
 }
 
 inline void StartSystem(int argc, char *argv[]) {
-  PS::Postoffice::instance().Run(&argc, &argv);
+  ps::Postoffice::instance().Run(&argc, &argv);
 }
 
 inline void StopSystem() {
-  PS::Postoffice::instance().Stop();
+  ps::Postoffice::instance().Stop();
 }
 
 inline int RunSystem(int argc, char *argv[]) {
@@ -77,4 +77,4 @@ inline int RunSystem(int argc, char *argv[]) {
   return 0;
 }
 
-} // namespace PS
+} // namespace ps

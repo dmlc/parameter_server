@@ -1,6 +1,6 @@
 #pragma once
 #include "app/linear_method/proto/linear.pb.h"
-namespace PS {
+namespace ps {
 namespace LM {
 
 template <typename V>
@@ -30,4 +30,4 @@ class LearningRate {
 
 
 } // namespace LM
-} // namespace PS
+} // namespace ps

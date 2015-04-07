@@ -4,7 +4,7 @@
 #include <random>
 #include "snappy.h"
 
-namespace PS {
+namespace ps {
 
 // static double sarray_time;
 template <typename V>
@@ -262,7 +262,7 @@ void SArray<V>::append(const SArray<V>& arr) {
   memcpy(data_+orig_size, arr.data(), arr.size()*sizeof(V));
 }
 
-} // namespace PS
+} // namespace ps
 
   // zlib version
   // unsigned long dsize = size_ + (size_ * 0.1f) + 16;  // NOLINT

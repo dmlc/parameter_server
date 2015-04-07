@@ -12,7 +12,7 @@
 #include "util/macros.h"
 #include "util/barrier.h"
 
-namespace PS {
+namespace ps {
 
 class ThreadPool {
  public:

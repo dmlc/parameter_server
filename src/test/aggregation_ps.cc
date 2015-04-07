@@ -1,5 +1,5 @@
 #include "ps.h"
-namespace PS {
+namespace ps {
 
 DEFINE_int32(n, 100, "# of aggregation");
 DEFINE_int32(interval, 100000, "time (usec) between two aggregation");
@@ -35,7 +35,7 @@ App* App::Create(const std::string& conf) {
   return new App();
 }
 
-}  // namespace PS
+}  // namespace ps
 
 int main(int argc, char *argv[]) {
   return PS::RunSystem(argc, argv);

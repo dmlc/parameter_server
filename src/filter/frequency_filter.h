@@ -1,7 +1,7 @@
 #pragma once
 #include "util/countmin.h"
 #include "util/shared_array_inl.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief Filters infrequent keys via the countmin sketch

@@ -2,7 +2,7 @@
 #include "system/message.h"
 #include "system/proto/heartbeat.pb.h"
 
-namespace PS {
+namespace ps {
 
 struct NodeIDCmp {
   void splitNodeID(const NodeID& in, string& primary, string& secondary);
@@ -21,4 +21,4 @@ class Dashboard {
   std::map<NodeID, HeartbeatReport, NodeIDCmp> data_;
 };
 
-} // namespace PS
+} // namespace ps

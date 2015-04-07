@@ -1,6 +1,6 @@
 #pragma once
 #include "util/sketch.h"
-namespace PS {
+namespace ps {
 
 // a blocked version, see
 // Cache-, Hash- and Space-Efficient Bloom Filters,

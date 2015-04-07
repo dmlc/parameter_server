@@ -1,7 +1,7 @@
 #pragma once
 #include "filter/filter.h"
 #include <time.h>
-namespace PS {
+namespace ps {
 
 class FixingFloatFilter : public Filter {
  public:
@@ -102,4 +102,4 @@ class FixingFloatFilter : public Filter {
   }
 };
 
-} // namespace PS
+} // namespace ps

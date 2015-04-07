@@ -14,7 +14,7 @@
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/io/tokenizer.h"
 
-namespace PS {
+namespace ps {
 
 class File {
  public:
@@ -124,4 +124,4 @@ string removeExtension(const string& file);
 string getPath(const string& full);
 string getFilename(const string& full);
 
-} // namespace PS
+} // namespace ps

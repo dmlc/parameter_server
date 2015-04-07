@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 #include "data/proto/data.pb.h"
 #include "parameter/proto/param.pb.h"
-namespace PS {
+namespace ps {
 
 template<typename V> class Matrix;
 /**
@@ -299,4 +299,4 @@ std::ostream& operator<<(std::ostream& os, const SArray<V>& obj) {
   return os;
 }
 
-} // namespace PS
+} // namespace ps

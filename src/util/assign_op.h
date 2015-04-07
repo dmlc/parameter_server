@@ -1,7 +1,7 @@
 #pragma once
 #include "util/proto/assign_op.pb.h"
 #include "glog/logging.h"
-namespace PS {
+namespace ps {
 // The cost of the switch is minimal. Once "op" is a constant, the compiler will
 // do optimization. see test/assign_op_test.cc
 
@@ -49,4 +49,4 @@ T& AssignOpI(T& right, const T& left, const AssignOpType& op) {
   return right;
 }
 
-}  // namespace PS
+}  // namespace ps

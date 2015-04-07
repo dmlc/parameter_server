@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "util/localizer.h"
 
-using namespace PS;
+using namespace ps;
 
 TEST(Localizer, RCV1) {
   DataConfig cache, dc;

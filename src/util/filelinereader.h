@@ -7,7 +7,7 @@
 
 #include "util/file.h"
 
-namespace PS {
+namespace ps {
 
 // The FileLineReader class will read a text file specified by
 // 'filename' line by line.  Each line will be cleaned with respect to
@@ -39,4 +39,4 @@ class FileLineReader {
   bool loaded_successfully_;
 };
 
-}  // namespace PS
+}  // namespace ps

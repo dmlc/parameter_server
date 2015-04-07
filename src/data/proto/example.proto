@@ -1,4 +1,4 @@
-package PS;
+package ps;
 message SlotInfo {
   enum Format {
     DENSE = 1;

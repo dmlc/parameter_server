@@ -47,7 +47,7 @@
 
 //const int MAX_NUM_LEN = 1000;
 
-namespace PS {
+namespace ps {
 
 // uint64 is the default key size. We can change it into uint32 to reduce the
 // spaces for storing the keys. Howerver, if we want a larger key size, say
@@ -93,7 +93,7 @@ inline string dbstr(const V* data, int n, int m = 5) {
             __FILE__+n+1, __LINE__, ##args);                            \
 } while (0)
 
-} // namespace PS
+} // namespace ps
 
 
 // basename(__FILE__)

@@ -4,7 +4,7 @@
 #include "system/postoffice.h"
 #include "system/executor.h"
 
-namespace PS {
+namespace ps {
 /**
  * \brief The base class of a shared object, such as an application or shared parameters.
  *
@@ -278,4 +278,4 @@ class App : public Customer {
 };
 
 
-}  // namespace PS
+}  // namespace ps

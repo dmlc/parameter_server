@@ -2,11 +2,11 @@
 #include "util/parallel_ordered_match.h"
 #include "util/shared_array_inl.h"
 
-using namespace PS;
-namespace PS {
+using namespace ps;
+namespace ps {
 DEFINE_int32(num_threads, 2, "");
 DEFINE_int32(k, 1, "k");
-}  // namespace PS
+}  // namespace ps
 
 
 class PMatchTest : public ::testing::Test {

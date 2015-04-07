@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace PS {
+namespace ps {
 
 // information of local machine, works on linux (probably some also work for mac)
 class LocalMachine {
@@ -132,4 +132,4 @@ class LocalMachine {
   }
 };
 
-} // namespace PS
+} // namespace ps

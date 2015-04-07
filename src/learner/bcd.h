@@ -9,7 +9,7 @@
 #include "data/common.h"
 #include "util/localizer.h"
 #include "parameter/kv_vector.h"
-namespace PS {
+namespace ps {
 
 /**
  * @brief The scheduler.
@@ -409,7 +409,7 @@ class BCDWorker : public BCDCompNode<V> {
   USING_BCD_COMP_NODE;
 };
 
-} // namespace PS
+} // namespace ps
 
   // bool DataCache(const string& name, bool load) {
     // // load / save label

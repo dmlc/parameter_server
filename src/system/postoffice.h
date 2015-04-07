@@ -4,7 +4,7 @@
 #include "util/threadsafe_queue.h"
 #include "system/manager.h"
 #include "system/heartbeat_info.h"
-namespace PS {
+namespace ps {
 
 class Postoffice {
  public:
@@ -51,4 +51,4 @@ class Postoffice {
   DISALLOW_COPY_AND_ASSIGN(Postoffice);
 };
 
-} // namespace PS
+} // namespace ps

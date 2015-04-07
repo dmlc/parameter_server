@@ -5,7 +5,7 @@
 #include <memory>
 #include "util/common.h"
 
-namespace PS {
+namespace ps {
 
 template<typename T>
 class ThreadsafeLimitedQueue {
@@ -70,4 +70,4 @@ class ThreadsafeLimitedQueue {
   std::queue<std::pair<T, size_t> > queue_;
   std::condition_variable empty_cond_, full_cond_;
 };
-} // namespace PS
+} // namespace ps

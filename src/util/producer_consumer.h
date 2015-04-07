@@ -1,7 +1,7 @@
 #pragma once
 #include "util/threadsafe_limited_queue.h"
 #include "util/common.h"
-namespace PS {
+namespace ps {
 
 template<class V>
 class ProducerConsumer {
@@ -51,4 +51,4 @@ class ProducerConsumer {
   std::thread producer_thr_;
   std::thread consumer_thr_;
 };
-} // namespace PS
+} // namespace ps

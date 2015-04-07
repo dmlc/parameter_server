@@ -4,7 +4,7 @@
 #include "filter/fixing_float.h"
 #include "filter/add_noise.h"
 
-namespace PS {
+namespace ps {
 
 Filter* Filter::create(const FilterConfig& conf) {
   switch (conf.type()) {
@@ -30,4 +30,4 @@ FilterConfig* Filter::find(FilterConfig::Type type, Task* task) {
   return nullptr;
 }
 
-} // namespace PS
+} // namespace ps

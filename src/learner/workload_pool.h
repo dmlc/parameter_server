@@ -2,7 +2,7 @@
 #include "util/common.h"
 #include "system/message.h"
 #include "learner/proto/workload.pb.h"
-namespace PS {
+namespace ps {
 
 // the base class of a workload pool. thread safe
 class WorkloadPool {
@@ -38,4 +38,4 @@ class WorkloadPool {
   std::mutex mu_;
 };
 
-} // namespace PS
+} // namespace ps

@@ -1,5 +1,5 @@
 // configuration of linear methods
-package PS.LM;
+package ps.LM;
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
 import "filter/proto/filter.proto";

@@ -4,7 +4,7 @@
 #include "app/linear_method/proto/linear.pb.h"
 #include <Eigen/Dense>
 
-namespace PS {
+namespace ps {
 namespace LM {
 
 template<typename T> class Loss {
@@ -129,4 +129,4 @@ static LossPtr<T> createLoss(const LossConfig& config) {
 }
 
 } // namespace LM
-} // namespace PS
+} // namespace ps

@@ -4,7 +4,7 @@
 #include "util/recordio.h"
 #include "util/threadpool.h"
 #include "util/filelinereader.h"
-namespace PS {
+namespace ps {
 
 void SlotReader::Init(const DataConfig& data, const DataConfig& cache) {
   // if (cache.file_size()) dump_to_disk_ = true;
@@ -190,4 +190,4 @@ SArray<size_t> SlotReader::offset(int slot_id) {
   return os;
 }
 
-} // namespace PS
+} // namespace ps

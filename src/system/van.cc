@@ -5,7 +5,7 @@
 #include "util/shared_array_inl.h"
 #include "system/manager.h"
 #include "system/postoffice.h"
-namespace PS {
+namespace ps {
 
 DEFINE_int32(bind_to, 0, "binding port");
 DEFINE_bool(local, false, "run in local");
@@ -328,7 +328,7 @@ void Van::Monitor() {
   VLOG(1) << "monitor stopped.";
 }
 
-} // namespace PS
+} // namespace ps
 
 
 // check whether I could connect to a specified node

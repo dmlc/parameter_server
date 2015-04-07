@@ -1,6 +1,6 @@
 #include "learner/workload_pool.h"
 #include "data/common.h"
-namespace PS {
+namespace ps {
 
 void WorkloadPool::set(const Workload& load) {
   VLOG(1) << "init workload " << load.ShortDebugString();
@@ -74,4 +74,4 @@ void WorkloadPool::waitUtilDone() {
   VLOG(1) << "all workloads are done";
 }
 
-} // namespace PS
+} // namespace ps

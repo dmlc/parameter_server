@@ -3,7 +3,7 @@
 #include "util/range.h"
 #include "system/proto/node.pb.h"
 #include "data/proto/data.pb.h"
-namespace PS {
+namespace ps {
 
 // assign *node* with proper rank_id, key_range, etc..
 class NodeAssigner {
@@ -54,4 +54,4 @@ class DataAssigner {
   int cur_i_ = 0;
 };
 
-} // namespace PS
+} // namespace ps

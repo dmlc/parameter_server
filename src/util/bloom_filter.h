@@ -1,6 +1,6 @@
 #pragma once
 #include "util/sketch.h"
-namespace PS {
+namespace ps {
 
 template <typename K>
 class BloomFilter : public Sketch {
@@ -45,4 +45,4 @@ class BloomFilter : public Sketch {
   uint32 m_ = 0;
   int k_ = 0;
 };
-} // namespace PS
+} // namespace ps

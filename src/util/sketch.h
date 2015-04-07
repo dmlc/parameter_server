@@ -1,7 +1,7 @@
 #pragma once
 #include "util/common.h"
 // #include <nmmintrin.h>
-namespace PS {
+namespace ps {
 
 // the basc class for bloom filters, countmin, etc...
 class Sketch {
@@ -32,4 +32,4 @@ class Sketch {
     return h;
   }
 };
-} // namespace PS
+} // namespace ps

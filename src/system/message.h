@@ -3,7 +3,7 @@
 #include "util/shared_array.h"
 #include "system/proto/task.pb.h"
 #include "filter/proto/filter.pb.h"
-namespace PS {
+namespace ps {
 
 // The message communicated between nodes. It conntains all argument and data
 // a request or a response needed.
@@ -146,7 +146,7 @@ template <typename K> void SliceKOFVMessage(
   }
 }
 
-} // namespace PS
+} // namespace ps
 
 // inline std::ostream& operator<<(std::ostream& os, const Message& msg) {
 //   return (os << msg.ShortDebugString());

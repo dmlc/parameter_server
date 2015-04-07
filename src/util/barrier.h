@@ -5,7 +5,7 @@
 #include "util/macros.h"
 #include "glog/logging.h"
 
-namespace PS {
+namespace ps {
 
 class Barrier {
  public:
