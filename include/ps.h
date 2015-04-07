@@ -2,15 +2,13 @@
  * @file   ps.h
  * \brief  The parameter server interface
  */
-#ifndef DMLC_PS_H_
-#define DMLC_PS_H_
-#include "./base.h"
+#pragma once
 #include "./blob.h"
-namespace dmlc {
 namespace ps {
 
 /*! \brief The default type of a key */
-typedef uint64_t K;
+typedef uint64_t Key;
+static const Key kMaxKey = static_cast<uint64_t>(0xFFFFFFFFFFFFFFFF);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///
@@ -78,7 +76,7 @@ class KVCache {
    * two pairs into the parameter server:
    \code
      KVCache<float> cache(0);
-     std::vector<K> keys = {1, 3};
+     std::vector<Key> keys = {1, 3};
      std::vector<float> vals = {1.1, 1.2, 3.1, 3.2};
      cache.Push(keys, vals);
    \endcode
@@ -89,9 +87,9 @@ class KVCache {
    *
    * @return the timestamp of this request.
    */
-  int Push(const std::vector<K>& keys, const std::vector<V>& values,
+  int Push(const std::vector<Key>& keys, const std::vector<V>& values,
            const SyncOpts& opts = SyncOpts()) {
-    return Push(CBlob<K>(keys), CBlob<V>(values), opts);
+    return Push(CBlob<Key>(keys), CBlob<V>(values), opts);
   }
 
   /*!
@@ -110,15 +108,15 @@ class KVCache {
    * vector value. We then can pull the newest value from the parameter server:
    \code
      KVCache<float> cache(0);
-     std::vector<K> keys = {1, 3};
+     std::vector<Key> keys = {1, 3};
      std::vector<float> vals(4);
      cache.Pull(keys, &vals);
    \endcode
    * @return the timestamp of this request
    */
-  int Pull(const std::vector<K>& keys, std::vector<V>* values,
+  int Pull(const std::vector<Key>& keys, std::vector<V>* values,
            const SyncOpts& opts = SyncOpts()) {
-    return Pull(CBlob<K>(keys), Blob<V>(*values), opts);
+    return Pull(CBlob<Key>(keys), Blob<V>(*values), opts);
   }
 
   /*!
@@ -135,14 +133,14 @@ class KVCache {
 
   /*! \brief Blob style Push and Pull */
 
-  int Push(CBlob<K> keys, CBlob<V> values, const SyncOpts& opts = SyncOpts());
-  int Pull(CBlob<K> keys, Blob<V> values, const SyncOpts& opts = SyncOpts());
+  int Push(CBlob<Key> keys, CBlob<V> values, const SyncOpts& opts = SyncOpts());
+  int Pull(CBlob<Key> keys, Blob<V> values, const SyncOpts& opts = SyncOpts());
 
   /*! \brief More advanced Push and Pull by using shared blob */
 
-  int Push(const SBlob<K>& keys, const SBlob<V>& values,
+  int Push(const SBlob<Key>& keys, const SBlob<V>& values,
            const SyncOpts& opts = SyncOpts());
-  int Pull(const SBlob<K>& keys, SBlob<V>* values,
+  int Pull(const SBlob<Key>& keys, SBlob<V>* values,
            const SyncOpts& opts = SyncOpts());
 
   /*!
@@ -281,12 +279,7 @@ bool IsSchedulerNode() {return true;  }
 /*! \brief The global unique string ID of this node */
 std::string MyNodeID() { return std::string(); }
 
-
 }  // namespace ps
-}  // namespace dmlc
 
 /// implementation
-
-#endif  /* DMLC_PS_H_ */
-
-#include "../../src/ps/ps-inl.h"
+#include "../src/ps/ps-inl.h"

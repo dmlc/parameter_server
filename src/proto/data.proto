@@ -1,5 +1,5 @@
-package ps;
-import "util/proto/range.proto";
+package PS;
+import "proto/range.proto";
 
 message DataConfig {
   enum DataFormat {

@@ -1,6 +1,6 @@
 #pragma once
 #include "util/common.h"
-#include "system/proto/task.pb.h"
+#include "proto/task.pb.h"
 #include "system/van.h"
 #include "system/postoffice.h"
 #include "filter/filter.h"
@@ -23,7 +23,7 @@ class RequestTracker {
   // Mark timestamp "ts" as finished.
   void Finish(int ts) {
     CHECK_GE(ts, 0);
-    CHECK_LT(ts, 1000000);
+    CHECK_LT(ts, 100000000);
     if ((int)data_.size() <= ts) data_.resize(ts*2+5);
     data_[ts] = true;
   }

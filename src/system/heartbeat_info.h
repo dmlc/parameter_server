@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/proto/heartbeat.pb.h"
+#include "proto/heartbeat.pb.h"
 #include "util/resource_usage.h"
 #include "util/common.h"
 

@@ -3,19 +3,20 @@
  * \brief  Blob is a simple structure that contains a length and a pointer to an
  * external array,
  */
-#ifndef DMCL_BLOB_H_
-#define DMLC_BLOB_H_
+#pragma once
 #include <string>
 #include <vector>
 #include <memory>
 #include <string>
-#include "logging.h"
+
 #if DMLC_USE_EIGEN
 #include "Eigen/src/Core/Map.h"
 #include "Eigen/src/Core/Array.h"
 #endif  // DMLC_USE_EIGEN
 
-namespace dmlc {
+#include "glog/logging.h"
+
+namespace ps {
 
 /*!
  * \brief Blob, Binary Large OBject, is a simple structure containing a pointer
@@ -131,7 +132,7 @@ class SBlob {
   T& operator[](size_t i) const { return data_.get()[i]; }
   T* data() const { return data_.get(); }
 
-size_t size() { return size_; }
+  size_t size() { return size_; }
   std::string ShortDebugString() {
     return std::string();
   }
@@ -145,5 +146,5 @@ size_t size() { return size_; }
 // TODO slice itself Segment(int pos, int
 // TODO a mutable slice?
 
-}  // namespace dmlc
+}  // namespace ps
 #endif  // DMLC_BLOB_H_
