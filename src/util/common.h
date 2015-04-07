@@ -38,12 +38,13 @@
 
 // util
 #include "util/macros.h"
-#include "util/integral_types.h"
 #include "util/resource_usage.h"
 
 // base
 #include <google/protobuf/stubs/common.h>
 #include "google/protobuf/text_format.h"
+
+#include "ps/base.h"
 
 //const int MAX_NUM_LEN = 1000;
 
@@ -53,8 +54,8 @@ namespace ps {
 // spaces for storing the keys. Howerver, if we want a larger key size, say
 // uint128, we need to change proto/range.proto to string type, because uint64
 // is the largest integer type supported by protobuf
-typedef uint64 Key;
-static const Key kMaxKey = kuint64max;
+// typedef uint64 Key;
+// static const Key kMaxKey = kuint64max;
 
 typedef std::string NodeID;
 

@@ -3,12 +3,9 @@
  * \brief  The parameter server interface
  */
 #pragma once
-#include "./blob.h"
+#include "ps/base.h"
+#include "ps/blob.h"
 namespace ps {
-
-/*! \brief The default type of a key */
-typedef uint64_t Key;
-static const Key kMaxKey = static_cast<uint64_t>(0xFFFFFFFFFFFFFFFF);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///
@@ -44,6 +41,17 @@ struct SyncOpts {
    * Wait(ts) returns or the callback is called.
    */
   bool zero_copy = false;
+
+  /**
+   * \brief The keys are small integers. One can either set it to be true, or
+   * set a proper -max_key flag to avoid all data goes to one or a few servers.
+   */
+  bool small_keys = false;
+
+  /**
+   * \brief the value length is dynamic.
+   */
+  bool dynamic_value = false;
 };
 
 /*!
@@ -52,14 +60,14 @@ struct SyncOpts {
  * @tparam V the type of value
  */
 template<typename V>
-class KVCache {
+class KVWorker {
  public:
   /**
    * @param id the unique identity which is used to find the KVStore at the
    * parameter server. Negative IDs is preserved by system.
    */
-  explicit KVCache(int id = 0);
-  ~KVCache();
+  explicit KVWorker(int id = 0);
+  ~KVWorker();
 
   /*!
    * \brief Pushes a list of key-value pairs into the parameter server
@@ -75,7 +83,7 @@ class KVCache {
    * (3.1,3.2)}, where the value is a 2-length float vector. We then can push these
    * two pairs into the parameter server:
    \code
-     KVCache<float> cache(0);
+     KVWorker<float> cache(0);
      std::vector<Key> keys = {1, 3};
      std::vector<float> vals = {1.1, 1.2, 3.1, 3.2};
      cache.Push(keys, vals);
@@ -107,7 +115,7 @@ class KVCache {
    * Sample usage: again assume each key is associated with a 2-length float
    * vector value. We then can pull the newest value from the parameter server:
    \code
-     KVCache<float> cache(0);
+     KVWorker<float> cache(0);
      std::vector<Key> keys = {1, 3};
      std::vector<float> vals(4);
      cache.Pull(keys, &vals);
@@ -205,7 +213,7 @@ class IHandle {
 };
 
 
-#define DYNAMIC_LEN -1
+static const int kDynamicValue = -1;
 
 /*!
  * \brief key-value store for server nodes
@@ -216,9 +224,8 @@ class IHandle {
  * local. It could be a dynamic length DYNAMIC_LEN
  * @tparam sync_val_len the length of value will be synchronized
  */
-template <typename V, typename Handle = IHandle<V>,
-          int val_len = 1, int sync_val_len = 1>
-class KVStore {
+template <typename V, typename Handle = IHandle<V>, int val_len = 1>
+class KVServer {
  public:
   /**
    * \brief Process key-value pairs in online or batch style
@@ -247,39 +254,89 @@ class KVStore {
    *  initializer, see comments below
    * @param id the unique identity. Negative IDs is preserved by system.
    */
-  KVStore(int id = 0, Type type = ONLINE) { }
-  ~KVStore() { }
+  KVServer(int id = 0, Type type = ONLINE) { }
+  ~KVServer() { }
 
+  void set_sync_val_len(int len) { sync_val_len_ = len; }
   Handle& handle() { return handle_; }
+
   void Run() { }
  private:
   Handle handle_;
+  int sync_val_len_ = val_len;
 };
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                            Scheduler Node APIs                          ///
 ///////////////////////////////////////////////////////////////////////////////
 // TODO
+}  // namespace ps
+
+/// implementation
+#include "ps/ps-inl.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                            More Advanced APIs                           ///
 ///////////////////////////////////////////////////////////////////////////////
-/// ///
+#include "system/customer.h"
+namespace ps {
 
-/*! \brief Return true if this node is a worker node. */
-bool IsWorkerNode() { return true; }
-
-/*! \brief Return true if this node is a server node. */
-bool IsServerNode() { return true; }
-
-/*! \brief Return true if this node is a scheduler node. */
-bool IsSchedulerNode() {return true;  }
+// The app this node runs
+inline App* MyApp() { return Postoffice::instance().manager().app(); }
 
 /*! \brief The global unique string ID of this node */
-std::string MyNodeID() { return std::string(); }
+inline Node MyNode() { return Postoffice::instance().manager().van().my_node(); }
+// Each unique string id of my node
+inline std::string MyNodeID() { return MyNode().id(); }
+/*! \brief Return true if this node is a worker node. */
+inline int IsWorkerNode() { return MyNode().role() == Node::WORKER; }
+/*! \brief Return true if this node is a server node. */
+inline int IsServerNode() { return MyNode().role() == Node::SERVER; }
+/*! \brief Return true if this node is a scheduler node. */
+inline int IsSchedulerNode() { return MyNode().role() == Node::SCHEDULER; }
+
+inline Range<Key> MyKeyRange() { return Range<Key>(MyNode().key()); }
+inline std::string SchedulerID() {
+  return Postoffice::instance().manager().van().scheduler().id();
+}
+
+inline int NextCustomerID() {
+  return Postoffice::instance().manager().NextCustomerID();
+}
+
+// The rank ID of this node in its group. Assume this a worker node in a worker
+// group with N workers. Then this node will be assigned an unique ID from 0,
+// ..., N. Similarly for server and scheduler.
+inline int MyRank() { return MyNode().rank(); }
+// Total nodes in this node group.
+inline int RankSize() {
+  auto& mng = Postoffice::instance().manager();
+  return IsWorkerNode() ? mng.num_workers() : (IsServerNode() ? mng.num_servers() : 1);
+}
+
+// Wait until all FLAGS_num_servers servers are ready.
+inline void WaitServersReady() {
+  ps::Postoffice::instance().manager().WaitServersReady();
+}
+
+// Wait until all FLAGS_num_workers workers are ready.
+inline void WaitWorkersReady() {
+  ps::Postoffice::instance().manager().WaitWorkersReady();
+}
+
+inline void StartSystem(int argc, char *argv[]) {
+  ps::Postoffice::instance().Run(&argc, &argv);
+}
+
+inline void StopSystem() {
+  ps::Postoffice::instance().Stop();
+}
+
+inline int RunSystem(int argc, char *argv[]) {
+  StartSystem(argc, argv); StopSystem();
+  return 0;
+}
 
 }  // namespace ps
-
-/// implementation
-#include "../src/ps/ps-inl.h"

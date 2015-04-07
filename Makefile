@@ -17,7 +17,7 @@ THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
 endif
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
-INCPATH = -I./src -I$(THIRD_PATH)/include
+INCPATH = -I./src -I./include -I$(THIRD_PATH)/include
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) $(EXTRA_CFLAGS)
 ifeq ($(USE_S3), 1)
 CFLAGS += -DUSE_S3=1
@@ -46,7 +46,6 @@ build/libps.a: $(patsubst %.proto, %.pb.h, $(ps_protos)) $(ps_objs)
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
 
-# general rules
 build/%.o: src/%.cc
 	@mkdir -p $(@D)
 	$(CC) $(INCPATH) -std=c++0x -MM -MT build/$*.o $< >build/$*.d
@@ -57,4 +56,4 @@ build/%.o: src/%.cc
 
 -include build/*/*.d
 -include build/*/*/*.d
--include src/test/build.mk
+-include test/build.mk

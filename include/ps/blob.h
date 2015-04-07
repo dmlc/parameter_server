@@ -147,4 +147,3 @@ class SBlob {
 // TODO a mutable slice?
 
 }  // namespace ps
-#endif  // DMLC_BLOB_H_

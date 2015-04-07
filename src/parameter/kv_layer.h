@@ -174,7 +174,7 @@ void KVLayer<V, Updater>::GetValue(Message* msg) {
 
   CHECK_EQ(my_val.size(), kr.size());
   SArray<V> send_data(kr.size());
-  send_data.CopyFrom(my_val);  // TODO, memcpy?
+  send_data.CopyFrom(my_val);  // TODO, needs memcpy?
   msg->add_value(send_data);
 }
 

@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <string>
 #include "zlib.h"
-#include "util/integral_types.h"
 #include "util/common.h"
 #include "glog/logging.h"
 #include "proto/data.pb.h"
