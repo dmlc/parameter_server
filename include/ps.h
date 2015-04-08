@@ -5,7 +5,6 @@
 #pragma once
 #include "ps/base.h"
 #include "ps/blob.h"
-namespace ps {
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///
@@ -19,6 +18,7 @@ namespace ps {
  */
 int WorkerNodeMain(int argc, char *argv[]);
 
+namespace ps {
 /**
  * \brief Options for Push and Pull
  */
@@ -160,6 +160,7 @@ class KVWorker {
  private:
   KVCache<Key, V>* cache_;
 };
+}  // namespace ps
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                             Server node APIs                            ///
@@ -173,6 +174,7 @@ class KVWorker {
  */
 int CreateServerNode(int argc, char *argv[]);
 
+namespace ps {
 /**
  * \brief An example of user-defineable handle. See more handle examples in
  * ps_server_handle.h
@@ -191,9 +193,10 @@ class IHandle {
    * @param recv_vals the corresponding values received from the worker node
    * @param my_vals the corresponding local values
    */
-  inline void HandlePush(CBlob<V> recv_keys, CBlob<V> recv_vals,
-                         Blob<V> my_vals) {
-    LOG(FATAL) << "implement this function";
+  inline void HandlePush(CBlob<Key> recv_keys, CBlob<V> recv_vals,
+                         Blob<V>* my_vals) {
+    for (size_t i = 0; i < recv_vals.size; ++i)
+      (*my_vals)[i] += recv_vals[i];
   }
   /**
    * \brief Handle PUSH requests from worker nod
@@ -202,16 +205,17 @@ class IHandle {
    * @param my_vals the corresponding local values
    * @param sent_vals the corresponding values will send to the worker node
    */
-  inline void HandlePull(CBlob<V> recv_keys, CBlob<V> my_vals,
-                         Blob<V> send_vals) {
-    LOG(FATAL) << "implement this function";
+  inline void HandlePull(CBlob<Key> recv_keys, CBlob<V> my_vals,
+                         Blob<V>* send_vals) {
+    for (size_t i = 0; i < my_vals.size; ++i)
+      (*send_vals)[i] = my_vals[i];
   }
 
   /**
    * \brief Initialize local values
    */
-  inline void HandleInit(CBlob<V> keys, Blob<V> vals) {
-    LOG(FATAL) << "implement this function";
+  inline void HandleInit(CBlob<Key> keys, Blob<V>* vals) {
+    memset(vals->data, 0, vals->size*sizeof(V));
   }
 };
 
@@ -257,16 +261,19 @@ class KVServer {
    *  initializer, see comments below
    * @param id the unique identity. Negative IDs is preserved by system.
    */
-  KVServer(int id = 0, Type type = ONLINE) { }
+  KVServer(int id = 0, Type type = ONLINE)
+      : id_(id), type_(type), sync_val_len_(val_len) { }
   ~KVServer() { }
 
   void set_sync_val_len(int len) { sync_val_len_ = len; }
   Handle& handle() { return handle_; }
 
-  void Run() { }
+  void Run();
  private:
+  int id_;
+  Type type_;
+  int sync_val_len_;
   Handle handle_;
-  int sync_val_len_ = val_len;
 };
 
 

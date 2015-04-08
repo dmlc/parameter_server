@@ -79,7 +79,7 @@ class CBlob {
   /*! \brief Create a blob from std::vector */
   CBlob(const std::vector<T>& v) : data(v.data()), size(v.size()) { }
 
-  T operator[] (size_t n) const {
+  T& operator[] (size_t n) const {
     CHECK_LT(n, size);
     return data[n];
   }

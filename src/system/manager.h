@@ -34,6 +34,7 @@ class Manager {
   // manage customer
   Customer* customer(int id);
   void AddCustomer(Customer* obj);
+  void TransferCustomer(Customer* obj);
   void RemoveCustomer(int id);
   int NextCustomerID();
 

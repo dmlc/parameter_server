@@ -304,15 +304,21 @@ Customer* Manager::customer(int id) {
   if (it == customers_.end()) CHECK(false) << id << " does not exist";
   return it->second.first;
 }
+
 void Manager::AddCustomer(Customer* obj) {
-  CHECK_EQ(customers_.count(obj->id()), 0)
-      << obj->id() << " already exists";
+  CHECK_EQ(customers_.count(obj->id()), 0) << obj->id() << " already exists";
   customers_[obj->id()] = std::make_pair(obj, false);
   nodes_mu_.lock();
   for (const auto& it : nodes_) {
     obj->executor()->AddNode(it.second);
   }
   nodes_mu_.unlock();
+}
+
+
+void Manager::TransferCustomer(Customer* obj) {
+  CHECK_EQ(customers_.count(obj->id()), 1) << obj->id() << " dose not exist";
+  customers_[obj->id()].second = true;
 }
 
 void Manager::RemoveCustomer(int id) {
@@ -323,8 +329,8 @@ void Manager::RemoveCustomer(int id) {
 }
 
 int Manager::NextCustomerID() {
-  int id = 0;
-  for (const auto& it : customers_) id = std::max(id, it.second.first->id()+1);
+  int id = -1;
+  for (const auto& it : customers_) id = std::min(id, it.second.first->id()-1);
   return id;
 }
 

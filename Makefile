@@ -25,14 +25,14 @@ endif
 LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread # -lrt
 
 PS_LIB = build/libps.a
-PS_MAIN = build/libpsmain.a
-TEST_MAIN = build/test_main.o
+PS_MAIN = build/libps_main.a
+# TEST_MAIN = build/test_main.o
 
 clean:
 	rm -rf build
 	find . -name "*.pb.[ch]*" -delete
 
-ps: $(PS_LIB) $(PS_MAIN) $(TEST_MAIN)
+ps: $(PS_LIB) $(PS_MAIN) #$(TEST_MAIN)
 
 # PS system
 ps_srcs	= $(wildcard src/*.cc src/*/*.cc)
@@ -43,7 +43,7 @@ ps_objs	= $(patsubst src/%.proto, build/%.pb.o, $(ps_protos)) \
 build/libps.a: $(patsubst %.proto, %.pb.h, $(ps_protos)) $(ps_objs)
 	ar crv $@ $(filter %.o, $?)
 
-build/libpsmain.a: build/ps_main.o
+build/libps_main.a: build/ps_main.o
 	ar crv $@ $?
 
 build/%.o: src/%.cc
