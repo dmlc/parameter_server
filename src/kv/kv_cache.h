@@ -1,5 +1,6 @@
 #pragma once
 #include "system/customer.h"
+#include "util/parallel_ordered_match.h"
 namespace ps {
 
 template <typename K, typename V>
@@ -7,6 +8,8 @@ class KVCache : public Customer {
  public:
   KVCache(int id) : Customer(id) { }
   virtual ~KVCache() { }
+
+  /// called by users ///
 
   inline int Push(const SBlob<K>& keys,
                   const SBlob<V>& values,
@@ -36,15 +39,20 @@ class KVCache : public Customer {
     return Submit(&msg);
   }
 
+  /// called by system ///
+
   void Slice(const Message& request, const std::vector<Range<Key>>& krs,
              std::vector<Message*>* msgs) {
     SliceKOFVMessage<K>(request, krs, msgs);
   }
 
-  void SetValue(const Message* msg) {
+  void ProcessResponse(Message* msg) {
+    // only need to process pull response
+    if (msg->task.param().push()) return;
+
     // received kv
-    CHECK_EQ(msg->value.size(), 1);
     SArray<K> recv_key(msg->key);
+    CHECK_EQ(msg->value.size(), 1);
     SArray<V> recv_data(msg->value[0]);
     int k = recv_data.size() / recv_key.size();
 
@@ -60,6 +68,9 @@ class KVCache : public Customer {
 
  private:
   Task ParseOption(const SyncOpts opts) {
+    Task req; req.set_request(true);
+    req.set_time(exec_.time());
+    for (int t : opts.deps) req.add_wait_time(t);
     return Task();
   }
 

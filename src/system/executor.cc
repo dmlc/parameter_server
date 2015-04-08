@@ -110,14 +110,14 @@ int Executor::Submit(Message* msg) {
   Lock l(node_mu_);
 
   // timestamp and other flags
-  int ts = msg->task.has_time() ? msg->task.time() : time_ + 1;
+  int ts = msg->task.has_time() ? msg->task.time() : time_;
   // CHECK_LT(time_, ts) << my_node_.id() << " has a newer timestamp";
   msg->task.set_time(ts);
   msg->task.set_request(true);
   msg->task.set_customer_id(obj_.id());
 
   // store something
-  time_ = ts;
+  time_ = ts+1;
   auto& req_info = sent_reqs_[ts];
   req_info.recver = msg->recver;
   if (msg->callback) {

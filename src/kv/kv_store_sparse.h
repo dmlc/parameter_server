@@ -1,12 +1,12 @@
 #pragma once
-#include "system/customer.h"
+#include "kv/kv_store.h"
 namespace ps {
 
 template<typename K, typename V, typename Handle, int val_len>
-class KVStoreSparse : public Customer {
+class KVStoreSparse : public KVStore {
  public:
   KVStoreSparse(int id, Handle handle, int sync_val_len)
-      : Customer(id), handle_(handle), k_(sync_val_len) { }
+      : KVStore(id), handle_(handle), k_(sync_val_len) { }
   virtual ~KVStoreSparse() { }
 
   void GetValue(Message* msg) {

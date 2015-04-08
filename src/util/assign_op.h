@@ -1,5 +1,5 @@
 #pragma once
-proto/assign_op.pb.h"
+#include "proto/assign_op.pb.h"
 #include "glog/logging.h"
 namespace ps {
 // The cost of the switch is minimal. Once "op" is a constant, the compiler will
@@ -20,7 +20,7 @@ T& AssignOp(T& right, const T& left, const AssignOpType& op) {
     case AssignOpType::DIVIDE:
       right /= left; break;
     default:
-      CHECK(false) << "use AssignOpI.." ;
+      LOG(FATAL) << "use AssignOpI.." ;
   }
   return right;
 }

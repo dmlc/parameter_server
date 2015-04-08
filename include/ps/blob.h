@@ -34,10 +34,13 @@ struct Blob {
   /*! \brief Create an empty blob */
   Blob() : data(NULL), size(0) { }
 
+  /*! \brief Create a blob from a pointer */
+  Blob(T* d, size_t s) : data(d), size(s) { }
+
   /*! \brief Create a blob from std::vector */
   Blob(std::vector<T>& v) : data(v.data()), size(v.size()) { }
 
-  T operator[] (size_t n) const {
+  T& operator[] (size_t n) const {
     CHECK_LT(n, size);
     return data[n];
   }
@@ -76,10 +79,13 @@ class CBlob {
   /*! \brief Create an empty blob */
   CBlob() : data(NULL), size(0) { }
 
+  /*! \brief Create a blob from a pointer */
+  CBlob(T* d, size_t s) : data(d), size(s) { }
+
   /*! \brief Create a blob from std::vector */
   CBlob(const std::vector<T>& v) : data(v.data()), size(v.size()) { }
 
-  T& operator[] (size_t n) const {
+  T operator[] (size_t n) const {
     CHECK_LT(n, size);
     return data[n];
   }
