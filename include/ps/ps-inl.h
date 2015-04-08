@@ -35,7 +35,7 @@ int KVWorker<V>::Push(CBlob<Key> keys, CBlob<V> values, const SyncOpts& opts) {
 template<typename V>
 int KVWorker<V>::Pull(CBlob<Key> keys, Blob<V> values, const SyncOpts& opts) {
   SBlob<Key> s_keys; s_keys.CopyFrom(keys.data, keys.size);
-  SBlob<V> s_values(values.data, values.size, false);
+  SBlob<V> s_values(values.data, values.size, EmptyDeleter<V>());
   return Push(s_keys, s_values, opts);
 }
 

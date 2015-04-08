@@ -106,6 +106,11 @@ class CBlob {
 
 };
 
+
+template<typename T> struct EmptyDeleter {
+  void operator()(T* p) const { }
+};
+
 /**
  * @brief a shared blob
  *
@@ -118,24 +123,69 @@ class SBlob {
   SBlob() { }
   ~SBlob() { }
 
-  /*! @brief Create a blob with length n, values are initialized to 0 */
-  explicit SBlob(size_t n) { }
 
-  SBlob(T* data, size_t size, bool deletable = true) {
+  /*! @brief Create a blob with length n, values are initialized to 0 */
+  explicit SBlob(size_t n) {
+
+  }
+
+
+
+  SBlob(T* data, size_t size) {
+    reset(data, size);
+  }
+
+  template<typename Deleter>
+  SBlob(T* data, size_t size, Deleter d) {
+    reset(data, size, d);
+  }
+
+  void reset(T* data, size_t size) {
+    reset(data, size,  ArrayDeleter());
+  }
+
+  template<typename Deleter>
+  void reset(T* data, size_t size, Deleter d) {
+    size_ = size;
+    data_.reset(data, d);
+  }
+
+  void resize(size_t n) {
+    T* new_data = new T[n+5];
+    memcpy(new_data, data(), size() * sizeof(T));
+    reset(new_data, n);
+  }
+
+  void resize(size_t n, T init_val) {
+    resize(n);
+    if (init_val == 0) {
+      memset(data(), 0, n * sizeof(T));
+    } else {
+      for (size_t i = 0; i < size(); ++i) {
+        data()[i] = init_val;
+      }
+    }
   }
 
   template <typename V>
-  SBlob(const std::initializer_list<V>& list) { }
-
-  void CopyFrom(const T* data, size_t size) { }
-
-  Blob<T> blob() const {
-    return Blob<T>(data(), size());
+  SBlob(const std::initializer_list<V>& list) {
+    resize(list.size());
+    size_t i = 0;
+    for (V l : list) data()[i++] = l;
   }
 
-  CBlob<T> cblob() const {
-    return CBlob<T>(data(), size());
+  void CopyFrom(const T* data, size_t size) {
+    resize(size);
+    memcpy(data_.get(), data, size * sizeof(T));
   }
+
+  // Blob<T> blob() const {
+  //   return Blob<T>(data(), size());
+  // }
+
+  // CBlob<T> cblob() const {
+  //   return CBlob<T>(data(), size());
+  // }
 
   T& operator[](size_t i) const { return data_.get()[i]; }
   T* data() const { return data_.get(); }
@@ -147,6 +197,9 @@ class SBlob {
     return std::string();
   }
  private:
+  struct ArrayDeleter {
+    void operator()(T* p) const { delete [] p; }
+  };
   size_t size_ = 0;
   std::shared_ptr<T> data_;
 };
