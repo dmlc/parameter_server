@@ -54,6 +54,7 @@ struct SyncOpts {
   bool dynamic_value = false;
 };
 
+template<typename K, typename V> class KVCache;
 /*!
  * \brief key-value cache for sending (receiving) key-value pairs to (from) servers
  *
@@ -148,6 +149,7 @@ class KVWorker {
 
   int Push(const SBlob<Key>& keys, const SBlob<V>& values,
            const SyncOpts& opts = SyncOpts());
+
   int Pull(const SBlob<Key>& keys, SBlob<V>* values,
            const SyncOpts& opts = SyncOpts());
 
@@ -156,6 +158,7 @@ class KVWorker {
    */
   void IncrClock(int delta = 1);
  private:
+  KVCache<Key, V>* cache_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

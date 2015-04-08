@@ -46,14 +46,14 @@ struct Blob {
   typedef Eigen::Map<
     Eigen::Array<T, Eigen::Dynamic, 1> > EigenArrayMap;
   /*! \brief Return a size() by 1 Eigen3 Array */
-  EigenArrayMap ToEigenArray() const {
+  EigenArrayMap EigenArray() const {
     return EigenArrayMap(data, size);
   }
 
   typedef Eigen::Map<
     const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> > EigenMatrixMap;
   /*! \brief Return a size()/k by k Eigen3 Matrix */
-  EigenMatrixMap ToEigenMatrix(int k = 1) const {
+  EigenMatrixMap EigenMatrix(int k = 1) const {
     CHECK_EQ(size % k, 0);
     return EigenMatrixMap(data, size / k, k);
   }
@@ -91,14 +91,14 @@ class CBlob {
   typedef Eigen::Map<
     Eigen::Array<T, Eigen::Dynamic, 1> > EigenArrayMap;
   /*! \brief Return a size() by 1 Eigen3 Array */
-  EigenArrayMap ToEigenArray() const {
+  EigenArrayMap EigenArray() const {
     return EigenArrayMap(data, size);
   }
 
   typedef Eigen::Map<
     const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> > EigenMatrixMap;
   /*! \brief Return a size()/k by k Eigen3 Matrix */
-  EigenMatrixMap ToEigenMatrix(int k = 1) const {
+  EigenMatrixMap EigenMatrix(int k = 1) const {
     CHECK_EQ(size % k, 0);
     return EigenMatrixMap(data, size / k, k);
   }
@@ -129,11 +129,21 @@ class SBlob {
 
   void CopyFrom(const T* data, size_t size) { }
 
+  Blob<T> blob() const {
+    return Blob<T>(data(), size());
+  }
+
+  CBlob<T> cblob() const {
+    return CBlob<T>(data(), size());
+  }
+
   T& operator[](size_t i) const { return data_.get()[i]; }
   T* data() const { return data_.get(); }
 
-  size_t size() { return size_; }
-  std::string ShortDebugString() {
+  std::shared_ptr<T> shared_data() const { return data_; }
+
+  size_t size() const { return size_; }
+  std::string ShortDebugString() const {
     return std::string();
   }
  private:

@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include "ps/blob.h"
 #include "util/common.h"
 #include "util/file.h"
 #include "util/range.h"
@@ -56,6 +57,13 @@ template<typename V> class SArray {
    */
   SArray(V* data, size_t size, bool deletable = true) {
     reset(data, size, deletable);
+  }
+
+  explicit SArray(const SBlob<V>& blob) {
+    size_ = blob.size();
+    capacity_ = size_;
+    data_ = blob.data();
+    ptr_ = std::shared_ptr<char>(blob.shared_data(), (char*)blob.data());
   }
 
   /**
@@ -284,6 +292,7 @@ template<typename V> class SArray {
 
 
  private:
+  // TODO use single std::shared_ptr<V> data_;
   size_t size_ = 0;
   size_t capacity_ = 0;
   V* data_ = nullptr;

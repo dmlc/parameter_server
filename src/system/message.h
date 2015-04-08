@@ -11,7 +11,6 @@ struct Message {
  public:
   const static int kInvalidTime = -1;
   Message() { }
-  // Message(const NodeID& dest, int time = kInvalidTime, int wait_time = kInvalidTime);
   Message(const Task& tk, const NodeID& dst) : task(tk), recver(dst) { }
   explicit Message(const Task& tk) : task(tk) { }
 

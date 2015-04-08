@@ -4,18 +4,19 @@
  */
 #pragma once
 #include "ps.h"
+#include "kv/kv_cache.h"
 namespace ps {
 
 /// worker nodes
 
 template<typename V>
 KVWorker<V>::KVWorker(int id) {
-
+  cache_ = CHECK_NOTNULL((new KVCache<Key, V>(id)));
 }
 
 template<typename V>
 KVWorker<V>::~KVWorker() {
-
+  delete cache_;
 }
 
 template<typename V>
@@ -39,8 +40,7 @@ int KVWorker<V>::Pull(CBlob<Key> keys, Blob<V> values, const SyncOpts& opts) {
 template<typename V>
 int KVWorker<V>::Push(const SBlob<Key>& keys, const SBlob<V>& values,
                      const SyncOpts& opts) {
-
-  return 0;
+  return cache_->Push(keys, values, opts);
 }
 
 template<typename V>
