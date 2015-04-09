@@ -4,6 +4,7 @@
 #include "util/threadsafe_queue.h"
 #include "system/manager.h"
 #include "system/heartbeat_info.h"
+#include "system/network_usage.h"
 namespace ps {
 
 class Postoffice {
@@ -43,6 +44,7 @@ class Postoffice {
 
   Manager manager_;
   HeartbeatInfo perf_monitor_;
+  NetworkUsage network_usage_;
 
   // key: <sender, customer_id>, value: messages will be packed
   std::map<std::pair<NodeID, int>, std::vector<Message*>> pack_;

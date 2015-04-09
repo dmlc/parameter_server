@@ -20,32 +20,44 @@ Manager::~Manager() {
   delete app_;
 }
 
-void Manager::Init(char* argv0) {
-  env_.Init(argv0);
+void Manager::Init(int argc, char *argv[]) {
+  env_.Init(argv[0]);
   van_.Init();
+  argc_ = argc;
+  argv_ = argv;
+
+  app_ = App::Create("");
+  CHECK(app_ != NULL) << ": failed to create app";
 
   if (IsScheduler()) {
     if (!FLAGS_logtostderr) {
       NOTICE("Staring system. Logging into %s/%s.log.*",
-             FLAGS_log_dir.c_str(), basename(argv0));
+             FLAGS_log_dir.c_str(), basename(argv[0]));
     }
 
     node_assigner_ = new NodeAssigner(FLAGS_num_servers);
-    // create the app
-    if (!FLAGS_app_file.empty()) {
-      CHECK(readFileToString(FLAGS_app_file, &app_conf_))
-          << " failed to read conf file " << FLAGS_app_file;
-    }
-    app_conf_ += FLAGS_app_conf;
-    CreateApp(app_conf_);
+    // // create the app
+    // if (!FLAGS_app_file.empty()) {
+    //   CHECK(readFileToString(FLAGS_app_file, &app_conf_))
+    //       << " failed to read conf file " << FLAGS_app_file;
+    // }
+    // app_conf_ += FLAGS_app_conf;
+    // CreateApp();
 
     // add my node into app_
     AddNode(van_.my_node());
   } else {
-    // request the app config from the scheduler
-    Task task = NewControlTask(Control::REQUEST_APP);
+
+      // CreateApp();
+    // ask the scheduler to broadcast this node to others
+    Task task = NewControlTask(Control::REGISTER_NODE);
     *task.mutable_ctrl()->add_node() = van_.my_node();
     SendTask(van_.scheduler(), task);
+
+    // request the app config from the scheduler
+    // Task task = NewControlTask(Control::REQUEST_APP);
+    // *task.mutable_ctrl()->add_node() = van_.my_node();
+    // SendTask(van_.scheduler(), task);
   }
 }
 
@@ -88,75 +100,55 @@ void Manager::Stop() {
 bool Manager::Process(Message* msg) {
   const Task& task = msg->task;
   CHECK(task.control());
+  if (!task.request()) return true;
+  Task reply;
+  reply.set_control(true);
+  reply.set_request(false);
+  reply.set_time(task.time());
 
-  if (task.request()) {
-    Task reply;
-    reply.set_control(true);
-    reply.set_request(false);
-    reply.set_time(task.time());
-
-    CHECK(task.has_ctrl());
-    const auto& ctrl = task.ctrl();
-    switch (ctrl.cmd()) {
-      case Control::REQUEST_APP: {
-        CHECK(IsScheduler());
-        // need to connect to this node before sending reply message
-        CHECK_EQ(ctrl.node_size(), 1);
-        CHECK(van_.Connect(ctrl.node(0)));
-        reply.mutable_ctrl()->set_cmd(Control::REQUEST_APP);
-        reply.set_msg(app_conf_);
-        break;
-      }
-      case Control::REGISTER_NODE: {
-        CHECK(IsScheduler());
-        CHECK_EQ(ctrl.node_size(), 1);
-        Node sender = ctrl.node(0);
-        CHECK_NOTNULL(node_assigner_)->assign(&sender);
-        AddNode(sender);
-        break;
-      }
-      case Control::REPORT_PERF: {
-        CHECK(IsScheduler());
-        // TODO
-        break;
-      }
-      case Control::READY_TO_EXIT: {
-        CHECK(IsScheduler());
-        -- num_active_nodes_;
-        break;
-      }
-      case Control::ADD_NODE:
-      case Control::UPDATE_NODE: {
-        for (int i = 0; i < ctrl.node_size(); ++i) {
-          AddNode(ctrl.node(i));
-        } break;
-      }
-      case Control::REPLACE_NODE: {
-        // TODO
-        break;
-      }
-      case Control::REMOVE_NODE: {
-        for (int i = 0; i < ctrl.node_size(); ++i) {
-          RemoveNode(ctrl.node(i).id());
-        } break;
-      }
-      case Control::EXIT: {
-        done_ = true;
-        return false;
-      }
+  CHECK(task.has_ctrl());
+  const auto& ctrl = task.ctrl();
+  switch (ctrl.cmd()) {
+    case Control::REGISTER_NODE: {
+      CHECK(IsScheduler());
+      CHECK_EQ(ctrl.node_size(), 1);
+      CHECK(van_.Connect(ctrl.node(0)));
+      Node sender = ctrl.node(0);
+      CHECK_NOTNULL(node_assigner_)->assign(&sender);
+      AddNode(sender);
+      break;
     }
-    SendTask(msg->sender, reply);
-  } else {
-    if (!task.has_ctrl()) return true;
-    if (task.ctrl().cmd() == Control::REQUEST_APP) {
-      CHECK(task.has_msg());
-      CreateApp(task.msg());
-      // app is created, now we can ask the scheduler to broadcast this node to others
-      Task task = NewControlTask(Control::REGISTER_NODE);
-      *task.mutable_ctrl()->add_node() = van_.my_node();
-      SendTask(van_.scheduler(), task);
+    case Control::REPORT_PERF: {
+      CHECK(IsScheduler());
+      // TODO
+      break;
+    }
+    case Control::READY_TO_EXIT: {
+      CHECK(IsScheduler());
+      -- num_active_nodes_;
+      break;
+    }
+    case Control::ADD_NODE:
+    case Control::UPDATE_NODE: {
+      for (int i = 0; i < ctrl.node_size(); ++i) {
+        AddNode(ctrl.node(i));
+      } break;
+    }
+    case Control::REPLACE_NODE: {
+      // TODO
+      break;
+    }
+    case Control::REMOVE_NODE: {
+      for (int i = 0; i < ctrl.node_size(); ++i) {
+        RemoveNode(ctrl.node(i).id());
+      } break;
+    }
+    case Control::EXIT: {
+      done_ = true;
+      return false;
     }
   }
+  SendTask(msg->sender, reply);
   return true;
 }
 
@@ -281,10 +273,9 @@ void Manager::SendTask(const NodeID& recver, const Task& task) {
   Postoffice::instance().Queue(msg);
 }
 
-void Manager::CreateApp(const string& conf) {
-  app_ = App::Create(conf);
-  CHECK(app_ != NULL)
-      << ": failed to create app with conf\n" << app_conf_;
+void Manager::CreateApp() {
+  app_ = App::Create("");
+  CHECK(app_ != NULL) << ": failed to create app";
 }
 
 void Manager::WaitServersReady() {

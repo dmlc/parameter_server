@@ -15,7 +15,7 @@ class Manager {
   Manager();
   ~Manager();
 
-  void Init(char* argv0);
+  void Init(int argc, char *argv[]);
   void Run();
   void Stop();
   bool Process(Message* msg);
@@ -62,9 +62,11 @@ class Manager {
   }
 
   // the app
-  void CreateApp(const string& conf);
+  void CreateApp();
   App* app_ = nullptr;
-  string app_conf_;
+  int argc_;
+  char** argv_;
+  // string app_conf_;
   // std::promise<void> my_node_promise_;
 
   // nodes

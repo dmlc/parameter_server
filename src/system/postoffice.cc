@@ -26,7 +26,7 @@ void Postoffice::Run(int* argc, char*** argv) {
   google::InitGoogleLogging((*argv)[0]);
   google::ParseCommandLineFlags(argc, argv, true);
 
-  manager_.Init((*argv)[0]);
+  manager_.Init(*argc, *argv);
 
   if (FLAGS_report_interval > 0) {
     perf_monitor_.init(FLAGS_interface, manager_.van().my_node().hostname());

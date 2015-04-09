@@ -16,9 +16,6 @@ DECLARE_int32(num_workers);
 DECLARE_int32(num_servers);
 
 Van::~Van() {
-  Statistic();
-  LOG(INFO) << num_call_ << " " << send_time_ << " " << recv_time_;
-
   for (auto& it : senders_) zmq_close(it.second);
   zmq_close(receiver_);
   zmq_ctx_destroy(context_);
@@ -113,7 +110,6 @@ bool Van::Connect(const Node& node) {
   }
 
   senders_[id] = sender;
-  hostnames_[id] = node.hostname();
 
   VLOG(1) << "CONNECT to " << id << " [" << addr << "]";
   return true;
@@ -138,9 +134,6 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
   }
   int n = has_key + msg->value.size();
 
-  size_t data_size = 0;
-  auto tv = hwtic();
-
   // send task
   size_t task_size = msg->task.ByteSize();
   char* task_buf = new char[task_size+5];
@@ -159,7 +152,7 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
                  << "] errno: " << zmq_strerror(errno);
     return false;
   }
-  data_size += task_size;
+  *send_bytes += task_size;
 
   // send data
   for (int i = 0; i < n; ++i) {
@@ -175,23 +168,14 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
                    << "] errno: " << zmq_strerror(errno);
       return false;
     }
-    data_size += data->size();
+    *send_bytes += data->size();
   }
-  send_time_ += hwtoc(tv);
 
-  // statistics
-  *send_bytes += data_size;
-  if (hostnames_[id] == my_node_.hostname()) {
-    sent_to_local_ += data_size;
-  } else {
-    sent_to_others_ += data_size;
-  }
   VLOG(1) << "TO " << msg->recver << " " << msg->ShortDebugString();
   return true;
 }
 
 bool Van::Recv(Message* msg, size_t* recv_bytes) {
-  size_t data_size = 0;
   msg->clear_data();
   for (int i = 0; ; ++i) {
     // zmq_msg_t zmsg;
@@ -206,9 +190,8 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
     }
     char* buf = CHECK_NOTNULL((char *)zmq_msg_data(zmsg));
     size_t size = zmq_msg_size(zmsg);
-    data_size += size;
+    recv_bytes += size;
 
-    auto tv = hwtic();
     if (i == 0) {
       // identify
       msg->sender = std::string(buf, size);
@@ -222,7 +205,7 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
           << "failed to parse string from " << msg->sender
           << ". this is " << my_node_.id() << " " << size;
       if (IsScheduler() && msg->task.control() &&
-          msg->task.ctrl().cmd() == Control::REQUEST_APP) {
+          msg->task.ctrl().cmd() == Control::REGISTER_NODE) {
         // it is the first time the scheduler receive message from the
         // sender. store the file desciptor of the sender for the monitor
         int val[64]; size_t val_len = msg->sender.size();
@@ -240,7 +223,6 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       zmq_msg_close(zmsg);
       if (!zmq_msg_more(zmsg)) break;
       delete zmsg;
-      // zmq_msg_close(&zmsg);
     } else {
       // copy data
       // SArray<char> data; data.CopyFrom(buf, size);
@@ -259,28 +241,10 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       }
       if (!zmq_msg_more(zmsg)) { break; }
     }
-    recv_time_ += hwtoc(tv);
-
   }
 
-  *recv_bytes += data_size;
-  if (hostnames_[msg->sender] == my_node_.hostname()) {
-    received_from_local_ += data_size;
-  } else {
-    received_from_others_ += data_size;
-  }
   VLOG(1) << "FROM: " << msg->sender << " " << msg->ShortDebugString();
   return true;
-}
-
-void Van::Statistic() {
-  // if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
-  auto gb = [](size_t x) { return  x / 1e9; };
-  LOG(INFO) << my_node_.id()
-            << " sent " << gb(sent_to_local_ + sent_to_others_)
-            << " (local " << gb(sent_to_local_) << ") Gbyte,"
-            << " received " << gb(received_from_local_ + received_from_others_)
-            << " (local " << gb(received_from_local_) << ") Gbyte";
 }
 
 Node Van::ParseNode(const string& node_str) {

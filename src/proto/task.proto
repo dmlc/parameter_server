@@ -57,7 +57,6 @@ message Task {
 message Control {
   enum Command {
     // a node => the scheduler
-    REQUEST_APP = 1;
     REGISTER_NODE = 2;
     REPORT_PERF = 3;
     READY_TO_EXIT = 4;
