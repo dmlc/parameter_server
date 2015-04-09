@@ -194,17 +194,18 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clear_data();
   for (int i = 0; ; ++i) {
-    zmq_msg_t zmsg;
-    CHECK(zmq_msg_init(&zmsg) == 0) << zmq_strerror(errno);
+    // zmq_msg_t zmsg;
+    zmq_msg_t* zmsg = new zmq_msg_t;
+    CHECK(zmq_msg_init(zmsg) == 0) << zmq_strerror(errno);
     while (true) {
-      if (zmq_msg_recv(&zmsg, receiver_, 0) != -1) break;
+      if (zmq_msg_recv(zmsg, receiver_, 0) != -1) break;
       if (errno == EINTR) continue;  // may be interupted by google profiler
       LOG(WARNING) << "failed to receive message. errno: "
                    << zmq_strerror(errno);
       return false;
     }
-    char* buf = CHECK_NOTNULL((char *)zmq_msg_data(&zmsg));
-    size_t size = zmq_msg_size(&zmsg);
+    char* buf = CHECK_NOTNULL((char *)zmq_msg_data(zmsg));
+    size_t size = zmq_msg_size(zmsg);
     data_size += size;
 
     auto tv = hwtic();
@@ -212,6 +213,9 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       // identify
       msg->sender = std::string(buf, size);
       msg->recver = my_node_.id();
+      CHECK(zmq_msg_more(zmsg));
+      zmq_msg_close(zmsg);
+      delete zmsg;
     } else if (i == 1) {
       // task
       CHECK(msg->task.ParseFromArray(buf, size))
@@ -233,30 +237,30 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
         Lock l(fd_to_nodeid_mu_);
         fd_to_nodeid_[fd] = msg->sender;
       }
+      zmq_msg_close(zmsg);
+      if (!zmq_msg_more(zmsg)) break;
+      delete zmsg;
       // zmq_msg_close(&zmsg);
     } else {
-      // data
-      SArray<char> data; data.CopyFrom(buf, size);
+      // copy data
+      // SArray<char> data; data.CopyFrom(buf, size);
 
       // ugly zero-copy
-      // SArray<char> data(buf, size, false);
-      // zmq_msg_t* data_msg = new zmq_msg_t;
-      // zmq_msg_init(data_msg);
-      // zmq_msg_move(data_msg, &zmsg);
-      // data.pointer().reset(buf, [data_msg](char*) {
-      //     zmq_msg_close(data_msg);
-      //   });
+      SArray<char> data(buf, size, false);
+      data.pointer().reset(buf, [zmsg](char*) {
+          zmq_msg_close(zmsg);
+          delete zmsg;
+        });
 
       if (i == 2 && msg->task.has_key()) {
         msg->key = data;
       } else {
         msg->value.push_back(data);
       }
+      if (!zmq_msg_more(zmsg)) { break; }
     }
     recv_time_ += hwtoc(tv);
-    zmq_msg_close(&zmsg);
 
-    if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0) << msg->sender; break; }
   }
 
   *recv_bytes += data_size;

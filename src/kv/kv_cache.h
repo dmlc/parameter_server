@@ -62,7 +62,6 @@ class KVCache : public Customer {
     CHECK_EQ(msg->value.size(), 1);
     SArray<V> recv_data(msg->value[0]);
     int k = recv_data.size() / recv_key.size();
-    LL << recv_data;
 
     // local kv
     auto& kv = pull_data_[msg->task.time()];
@@ -72,7 +71,6 @@ class KVCache : public Customer {
     size_t n = ParallelOrderedMatch(
         recv_key, recv_data, kv.key, &kv.value, k, AssignOpType::ASSIGN);
     CHECK_EQ(n, recv_data.size());
-    LL << kv.value;
   }
 
  private:
