@@ -30,10 +30,10 @@ class KVCache : public Customer {
     auto& kv = pull_data_[ts];
     kv.key = SArray<K>(keys);
     kv.value = SArray<V>(*values);
-    LL << ts << " " << pull_data_[ts].key << " " << kv.value;
+    // LL << ts << " " << pull_data_[ts].key << " " << kv.value;
     msg.set_key(kv.key);
     msg.callback = [ts, opts, this] {
-      opts.callback();
+      if (opts.callback) opts.callback();
       pull_data_.erase(ts);
     };
     msg.task.mutable_param()->set_push(false);
@@ -59,11 +59,11 @@ class KVCache : public Customer {
     int k = recv_data.size() / recv_key.size();
 
     // local kv
-    LL << msg->task.time();
+    // LL << msg->task.time();
     auto& kv = pull_data_[msg->task.time()];
-    LL << kv.key << " " << kv.value;
+    // LL << kv.key << " " << kv.value;
     CHECK_EQ(kv.value.size(), kv.key.size() * k);
-    LL << recv_key;
+    // LL << recv_key;
     // match
     size_t n = ParallelOrderedMatch(
         recv_key, recv_data, kv.key, &kv.value, k, AssignOpType::ASSIGN);
