@@ -30,13 +30,15 @@ class KVCache : public Customer {
     auto& kv = pull_data_[ts];
     kv.key = SArray<K>(keys);
     kv.value = SArray<V>(*values);
+    LL << ts << " " << pull_data_[ts].key << " " << kv.value;
     msg.set_key(kv.key);
     msg.callback = [ts, opts, this] {
       opts.callback();
       pull_data_.erase(ts);
     };
     msg.task.mutable_param()->set_push(false);
-    return Submit(&msg);
+    CHECK_EQ(ts, Submit(&msg));
+    return ts;
   }
 
   /// called by system ///
@@ -57,9 +59,11 @@ class KVCache : public Customer {
     int k = recv_data.size() / recv_key.size();
 
     // local kv
+    LL << msg->task.time();
     auto& kv = pull_data_[msg->task.time()];
+    LL << kv.key << " " << kv.value;
     CHECK_EQ(kv.value.size(), kv.key.size() * k);
-
+    LL << recv_key;
     // match
     size_t n = ParallelOrderedMatch(
         recv_key, recv_data, kv.key, &kv.value, k, AssignOpType::ASSIGN);
@@ -67,11 +71,11 @@ class KVCache : public Customer {
   }
 
  private:
-  Task ParseOption(const SyncOpts opts) {
+  Task ParseOption(const SyncOpts& opts) {
     Task req; req.set_request(true);
     req.set_time(exec_.time());
-    for (int t : opts.deps) req.add_wait_time(t);
-    return Task();
+    for (int t : opts.deps) { LL << t ; req.add_wait_time(t); }
+    return req;
   }
 
   struct KVPair {

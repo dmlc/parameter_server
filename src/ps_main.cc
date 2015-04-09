@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
 
   int ret = 0;
   if (ps::IsWorkerNode()) {
+    usleep(1000);
     ret = WorkerNodeMain(argc, argv);
   } else if (ps::IsServerNode()) {
     ret = CreateServerNode(argc, argv);

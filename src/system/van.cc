@@ -233,28 +233,30 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
         Lock l(fd_to_nodeid_mu_);
         fd_to_nodeid_[fd] = msg->sender;
       }
+      // zmq_msg_close(&zmsg);
     } else {
       // data
-      // SArray<char> data; data.CopyFrom(buf, size);
+      SArray<char> data; data.CopyFrom(buf, size);
 
       // ugly zero-copy
-      SArray<char> data(buf, size, false);
-      zmq_msg_t* data_msg = new zmq_msg_t;
-      zmq_msg_init(data_msg);
-      zmq_msg_move(data_msg, &zmsg);
-      data.pointer().reset(buf, [data_msg](char*) {
-          zmq_msg_close(data_msg);
-        });
+      // SArray<char> data(buf, size, false);
+      // zmq_msg_t* data_msg = new zmq_msg_t;
+      // zmq_msg_init(data_msg);
+      // zmq_msg_move(data_msg, &zmsg);
+      // data.pointer().reset(buf, [data_msg](char*) {
+      //     zmq_msg_close(data_msg);
+      //   });
+
       if (i == 2 && msg->task.has_key()) {
         msg->key = data;
       } else {
         msg->value.push_back(data);
       }
     }
-    zmq_msg_close(&zmsg);
     recv_time_ += hwtoc(tv);
+    zmq_msg_close(&zmsg);
 
-    if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
+    if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0) << msg->sender; break; }
   }
 
   *recv_bytes += data_size;

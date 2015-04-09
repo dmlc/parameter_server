@@ -91,7 +91,7 @@ class Executor {
   Node my_node_;
   int num_replicas_ = 0;  // number of replicas for a server node
 
-  int time_ = Message::kInvalidTime;  // current timestamp
+  int time_ = 0;  // current timestamp
   struct ReqInfo {
     NodeID recver;
     Message::Callback callback;

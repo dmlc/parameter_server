@@ -28,7 +28,7 @@ struct SyncOpts {
    * processed by the parameter servers only after the depended requests have
    * been processed.
    */
-  std::initializer_list<int> deps;
+  std::vector<int> deps;
   /**
    * \brief the function will be executed after received the
    * response from the parameter server
