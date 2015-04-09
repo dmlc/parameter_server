@@ -62,12 +62,7 @@ class Manager {
   }
 
   // the app
-  void CreateApp();
   App* app_ = nullptr;
-  int argc_;
-  char** argv_;
-  // string app_conf_;
-  // std::promise<void> my_node_promise_;
 
   // nodes
   std::map<NodeID, Node> nodes_;

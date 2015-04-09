@@ -23,8 +23,6 @@ Manager::~Manager() {
 void Manager::Init(int argc, char *argv[]) {
   env_.Init(argv[0]);
   van_.Init();
-  argc_ = argc;
-  argv_ = argv;
 
   app_ = App::Create("");
   CHECK(app_ != NULL) << ": failed to create app";
@@ -36,28 +34,14 @@ void Manager::Init(int argc, char *argv[]) {
     }
 
     node_assigner_ = new NodeAssigner(FLAGS_num_servers);
-    // // create the app
-    // if (!FLAGS_app_file.empty()) {
-    //   CHECK(readFileToString(FLAGS_app_file, &app_conf_))
-    //       << " failed to read conf file " << FLAGS_app_file;
-    // }
-    // app_conf_ += FLAGS_app_conf;
-    // CreateApp();
 
     // add my node into app_
     AddNode(van_.my_node());
   } else {
-
-      // CreateApp();
     // ask the scheduler to broadcast this node to others
     Task task = NewControlTask(Control::REGISTER_NODE);
     *task.mutable_ctrl()->add_node() = van_.my_node();
     SendTask(van_.scheduler(), task);
-
-    // request the app config from the scheduler
-    // Task task = NewControlTask(Control::REQUEST_APP);
-    // *task.mutable_ctrl()->add_node() = van_.my_node();
-    // SendTask(van_.scheduler(), task);
   }
 }
 
@@ -271,11 +255,6 @@ void Manager::SendTask(const NodeID& recver, const Task& task) {
   Message* msg = new Message(task);
   msg->recver = recver;
   Postoffice::instance().Queue(msg);
-}
-
-void Manager::CreateApp() {
-  app_ = App::Create("");
-  CHECK(app_ != NULL) << ": failed to create app";
 }
 
 void Manager::WaitServersReady() {
