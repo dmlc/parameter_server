@@ -5,6 +5,7 @@
 #include "system/van.h"
 #include "system/env.h"
 #include "system/assigner.h"
+#include "system/network_usage.h"
 namespace ps {
 
 class App;
@@ -52,6 +53,7 @@ class Manager {
   // accessors
   Van& van() { return van_; }
   App* app() { return app_; }
+  NetworkUsage& net_usage() { return net_usage_; }
 
  private:
   bool IsScheduler() { return van_.my_node().role() == Node::SCHEDULER; }
@@ -86,6 +88,8 @@ class Manager {
 
   Van van_;
   Env env_;
+
+  NetworkUsage net_usage_;
 
   DISALLOW_COPY_AND_ASSIGN(Manager);
 };

@@ -190,7 +190,7 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
     }
     char* buf = CHECK_NOTNULL((char *)zmq_msg_data(zmsg));
     size_t size = zmq_msg_size(zmsg);
-    recv_bytes += size;
+    *recv_bytes += size;
 
     if (i == 0) {
       // identify

@@ -23,6 +23,7 @@ Manager::~Manager() {
 void Manager::Init(int argc, char *argv[]) {
   env_.Init(argv[0]);
   van_.Init();
+  net_usage_.AddMyNode(van_.my_node());
 
   app_ = App::Create("");
   CHECK(app_ != NULL) << ": failed to create app";
@@ -176,6 +177,7 @@ void Manager::AddNode(const Node& node) {
   }
 
   if (node.id() == van_.my_node().id()) is_my_node_inited_ = true;
+  net_usage_.AddNode(node);
   VLOG(1) << "add node: " << node.ShortDebugString();
 }
 

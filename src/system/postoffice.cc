@@ -48,9 +48,7 @@ void Postoffice::Send() {
     if (msg->terminate) break;
     size_t send_bytes = 0;
     manager_.van().Send(msg, &send_bytes);
-    if (FLAGS_report_interval > 0) {
-      perf_monitor_.increaseOutBytes(send_bytes);
-    }
+    manager_.net_usage().IncrSend(msg->recver, send_bytes);
     if (msg->task.request()) {
       // a request "msg" is safe to be deleted only if the response is received
       manager_.AddRequest(msg);
@@ -94,9 +92,7 @@ void Postoffice::Recv() {
     Message* msg = new Message();
     size_t recv_bytes = 0;
     CHECK(manager_.van().Recv(msg, &recv_bytes));
-    if (FLAGS_report_interval > 0) {
-      perf_monitor_.increaseInBytes(recv_bytes);
-    }
+    manager_.net_usage().IncrRecv(msg->sender, recv_bytes);
 
     if (msg->task.task_size()) {
       // packed task
