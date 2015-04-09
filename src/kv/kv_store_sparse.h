@@ -14,7 +14,6 @@ class KVStoreSparse : public KVStore {
     SArray<K> key(msg->key);
     size_t n = key.size();
     SArray<V> val(n * k_);
-
     // handle this pull request
     V* val_data = val.data();
     for (size_t i = 0; i < n; ++i, val_data += k_) {
