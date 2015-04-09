@@ -14,13 +14,14 @@ class KVStoreSparse : public KVStore {
     SArray<K> key(msg->key);
     size_t n = key.size();
     SArray<V> val(n * k_);
+
     // handle this pull request
     V* val_data = val.data();
     for (size_t i = 0; i < n; ++i, val_data += k_) {
       K key_i = key[i];
       Blob<V> send_val(val_data, k_);
-      handle_.HandlePush(
-          CBlob<K>(&key_i, 1), CBlob<V>(data_[key_i].data(), val_len),
+      handle_.HandlePull(
+          CBlob<K>(&key_i, 1), CBlob<V>(FindValue(key_i), val_len),
           &send_val);
     }
     msg->add_value(val);
@@ -38,14 +39,26 @@ class KVStoreSparse : public KVStore {
     V* val_data = val.data();
     for (size_t i = 0; i < n; ++i, val_data += k_) {
       K key_i = key[i];
-      Blob<V> my_val(data_[key_i].data(), val_len);
+      Blob<V> my_val(FindValue(key_i), val_len);
       handle_.HandlePush(
           CBlob<K>(&key_i, 1), CBlob<V>(val_data, k_), &my_val);
     }
   }
 
  private:
-  std::unordered_map<K, std::array<V, val_len>> data_;
+  V* FindValue(K key) {
+    auto it = data_.find(key);
+    if (it == data_.end()) {
+      // init if necessary
+      auto it2 = data_.insert(std::make_pair(key, std::array<V, val_len>()));
+      CHECK(it2.second);
+      it = it2.first;
+      Blob<V> my_val(it->second.data(), val_len);
+      handle_.HandleInit(CBlob<K>(&key, 1), &my_val);
+    }
+    return it->second.data();
+  }
+ std::unordered_map<K, std::array<V, val_len>> data_;
   Handle handle_;
   int k_;
 };

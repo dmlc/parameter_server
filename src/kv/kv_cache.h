@@ -27,14 +27,18 @@ class KVCache : public Customer {
                   const SyncOpts& opts) {
     Message msg(ParseOption(opts), kServerGroup);
     int ts = msg.task.time();
+    mu_.lock();
     auto& kv = pull_data_[ts];
+    mu_.unlock();
     kv.key = SArray<K>(keys);
     kv.value = SArray<V>(*values);
     // LL << ts << " " << pull_data_[ts].key << " " << kv.value;
     msg.set_key(kv.key);
     msg.callback = [ts, opts, this] {
       if (opts.callback) opts.callback();
+      mu_.lock();
       pull_data_.erase(ts);
+      mu_.unlock();
     };
     msg.task.mutable_param()->set_push(false);
     CHECK_EQ(ts, Submit(&msg));
@@ -54,27 +58,27 @@ class KVCache : public Customer {
 
     // received kv
     SArray<K> recv_key(msg->key);
+    if (recv_key.empty()) return;
     CHECK_EQ(msg->value.size(), 1);
     SArray<V> recv_data(msg->value[0]);
     int k = recv_data.size() / recv_key.size();
+    LL << recv_data;
 
     // local kv
-    // LL << msg->task.time();
     auto& kv = pull_data_[msg->task.time()];
-    // LL << kv.key << " " << kv.value;
     CHECK_EQ(kv.value.size(), kv.key.size() * k);
-    // LL << recv_key;
+
     // match
     size_t n = ParallelOrderedMatch(
         recv_key, recv_data, kv.key, &kv.value, k, AssignOpType::ASSIGN);
     CHECK_EQ(n, recv_data.size());
+    LL << kv.value;
   }
 
  private:
   Task ParseOption(const SyncOpts& opts) {
     Task req; req.set_request(true);
     req.set_time(exec_.time());
-    for (int t : opts.deps) { LL << t ; req.add_wait_time(t); }
     return req;
   }
 
@@ -83,5 +87,6 @@ class KVCache : public Customer {
     SArray<V> value;  // [val_00, ..., val_0k, ..., val_n0, ..., val_nk]
   };
   std::unordered_map<int, KVPair> pull_data_;
+  std::mutex mu_;
 };
 }  // namespace ps
