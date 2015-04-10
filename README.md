@@ -1,13 +1,18 @@
-# Parameter Server
+![Parameter Server](http://parameterserver.org/images/parameterserver.png)
 
 The parameter server is a distributed system scaling to industry size machine
-learning problems. It is a joint project by [CMU SML-Lab](http://sml-lab.com),
-[Baidu IDL](http://idl.baidu.com/en/), and [Google](http://research.google.com).
+learning problems. It provides asynchronous and zero-copy key-value pair
+communications between worker machines and server machines. It also supports
+flexiable data consistency model, data filters, and flexiable server machine
+programming.
 
-
-- [Document](doc/)
+- [Tutorial](guide/)
+- [API Document](doc/)
 - [Wiki](https://github.com/dmlc/parameter_server/wiki/)
 - How to [build](make/)
 - Examples
   - [Linear method](example/linear)
   - Deep neural network, see [CXXNET](https://github.com/dmlc/cxxnet) and [Minverva](https://github.com/minerva-developers/minerva)
+- Research papers: System
+  [OSDI'14](http://www.cs.cmu.edu/~muli/file/parameter_server_osdi14.pdf),
+  Algorithm [NIPS'14](http://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf)
