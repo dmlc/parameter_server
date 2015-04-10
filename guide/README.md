@@ -1,6 +1,6 @@
 # Tutorial of the Parameter Server
 
-This is a beginner guide for how to using the parameter server interface.
+Here we show several examples on how to use the simplified parameter server API [ps.h](../include/ps.h).
 
 ## Worker APIs
 
