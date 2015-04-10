@@ -1,4 +1,4 @@
-<img src="http://parameterserver.org/images/parameterserver.png" alt="Parameter Server" style="height:10px">
+<img src="http://parameterserver.org/images/parameterserver.png" alt="Parameter Server" style="width: 10px;">
 
 <!-- [xx](http://parameterserver.org/images/parameterserver.png =250x) -->
 The parameter server is a distributed system scaling to industry size machine
