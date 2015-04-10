@@ -42,7 +42,6 @@ class NetworkUsage {
   }
 
  private:
-
   void Display() {
     double time = toc(start_);
     auto gb = [](size_t x) { return  x / 1e9; };
@@ -66,29 +65,3 @@ class NetworkUsage {
 };
 
 }  // namespace ps
-
-  // TODO move to postoffice::perf_monitor_
-  // print statistic info
-//   void Statistic();
-//   std::unordered_map<NodeID, string> hostnames_;
-
-
-//   // statistics
-//   *send_bytes += data_size;
-//   if (hostnames_[id] == my_node_.hostname()) {
-//   } else {
-//   }
-
-//   *recv_bytes += data_size;
-
-// void Van::Statistic() {
-//   // if (my_node_.role() == Node::UNUSED || my_node_.role() == Node::SCHEDULER) return;
-//   auto gb = [](size_t x) { return  x / 1e9; };
-//   LOG(INFO) << my_node_.id()
-//             << " sent " << gb(sent_to_local_ + sent_to_others_)
-//             << " (local " << gb(sent_to_local_) << ") Gbyte,"
-//             << " received " << gb(received_from_local_ + received_from_others_)
-//             << " (local " << gb(received_from_local_) << ") Gbyte";
-// }
-
-  // hostnames_[id] = node.hostname();

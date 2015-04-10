@@ -4,10 +4,13 @@ message FilterConfig {
   enum Type {
     // cache the keys at both sender and receiver
     KEY_CACHING = 1;
+
     // compress data by snappy
     COMPRESSING = 2;
+
     // convert a float/double into a fixed-point integer
     FIXING_FLOAT = 3;
+
     // add noise to data
     NOISE = 4;
   }
@@ -19,17 +22,17 @@ message FilterConfig {
 
   // -- fixing float filter --
   optional int32 num_bytes = 5 [default = 3];
-  message FixedFloatConfig {
-    optional float min_value = 1 [default = -1];
-    optional float max_value = 2 [default = 1];
-  }
-  repeated FixedFloatConfig fixed_point = 4;
 
   // -- nosie --
   optional float mean = 6;
   optional float std = 7;
 
   // -- runtime parameters used by the system --
+  message FixedFloatConfig {
+    optional float min_value = 1 [default = -1];
+    optional float max_value = 2 [default = 1];
+  }
+  repeated FixedFloatConfig fixed_point = 4;
   optional uint32 signature = 2;
   repeated uint64 uncompressed_size = 3;
 }

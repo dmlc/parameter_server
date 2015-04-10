@@ -5,7 +5,7 @@
 #pragma once
 #include "ps/base.h"
 #include "ps/blob.h"
-
+#include "proto/filter.pb.h"
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,13 +34,20 @@ struct SyncOpts {
    * response from the parameter server
    */
   std::function<void()> callback;
+
   /**
-   * \brief zero-copy synchronization. Keys (and values) will not be copied to
-   * reduce the communication delay. Therefore, it is the user's responsibility
-   * to keep the keys and values unchanged until the request is finished, namely
-   * Wait(ts) returns or the callback is called.
+   * \brief key-value filters to reduce communication cost
    */
-  bool zero_copy = false;
+  std::vector<FilterConfig> filters;
+
+  /**
+   * \brief A helper function. Sample usage: AddFilter(FilterConfig::COMPRESSING);
+   */
+  FilterConfig& AddFilter(FilterConfig::Type type) {
+    filters.push_back(FilterConfig());
+    filters.back().set_type(type);
+    return filters.back();
+  }
 
   /**
    * \brief The keys are small integers. One can either set it to be true, or
@@ -145,12 +152,16 @@ class KVWorker {
   int Push(CBlob<Key> keys, CBlob<V> values, const SyncOpts& opts = SyncOpts());
   int Pull(CBlob<Key> keys, Blob<V> values, const SyncOpts& opts = SyncOpts());
 
-  /*! \brief More advanced Push and Pull by using shared blob */
-
-  int Push(const SBlob<Key>& keys, const SBlob<V>& values,
+  /**
+   * \brief zero-copy synchronization. Keys (and values) will not be copied to
+   * reduce the communication delay. Therefore, it is the user's responsibility
+   * to keep the keys and values unchanged until the request is finished, namely
+   * Wait(ts) returns or the callback is called.
+   */
+  int ZPush(const SBlob<Key>& keys, const SBlob<V>& values,
            const SyncOpts& opts = SyncOpts());
 
-  int Pull(const SBlob<Key>& keys, SBlob<V>* values,
+  int ZPull(const SBlob<Key>& keys, SBlob<V>* values,
            const SyncOpts& opts = SyncOpts());
 
   /*!

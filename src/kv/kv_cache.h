@@ -77,6 +77,8 @@ class KVCache : public Customer {
   Task ParseOption(const SyncOpts& opts) {
     Task req; req.set_request(true);
     req.set_time(exec_.time());
+    for (int l : opts.deps) req.add_wait_time(l);
+    for (const auto& f : opts.filters) req.add_filter()->CopyFrom(f);
     return req;
   }
 

@@ -29,25 +29,25 @@ template<typename V>
 int KVWorker<V>::Push(CBlob<Key> keys, CBlob<V> values, const SyncOpts& opts) {
   SBlob<Key> s_keys; s_keys.CopyFrom(keys.data, keys.size);
   SBlob<V> s_values; s_values.CopyFrom(values.data, values.size);
-  return Push(s_keys, s_values, opts);
+  return ZPush(s_keys, s_values, opts);
 }
 
 template<typename V>
 int KVWorker<V>::Pull(CBlob<Key> keys, Blob<V> values, const SyncOpts& opts) {
   SBlob<Key> s_keys; s_keys.CopyFrom(keys.data, keys.size);
   SBlob<V> s_values(values.data, values.size, EmptyDeleter<V>());
-  return Pull(s_keys, &s_values, opts);
+  return ZPull(s_keys, &s_values, opts);
 }
 
 
 template<typename V>
-int KVWorker<V>::Push(const SBlob<Key>& keys, const SBlob<V>& values,
+int KVWorker<V>::ZPush(const SBlob<Key>& keys, const SBlob<V>& values,
                      const SyncOpts& opts) {
   return cache_->Push(keys, values, opts);
 }
 
 template<typename V>
-int KVWorker<V>::Pull(const SBlob<Key>& keys, SBlob<V>* values,
+int KVWorker<V>::ZPull(const SBlob<Key>& keys, SBlob<V>* values,
                      const SyncOpts& opts) {
   return cache_->Pull(keys, values, opts);
 }

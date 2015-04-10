@@ -54,10 +54,12 @@ struct RemoteNode {
   void AddGroupNode(RemoteNode* rnode);
   void RemoveGroupNode(RemoteNode* rnode);
   std::vector<RemoteNode*> group;
+
   // keys[i] is the key range of group[i]
   std::vector<Range<Key>> keys;
 
  private:
+
   Filter* FindFilterOrCreate(const FilterConfig& conf);
   // key: filter_type
   std::unordered_map<int, Filter*> filters;
