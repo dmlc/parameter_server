@@ -57,3 +57,4 @@ build/%.o: src/%.cc
 -include build/*/*.d
 -include build/*/*/*.d
 -include test/ps_test.mk
+-include guide/ps_guide.mk

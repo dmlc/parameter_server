@@ -262,8 +262,7 @@ class KVServer {
    *   slower comparing to BATCH
    *
    * - BATCH: use array to store KV pairs. Suitable for the keys set is fixed at
-   *   the beginning, such as batch algorithm. Both read and write are fast, but
-   *
+   *   the beginning, such as batch algorithm.
    */
   enum Type { ONLINE, BATCH };
 
