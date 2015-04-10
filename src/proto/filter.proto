@@ -1,6 +1,6 @@
 package ps;
 
-message FilterConf {
+message Filter {
   enum Type {
     // cache the keys at both sender and receiver
     KEY_CACHING = 1;

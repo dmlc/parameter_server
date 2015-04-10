@@ -34,7 +34,7 @@ message Task {
   repeated DataType value_type = 14;
 
   // filters applied to the data
-  repeated FilterConfig filter = 12;
+  repeated Filter filter = 12;
 
   // if true, the tasks will be packed into a single one during sending
   optional bool more = 16 [default = false];

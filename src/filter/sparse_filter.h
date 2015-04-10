@@ -2,9 +2,9 @@
 #include "filter/filter.h"
 namespace ps {
 
-class SparseFilter : public Filter {
+class SparseIFilter : public IFilter {
  public:
-  SparseFilter() {
+  SparseIFilter() {
     // use 0xffff..ff as the mark when a value is filtered, it is nan for float
     // and double.
     memcpy(&double_v_, &kuint64max, sizeof(double));

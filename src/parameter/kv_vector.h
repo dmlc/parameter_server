@@ -74,7 +74,7 @@ class KVVector : public Parameter {
     for (auto& v : buffer_[timestamp].values) v.clear();
   }
 
-  void ClearFilter() { freq_filter_.clear(); }
+  void ClearIFilter() { freq_filter_.clear(); }
 
   /**
    * @brief Push data into servers
@@ -122,7 +122,7 @@ class KVVector : public Parameter {
   std::mutex mu_;  // protect the structure of data_ and buffer_
 
   // <channel, filter tail keys>
-  std::unordered_map<int, FreqencyFilter<Key, uint8>> freq_filter_;
+  std::unordered_map<int, FreqencyIFilter<Key, uint8>> freq_filter_;
 };
 
 template <typename K, typename V>

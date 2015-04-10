@@ -38,13 +38,13 @@ struct SyncOpts {
   /**
    * \brief key-value filters to reduce communication cost
    */
-  std::vector<FilterConfig> filters;
+  std::vector<Filter> filters;
 
   /**
    * \brief A helper function. Sample usage: AddFilter(FilterConfig::COMPRESSING);
    */
-  FilterConfig& AddFilter(FilterConfig::Type type) {
-    filters.push_back(FilterConfig());
+  Filter& AddFilter(Filter::Type type) {
+    filters.push_back(Filter());
     filters.back().set_type(type);
     return filters.back();
   }

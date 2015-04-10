@@ -3,13 +3,13 @@
 #include <time.h>
 namespace ps {
 
-class FixingFloatFilter : public Filter {
+class FixingFloatIFilter : public IFilter {
  public:
-  void encode(Message* msg) {
+  void Encode(Message* msg) {
     convert(msg, true);
   }
 
-  void decode(Message* msg) {
+  void Decode(Message* msg) {
     convert(msg, false);
   }
 
@@ -20,9 +20,9 @@ class FixingFloatFilter : public Filter {
     return ((*seed >> 16) & 0x1) == 0;
   }
 
-  // decode / encode a message
-  void convert(Message* msg, bool encode) {
-    auto filter_conf = CHECK_NOTNULL(find(FilterConfig::FIXING_FLOAT, msg));
+  // Decode / Encode a message
+  void convert(Message* msg, bool Encode) {
+    auto filter_conf = CHECK_NOTNULL(find(Filter::FIXING_FLOAT, msg));
     if (filter_conf->num_bytes() == 0) return;
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
@@ -35,26 +35,26 @@ class FixingFloatFilter : public Filter {
       }
       if (type == DataType::FLOAT) {
         msg->value[i] = convert<float>(
-            msg->value[i], encode, filter_conf->num_bytes(),
+            msg->value[i], Encode, filter_conf->num_bytes(),
             filter_conf->mutable_fixed_point(k++));
       }
       if (type == DataType::DOUBLE) {
         msg->value[i] = convert<double>(
-            msg->value[i], encode, filter_conf->num_bytes(),
+            msg->value[i], Encode, filter_conf->num_bytes(),
             filter_conf->mutable_fixed_point(k++));
       }
     }
   }
 
-  // decode / encode an array
+  // Decode / Encode an array
   template <typename V>
-  SArray<char> convert(const SArray<char>& array, bool encode, int nbytes,
-                       FilterConfig::FixedFloatConfig* conf) {
+  SArray<char> convert(const SArray<char>& array, bool Encode, int nbytes,
+                       Filter::FixedFloatConfig* conf) {
     CHECK_GT(nbytes, 0);
     CHECK_LT(nbytes, 8);
     double ratio = static_cast<double>(1 << (nbytes*8)) - 2;
 
-    if (encode) {
+    if (Encode) {
       if (!conf->has_min_value()) {
         // conf->set_min_value(SArray<V>(array).EigenArray().minCoeff());
       }
@@ -70,7 +70,7 @@ class FixingFloatFilter : public Filter {
     double bin = max_v - min_v;
     CHECK_GT(bin, 0);
 
-    if (encode) {
+    if (Encode) {
       // float/double to nbytes*8 int
       SArray<V> orig(array);
       SArray<uint8> code(orig.size() * nbytes);

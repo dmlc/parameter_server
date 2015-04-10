@@ -4,12 +4,12 @@
 namespace ps {
 
 /**
- * @brief Filters infrequent keys via the countmin sketch
+ * @brief IFilters infrequent keys via the countmin sketch
  * @tparam K key type
  * @tparam V counter type
  */
 template<typename K, typename V>
-class FreqencyFilter {
+class FreqencyIFilter {
  public:
   /**
    * @brief Add keys with their key count
@@ -20,7 +20,7 @@ class FreqencyFilter {
   void InsertKeys(const SArray<K>& key, const SArray<V>& count);
 
   /**
-   * @brief Filters infrequency keys
+   * @brief IFilters infrequency keys
    *
    * @param key the list of keys
    * @param freq_thr the frequency threshold
@@ -45,7 +45,7 @@ class FreqencyFilter {
 
 // countmin implementation
 template<typename K, typename V>
-SArray<K> FreqencyFilter<K,V>::QueryKeys(const SArray<K>& key, int freqency) {
+SArray<K> FreqencyIFilter<K,V>::QueryKeys(const SArray<K>& key, int freqency) {
   CHECK_LT(freqency, kuint8max) << "change to uint16 or uint32...";
   SArray<K> filtered_key;
   for (auto k : key) {
@@ -57,7 +57,7 @@ SArray<K> FreqencyFilter<K,V>::QueryKeys(const SArray<K>& key, int freqency) {
 }
 
 template<typename K, typename V>
-void FreqencyFilter<K,V>::InsertKeys(const SArray<K>& key, const SArray<V>& count) {
+void FreqencyIFilter<K,V>::InsertKeys(const SArray<K>& key, const SArray<V>& count) {
   CHECK_EQ(key.size(), count.size());
   for (size_t i = 0; i < key.size(); ++i) {
     count_.insert(key[i], count[i]);
@@ -68,7 +68,7 @@ void FreqencyFilter<K,V>::InsertKeys(const SArray<K>& key, const SArray<V>& coun
 // std::unordered_map<K, V> map_;
 
 // template<typename K>
-// SArray<K> FreqencyFilter<K>::QueryKeys(const SArray<K>& key, int freqency) {
+// SArray<K> FreqencyIFilter<K>::QueryKeys(const SArray<K>& key, int freqency) {
 //   SArray<K> filtered_key;
 //   for (K k : key) {
 //     if (map_[k] > freqency) filtered_key.push_back(k);
@@ -77,7 +77,7 @@ void FreqencyFilter<K,V>::InsertKeys(const SArray<K>& key, const SArray<V>& coun
 // }
 
 // template<typename K>
-// void FreqencyFilter<K>::InsertKeys(const SArray<K>& key, const SArray<uint32>& count) {
+// void FreqencyIFilter<K>::InsertKeys(const SArray<K>& key, const SArray<uint32>& count) {
 //   CHECK_EQ(key.size(), count.size());
 //   for (size_t i = 0; i < key.size(); ++i) {
 //     map_[key[i]] += count[i];

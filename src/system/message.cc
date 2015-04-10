@@ -7,7 +7,7 @@ namespace ps {
 //   if (wait_time != kInvalidTime) task.add_wait_time(wait_time);
 // }
 
-FilterConfig* Message::add_filter(FilterConfig::Type type) {
+Filter* Message::add_filter(Filter::Type type) {
   auto ptr = task.add_filter();
   ptr->set_type(type);
   return ptr;

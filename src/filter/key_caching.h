@@ -3,12 +3,12 @@
 #include "util/crc32c.h"
 namespace ps {
 
-class KeyCachingFilter : public Filter {
+class KeyCachingIFilter : public IFilter {
  public:
   // thread safe
-  void encode(Message* msg) {
+  void Encode(Message* msg) {
     // if (!msg->task.has_key_range()) return;
-    auto conf = find(FilterConfig::KEY_CACHING, msg);
+    auto conf = find(Filter::KEY_CACHING, msg);
     if (!conf) return;
     if (!msg->has_key()) {
       conf->clear_signature();
@@ -33,9 +33,9 @@ class KeyCachingFilter : public Filter {
     }
   }
 
-  void decode(Message* msg) {
+  void Decode(Message* msg) {
     // if (!msg->task.has_key_range()) return;
-    auto conf = find(FilterConfig::KEY_CACHING, msg);
+    auto conf = find(Filter::KEY_CACHING, msg);
     if (!conf || !conf->has_signature()) return;
     auto sig = conf->signature();
     // do a double check

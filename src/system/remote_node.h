@@ -60,9 +60,9 @@ struct RemoteNode {
 
  private:
 
-  Filter* FindFilterOrCreate(const FilterConfig& conf);
+  IFilter* FindIFilterOrCreate(const Filter& conf);
   // key: filter_type
-  std::unordered_map<int, Filter*> filters;
+  std::unordered_map<int, IFilter*> filters;
 
 };
 

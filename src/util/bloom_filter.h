@@ -3,11 +3,11 @@
 namespace ps {
 
 template <typename K>
-class BloomFilter : public Sketch {
+class BloomIFilter : public Sketch {
  public:
-  BloomFilter() { }
-  BloomFilter(int m, int k) { resize(m, k); }
-  ~BloomFilter() { delete [] data_; }
+  BloomIFilter() { }
+  BloomIFilter(int m, int k) { resize(m, k); }
+  ~BloomIFilter() { delete [] data_; }
   void resize(int m, int k) {
     delete [] data_;
     k_ = std::min(64, std::max(1, k));

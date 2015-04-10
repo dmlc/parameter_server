@@ -8,7 +8,7 @@ message ParamCall {
   // merge operator
   optional AssignOpType op = 2;
 
-  optional TailKeyFilter tail_filter = 3;
+  optional TailKeyIFilter tail_filter = 3;
 
   // optional bool insert_key = 5;
   // optional bool gather = 6;
@@ -39,7 +39,7 @@ message Timestamp {
   required int32 time = 2;
 }
 
-message TailKeyFilter {
+message TailKeyIFilter {
   optional bool insert_count = 1;
   optional int32 freq_threshold = 2;
   optional bool query_value = 3;

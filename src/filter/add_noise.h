@@ -6,10 +6,10 @@ namespace ps {
  * @brief Add noise
  *
  */
-class AddNoiseFilter : public Filter {
+class AddNoiseIFilter : public IFilter {
  public:
-  void encode(Message* msg) {
-    auto filter_conf = CHECK_NOTNULL(find(FilterConfig::NOISE, msg));
+  void Encode(Message* msg) {
+    auto filter_conf = CHECK_NOTNULL(find(Filter::NOISE, msg));
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
     for (int i = 0; i < n; ++i) {
@@ -26,7 +26,7 @@ class AddNoiseFilter : public Filter {
  private:
 
   template <typename V>
-  void AddNoise(const SArray<char>& array, FilterConfig* cf) {
+  void AddNoise(const SArray<char>& array, Filter* cf) {
     std::default_random_engine generator;
     std::normal_distribution<V> distribution((V)cf->mean(), (V)cf->std());
     SArray<V> data(array);

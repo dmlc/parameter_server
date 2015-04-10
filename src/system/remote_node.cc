@@ -4,11 +4,11 @@
 #include "util/shared_array_inl.h"
 namespace ps {
 
-Filter* RemoteNode::FindFilterOrCreate(const FilterConfig& conf) {
+IFilter* RemoteNode::FindIFilterOrCreate(const Filter& conf) {
   int id = conf.type();
   auto it = filters.find(id);
   if (it == filters.end()) {
-    filters[id] = Filter::create(conf);
+    filters[id] = IFilter::create(conf);
     it = filters.find(id);
   }
   return it->second;
@@ -17,14 +17,14 @@ Filter* RemoteNode::FindFilterOrCreate(const FilterConfig& conf) {
 void RemoteNode::EncodeMessage(Message* msg) {
   const auto& tk = msg->task;
   for (int i = 0; i < tk.filter_size(); ++i) {
-    FindFilterOrCreate(tk.filter(i))->encode(msg);
+    FindIFilterOrCreate(tk.filter(i))->Encode(msg);
   }
 }
 void RemoteNode::DecodeMessage(Message* msg) {
   const auto& tk = msg->task;
   // a reverse order comparing to encode
   for (int i = tk.filter_size()-1; i >= 0; --i) {
-    FindFilterOrCreate(tk.filter(i))->decode(msg);
+    FindIFilterOrCreate(tk.filter(i))->Decode(msg);
   }
 }
 

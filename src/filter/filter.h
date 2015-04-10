@@ -6,21 +6,21 @@
 namespace ps {
 
 // A filter should be thread safe
-class Filter {
+class IFilter {
  public:
-  Filter() { }
-  virtual ~Filter() { }
+  IFilter() { }
+  virtual ~IFilter() { }
 
-  static Filter* create(const FilterConfig& conf);
+  static IFilter* create(const Filter& conf);
 
 
-  virtual void encode(Message* msg) { }
-  virtual void decode(Message* msg) { }
+  virtual void Encode(Message* msg) { }
+  virtual void Decode(Message* msg) { }
 
-  static FilterConfig* find(FilterConfig::Type type, Message* msg) {
+  static Filter* find(Filter::Type type, Message* msg) {
     return find(type, &(msg->task));
   }
-  static FilterConfig* find(FilterConfig::Type type, Task* task);
+  static Filter* find(Filter::Type type, Task* task);
 };
 
 } // namespace

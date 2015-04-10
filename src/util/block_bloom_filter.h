@@ -3,16 +3,16 @@
 namespace ps {
 
 // a blocked version, see
-// Cache-, Hash- and Space-Efficient Bloom Filters,
+// Cache-, Hash- and Space-Efficient Bloom IFilters,
 // http://algo2.iti.kit.edu/documents/cacheefficientbloomfilters-jea.pdf
 
-// 1.2x - 1.8x faster than BloomFilter, but may give slightly large FPR
+// 1.2x - 1.8x faster than BloomIFilter, but may give slightly large FPR
 template <typename K>
-class BlockBloomFilter : public Sketch {
+class BlockBloomIFilter : public Sketch {
  public:
-  BlockBloomFilter() { }
-  BlockBloomFilter(int m, int k) { resize(m, k); }
-  ~BlockBloomFilter() { delete [] data_; }
+  BlockBloomIFilter() { }
+  BlockBloomIFilter(int m, int k) { resize(m, k); }
+  ~BlockBloomIFilter() { delete [] data_; }
   void resize(int m, int k) {
     m = std::max(m, 1024);
     num_bin_ = (m / 8 / bin_size_) + 1;

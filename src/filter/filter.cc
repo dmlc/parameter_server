@@ -6,16 +6,16 @@
 
 namespace ps {
 
-Filter* Filter::create(const FilterConfig& conf) {
+IFilter* IFilter::create(const Filter& conf) {
   switch (conf.type()) {
-    case FilterConfig::KEY_CACHING:
-      return new KeyCachingFilter();
-    case FilterConfig::COMPRESSING:
-      return new CompressingFilter();
-    case FilterConfig::FIXING_FLOAT:
-      return new FixingFloatFilter();
-    case FilterConfig::NOISE:
-      return new AddNoiseFilter();
+    case Filter::KEY_CACHING:
+      return new KeyCachingIFilter();
+    case Filter::COMPRESSING:
+      return new CompressingIFilter();
+    case Filter::FIXING_FLOAT:
+      return new FixingFloatIFilter();
+    case Filter::NOISE:
+      return new AddNoiseIFilter();
     default:
       CHECK(false) << "unknow filter type";
   }
@@ -23,7 +23,7 @@ Filter* Filter::create(const FilterConfig& conf) {
 }
 
 
-FilterConfig* Filter::find(FilterConfig::Type type, Task* task) {
+Filter* IFilter::find(Filter::Type type, Task* task) {
   for (int i = 0; i < task->filter_size(); ++i) {
     if (task->filter(i).type() == type) return task->mutable_filter(i);
   }

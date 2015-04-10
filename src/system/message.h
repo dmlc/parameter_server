@@ -36,7 +36,7 @@ struct Message {
   // memory size in bytes
   size_t mem_size();
 
-  FilterConfig* add_filter(FilterConfig::Type type);
+  Filter* add_filter(Filter::Type type);
 
   // -- more local control signals --
   // they will not be sent to other nodes

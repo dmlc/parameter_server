@@ -240,7 +240,8 @@ void Manager::NodeDisconnected(const NodeID node_id) {
     }
     LOG(ERROR) << van_.my_node().id() << ": the scheduler is died, killing myself";
     string kill = "kill -9 " + std::to_string(getpid());
-    system(kill.c_str());
+    int ret = system(kill.c_str());
+    if (ret != 0) LOG(WARNING) << "failed to " << kill;
   }
 }
 
