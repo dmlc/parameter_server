@@ -1,6 +1,6 @@
-<!-- <img src="http://parameterserver.org/images/parameterserver.png" alt="Parameter Server" style="height:200px"> -->
+<img src="http://parameterserver.org/images/parameterserver.png" alt="Parameter Server" style="height:10px">
 
-[xx](http://parameterserver.org/images/parameterserver.png =250x)
+<!-- [xx](http://parameterserver.org/images/parameterserver.png =250x) -->
 The parameter server is a distributed system scaling to industry size machine
 learning problems. It provides asynchronous and zero-copy key-value pair
 communications between worker machines and server machines. It also supports
