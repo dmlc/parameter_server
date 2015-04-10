@@ -8,18 +8,19 @@ int CreateServerNode(int argc, char *argv[]) {
 
 int WorkerNodeMain(int argc, char *argv[]) {
   using namespace ps;
-  std::vector<Key> key = {1, 3, 5};
-  std::vector<Val> val = {1, 1, 1};
-  std::vector<Val> recv_val(3);
+
+  SBlob<Key> key = {1, 3, 5};
+  SBlob<Val> val = {1, 1, 1};
+  SBlob<Val> recv_val(3);
 
   KVWorker<Val> wk;
-  int ts = wk.Push(key, val);
+  int ts = wk.ZPush(key, val);
   wk.Wait(ts);
 
-  ts = wk.Pull(key, &recv_val);
+  ts = wk.ZPull(key, &recv_val);
   wk.Wait(ts);
 
   std::cout << "values pulled at " << MyNodeID() << ": " <<
-      CBlob<Val>(recv_val).ShortDebugString() << std::endl;
+      recv_val.ShortDebugString() << std::endl;
   return 0;
 }

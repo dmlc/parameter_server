@@ -14,12 +14,15 @@ int WorkerNodeMain(int argc, char *argv[]) {
 
   KVWorker<Val> wk;
   int ts = wk.Push(key, val);
+
+  SyncOpts opts;
+  opts.deps = {ts};
+  opts.callback = [&recv_val]() {
+    std::cout << "values pulled at " << MyNodeID() << ": " <<
+    CBlob<Val>(recv_val).ShortDebugString() << std::endl;
+  };
+  ts = wk.Pull(key, &recv_val, opts);
   wk.Wait(ts);
 
-  ts = wk.Pull(key, &recv_val);
-  wk.Wait(ts);
-
-  std::cout << "values pulled at " << MyNodeID() << ": " <<
-      CBlob<Val>(recv_val).ShortDebugString() << std::endl;
   return 0;
 }
