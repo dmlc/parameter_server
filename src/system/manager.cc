@@ -25,7 +25,7 @@ void Manager::Init(int argc, char *argv[]) {
   van_.Init();
   net_usage_.AddMyNode(van_.my_node());
 
-  app_ = App::Create("");
+  app_ = App::Create(argc, argv);
   CHECK(app_ != NULL) << ": failed to create app";
 
   if (IsScheduler()) {
@@ -55,6 +55,7 @@ void Manager::Run() {
   while (!is_my_node_inited_) usleep(500);
   if (van_.my_node().role() == Node::WORKER) {
     WaitServersReady();
+    usleep(1000);  // sleep a while to let all servers has been connected to me
   }
   VLOG(1) << "run app..";
   CHECK_NOTNULL(app_)->Run();

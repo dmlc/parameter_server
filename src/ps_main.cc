@@ -1,21 +1,18 @@
 #include "ps.h"
 
 namespace ps {
-App* App::Create(const string& conf) {
-  return new App();
+App* App::Create(int argc, char *argv[]) {
+  App* app = new App();
+  if (ps::IsServerNode()) {
+    CreateServerNode(argc, argv);
+  }
+  return app;
 }
 }  // namespace ps
 
 int main(int argc, char *argv[]) {
   ps::StartSystem(argc, argv);
-
-  int ret = 0;
-  if (ps::IsWorkerNode()) {
-    usleep(1000);
-    ret = WorkerNodeMain(argc, argv);
-  } else if (ps::IsServerNode()) {
-    ret = CreateServerNode(argc, argv);
-  }
+  int ret = ps::IsWorkerNode() ? WorkerNodeMain(argc, argv) : 0;
   ps::StopSystem();
   return ret;
 }

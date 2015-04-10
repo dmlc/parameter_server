@@ -266,7 +266,7 @@ class App : public Customer {
    *
    * @return The created instance
    */
-  static App* Create(const std::string& conf);
+  static App* Create(int argc, char *argv[]);
 
   /// @brief It is executed by the main thread immediately after this app has been
   /// created.
