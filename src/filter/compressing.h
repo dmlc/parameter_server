@@ -6,7 +6,7 @@ namespace ps {
 class CompressingIFilter : public IFilter {
  public:
   void Encode(Message* msg) {
-    auto conf = find(Filter::COMPRESSING, msg);
+    auto conf = Find(Filter::COMPRESSING, msg);
     if (!conf) return;
     conf->clear_uncompressed_size();
     if (msg->has_key()) {
@@ -19,7 +19,7 @@ class CompressingIFilter : public IFilter {
     }
   }
   void Decode(Message* msg) {
-    auto conf = find(Filter::COMPRESSING, msg);
+    auto conf = Find(Filter::COMPRESSING, msg);
     if (!conf) return;
     int has_key = msg->has_key();
     CHECK_EQ(conf->uncompressed_size_size(), msg->value.size() + has_key);

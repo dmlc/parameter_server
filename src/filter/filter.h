@@ -5,7 +5,9 @@
 
 namespace ps {
 
-// A filter should be thread safe
+/**
+ * \brief The interface of a filter
+ */
 class IFilter {
  public:
   IFilter() { }
@@ -13,14 +15,13 @@ class IFilter {
 
   static IFilter* create(const Filter& conf);
 
-
   virtual void Encode(Message* msg) { }
   virtual void Decode(Message* msg) { }
 
-  static Filter* find(Filter::Type type, Message* msg) {
-    return find(type, &(msg->task));
+  static Filter* Find(Filter::Type type, Message* msg) {
+    return Find(type, &(msg->task));
   }
-  static Filter* find(Filter::Type type, Task* task);
+  static Filter* Find(Filter::Type type, Task* task);
 };
 
 } // namespace

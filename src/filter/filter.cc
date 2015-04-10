@@ -23,7 +23,7 @@ IFilter* IFilter::create(const Filter& conf) {
 }
 
 
-Filter* IFilter::find(Filter::Type type, Task* task) {
+Filter* IFilter::Find(Filter::Type type, Task* task) {
   for (int i = 0; i < task->filter_size(); ++i) {
     if (task->filter(i).type() == type) return task->mutable_filter(i);
   }

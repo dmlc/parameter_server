@@ -22,7 +22,7 @@ class FixingFloatIFilter : public IFilter {
 
   // Decode / Encode a message
   void convert(Message* msg, bool Encode) {
-    auto filter_conf = CHECK_NOTNULL(find(Filter::FIXING_FLOAT, msg));
+    auto filter_conf = CHECK_NOTNULL(Find(Filter::FIXING_FLOAT, msg));
     if (filter_conf->num_bytes() == 0) return;
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());

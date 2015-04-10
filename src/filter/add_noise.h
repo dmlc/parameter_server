@@ -9,7 +9,7 @@ namespace ps {
 class AddNoiseIFilter : public IFilter {
  public:
   void Encode(Message* msg) {
-    auto filter_conf = CHECK_NOTNULL(find(Filter::NOISE, msg));
+    auto filter_conf = CHECK_NOTNULL(Find(Filter::NOISE, msg));
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
     for (int i = 0; i < n; ++i) {
