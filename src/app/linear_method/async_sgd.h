@@ -228,6 +228,7 @@ class AsyncSGDWorker : public ISGDCompNode, public LinearMethod {
       MessagePtr msg(new Message(kServerGroup));
       msg->setKey(key);
       msg->task.set_key_channel(id);
+      msg->addFilter(FilterConfig::KEY_CACHING)
       msg->fin_handle = [this, id]() { computeGradient(id); };
       model_.key(id) = key;
       model_.pull(msg);
