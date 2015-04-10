@@ -124,8 +124,8 @@ compression on values.
   int m = 100;
   for (int i = 0; i < m; ++i) {
     SyncOpts opts;
-    // opts.AddFilter(Filter::KEY_CACHING);
-    // opts.AddFilter(Filter::COMPRESSING);
+    opts.AddFilter(Filter::KEY_CACHING);
+    opts.AddFilter(Filter::COMPRESSING);
     int ts = wk.ZPush(key, val, opts);
     wk.Wait(ts);
 
