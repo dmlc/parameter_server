@@ -25,12 +25,14 @@ message Task {
   // the key range of this task
   optional PbRange key_range = 7;
   // namespace of keys
-  optional int32 key_channel = 8;
+  optional uint64 key_channel = 8;
   // true: the message sent with this task will contain a list of keys
   optional bool has_key = 9 [default = false];
 
-  // data type
   optional DataType key_type = 13;
+
+  // data type
+  repeated int32 value_len = 24;
   repeated DataType value_type = 14;
 
   // filters applied to the data

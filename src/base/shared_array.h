@@ -303,7 +303,7 @@ template<typename V> class SArray {
 // for debug use
 template <typename V>
 std::ostream& operator<<(std::ostream& os, const SArray<V>& obj) {
-  os << dbstr(obj.data(), obj.size(), 10);
+  os << DBSTR(obj.data(), obj.size(), 10);
   return os;
 }
 

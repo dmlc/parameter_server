@@ -50,15 +50,15 @@ struct SyncOpts {
   }
 
   /**
-   * \brief The keys are small integers. One can either set it to be true, or
-   * set a proper -max_key flag to avoid all data goes to one or a few servers.
-   */
-  bool small_keys = false;
-
-  /**
    * \brief the value length is dynamic.
    */
-  bool dynamic_value = false;
+  // bool dynamic_value = false;
+
+  /**
+   * \brief A value with length more than split_val is sliced into all servers
+   * nodes. Often used by nueral network
+   */
+  int split_val = 10000;
 };
 
 template<typename K, typename V> class KVCache;
@@ -204,7 +204,7 @@ class IHandle {
    * @param recv_vals the corresponding values received from the worker node
    * @param my_vals the corresponding local values
    */
-  inline void HandlePush(CBlob<Key> recv_keys, CBlob<V> recv_vals,
+  inline void HandlePush(int ts, CBlob<Key> recv_keys, CBlob<V> recv_vals,
                          Blob<V>* my_vals) {
     for (size_t i = 0; i < recv_vals.size; ++i)
       (*my_vals)[i] += recv_vals[i];
@@ -216,7 +216,7 @@ class IHandle {
    * @param my_vals the corresponding local values
    * @param sent_vals the corresponding values will send to the worker node
    */
-  inline void HandlePull(CBlob<Key> recv_keys, CBlob<V> my_vals,
+  inline void HandlePull(int ts, CBlob<Key> recv_keys, CBlob<V> my_vals,
                          Blob<V>* send_vals) {
     for (size_t i = 0; i < my_vals.size; ++i)
       (*send_vals)[i] = my_vals[i];
@@ -225,14 +225,14 @@ class IHandle {
   /**
    * \brief Initialize local values
    */
-  inline void HandleInit(CBlob<Key> keys, Blob<V>* vals) {
+  inline void HandleInit(int ts, CBlob<Key> keys, Blob<V>* vals) {
     memset(vals->data, 0, vals->size*sizeof(V));
   }
 };
 
 
 static const int kDynamicValue = -1;
-
+class KVStore;
 /*!
  * \brief key-value store for server nodes
  *
