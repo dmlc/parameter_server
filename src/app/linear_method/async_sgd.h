@@ -289,7 +289,7 @@ class AsyncSGDWorker : public ISGDCompNode {
 
     // push the gradient
     auto req = Parameter::Request(id, -1, {}, conf_.async_sgd().push_filter());
-    grad.EigenArray() /= (V)Y->rows();
+    // grad.EigenArray() /= (V)Y->rows();
     // LL << grad;
     model_.Push(req, model_[id].key, {grad}, [this](){ ++ processed_batch_; });
     model_.Clear(id);
