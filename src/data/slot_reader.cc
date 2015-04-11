@@ -6,9 +6,7 @@
 #include "util/filelinereader.h"
 namespace PS {
 
-DECLARE_bool(verbose);
-
-void SlotReader::init(const DataConfig& data, const DataConfig& cache) {
+void SlotReader::Init(const DataConfig& data, const DataConfig& cache) {
   // if (cache.file_size()) dump_to_disk_ = true;
   CHECK(cache.file_size());
   cache_ = cache.file(0);
@@ -28,7 +26,7 @@ size_t SlotReader::nnzEle(int slot_id) const {
   return nnz;
 }
 
-int SlotReader::read(ExampleInfo* info) {
+int SlotReader::Read(ExampleInfo* info) {
   CHECK_GT(FLAGS_num_threads, 0);
   {
     Lock l(mu_);
@@ -36,12 +34,10 @@ int SlotReader::read(ExampleInfo* info) {
     num_ex_.resize(data_.file_size());
   }
   {
-    if (FLAGS_verbose) {
-      for (size_t i = 0; i < data_.file_size(); ++i) {
-        LI << "I will load data file [" << i + 1 << "/" <<
-          data_.file_size() << "] [" << data_.file(i) << "]";
-      }
-    }
+    // for (size_t i = 0; i < data_.file_size(); ++i) {
+    //   VLOG(1) << "I will load data file [" << i + 1 << "/" <<
+    //       data_.file_size() << "] [" << data_.file(i) << "]";
+    // }
 
     ThreadPool pool(FLAGS_num_threads);
     for (int i = 0; i < data_.file_size(); ++i) {
@@ -58,11 +54,11 @@ int SlotReader::read(ExampleInfo* info) {
 }
 
 bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
-  if (FLAGS_verbose) {
-    Lock l(mu_);
-    LI << "loading data file [" << data.file(0) << "]; loaded [" <<
+  mu_.lock();
+  VLOG(1) << "loading data file [" << data.file(0) << "]; loaded [" <<
       loaded_file_count_ << "/" << data_.file_size() << "]";
-  }
+  mu_.unlock();
+
   // check if hit cache
   string info_name = cache_ + getFilename(data.file(0)) + ".info";
   ExampleInfo info;
@@ -80,9 +76,9 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     SArray<uint64> col_idx;
     SArray<uint16> row_siz;
     bool writeToFile(const string& name) {
-      return val.compressTo().writeToFile(name+".value")
-          && col_idx.compressTo().writeToFile(name+".colidx")
-          && row_siz.compressTo().writeToFile(name+".rowsiz");
+      return val.CompressTo().WriteToFile(name+".value")
+          && col_idx.CompressTo().WriteToFile(name+".colidx")
+          && row_siz.CompressTo().WriteToFile(name+".rowsiz");
     }
   };
   VSlot vslots[kSlotIDmax];
@@ -97,11 +93,11 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
       CHECK_LT(slot.id(), kSlotIDmax);
       auto& vslot = vslots[slot.id()];
       int key_size = slot.key_size();
-      for (int j = 0; j < key_size; ++j) vslot.col_idx.pushBack(slot.key(j));
+      for (int j = 0; j < key_size; ++j) vslot.col_idx.push_back(slot.key(j));
       int val_size = slot.val_size();
-      for (int j = 0; j < val_size; ++j) vslot.val.pushBack(slot.val(j));
-      while (vslot.row_siz.size() < num_ex) vslot.row_siz.pushBack(0);
-      vslot.row_siz.pushBack(std::max(key_size, val_size));
+      for (int j = 0; j < val_size; ++j) vslot.val.push_back(slot.val(j));
+      while (vslot.row_siz.size() < num_ex) vslot.row_siz.push_back(0);
+      vslot.row_siz.push_back(std::max(key_size, val_size));
     }
     ++ num_ex;
   };
@@ -138,7 +134,7 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
   for (int i = 0; i < kSlotIDmax; ++i) {
     auto& vslot = vslots[i];
     if (vslot.row_siz.empty() && vslot.val.empty()) continue;
-    while (vslot.row_siz.size() < num_ex) vslot.row_siz.pushBack(0);
+    while (vslot.row_siz.size() < num_ex) vslot.row_siz.push_back(0);
     CHECK(vslot.writeToFile(cacheName(data, i)));
   }
   {
@@ -146,10 +142,8 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
     info_ = mergeExampleInfo(info_, info);
     loaded_file_count_++;
     num_ex_[ith_file] = num_ex;
-    if (FLAGS_verbose) {
-      LI << "loaded data file [" << data.file(0) << "]; loaded [" <<
+    VLOG(1) << "loaded data file [" << data.file(0) << "]; loaded [" <<
         loaded_file_count_ << "/" << data_.file_size() << "]";
-    }
   }
   return true;
 }
@@ -162,8 +156,8 @@ SArray<uint64> SlotReader::index(int slot_id) {
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".colidx";
     SArray<char> comp;
-    if (!comp.readFromFile(file)) continue;
-    SArray<uint64> uncomp; uncomp.uncompressFrom(comp);
+    if (!comp.ReadFromFile(file)) continue;
+    SArray<uint64> uncomp; uncomp.UncompressFrom(comp);
     idx.append(uncomp);
   }
   CHECK_EQ(idx.size(), nnz);
@@ -181,8 +175,8 @@ SArray<size_t> SlotReader::offset(int slot_id) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".rowsiz";
     SArray<char> comp;
     SArray<uint16> uncomp;
-    if (comp.readFromFile(file) && !comp.empty()) {
-      uncomp.uncompressFrom(comp);
+    if (comp.ReadFromFile(file) && !comp.empty()) {
+      uncomp.UncompressFrom(comp);
       CHECK_EQ(uncomp.size(), num_ex_[i]) << file;
     } else {
       uncomp.resize(num_ex_[i], 0);

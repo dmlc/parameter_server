@@ -1,61 +1,57 @@
-CC = g++
+ifneq ("$(wildcard ./config.mk)","")
+include ./config.mk
+else
+include make/config.mk
+endif
 
-# OPT = -O0 -ggdb
-OPT = -O3 -ggdb
-
-THIRD_PATH=$(shell pwd)/third_party
-STATIC_THIRD_LIB=0
-USE_S3=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
-	ifeq ($(USE_S3), 1)
+	ifeq ($(USE_S3),1)
 	THIRD_LIB+=$(addprefix $(THIRD_PATH)/lib/, libxml2.a)
 	endif
 else
 THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
-	ifeq ($(USE_S3), 1)
-        THIRD_LIB+=-lxml2
-        endif
+	ifeq ($(USE_S3),1)
+	THIRD_LIB+=-lxml2
+	endif
 endif
-# THIRD_LIB+=-ltcmalloc_and_profiler
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
-CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
+CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) $(EXTRA_CFLAGS)
 ifeq ($(USE_S3), 1)
 CFLAGS += -DUSE_S3=1
 endif
-LDFLAGS += $(THIRD_LIB) -lpthread -lrt
+LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread # -lrt
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a
+TEST_MAIN = build/test_main.o
 
-all: ps app
 clean:
 	rm -rf build
+	find . -name "*.pb.[ch]*" -delete
 
-ps: $(PS_LIB) $(PS_MAIN)
-app: build/ps
+ps: $(PS_LIB) $(PS_MAIN) $(TEST_MAIN)
 
-build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
-sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
-			  $(wildcard src/system/*.cc) $(wildcard src/filter/*.cc)
-sys_protos	= $(wildcard src/*/proto/*.proto)
+# PS system
+sys_dir		= $(addprefix src/, util data system filter learner parameter)
+sys_srcs	= $(wildcard $(patsubst %, %/*.cc, $(sys_dir)))
+sys_protos	= $(wildcard $(patsubst %, %/proto/*.proto, $(sys_dir)))
 sys_objs	= $(patsubst src/%.proto, build/%.pb.o, $(sys_protos)) \
-		      $(patsubst src/%.cc, build/%.o, $(sys_srcs))
-build/libps.a: $(sys_objs)
-	ar crv $@ $?
+			  $(patsubst src/%.cc, build/%.o, $(sys_srcs))
+
+build/libps.a: $(patsubst %.proto, %.pb.h, $(sys_protos)) $(sys_objs)
+	ar crv $@ $(filter %.o, $?)
 
 build/libpsmain.a: build/ps_main.o
 	ar crv $@ $?
 
-app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
-
-build/ps:  build/app/main/main.o $(app_objs) $(PS_LIB)
+# applications
+build/linear: $(addprefix build/app/linear_method/, proto/linear.pb.o main.o) $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
+# general rules
 build/%.o: src/%.cc
 	@mkdir -p $(@D)
 	$(CC) $(INCPATH) -std=c++0x -MM -MT build/$*.o $< >build/$*.d

@@ -1,27 +1,26 @@
 #pragma once
-#include "system/app.h"
+#include "system/customer.h"
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
-#include "app/linear_method/linear.h"
 namespace PS {
 namespace LM {
 
-class ModelEvaluation : public App, public LinearMethod {
+class ModelEvaluation : public App {
  public:
-  ModelEvaluation(const string& name, const Config& conf)
-      : App(name), LinearMethod(conf) { }
+  ModelEvaluation(const Config& conf) : App(), conf_(conf) { }
   virtual ~ModelEvaluation() { }
-  void run();
+  virtual void Run();
  private:
   typedef float Real;
+  Config conf_;
 };
 
-void ModelEvaluation::run() {
-  if (!isScheduler()) return;
+void ModelEvaluation::Run() {
+  if (!IsScheduler()) return;
   // load model
   std::unordered_map<Key, Real> weight;
   auto model = searchFiles(conf_.model_input());
-  LI << "find " << model.file_size() << " model files";
+  NOTICE("find %d model files", model.file_size());
   for (int i = 0; i < model.file_size(); ++i) {
     std::ifstream in(model.file(i));
     while (in.good()) {
@@ -30,12 +29,13 @@ void ModelEvaluation::run() {
       weight[k] = v;
     }
   }
-  LI << "load " << weight.size() << " model entries";
+
+  NOTICE("load %lu model entries", weight.size());
 
   // load evaluation data and compute the predicted value
   auto data = searchFiles(conf_.validation_data());
   data.set_ignore_feature_group(true);
-  LI << "find " << data.file_size() << " data files";
+  NOTICE("find %d data files", data.file_size());
 
   SArray<Real> label;
   SArray<Real> predict;
@@ -48,7 +48,7 @@ void ModelEvaluation::run() {
     CHECK_EQ(mat.size(), 2);
     label.append(mat[0]->value());
 
-    SArray<Real> Xw(mat[1]->rows()); Xw.setZero();
+    SArray<Real> Xw(mat[1]->rows()); Xw.SetZero();
     auto X = std::static_pointer_cast<SparseMatrix<Key, Real>>(mat[1]);
     for (int i = 0; i < X->rows(); ++i) {
       Real re = 0;
@@ -62,15 +62,15 @@ void ModelEvaluation::run() {
       Xw[i] = re;
     }
     predict.append(Xw);
-    LI << "load " << label.size() << " examples";
+    NOTICE("load %lu examples", label.size());
   } while (good);
 
   // label.writeToFile("label");
   // predict.writeToFile("predict");
 
   // evaluation
-  LI << "auc: " << Evaluation<Real>::auc(label, predict);
-  LI << "accuracy: " << Evaluation<Real>::accuracy(label, predict);
+  NOTICE("auc: %f", Evaluation<Real>::auc(label, predict));
+  NOTICE("accuracy: %f", Evaluation<Real>::accuracy(label, predict));
 }
 
 } // namespace LM

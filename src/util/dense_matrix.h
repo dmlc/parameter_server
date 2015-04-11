@@ -36,22 +36,22 @@ class DenseMatrix : public Matrix<V> {
   virtual MatrixPtr<V> rowBlock(SizeR range) const {
     if (colMajor()) CHECK_EQ(range, SizeR(0, rows()));
     auto info = info_;
-    range.to(info.mutable_row());
+    range.To(info.mutable_row());
     info.set_nnz(range.size() * cols());
-    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*cols())));
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.Segment(range*cols())));
   }
 
   virtual MatrixPtr<V> colBlock(SizeR range) const {
     if (rowMajor()) CHECK_EQ(range, SizeR(0, cols()));
     auto info = info_;
-    range.to(info.mutable_col());
+    range.To(info.mutable_col());
     info.set_nnz(range.size() * rows());
-    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.segment(range*rows())));
+    return MatrixPtr<V>(new DenseMatrix<V>(info, value_.Segment(range*rows())));
   }
 
   virtual bool writeToBinFile(string name) const {
     return (writeProtoToASCIIFile(info_, name+".info")
-            && value_.writeToFile(name+".value"));
+            && value_.WriteToFile(name+".value"));
   }
 
   virtual string debugString() const {
@@ -68,8 +68,8 @@ void DenseMatrix<V>::resize(
     size_t rows, size_t cols, size_t nnz, bool row_major) {
   info_.set_type(MatrixInfo::DENSE);
   info_.set_row_major(row_major);
-  SizeR(0, rows).to(info_.mutable_row());
-  SizeR(0, cols).to(info_.mutable_col());
+  SizeR(0, rows).To(info_.mutable_row());
+  SizeR(0, cols).To(info_.mutable_col());
   nnz = rows * cols;
   // CHECK_EQ(nnz, rows*cols);
   info_.set_nnz(nnz);
@@ -78,7 +78,7 @@ void DenseMatrix<V>::resize(
   // info_.set_nnz_per_col(rows);
   // data
   value_.resize(nnz);
-  value_.setZero();
+  value_.SetZero();
 
 }
 

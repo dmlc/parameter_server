@@ -8,8 +8,8 @@
 #include "util/filelinereader.h"
 #include "util/recordio.h"
 #include "util/sparse_matrix.h"
-
 namespace PS {
+DECLARE_uint64(hash_kernel);
 
 template<typename V>
 class StreamReader {
@@ -100,13 +100,18 @@ void StreamReader<V>::parseExample(const Example& ex, int num_read) {
     CHECK_LT(slot.id(), kSlotIDmax);
     auto& vslot = vslots_[slot.id()];
     int key_size = slot.key_size();
-    for (int j = 0; j < key_size; ++j) vslot.col_idx.pushBack(slot.key(j));
+
+    if (FLAGS_hash_kernel > 0) {
+      for (int j = 0; j < key_size; ++j) vslot.col_idx.push_back(slot.key(j) % FLAGS_hash_kernel);
+    } else {
+      for (int j = 0; j < key_size; ++j) vslot.col_idx.push_back(slot.key(j));
+    }
     int val_size = slot.val_size();
     for (int j = 0; j < val_size; ++j) {
-      vslot.val.pushBack(slot.val(j));
+      vslot.val.push_back(slot.val(j));
     }
-    while (vslot.row_siz.size() < num_read) vslot.row_siz.pushBack(0);
-    vslot.row_siz.pushBack(std::max(key_size, val_size));
+    while (vslot.row_siz.size() < num_read) vslot.row_siz.push_back(0);
+    vslot.row_siz.push_back(std::max(key_size, val_size));
   }
 }
 

@@ -5,7 +5,6 @@ message Node {
   enum Role {
     SERVER = 0;
     WORKER = 1;
-    MANAGER = 2;  // server manager
     SCHEDULER = 3;  // each running application has a single scheduler
     GROUP = 4;      // a virtual node, present a group of node
     UNUSED = 5;     // a backup node, could turn into another node

@@ -5,33 +5,33 @@ namespace PS {
 
 class CompressingFilter : public Filter {
  public:
-  void encode(const MessagePtr& msg) {
+  void encode(Message* msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
     conf->clear_uncompressed_size();
-    if (msg->hasKey()) {
+    if (msg->has_key()) {
       conf->add_uncompressed_size(msg->key.size());
-      msg->key = msg->key.compressTo();
+      msg->key = msg->key.CompressTo();
     }
     for (auto& v : msg->value) {
       conf->add_uncompressed_size(v.size());
-      v = v.compressTo();
+      v = v.CompressTo();
     }
   }
-  void decode(const MessagePtr& msg) {
+  void decode(Message* msg) {
     auto conf = find(FilterConfig::COMPRESSING, msg);
     if (!conf) return;
-    int has_key = msg->hasKey();
+    int has_key = msg->has_key();
     CHECK_EQ(conf->uncompressed_size_size(), msg->value.size() + has_key);
 
     if (has_key) {
       SArray<char> raw(conf->uncompressed_size(0));
-      raw.uncompressFrom(msg->key);
+      raw.UncompressFrom(msg->key);
       msg->key = raw;
     }
     for (int i = 0; i < msg->value.size(); ++i) {
       SArray<char> raw(conf->uncompressed_size(i+has_key));
-      raw.uncompressFrom(msg->value[i]);
+      raw.UncompressFrom(msg->value[i]);
       msg->value[i] = raw;
     }
   }

@@ -1,73 +1,74 @@
 #pragma once
 #include "util/common.h"
-#include "util/status.h"
 #include "system/proto/node.pb.h"
 #include "system/message.h"
-
 namespace PS {
 
-DECLARE_string(my_node);
-// Van sends (receives) packages to (from) a node
-// The current implementation uses ZeroMQ
+/**
+ * @brief Van sends (receives) packages to (from) a node The current
+ * implementation uses ZeroMQ
+ *
+ */
 class Van {
  public:
-  Van() : context_(nullptr), receiver_(nullptr) {}
-  ~Van() { }
-  void init();
-  void destroy();
+  Van() { }
+  ~Van();
 
-  void disconnect(const Node&  node);
-  Status connect(const Node&  node);
+  void Init();
 
-  // check whether I could connect to a specified node
-  bool connected(const Node& node);
+  void Disconnect(const Node&  node);
+  bool Connect(const Node&  node);
 
-  // Status send(const MessagePtr& msg);
-  Status send(const MessagePtr& msg, size_t* send_bytes);
-  Status recv(const MessagePtr& msg, size_t* recv_bytes);
+  bool Send(Message* msg, size_t* send_bytes);
+  bool Recv(Message* msg, size_t* recv_bytes);
 
-  Node& myNode() { return my_node_; }
+  static Node ParseNode(const string& node_str);
+
+  Node& my_node() { return my_node_; }
   Node& scheduler() { return scheduler_; };
-
-  // utility functions for node
-  static Node parseNode(const string& config) {
-    Node node; CHECK(TextFormat::ParseFromString(config, &node));
-    if (!node.has_id()) node.set_id(id(address(node)));
-    return node;
-  }
-
-  static std::string address(const Node& node) {
-    return node.hostname() + ":" + std::to_string(node.port());
-  }
-  static const NodeID id(const std::string& name) {
-    return name;
-  }
-
-  // print statistic info
-  void statistic();
-
  private:
-  DISALLOW_COPY_AND_ASSIGN(Van);
   // bind to my port
-  void bind();
-  void *context_;
-  void *receiver_;
+  void Bind();
+
+  static void FreeData(void *data, void *hint) {
+    if (hint == NULL) {
+      delete [] (char*)data;
+    } else {
+      delete (SArray<char>*)hint;
+    }
+  }
+
+  bool IsScheduler() { return my_node_.role() == Node::SCHEDULER; }
+  // for scheduler: monitor the liveness of all other nodes
+  // for other nodes: monitor the liveness of the scheduler
+  void Monitor();
+
+  void *context_ = nullptr;
+  void *receiver_ = nullptr;
   Node my_node_;
   Node scheduler_;
-  std::mutex mu_;
   std::unordered_map<NodeID, void *> senders_;
-  std::unordered_map<NodeID, string> hostnames_;
 
+  DISALLOW_COPY_AND_ASSIGN(Van);
+
+  // TODO move to postoffice::perf_monitor_
+  // print statistic info
+  void Statistic();
+  std::unordered_map<NodeID, string> hostnames_;
   size_t sent_to_local_ = 0;
   size_t sent_to_others_ = 0;
   size_t received_from_local_ = 0;
   size_t received_from_others_ = 0;
 
-  std::ofstream debug_out_;
-//   #ifndef debug_out_
-// #define debug_out_ std::cerr
-//   #endif
-  Node assembleMyNode();
+  // for monitor
+  std::unordered_map<int, NodeID> fd_to_nodeid_;
+  std::mutex fd_to_nodeid_mu_;
+  std::thread* monitor_thread_;
+
+  // debug performance
+  double send_time_ = 0;
+  double recv_time_ = 0;
+  int num_call_ = 0;
 };
 
 } // namespace PS

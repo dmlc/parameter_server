@@ -1,186 +1,49 @@
+/**
+ * @file   bcd.h
+ * @brief  The interface for a block coordinate descent solver
+ */
 #pragma once
 #include "learner/proto/bcd.pb.h"
+#include "system/assigner.h"
 #include "data/slot_reader.h"
 #include "data/common.h"
-#include "system/postmaster.h"
-#include "parameter/kv_buffered_vector.h"
+#include "util/localizer.h"
+#include "parameter/kv_vector.h"
 namespace PS {
-DECLARE_bool(verbose);
-// block coordinate descent solver
-class BCDCommon {
- public:
-  BCDCommon(const BCDConfig& conf) : bcd_conf_(conf) {
-    if (!bcd_conf_.has_local_cache()) {
-      bcd_conf_.mutable_local_cache()->add_file("/tmp/bcd_");
-    }
-  }
 
-  virtual ~BCDCommon() { }
- protected:
-  // feature group
-  std::vector<int> fea_grp_;
-  const int time_ratio_ = 10;
-  BCDConfig bcd_conf_;
-};
-
-class BCDScheduler : public App, public BCDCommon {
+/**
+ * @brief The scheduler.
+ */
+class BCDScheduler : public App {
  public:
-  BCDScheduler(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf) { }
+  BCDScheduler(const BCDConfig& conf) : App(), bcd_conf_(conf) { }
   virtual ~BCDScheduler() { }
 
-  void loadTrainingData(const DataConfig& train) {
-    // ask the workers to load the data
-    auto load_time = tic();
-    auto confs = Postmaster::partitionData(train, sys_.yp().num_workers());
-    std::vector<Task> loads(confs.size());
-    for (int i = 0; i < confs.size(); ++i) {
-      auto bcd = loads[i].mutable_bcd();
-      bcd->set_cmd(BCDCall::LOAD_DATA);
-      *bcd->mutable_data() = confs[i];
-    }
-    int hit_cache = 0;
-    port(kWorkerGroup)->submitAndWait(loads, [this, &hit_cache](){
-        LoadDataReturn info; CHECK(info.ParseFromString(exec_.lastRecvReply()));
-        // LL << info.DebugString();
-        g_train_info_ = mergeExampleInfo(g_train_info_, info.example_info());
-        hit_cache += info.hit_cache();
-      });
-    if (hit_cache > 0) {
-      CHECK_EQ(hit_cache, loads.size()) << "clear the local caches";
-      LI << "Hit local caches for the training data";
-    }
-    LI << "Loaded " << g_train_info_.num_ex() << " examples in "
-       << toc(load_time) << " sec";
-
-
-    // preprocess the training data
-    for (int i = 0; i < g_train_info_.slot_size(); ++i) {
-      auto info = g_train_info_.slot(i);
-      CHECK(info.has_id());
-      if (info.id() == 0) continue;  // it's the label
-      fea_grp_.push_back(info.id());
-    }
-    auto preprocess_time = tic();
-    Task preprocess;
-    auto prep_bcd = preprocess.mutable_bcd();
-    prep_bcd->set_cmd(BCDCall::PREPROCESS_DATA);
-    for (auto grp : fea_grp_) prep_bcd->add_fea_grp(grp);
-    prep_bcd->set_hit_cache(hit_cache > 0);
-    port(kCompGroup)->submitAndWait(preprocess);
-    LI << "Preprocessing is finished in " << toc(preprocess_time) << " sec";
-    if (bcd_conf_.tail_feature_freq()) {
-      LI << "Features with frequency <= " << bcd_conf_.tail_feature_freq()
-         << " are filtered";
-    }
+  virtual void ProcessRequest(Message* request);
+  virtual void ProcessResponse(Message* response);
+  virtual void Run() {
+    LoadData();
+    PreprocesseData();
+    DivideFeatureBlocks();
   }
 
-  void divideFeatureBlocks() {
-    // partition feature blocks
-    for (int i = 0; i < g_train_info_.slot_size(); ++i) {
-      auto info = g_train_info_.slot(i);
-      CHECK(info.has_id());
-      if (info.id() == 0) continue;  // it's the label
-      CHECK(info.has_nnz_ele());
-      CHECK(info.has_nnz_ex());
-      double nnz_per_row = (double)info.nnz_ele() / (double)info.nnz_ex();
-      int n = 1;  // number of blocks for a feature group
-      if (nnz_per_row > 1 + 1e-6) {
-        // only parititon feature group whose features are correlated
-        n = std::max((int)std::ceil(nnz_per_row * bcd_conf_.feature_block_ratio()), 1);
-      }
-      for (int i = 0; i < n; ++i) {
-        auto block = Range<Key>(info.min_key(), info.max_key()).evenDivide(n, i);
-        if (block.empty()) continue;
-        fea_blk_.push_back(std::make_pair(info.id(), block));
-      }
-    }
-    LI << "Features are partitioned into " << fea_blk_.size() << " blocks";
-
-    // a simple block order
-    for (int i = 0; i < fea_blk_.size(); ++i) blk_order_.push_back(i);
-
-    // blocks for important feature groups
-    std::vector<string> hit_blk;
-    for (int i = 0; i < bcd_conf_.prior_fea_group_size(); ++i) {
-      int grp_id = bcd_conf_.prior_fea_group(i);
-      std::vector<int> tmp;
-      for (int k = 0; k < fea_blk_.size(); ++k) {
-        if (fea_blk_[k].first == grp_id) tmp.push_back(k);
-      }
-      if (tmp.empty()) continue;
-      hit_blk.push_back(std::to_string(grp_id));
-      for (int j = 0; j < bcd_conf_.num_iter_for_prior_fea_group(); ++j) {
-        if (bcd_conf_.random_feature_block_order()) {
-          std::random_shuffle(tmp.begin(), tmp.end());
-        }
-        prior_blk_order_.insert(prior_blk_order_.end(), tmp.begin(), tmp.end());
-      }
-    }
-    if (!hit_blk.empty()) LI << "Prior feature groups: " + join(hit_blk, ", ");
-    total_timer_.restart();
-  }
-
-  void saveModel(const DataConfig& data) {
-    Task task;
-    task.mutable_bcd()->set_cmd(BCDCall::SAVE_MODEL);
-    *task.mutable_bcd()->mutable_data() = data;
-    port(kServerGroup)->submitAndWait(task);
-  }
  protected:
-  void mergeProgress(int iter) {
-    BCDProgress recv;
-    CHECK(recv.ParseFromString(exec_.lastRecvReply()));
-    auto& p = g_progress_[iter];
-    p.set_objective(p.objective() + recv.objective());
-    p.set_nnz_w(p.nnz_w() + recv.nnz_w());
-
-    if (recv.busy_time_size() > 0) p.add_busy_time(recv.busy_time(0));
-    p.set_total_time(total_timer_.stop());
-    total_timer_.start();
-    p.set_relative_obj(iter==0 ? 1 : g_progress_[iter-1].objective()/p.objective() - 1);
-    p.set_violation(std::max(p.violation(), recv.violation()));
-    p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
-  }
-
-  void showTime(int iter) {
-    if (iter == -3) {
-      fprintf(stderr, "|    time (sec.)\n");
-    } else if (iter == -2) {
-      fprintf(stderr, "|(app:min max) total\n");
-    } else if (iter == -1) {
-      fprintf(stderr, "+-----------------\n");
-    } else {
-      auto prog = g_progress_[iter];
-      double ttl_t = prog.total_time() - (
-          iter > 0 ? g_progress_[iter-1].total_time() : 0);
-      int n = prog.busy_time_size();
-      Eigen::ArrayXd busy_t(n);
-      for (int i = 0; i < n; ++i) {
-        busy_t[i] = prog.busy_time(i);
-      }
-      fprintf(stderr, "|%6.1f%6.1f%6.1f\n", busy_t.minCoeff(), busy_t.maxCoeff(), ttl_t);
-    }
-  }
-
-  void showObjective(int iter) {
-    if (iter == -3) {
-      fprintf(stderr, "     |        training        |  sparsity ");
-    } else if (iter == -2) {
-      fprintf(stderr, "iter |  objective    relative |     |w|_0 ");
-    } else if (iter == -1) {
-      fprintf(stderr, " ----+------------------------+-----------");
-    } else {
-      auto prog = g_progress_[iter];
-      fprintf(stderr, "%4d | %.5e  %.3e |%10lu ",
-              iter, prog.objective(), prog.relative_obj(), (size_t)prog.nnz_w());
-    }
-  }
+  /**
+   * @brief issues model saving tasks to workers
+   */
+  void SaveModel(const DataConfig& data);
+  /**
+   * @brief returns the time string
+   */
+  std::string ShowTime(int iter);
+  /**
+   * @brief returns the objective string
+   */
+  std::string ShowObjective(int iter);
 
   // progress of all iterations. The progress of all nodes are merged for every
   // iteration.
   std::map<int, BCDProgress> g_progress_;
-  Timer total_timer_;
   // feature block info, format: pair<fea_grp_id, fea_range>
   typedef std::vector<std::pair<int, Range<Key>>> FeatureBlocks;
   FeatureBlocks fea_blk_;
@@ -188,42 +51,126 @@ class BCDScheduler : public App, public BCDCommon {
   std::vector<int> prior_blk_order_;
   // global data information
   ExampleInfo g_train_info_;
+  BCDConfig bcd_conf_;
+  std::vector<int> fea_grp_;
+  DataAssigner data_assigner_;
+ private:
+  /**
+   * @brief waits util all workers finished data loading
+   */
+  void LoadData();
+
+  /**
+   * @brief issues data preprocessing tasks to workers
+   */
+  void PreprocesseData();
+
+  /**
+   * @brief divide feature into blocks
+   */
+  void DivideFeatureBlocks();
+
+  /**
+   * @brief merge the progress of all nodes at iteration iter
+   */
+  void MergeProgress(int iter, const BCDProgress& recv);
+
+  int hit_cache_ = 0;
+  int load_data_ = 0;
+  Timer total_timer_;
 };
 
+/**
+ * @brief The iterface of a computation node. One must implement the virtual
+ * functions defined here.
+ */
 template <typename V>
-class BCDServer : public App, public BCDCommon {
+class BCDCompNode : public App {
  public:
-  BCDServer(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf), model_(name+"_model", name) { }
-  virtual ~BCDServer() { }
-
-  void process(const MessagePtr& msg) {
-    CHECK(msg->task.has_bcd());
-    auto bcd = msg->task.bcd();
-    int time  = msg->task.time() * time_ratio_;
-    switch (bcd.cmd()) {
+  BCDCompNode(const BCDConfig& conf) : bcd_conf_(conf), model_(true) { }
+  virtual ~BCDCompNode() { }
+  virtual void ProcessRequest(Message* request) {
+    const auto& task = request->task;
+    CHECK(task.has_bcd());
+    int time = task.bcd().time();
+    switch (task.bcd().cmd()) {
       case BCDCall::PREPROCESS_DATA:
-        preprocessData(time, bcd);
+        PreprocessData(time, request);
         break;
       case BCDCall::UPDATE_MODEL:
-        updateModel(time, bcd);
+        Update(time, request);
         break;
-      case BCDCall::SAVE_MODEL:
-        CHECK(bcd.has_data());
-        saveModel(bcd.data());
       case BCDCall::EVALUATE_PROGRESS: {
-        BCDProgress prog; evaluate(&prog);
-        sys_.replyProtocalMessage(msg, prog);
-        break;
-      }
+        BCDProgress prog; Evaluate(&prog);
+        string str; CHECK(prog.SerializeToString(&str));
+        Task res; res.set_msg(str);
+        res.mutable_bcd()->set_iter(task.bcd().iter());
+        res.mutable_bcd()->set_cmd(BCDCall::EVALUATE_PROGRESS);
+        Reply(request, res);
+      } break;
       default: break;
     }
   }
  protected:
-  virtual void updateModel(int time, const BCDCall& call) = 0;
-  virtual void evaluate(BCDProgress* prog) = 0;
+  /**
+   * @brief Update the model
+   *
+   * @param time the timestamp
+   * @param msg the request from the scheduler
+   */
+  virtual void Update(int time, Message* msg) = 0;
+  /**
+   * @brief Evaluate the progress
+   *
+   * @param prog the progress
+   */
+  virtual void Evaluate(BCDProgress* prog) = 0;
+  /**
+   * @brief Preprocesse the training data.
+   *
+   * Tranpose the training data into column-major format, and also build the key
+   * maping from global uint64 key to local continous key to fast the local
+   * computation.
+   *
+   * @param time the timestamp
+   * @param msg the request from the scheduler
+   */
+  virtual void PreprocessData(int time, Message* msg) = 0;
 
-  virtual void preprocessData(int time, const BCDCall& call) {
+  const int time_ratio_ = 3;
+  // feature group
+  std::vector<int> fea_grp_;
+  BCDConfig bcd_conf_;
+  KVVector<Key, V> model_;
+};
+
+#define USING_BCD_COMP_NODE                     \
+  using BCDCompNode<V>::fea_grp_;               \
+  using BCDCompNode<V>::model_;                 \
+  using BCDCompNode<V>::bcd_conf_
+
+/**
+ * @brief A server node
+ *
+ */
+template <typename V>
+class BCDServer : public BCDCompNode<V> {
+ public:
+  BCDServer(const BCDConfig& conf)
+      : BCDCompNode<V>(conf) { }
+  virtual ~BCDServer() { }
+
+  virtual void ProcessRequest(Message* request) {
+    BCDCompNode<V>::ProcessRequest(request);
+    auto bcd = request->task.bcd();
+    if (bcd.cmd() == BCDCall::SAVE_MODEL) {
+      CHECK(bcd.has_data());
+      SaveModel(bcd.data());
+    }
+  }
+ protected:
+  virtual void PreprocessData(int time, Message* request) {
+    auto call = request->task.bcd();
     int grp_size = call.fea_grp_size();
     fea_grp_.clear();
     for (int i = 0; i < grp_size; ++i) {
@@ -231,35 +178,34 @@ class BCDServer : public App, public BCDCommon {
     }
     bool hit_cache = call.hit_cache();
     // filter tail keys
-    for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
+    for (int i = 0; i < grp_size; ++i, time += 3) {
       if (hit_cache) continue;
-      model_.waitInMsg(kWorkerGroup, time);
-      model_.finish(kWorkerGroup, time+1);
+      model_.WaitReceivedRequest(time, kWorkerGroup);
+      model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
-    for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
-      // wait untill received all keys from workers
-      model_.waitInMsg(kWorkerGroup, time);
+    for (int i = 0; i < grp_size; ++i, time += 3) {
+      // wait until received all keys from workers
+      model_.WaitReceivedRequest(time, kWorkerGroup);
       // initialize the weight
-      int chl = fea_grp_[i];
-      model_.clearTailFilter(chl);
-      model_.value(chl).resize(model_.key(chl).size());
-      model_.value(chl).setValue(bcd_conf_.init_w());
-      model_.finish(kWorkerGroup, time+1);
+      auto& grp = model_[fea_grp_[i]];
+      grp.value.resize(grp.key.size());
+      grp.value.SetValue(bcd_conf_.init_w());
+      model_.FinishReceivedRequest(time+1, kWorkerGroup);
     }
+    model_.ClearFilter();
   }
 
-  void saveModel(const DataConfig& output) {
-
+  void SaveModel(const DataConfig& output) {
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
-      std::string file = output.file(0) + "_" + myNodeID();
+      std::string file = output.file(0) + "_" + MyNodeID();
       if (!dirExists(getPath(file))) {
         createDir(getPath(file));
       }
       std::ofstream out(file); CHECK(out.good());
       for (int grp : fea_grp_) {
-        auto key = model_.key(grp);
-        auto value = model_.value(grp);
+        auto key = model_[grp].key;
+        auto value = model_[grp].value;
         CHECK_EQ(key.size(), value.size());
         // TODO use the model_file in msg
         for (size_t i = 0; i < key.size(); ++i) {
@@ -267,61 +213,56 @@ class BCDServer : public App, public BCDCommon {
           if (v != 0 && !(v != v)) out << key[i] << "\t" << v << "\n";
         }
       }
-      LI << myNodeID() << " written the model to " << file;
+      LI << MyNodeID() << " written the model to " << file;
     }
   }
-  KVBufferedVector<Key, V> model_;
+  USING_BCD_COMP_NODE;
 };
 
 template <typename V>
-class BCDWorker : public App, public BCDCommon {
+class BCDWorker : public BCDCompNode<V> {
  public:
-  BCDWorker(const string& name, const BCDConfig& conf)
-      : App(name), BCDCommon(conf), model_(name+"_model", name) { }
+  BCDWorker(const BCDConfig& conf)
+      : BCDCompNode<V>(conf) {
+    if (!bcd_conf_.has_local_cache()) {
+      bcd_conf_.mutable_local_cache()->add_file("/tmp/bcd_");
+    }
+  }
   virtual ~BCDWorker() { }
 
-  void process(const MessagePtr& msg) {
-    CHECK(msg->task.has_bcd());
-    auto bcd = msg->task.bcd();
-    int time  = msg->task.time() * time_ratio_;
-    switch (bcd.cmd()) {
-      case BCDCall::LOAD_DATA: {
-        LoadDataReturn ret;
-        int hit_cache = 0;
-        CHECK(bcd.has_data());
-        loadData(bcd.data(), ret.mutable_example_info(), &hit_cache);
-        ret.set_hit_cache(hit_cache);
-        sys_.replyProtocalMessage(msg, ret);
-        break;
-      }
-      case BCDCall::PREPROCESS_DATA:
-        preprocessData(time, bcd);
-        break;
-      case BCDCall::UPDATE_MODEL:
-        computeGradient(time, bcd, msg);
-        msg->finished = false;  //
-        break;
-      case BCDCall::EVALUATE_PROGRESS: {
-        BCDProgress prog; evaluate(&prog);
-        sys_.replyProtocalMessage(msg, prog);
-        break;
-      }
-      default: break;
+  virtual void Run() {
+    Task task;
+    task.mutable_bcd()->set_cmd(BCDCall::REQUEST_WORKLOAD);
+    this->Submit(task, SchedulerID());
+  }
+
+  virtual void ProcessRequest(Message* request) {
+    BCDCompNode<V>::ProcessRequest(request);
+    auto bcd = request->task.bcd();
+    if (bcd.cmd() == BCDCall::LOAD_DATA) {
+      CHECK(bcd.has_data());
+      LoadDataResponse ret;
+      int hit_cache = 0;
+      LoadData(bcd.data(), ret.mutable_example_info(), &hit_cache);
+
+      ret.set_hit_cache(hit_cache);
+      string str; CHECK(ret.SerializeToString(&str));
+      Task res; res.set_msg(str);
+      res.mutable_bcd()->set_cmd(BCDCall::LOAD_DATA);
+      this->Reply(request, res);
     }
   }
  protected:
-  virtual void computeGradient(int time, const BCDCall& bcd, MessagePtr msg) = 0;
-  virtual void evaluate(BCDProgress* prog) = 0;
-
-  void loadData(const DataConfig& data, ExampleInfo* info, int *hit_cache) {
-    *hit_cache = dataCache("train", true);
+  void LoadData(const DataConfig& data, ExampleInfo* info, int *hit_cache) {
+    *hit_cache = DataCache("train", true);
     if (!(*hit_cache)) {
-      slot_reader_.init(data, bcd_conf_.local_cache());
-      slot_reader_.read(info);
+      slot_reader_.Init(data, bcd_conf_.local_cache());
+      slot_reader_.Read(info);
     }
   }
 
-  virtual void preprocessData(int time, const BCDCall& call) {
+  virtual void PreprocessData(int time, Message *msg) {
+    const auto& call = msg->task.bcd();
     int grp_size = call.fea_grp_size();
     fea_grp_.clear();
     for (int i = 0; i < grp_size; ++i) {
@@ -330,125 +271,27 @@ class BCDWorker : public App, public BCDCommon {
     bool hit_cache = call.hit_cache();
     int max_parallel = std::max(
         1, bcd_conf_.max_num_parallel_groups_in_preprocessing());
+
     // filter keys whose occurance <= bcd_conf_.tail_feature_freq()
     std::vector<int> pull_time(grp_size);
-    for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
+    for (int i = 0; i < grp_size; ++i, time += 3) {
       if (hit_cache) continue;
-      int grp = fea_grp_[i];
+      pull_time[i] = FilterTailFeatures(time, i);
 
-      // find all unique keys with their count in feature group i
-      SArray<Key> uniq_key;
-      SArray<uint8> key_cnt;
-      Localizer<Key, double> *localizer = new Localizer<Key, double>();
-
-      if (FLAGS_verbose) {
-        LI << "counting unique key [" << i + 1 << "/" << grp_size << "]";
-      }
-      localizer->countUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
-
-      if (FLAGS_verbose) {
-        LI << "counted unique key [" << i + 1 << "/" << grp_size << "]";
-      }
-
-      // push to servers
-      MessagePtr count(new Message(kServerGroup, time));
-      count->setKey(uniq_key);
-      count->addValue(key_cnt);
-      count->task.set_key_channel(grp);
-      count->addFilter(FilterConfig::KEY_CACHING);
-      auto tail = model_.set(count)->mutable_tail_filter();
-      tail->set_insert_count(true);
-      tail->set_countmin_k(bcd_conf_.countmin_k());
-      tail->set_countmin_n((int)(uniq_key.size()*bcd_conf_.countmin_n_ratio()));
-      CHECK_EQ(time, model_.push(count));
-
-      // pull filtered keys after the servers have aggregated all counts
-      MessagePtr filter(new Message(kServerGroup, time+2, time+1));
-      filter->setKey(uniq_key);
-      filter->task.set_key_channel(grp);
-      filter->addFilter(FilterConfig::KEY_CACHING);
-      model_.set(filter)->mutable_tail_filter()->set_query_key(
-          bcd_conf_.tail_feature_freq());
-      filter->fin_handle = [this, grp, localizer, i, grp_size]() mutable {
-        // localize the training matrix
-        if (FLAGS_verbose) {
-          LI << "started remapIndex [" << i + 1 << "/" << grp_size << "]";
-        }
-
-        auto X = localizer->remapIndex(grp, model_.key(grp), &slot_reader_);
-        delete localizer;
-        slot_reader_.clear(grp);
-        if (!X) return;
-
-        if (FLAGS_verbose) {
-          LI << "finished remapIndex [" << i + 1 << "/" << grp_size << "]";
-          LI << "started toColMajor [" << i + 1 << "/" << grp_size << "]";
-        }
-
-        if (bcd_conf_.feature_block_ratio()) X = X->toColMajor();
-
-        if (FLAGS_verbose) {
-          LI << "finished toColMajor [" << i + 1 << "/" << grp_size << "]";
-        }
-
-        { Lock l(mu_); X_[grp] = X; }
-      };
-      CHECK_EQ(time+2, model_.pull(filter));
-      pull_time[i] = time + 2;
-
-      // wait if necessary
+      // wait if necessary to reduce memory usage
       if (i >= max_parallel) {
-        model_.waitOutMsg(kServerGroup, pull_time[i-max_parallel]);
+        model_.Wait(pull_time[i-max_parallel]);
       }
     }
 
-    // push the filtered keys to severs to let severs build the key maps. because
-    // of the key_caching, these keys are not sent, so the communication cost is
-    // little. then pull the intialial model value back
+    // push the filtered keys to severs then pull the intialial model value back
     std::vector<std::promise<void>> wait_dual(grp_size);
-    for (int i = 0; i < grp_size; ++i, time += time_ratio_) {
+    for (int i = 0; i < grp_size; ++i, time += 3) {
       // wait if necessary
       if (!hit_cache && i >= grp_size - max_parallel) {
-        model_.waitOutMsg(kServerGroup, pull_time[i]);
+        model_.Wait(pull_time[i]);
       }
-
-      // push the filtered keys to servers
-      MessagePtr push_key(new Message(kServerGroup, time));
-      int grp = fea_grp_[i];
-      push_key->setKey(model_.key(grp));
-      push_key->task.set_key_channel(grp);
-      push_key->addFilter(FilterConfig::KEY_CACHING);
-      CHECK_EQ(time, model_.push(push_key));
-
-      // fetch the initial value of the model
-      MessagePtr pull_val(new Message(kServerGroup, time+2, time+1));
-      pull_val->setKey(model_.key(grp));
-      pull_val->task.set_key_channel(grp);
-      pull_val->addFilter(FilterConfig::KEY_CACHING)->set_clear_cache_if_done(true);
-      pull_val->fin_handle = [this, grp, time, &wait_dual, i]() {
-        size_t n = model_.key(grp).size();
-        if (n) { // otherwise received(time+2) may return error
-          // intialize the local cache of the model
-          auto init_w = model_.received(time+2);
-          CHECK_EQ(init_w.second.size(), 1);
-          CHECK_EQ(n, init_w.first.size());
-          model_.value(grp) = init_w.second[0];
-
-          // set the local variable
-          auto X = X_[grp]; CHECK(X);
-          if (dual_.empty()) {
-            dual_.resize(X->rows(), 0);
-          } else {
-            CHECK_EQ(dual_.size(), X->rows());
-          }
-          if (bcd_conf_.init_w().type() != ParameterInitConfig::ZERO) {
-            dual_.eigenVector() = *X * model_.value(grp).eigenVector();
-          }
-        }
-        wait_dual[i].set_value();
-      };
-      CHECK_EQ(time+2, model_.pull(pull_val));
-      pull_time[i] = time + 2;
+      InitModel(time, fea_grp_[i], wait_dual[i]);
     }
 
     // load the label if necessary
@@ -461,11 +304,114 @@ class BCDWorker : public App, public BCDCommon {
     for (int i = 0; i < grp_size; ++i) {
       wait_dual[i].get_future().wait();
     }
-    dataCache("train", false);
+    DataCache("train", false);
+  }
+ private:
+  int FilterTailFeatures(int time, int i) {
+    int grp_size = fea_grp_.size();
+    int grp = fea_grp_[i];
+    // find all unique keys with their count in feature group i
+    SArray<Key> uniq_key;
+    SArray<uint8> key_cnt;
+    Localizer<Key, double> *localizer = new Localizer<Key, double>();
+
+    VLOG(1) << "counting unique key [" << i + 1 << "/" << grp_size << "]";
+    localizer->CountUniqIndex(slot_reader_.index(grp), &uniq_key, &key_cnt);
+    VLOG(1) << "finished counting [" << i + 1 << "/" << grp_size << "]";
+
+    // push key and count to servers
+    Task push = Parameter::Request(grp, time, {}, bcd_conf_.comm_filter());
+    auto tail = push.mutable_param()->mutable_tail_filter();
+    tail->set_insert_count(true);
+    tail->set_countmin_k(bcd_conf_.countmin_k());
+    tail->set_countmin_n((int)(uniq_key.size()*bcd_conf_.countmin_n_ratio()));
+    Message push_msg(push, kServerGroup);
+    push_msg.set_key(uniq_key);
+    push_msg.add_value(key_cnt);
+    model_.Push(&push_msg);
+
+    // pull filtered keys after the servers have aggregated all counts
+    Task pull = Parameter::Request(grp, time+2, {time+1}, bcd_conf_.comm_filter());
+    tail = pull.mutable_param()->mutable_tail_filter();
+    tail->set_freq_threshold(bcd_conf_.tail_feature_freq());
+    Message pull_msg(pull, kServerGroup);
+    pull_msg.set_key(uniq_key);
+    pull_msg.callback = [this, grp, localizer, i, grp_size]() mutable {
+      // localize the training matrix
+      VLOG(1) << "remap index [" << i + 1 << "/" << grp_size << "]";
+      auto X = localizer->RemapIndex(grp, model_[grp].key, &slot_reader_);
+      delete localizer;
+      slot_reader_.clear(grp);
+      if (!X) return;
+      VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
+
+      VLOG(1) << "transpose to column major [" << i + 1 << "/" << grp_size << "]";
+      X = X->toColMajor();
+      VLOG(1) << "finished [" << i + 1 << "/" << grp_size << "]";
+
+      { Lock l(mu_); X_[grp] = X; }
+    };
+    return model_.Pull(&pull_msg);
   }
 
-  bool dataCache(const string& name, bool load) {
+  void InitModel(int time, int grp, std::promise<void>& wait) {
+    // push the filtered keys to let servers build the key maps. when the
+    // key_caching fitler is used, the communication cost will be little
+    model_.Push(Parameter::Request(grp, time, {}, bcd_conf_.comm_filter()),
+                model_[grp].key);
+
+    // fetch the initial value of the model
+    model_.Pull(
+        Parameter::Request(grp, time+2, {time+1}, bcd_conf_.comm_filter()),
+        model_[grp].key, [this, grp, time, &wait]() {
+          size_t n = model_[grp].key.size();
+          if (n) { // otherwise buffer(time+2) may return error
+            // intialize the local cache of the model
+            auto init_w = model_.buffer(time+2);
+            CHECK_EQ(init_w.values.size(), 1);
+            CHECK_EQ(init_w.idx_range.size(), n);
+            CHECK_EQ(init_w.channel, grp);
+
+            model_[grp].value = init_w.values[0];
+
+            // set the local variable
+            auto X = X_[grp]; CHECK(X);
+            if (dual_.empty()) {
+              dual_.resize(X->rows(), 0);
+            } else {
+              CHECK_EQ(dual_.size(), X->rows());
+            }
+            if (bcd_conf_.init_w().type() != ParamInitConfig::ZERO) {
+              dual_.EigenVector() = *X * model_[grp].value.EigenVector();
+            }
+          }
+          wait.set_value();
+        });
+  }
+
+  bool DataCache(const string& name, bool load) {
+    // TODO
     return false;
+  }
+
+  SlotReader slot_reader_;
+
+ protected:
+  // <slot id, feature matrix>
+  std::unordered_map<int, MatrixPtr<V>> X_;
+  // label
+  MatrixPtr<V> y_;
+  // dual_ = X * w
+  SArray<V> dual_;
+
+  std::mutex mu_;
+
+  USING_BCD_COMP_NODE;
+};
+
+} // namespace PS
+
+  // bool DataCache(const string& name, bool load) {
     // // load / save label
     // auto cache = conf_.local_cache();
     // auto y_conf = ithFile(cache, 0, name + "_label_" + myNodeID());
@@ -502,19 +448,4 @@ class BCDWorker : public App, public BCDCommon {
     // }
     // if (!load && !writeProtoToASCIIFile(new_info, info_file)) return false;
     // return true;
-  }
-
-  SlotReader slot_reader_;
-
-  // training data
-  std::map<int, MatrixPtr<V>> X_;  //slot_id versus X
-  MatrixPtr<double> y_;
-  // dual_ = X * w
-  SArray<double> dual_;
-
-  std::mutex mu_;
-
-  KVBufferedVector<Key, V> model_;
-};
-
-} // namespace PS
+  // }

@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+#include <libgen.h>
 
 // concurrency
 #include <future>
@@ -23,7 +26,6 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
-#include <tuple>
 #include <set>
 #include <algorithm>
 
@@ -54,39 +56,17 @@ namespace PS {
 typedef uint64 Key;
 static const Key kMaxKey = kuint64max;
 
-typedef std::vector<Key> KeyList;
-
+typedef std::string NodeID;
 
 typedef std::lock_guard<std::mutex> Lock;
-
 using std::string;
-typedef std::vector<std::string> StringList;
-
-using std::shared_ptr;
-using std::unique_ptr;
-using std::pair;
-using std::make_pair;
-using std::map;
-using std::tuple;
-using std::make_tuple;
-using std::to_string;
-using std::initializer_list;
-
-using google::protobuf::TextFormat;
 
 #define LL LOG(ERROR)
 #define LI LOG(INFO)
-#define DD DLOG(ERROR)
 
 DECLARE_int32(num_threads);
 
-// http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
-inline int32 NumberOfSetBits(int32 i) {
-    i = i - ((i >> 1) & 0x55555555);
-    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
-}
-
+// print the array's head and tail
 template <typename V>
 inline string dbstr(const V* data, int n, int m = 5) {
   std::stringstream ss;
@@ -101,6 +81,19 @@ inline string dbstr(const V* data, int n, int m = 5) {
   return ss.str();
 }
 
-
+#define NOTICE(_fmt_, args...) do {                                     \
+    struct timeval tv; gettimeofday(&tv, NULL);                         \
+    time_t ts = (time_t)(tv.tv_sec);                                    \
+    struct ::tm tm_time; localtime_r(&ts, &tm_time);                    \
+    int n = strlen(__FILE__) - 1;                                       \
+    for (; n > -1; --n) { if (n==-1 || __FILE__[n] == '/') break; }     \
+    fprintf(stdout, "[%02d%02d %02d:%02d:%02d.%03d %s:%d] " _fmt_ "\n", \
+            1+tm_time.tm_mon, tm_time.tm_mday, tm_time.tm_hour,         \
+            tm_time.tm_min, tm_time.tm_sec, (int)tv.tv_usec/1000,       \
+            __FILE__+n+1, __LINE__, ##args);                            \
+} while (0)
 
 } // namespace PS
+
+
+// basename(__FILE__)

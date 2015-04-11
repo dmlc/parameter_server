@@ -1,0 +1,22 @@
+package PS;
+import "data/proto/data.proto";
+
+message Workload {
+  // the workload id
+  optional int32 id = 1;
+
+  // the data associated with this workload
+  optional DataConfig data = 2;
+
+  // randomly shuffle the file order
+  optional bool shuffle = 3 [default = false];
+
+  // duplicate the data several times
+  optional int32 replica = 4 [default = 1];
+
+  // all finished workload ids
+  repeated int32 finished = 6;
+
+  // all workload is been done
+  optional bool all_is_done = 5 [default = false];
+}

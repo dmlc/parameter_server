@@ -93,7 +93,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     auto f = new File(des, filename);
     return f;
   }
-#if USE_S3 
+#if USE_S3
   else if (s3file(filename)) {
     std::string cmd = "curl -s -X GET "+s3FileUrl(filename);
     // .gz
@@ -105,7 +105,7 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     auto f = new File(des, filename);
     return f;
   }
-#endif // USE_S3 
+#endif // USE_S3
   else {
     return open(filename, flag);
   }
@@ -314,10 +314,10 @@ std::vector<std::string> s3GetFileNamesFromXml(const char* fbuf, int fsize, cons
           xmlFree(str);
         }
       }
-      xmlXPathFreeObject(xpathObj);  
+      xmlXPathFreeObject(xpathObj);
     }
-    xmlXPathFreeContext(xpathCtx); 
-    xmlFreeDoc(doc); 
+    xmlXPathFreeContext(xpathCtx);
+    xmlFreeDoc(doc);
     return files;
 }
 #endif // USE_S3
@@ -343,9 +343,7 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     std::vector<std::string> files;
     string cmd = hadoopFS(directory.hdfs()) + " -ls " + dirname;
 
-    if (FLAGS_verbose) {
-      LI << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
-    }
+    VLOG(1) << "readFilenamesInDirectory hdfs ls [" << cmd << "]";
 
     FILE* des = popen(cmd.c_str(), "r"); CHECK(des);
     char line[10000];
@@ -365,7 +363,7 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     pclose(des);
     return files;
   }
-#if USE_S3 
+#if USE_S3
   else if (s3file(dirname)) {
     // open xml
     std::string cmd = "curl -s -X GET "+s3DirectoryUrl(dirname);
@@ -387,7 +385,7 @@ std::vector<std::string> readFilenamesInDirectory(const DataConfig& directory) {
     free (fbuf);
     return files;
   }
-#endif // USE_S3 
+#endif // USE_S3
   else {
     return readFilenamesInDirectory(dirname);
   }

@@ -3,6 +3,7 @@ import "util/proto/range.proto";
 import "data/proto/data.proto";
 import "data/proto/example.proto";
 import "parameter/proto/param.proto";
+import "filter/proto/filter.proto";
 
 message BCDConfig {
   // Divide a feature group into feature_block_ratio x nnz_feature_per_example
@@ -36,7 +37,10 @@ message BCDConfig {
   optional int32 max_data_buf_size_in_mb = 10 [default = 1000];
   optional DataConfig local_cache = 11;
 
-  optional ParameterInitConfig init_w = 12;
+  optional ParamInitConfig init_w = 12;
+
+  repeated FilterConfig comm_filter = 15;
+
   extensions 100 to 199;
 }
 
@@ -64,6 +68,7 @@ message BCDCall {
     SAVE_MODEL = 5;  // save w
     RECOVER = 6;
     COMPUTE_VALIDATION_AUC = 7;
+    REQUEST_WORKLOAD = 8;
     // SAVE_AS_DENSE = 7;     // save X * w in a given key range
   }
   required Command cmd = 1;
@@ -73,13 +78,15 @@ message BCDCall {
   optional double kkt_filter_threshold = 4;
   optional bool reset_kkt_filter = 5;
 
+  optional int32 iter = 11;
   repeated int32 fea_grp = 8;
   optional bool hit_cache = 9;
   optional DataConfig data = 10;
+  optional int32 time = 12;
 }
 
 
-message LoadDataReturn {
+message LoadDataResponse {
   optional ExampleInfo example_info = 1;
   optional int32 hit_cache = 2;
 }

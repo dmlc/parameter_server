@@ -2,6 +2,11 @@
 #include "util/countmin.h"
 using namespace PS;
 
+TEST(xx, xx) {
+  std::shared_ptr<int> p(new int());
+
+
+}
 
 // class CountMinTest : public ::testing::Test {
 //  protected:
