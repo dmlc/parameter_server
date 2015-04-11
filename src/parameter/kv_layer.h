@@ -83,10 +83,13 @@ class  KVLayer : public Parameter {
   std::unordered_map<int, SArray<V>> layer_;
   size_t partition_thr_;
   Updater* updater_ = nullptr;
+
+  int call_ = 0;
 };
 
 template <typename V, class Updater>
 int KVLayer<V, Updater>::Push(const Task& task, V* data, size_t size, bool zero_copy) {
+  // LOG_FIRST_N(INFO, 100) << size;
   SArray<V> val;
   if (zero_copy) {
     val = SArray<V>(data, size, false);

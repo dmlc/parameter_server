@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "string.h"
 
+#include <time.h>
 #include <ctime>
 #include <ratio>
 #include <chrono>
@@ -27,6 +28,19 @@ static double milliToc(system_clock::time_point start) {
   size_t ct = std::chrono::duration_cast<std::chrono::milliseconds>(
     system_clock::now() - start).count();
   return static_cast<double>(ct);
+}
+
+static struct timespec hwtic() {
+  struct timespec tv;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &tv);
+  return tv;
+}
+
+static double hwtoc(struct timespec tv) {
+  struct timespec curr;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &curr);
+  return  (double) ((curr.tv_sec - tv.tv_sec) +
+                        (curr.tv_nsec -tv.tv_nsec)*1e-9);
 }
 
 class ScopedTimer {

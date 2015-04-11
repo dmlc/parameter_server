@@ -17,6 +17,8 @@ DECLARE_int32(num_servers);
 
 Van::~Van() {
   Statistic();
+  LOG(INFO) << num_call_ << " " << send_time_ << " " << recv_time_;
+
   for (auto& it : senders_) zmq_close(it.second);
   zmq_close(receiver_);
   zmq_ctx_destroy(context_);
@@ -97,7 +99,6 @@ bool Van::Connect(const Node& node) {
   string my_id = my_node_.id(); // address(my_node_);
   zmq_setsockopt (sender, ZMQ_IDENTITY, my_id.data(), my_id.size());
 
-  // TODO is it useful?
   // uint64_t hwm = 5000000;
   // zmq_setsockopt (sender, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
@@ -137,35 +138,46 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
   }
   int n = has_key + msg->value.size();
 
-  // send task
   size_t data_size = 0;
-  string str;
-  CHECK(msg->task.SerializeToString(&str))
+  auto tv = hwtic();
+
+  // send task
+  size_t task_size = msg->task.ByteSize();
+  char* task_buf = new char[task_size+5];
+  CHECK(msg->task.SerializeToArray(task_buf, task_size))
       << "failed to serialize " << msg->task.ShortDebugString();
+
   int tag = ZMQ_SNDMORE;
   if (n == 0) tag = 0; // ZMQ_DONTWAIT;
+  zmq_msg_t task_msg;
+  zmq_msg_init_data(&task_msg, task_buf, task_size, FreeData, NULL);
+
   while (true) {
-    if (zmq_send(socket, str.c_str(), str.size(), tag) == str.size()) break;
-    if (errno == EINTR) continue;  // may be interupted by google profiler
+    if (zmq_msg_send(&task_msg, socket, tag) == task_size) break;
+    if (errno == EINTR) continue;  // may be interupted by profiler
     LOG(WARNING) << "failed to send message to node [" << id
                  << "] errno: " << zmq_strerror(errno);
     return false;
   }
-  data_size += str.size();
+  data_size += task_size;
 
   // send data
   for (int i = 0; i < n; ++i) {
-    const auto& raw = (has_key && i == 0) ? msg->key : msg->value[i-has_key];
+    SArray<char>* data = new SArray<char>(
+        (has_key && i == 0) ? msg->key : msg->value[i-has_key]);
+    zmq_msg_t data_msg;
+    zmq_msg_init_data(&data_msg, data->data(), data->size(), FreeData, data);
     if (i == n - 1) tag = 0; // ZMQ_DONTWAIT;
     while (true) {
-      if (zmq_send(socket, raw.data(), raw.size(), tag) == raw.size()) break;
-      if (errno == EINTR) continue;  // may be interupted by google profiler
+      if (zmq_msg_send(&data_msg, socket, tag) == data->size()) break;
+      if (errno == EINTR) continue;  // may be interupted by profiler
       LOG(WARNING) << "failed to send message to node [" << id
                    << "] errno: " << zmq_strerror(errno);
       return false;
     }
-    data_size += raw.size();
+    data_size += data->size();
   }
+  send_time_ += hwtoc(tv);
 
   // statistics
   *send_bytes += data_size;
@@ -181,7 +193,6 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
 bool Van::Recv(Message* msg, size_t* recv_bytes) {
   size_t data_size = 0;
   msg->clear_data();
-  NodeID sender;
   for (int i = 0; ; ++i) {
     zmq_msg_t zmsg;
     CHECK(zmq_msg_init(&zmsg) == 0) << zmq_strerror(errno);
@@ -191,39 +202,49 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       LOG(WARNING) << "failed to receive message. errno: "
                    << zmq_strerror(errno);
       return false;
-   }
-    char* buf = (char *)zmq_msg_data(&zmsg);
-    CHECK(buf != NULL);
+    }
+    char* buf = CHECK_NOTNULL((char *)zmq_msg_data(&zmsg));
     size_t size = zmq_msg_size(&zmsg);
     data_size += size;
+
+    auto tv = hwtic();
     if (i == 0) {
       // identify
-      sender = std::string(buf, size);
-      msg->sender = sender;
+      msg->sender = std::string(buf, size);
       msg->recver = my_node_.id();
     } else if (i == 1) {
       // task
-      CHECK(msg->task.ParseFromString(std::string(buf, size)))
-          << "parse string from " << sender << " I'm " << my_node_.id() << " "
-          << size;
+      CHECK(msg->task.ParseFromArray(buf, size))
+          << "failed to parse string from " << msg->sender
+          << ". this is " << my_node_.id() << " " << size;
       if (IsScheduler() && msg->task.control() &&
           msg->task.ctrl().cmd() == Control::REQUEST_APP) {
         // it is the first time the scheduler receive message from the
         // sender. store the file desciptor of the sender for the monitor
-        int val[10]; size_t val_len = sender.size();
-        CHECK_LT(val_len, 300);
-        memcpy(val, sender.data(), val_len);
-        CHECK(!zmq_getsockopt(receiver_,  ZMQ_IDENTITY_FD, (char*)val, &val_len))
-            << "failed to get the file descriptor of " << sender;
+        int val[64]; size_t val_len = msg->sender.size();
+        CHECK_LT(val_len, 64*sizeof(int));
+        memcpy(val, msg->sender.data(), val_len);
+        CHECK(!zmq_getsockopt(
+            receiver_,  ZMQ_IDENTITY_FD, (char*)val, &val_len))
+            << "failed to get the file descriptor of " << msg->sender;
         CHECK_EQ(val_len, 4);
         int fd = val[0];
-        VLOG(1) << "node [" << sender << "] is on file descriptor " << fd;
+        VLOG(1) << "node [" << msg->sender << "] is on file descriptor " << fd;
         Lock l(fd_to_nodeid_mu_);
-        fd_to_nodeid_[fd] = sender;
+        fd_to_nodeid_[fd] = msg->sender;
       }
     } else {
       // data
-      SArray<char> data; data.CopyFrom(buf, size);
+      // SArray<char> data; data.CopyFrom(buf, size);
+
+      // ugly zero-copy
+      SArray<char> data(buf, size, false);
+      zmq_msg_t* data_msg = new zmq_msg_t;
+      zmq_msg_init(data_msg);
+      zmq_msg_move(data_msg, &zmsg);
+      data.pointer().reset(buf, [data_msg](char*) {
+          zmq_msg_close(data_msg);
+        });
       if (i == 2 && msg->task.has_key()) {
         msg->key = data;
       } else {
@@ -231,11 +252,13 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
       }
     }
     zmq_msg_close(&zmsg);
+    recv_time_ += hwtoc(tv);
+
     if (!zmq_msg_more(&zmsg)) { CHECK_GT(i, 0); break; }
   }
 
   *recv_bytes += data_size;
-  if (hostnames_[sender] == my_node_.hostname()) {
+  if (hostnames_[msg->sender] == my_node_.hostname()) {
     received_from_local_ += data_size;
   } else {
     received_from_others_ += data_size;

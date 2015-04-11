@@ -30,6 +30,13 @@ class Van {
   // bind to my port
   void Bind();
 
+  static void FreeData(void *data, void *hint) {
+    if (hint == NULL) {
+      delete [] (char*)data;
+    } else {
+      delete (SArray<char>*)hint;
+    }
+  }
 
   bool IsScheduler() { return my_node_.role() == Node::SCHEDULER; }
   // for scheduler: monitor the liveness of all other nodes
@@ -57,6 +64,11 @@ class Van {
   std::unordered_map<int, NodeID> fd_to_nodeid_;
   std::mutex fd_to_nodeid_mu_;
   std::thread* monitor_thread_;
+
+  // debug performance
+  double send_time_ = 0;
+  double recv_time_ = 0;
+  int num_call_ = 0;
 };
 
 } // namespace PS

@@ -6,6 +6,7 @@
 
 namespace PS {
 
+// static double sarray_time;
 template <typename V>
 void SArray<V>::resize(size_t n) {
   if (capacity_ >= n) { size_ = n; return; }
@@ -142,9 +143,15 @@ SArray<V> SArray<V>::Segment(const Range<size_t>& range) const {
 
 template <typename V>
 void SArray<V>::CopyFrom(const V* src, size_t size) {
+  // auto tv = hwtic();
+
   resize(size);
   memcpy(data_, src, size*sizeof(V));
+
+  // sarray_time += hwtoc(tv);
+  // LOG_EVERY_N(ERROR, 1000) << sarray_time;
 }
+
 
 template <typename V>
 SArray<V> SArray<V>::SetIntersection(const SArray<V>& other) const {
