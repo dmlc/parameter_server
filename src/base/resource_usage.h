@@ -30,13 +30,13 @@ static double milliToc(system_clock::time_point start) {
   return static_cast<double>(ct);
 }
 
-static struct timespec hwtic() {
+inline struct timespec hwtic() {
   struct timespec tv;
   clock_gettime(CLOCK_MONOTONIC_RAW, &tv);
   return tv;
 }
 
-static double hwtoc(struct timespec tv) {
+inline double hwtoc(struct timespec tv) {
   struct timespec curr;
   clock_gettime(CLOCK_MONOTONIC_RAW, &curr);
   return  (double) ((curr.tv_sec - tv.tv_sec) +

@@ -190,11 +190,11 @@ void KVLayer<V, Updater>::SetValue(const Message* msg) {
   auto& my_val = layer_[key];
   mu_.unlock();
 
-  if (IsWorker()) {
+  if (IsWorkerNode()) {
     if (my_val.empty()) my_val.resize(kr.size(), 0);
     CHECK_GE(my_val.size(), kr.end());
     my_val.Segment(kr).CopyFrom(recv_data);
-  } else if (IsServer()) {
+  } else if (IsServerNode()) {
     // TODO this server can do flexible consistency control here
 
     if (my_val.empty()) {
