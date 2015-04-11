@@ -39,12 +39,11 @@
 // util
 #include "util/macros.h"
 #include "util/resource_usage.h"
+#include "util/base.h"
 
 // base
 #include <google/protobuf/stubs/common.h>
 #include "google/protobuf/text_format.h"
-
-#include "ps/base.h"
 
 //const int MAX_NUM_LEN = 1000;
 

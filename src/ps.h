@@ -3,8 +3,8 @@
  * \brief  The parameter server interface
  */
 #pragma once
-#include "ps/base.h"
-#include "ps/blob.h"
+#include "util/base.h"
+#include "util/blob.h"
 #include "proto/filter.pb.h"
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///
@@ -295,7 +295,7 @@ class KVServer {
 }  // namespace ps
 
 /// implementation
-#include "ps/ps-inl.h"
+#include "ps-inl.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                            More Advanced APIs                           ///
