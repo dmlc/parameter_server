@@ -26,9 +26,9 @@ class KVStoreSparseDynamic : public KVStore {
     }
 
     // parse values
-    CHECK_EQ(msg->task.value_len_size(), n);
+    CHECK_EQ(msg->task.dyn_val_len_size(), n);
     size_t send_val_len = 0;
-    for (int i = 0; i < n; ++i) send_val_len += msg->task.value_len(i);
+    for (int i = 0; i < n; ++i) send_val_len += msg->task.dyn_val_len(i);
     // TODO zero copy
     SArray<V> send_val(send_val_len);
 
@@ -36,7 +36,7 @@ class KVStoreSparseDynamic : public KVStore {
     int ts = msg->task.time();
     size_t os = 0;
     for (size_t i = 0; i < n; ++i) {
-      int val_len = msg->task.value_len(i);
+      int val_len = msg->task.dyn_val_len(i);
       Blob<V> send(send_val.data() + os, val_len);
       handle_.HandlePull(
           ts, CBlob<K>(key_ptr+i, 1),
@@ -59,7 +59,7 @@ class KVStoreSparseDynamic : public KVStore {
     }
 
     // parse values
-    CHECK_EQ(msg->task.value_len_size(), n);
+    CHECK_EQ(msg->task.dyn_val_len_size(), n);
     CHECK_EQ(msg->value.size(), 1);
     SArray<V> recv_val(msg->value[0]);
 
@@ -67,7 +67,7 @@ class KVStoreSparseDynamic : public KVStore {
     int ts = msg->task.time();
     size_t os = 0;
     for (size_t i = 0; i < n; ++i) {
-      int val_len = msg->task.value_len(i);
+      int val_len = msg->task.dyn_val_len(i);
       CHECK_GE(recv_val.size(), os + val_len);
       Blob<V> my_val(FindValue(key_ptr[i], ts, val_len), val_len);
       handle_.HandlePush(

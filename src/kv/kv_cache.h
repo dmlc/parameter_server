@@ -88,5 +88,6 @@ class KVCache : public Customer {
   };
   std::unordered_map<int, KVPair> pull_data_;
   std::mutex mu_;
+  int split_val_ = 10000;
 };
 }  // namespace ps

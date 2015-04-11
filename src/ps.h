@@ -48,17 +48,6 @@ struct SyncOpts {
     filters.back().set_type(type);
     return filters.back();
   }
-
-  /**
-   * \brief the value length is dynamic.
-   */
-  // bool dynamic_value = false;
-
-  /**
-   * \brief A value with length more than split_val is sliced into all servers
-   * nodes. Often used by nueral network
-   */
-  int split_val = 10000;
 };
 
 template<typename K, typename V> class KVCache;
