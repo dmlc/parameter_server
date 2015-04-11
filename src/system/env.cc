@@ -14,7 +14,7 @@ DEFINE_int32(num_replicas, 0, "number of replicas per server node");
 
 DEFINE_string(my_node, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "my node");
 DEFINE_string(scheduler, "role:SCHEDULER,hostname:'127.0.0.1',port:8000,id:'H'", "the scheduler node");
-DEFINE_int32(my_rank, -1, "my rank among MPI peers");
+// DEFINE_int32(my_rank, -1, "my rank among MPI peers");
 DEFINE_string(interface, "", "network interface");
 
 void Env::Init(char* argv0) {
@@ -88,7 +88,7 @@ void Env::AssembleMyNode() {
       id = "W" + std::to_string(my_rank);
     } else { // if (my_rank < FLAGS_num_workers + FLAGS_num_servers) {
       role = Node::SERVER;
-      id = "S" + std::to_string(FLAGS_my_rank - FLAGS_num_workers);
+      id = "S" + std::to_string(my_rank - FLAGS_num_workers);
     }
   }
 

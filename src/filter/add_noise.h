@@ -13,6 +13,7 @@ class AddNoiseFilter : public Filter {
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
     for (int i = 0; i < n; ++i) {
+      if (msg->value[i].size() == 0) continue;
       auto type = msg->task.value_type(i);
       if (type == DataType::FLOAT) {
         AddNoise<float>(msg->value[i], filter_conf);
@@ -30,9 +31,11 @@ class AddNoiseFilter : public Filter {
     std::default_random_engine generator;
     std::normal_distribution<V> distribution((V)cf->mean(), (V)cf->std());
     SArray<V> data(array);
+    // SArray<V> noise(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
       data[i] += distribution(generator);
     }
+    // LL << noise.Std() << " " << noise;
   }
 
 };
