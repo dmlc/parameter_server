@@ -14,40 +14,66 @@ class KVStoreSparseDynamic : public KVStore {
   }
 
   void GetValue(Message* msg) {
-    // parse data
-    CHECK(!msg->has_key()) << "limited support yet";
+    // parse keys
+    size_t n = 1;
     K key = msg->task.key_channel();
-    CHECK_EQ(msg->task.value_len_size(), 1);
-    int val_len = msg->task.value_len(0);
+    K* key_ptr = &key;
+    if (msg->has_key()) {
+      n = msg->key.size() / sizeof(V);
+      key_ptr = (K*) msg->key.data();
+    } else {
+      CHECK(msg->task.has_key_channel());
+    }
+
+    // parse values
+    CHECK_EQ(msg->task.value_len_size(), n);
+    size_t send_val_len = 0;
+    for (int i = 0; i < n; ++i) send_val_len += msg->task.value_len(i);
     // TODO zero copy
-    SArray<V> val(val_len);
-    Blob<V> send_val(val.data(), val_len);
+    SArray<V> send_val(send_val_len);
+
+    // fill values
     int ts = msg->task.time();
-
-    handle_.HandlePull(
-        CBlob<K>(&key, 1), CBlob<V>(FindValue(key), ts, val_len),
-        &send_val);
-
-    msg->add_value(val);
+    size_t os = 0;
+    for (size_t i = 0; i < n; ++i) {
+      int val_len = msg->task.value_len(i);
+      Blob<V> send(send_val.data() + os, val_len);
+      handle_.HandlePull(
+          ts, CBlob<K>(key_ptr+i, 1),
+          CBlob<V>(FindValue(key_ptr[i], ts, val_len), val_len), &send);
+      os += val_len;
+    }
+    msg->add_value(send_val);
   }
 
   void SetValue(const Message* msg) {
-    // parse data
-    CHECK(!msg->has_key()) << "limited support yet";
+    // parse keys
+    size_t n = 1;
     K key = msg->task.key_channel();
-    // CHECK_EQ(msg->task.value_len_size(), 1);
-    int val_len = msg->task.value_len(0);
-    int ts = msg->task.time();
+    K* key_ptr = &key;
+    if (msg->has_key()) {
+      n = msg->key.size() / sizeof(V);
+      key_ptr = (K*) msg->key.data();
+    } else {
+      CHECK(msg->task.has_key_channel());
+    }
 
+    // parse values
+    CHECK_EQ(msg->task.value_len_size(), n);
     CHECK_EQ(msg->value.size(), 1);
-    SArray<V> val(msg->value[0]);
-    CHECK_EQ(val_len val.size());
+    SArray<V> recv_val(msg->value[0]);
 
-    // handle this push request
-    V* val_data = val.data();
-    Blob<V> my_val(FindValue(key, ts, val_len), val_len);
-    handle_.HandlePush(
-        CBlob<K>(&key, 1), CBlob<V>(val_data, val_len), &my_val);
+    // get values
+    int ts = msg->task.time();
+    size_t os = 0;
+    for (size_t i = 0; i < n; ++i) {
+      int val_len = msg->task.value_len(i);
+      CHECK_GE(recv_val.size(), os + val_len);
+      Blob<V> my_val(FindValue(key_ptr[i], ts, val_len), val_len);
+      handle_.HandlePush(
+          ts, CBlob<K>(key_ptr, 1), CBlob<V>(recv_val.data() + os, val_len),
+          &my_val);
+    }
   }
 
  private:
@@ -62,11 +88,13 @@ class KVStoreSparseDynamic : public KVStore {
       it = it2.first;
 
       handle_.HandleInit(ts, CBlob<K>(&key, 1), &my_val);
+    } else {
+      CHECK_EQ(it->second.size, len);
     }
-    return it->second.data();
+    return it->second.data;
   }
 
-  std::unordered_map<K, Blob<V> data_;
+  std::unordered_map<K, Blob<V>> data_;
   Handle handle_;
 };
 

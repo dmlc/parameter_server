@@ -32,8 +32,8 @@ message Task {
   optional DataType key_type = 13;
 
   // data type
-  repeated int32 value_len = 24;
-  repeated DataType value_type = 14;
+  repeated int32 value_len = 24 [packed=true];
+  repeated DataType value_type = 14 [packed=true];
 
   // filters applied to the data
   repeated Filter filter = 12;

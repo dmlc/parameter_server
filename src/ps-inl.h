@@ -6,6 +6,7 @@
 #include "ps.h"
 #include "kv/kv_cache.h"
 #include "kv/kv_store_sparse.h"
+#include "kv/kv_store_sparse_dynamic.h"
 namespace ps {
 
 /// worker nodes
@@ -61,15 +62,18 @@ void KVWorker<V>::IncrClock(int delta) {
 /// server nodes
 
 template <typename V, typename Handle, int val_len>
-void KVServer<V, Handle, val_len>::Run() {
-  Customer* server = NULL;
+KVStore* KVServer<V, Handle, val_len>::Run() {
+  KVStore* server = NULL;
   if (type_ == ONLINE) {
     if (val_len != kDynamicValue) {
       server = new KVStoreSparse<Key, V, Handle, val_len>(
           id_, handle_, sync_val_len_);
+    } else {
+      server = new KVStoreSparseDynamic<Key, V, Handle>(id_, handle_);
     }
   }
   Postoffice::instance().manager().TransferCustomer(CHECK_NOTNULL(server));
+  return server;
 }
 
 }  // namespace ps

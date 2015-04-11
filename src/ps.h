@@ -278,7 +278,7 @@ class KVServer {
   void set_sync_val_len(int len) { sync_val_len_ = len; }
   Handle& handle() { return handle_; }
 
-  void Run();
+  KVStore* Run();
  private:
   int id_;
   Type type_;
