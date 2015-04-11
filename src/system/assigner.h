@@ -1,6 +1,6 @@
 #pragma once
-#include "util/common.h"
-#include "util/range.h"
+#include "base/common.h"
+#include "base/range.h"
 #include "proto/node.pb.h"
 #include "proto/data.pb.h"
 namespace ps {

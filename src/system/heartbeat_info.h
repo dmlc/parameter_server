@@ -1,8 +1,8 @@
 #pragma once
 
 #include "proto/heartbeat.pb.h"
-#include "util/resource_usage.h"
-#include "util/common.h"
+#include "base/resource_usage.h"
+#include "base/common.h"
 
 namespace ps {
 class HeartbeatInfo {

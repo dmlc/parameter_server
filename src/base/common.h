@@ -37,9 +37,9 @@
 #include "glog/logging.h"
 
 // util
-#include "util/macros.h"
-#include "util/resource_usage.h"
-#include "util/base.h"
+#include "base/macros.h"
+#include "base/resource_usage.h"
+#include "base/base.h"
 
 // base
 #include <google/protobuf/stubs/common.h>

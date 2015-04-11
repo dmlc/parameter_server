@@ -3,8 +3,8 @@
  * \brief  The parameter server interface
  */
 #pragma once
-#include "util/base.h"
-#include "util/blob.h"
+#include "base/base.h"
+#include "base/blob.h"
 #include "proto/filter.pb.h"
 ///////////////////////////////////////////////////////////////////////////////
 ///                              Worker node APIs                           ///

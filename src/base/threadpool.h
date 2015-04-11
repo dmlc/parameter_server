@@ -9,8 +9,8 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "util/macros.h"
-#include "util/barrier.h"
+#include "base/macros.h"
+#include "base/barrier.h"
 
 namespace ps {
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "util/threadsafe_limited_queue.h"
-#include "util/common.h"
+#include "base/threadsafe_limited_queue.h"
+#include "base/common.h"
 namespace ps {
 
 template<class V>

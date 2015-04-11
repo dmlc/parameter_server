@@ -2,7 +2,7 @@
 #include <string.h>
 #include <zmq.h>
 #include <libgen.h>
-#include "util/shared_array_inl.h"
+#include "base/shared_array_inl.h"
 #include "system/manager.h"
 #include "system/postoffice.h"
 namespace ps {

@@ -1,6 +1,6 @@
 #pragma once
-#include "util/shared_array.h"
-#include "util/assign_op.h"
+#include "base/shared_array.h"
+#include "base/assign_op.h"
 namespace ps {
 
 // the implementation, see comments bellow

@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 #include <string>
-#include "util/integral_types.h"
-// #include "util/common.h"
+#include "base/integral_types.h"
+// #include "base/common.h"
 
 namespace ps {
 

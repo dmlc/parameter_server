@@ -1,7 +1,7 @@
 #pragma once
-#include "util/sketch.h"
+#include "base/sketch.h"
 #include <math.h>
-#include "util/shared_array_inl.h"
+#include "base/shared_array_inl.h"
 namespace ps {
 
 template <typename K, typename V>

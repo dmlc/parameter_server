@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/shared_array.h"
-#include "util/parallel_sort.h"
+#include "base/shared_array.h"
+#include "base/parallel_sort.h"
 
 namespace ps {
 

@@ -1,7 +1,7 @@
 #pragma once
-#include "util/common.h"
+#include "base/common.h"
 #include "system/message.h"
-#include "util/threadsafe_queue.h"
+#include "base/threadsafe_queue.h"
 #include "system/manager.h"
 #include "system/heartbeat_info.h"
 namespace ps {

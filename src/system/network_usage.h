@@ -1,7 +1,7 @@
 #pragma once
 #include "proto/node.pb.h"
 #include <unordered_set>
-#include "util/resource_usage.h"
+#include "base/resource_usage.h"
 namespace ps {
 
 /**

@@ -1,9 +1,9 @@
 #pragma once
 #include <atomic>
-#include "util/blob.h"
-#include "util/common.h"
-#include "util/file.h"
-#include "util/range.h"
+#include "base/blob.h"
+#include "base/common.h"
+#include "base/file.h"
+#include "base/range.h"
 #include "Eigen/Core"
 #include "proto/data.pb.h"
 #include "proto/param.pb.h"

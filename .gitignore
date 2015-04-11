@@ -14,3 +14,4 @@ config.mk
 doc/html
 doc/latex
 test/
+test-bak

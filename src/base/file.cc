@@ -1,4 +1,4 @@
-#include "util/file.h"
+#include "base/file.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -7,8 +7,8 @@
 #include <iostream>
 #include <memory>
 #include <dirent.h>
-#include "util/common.h"
-#include "util/split.h"
+#include "base/common.h"
+#include "base/split.h"
 #if USE_S3
 #include <libxml/parser.h>
 #include <libxml/xpath.h>

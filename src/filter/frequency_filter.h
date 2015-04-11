@@ -1,6 +1,6 @@
 #pragma once
-#include "util/countmin.h"
-#include "util/shared_array_inl.h"
+#include "base/countmin.h"
+#include "base/shared_array_inl.h"
 namespace ps {
 
 /**
