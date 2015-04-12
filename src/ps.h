@@ -335,17 +335,17 @@ inline void WaitWorkersReady() {
   ps::Postoffice::instance().manager().WaitWorkersReady();
 }
 
-inline void StartSystem(int argc, char *argv[]) {
-  ps::Postoffice::instance().Run(&argc, &argv);
+inline void StartSystem(int* argc, char ***argv) {
+  ps::Postoffice::instance().Run(argc, argv);
 }
 
 inline void StopSystem() {
   ps::Postoffice::instance().Stop();
 }
 
-inline int RunSystem(int argc, char *argv[]) {
-  StartSystem(argc, argv); StopSystem();
-  return 0;
-}
+// inline int RunSystem(int argc, char *argv[]) {
+//   StartSystem(argc, argv); StopSystem();
+//   return 0;
+// }
 
 }  // namespace ps

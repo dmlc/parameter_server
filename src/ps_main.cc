@@ -11,7 +11,7 @@ App* App::Create(int argc, char *argv[]) {
 }  // namespace ps
 
 int main(int argc, char *argv[]) {
-  ps::StartSystem(argc, argv);
+  ps::StartSystem(&argc, &argv);
   int ret = ps::IsWorkerNode() ? WorkerNodeMain(argc, argv) : 0;
   ps::StopSystem();
   return ret;
