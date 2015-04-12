@@ -30,7 +30,7 @@ TEST_MAIN = build/test_main.o
 
 clean:
 	rm -rf build
-	find . -name "*.pb.[ch]*" -delete
+	find src -name "*.pb.[ch]*" -delete
 
 ps: $(PS_LIB) $(PS_MAIN) $(TEST_MAIN)
 
