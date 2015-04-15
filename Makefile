@@ -4,8 +4,8 @@ include $(CONFIG_FILE)
 
 CC = g++
 
-# OPT = -O0 -ggdb
-OPT = -O3 -ggdb
+OPT = -O0 -ggdb -DDEBUG
+# OPT = -O3 -ggdb
 
 THIRD_PATH=$(shell pwd -L )/third_party
 
@@ -36,6 +36,9 @@ build/hello: build/app/hello_world/main.o $(PS_LIB) $(PS_MAIN)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 build/caffe: build/app/caffe/caffe_main.o $(PS_LIB)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@	
+
+build/caffe_sync: build/app/caffe/caffe_synced.o $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@	
 
 sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
