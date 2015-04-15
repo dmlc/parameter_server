@@ -28,6 +28,10 @@ DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 
 
+DEFINE_bool(fb_only, true,
+    "DEPRECATED; workers only ForwardBackward.");
+DEFINE_bool(synced, false,
+    "DEPRECATED; pull/push synced with Forward");
 // client puller / pusher flags
 DEFINE_int32(pushstep, 3,
     "interval, in minibatches, between push operation.");
