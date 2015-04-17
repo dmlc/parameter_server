@@ -41,6 +41,8 @@ build/caffe: build/app/caffe/caffe_main.o $(PS_LIB)
 build/caffe_sync: build/app/caffe/caffe_synced.o $(PS_LIB)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@	
 
+caffe_all: build/caffe build/caffe_sync
+
 sys_srcs	= $(wildcard src/util/*.cc) $(wildcard src/data/*.cc) \
 			  $(wildcard src/system/*.cc) $(wildcard src/filter/*.cc)
 sys_protos	= $(wildcard src/*/proto/*.proto)

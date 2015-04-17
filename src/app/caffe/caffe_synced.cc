@@ -313,6 +313,11 @@ private:
   volatile bool weight_ready;
   std::mutex mu_diff;  //protect write to diffs
 
+
+  std::mutex mu_forward;
+  std::condition_variable cv_forward;
+  bool start_forward;
+
   VVector<char> *solver_states; // individual data ptr, solver state to initialize workers
 
   VVector<float> *weights;// individual data ptr, same order/size as solver->net->params
@@ -335,6 +340,7 @@ public:
   void init(){
     LL << "worker init()";
     weight_ready = false;
+    start_forward = false;
     solver = initCaffeSolver();
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
@@ -354,21 +360,48 @@ public:
   }
 
   /**
+   * by run() thread
+   */
+  void waitForwardSignal(){
+    std::unique_lock<std::mutex> l(mu_forward);
+    while(!start_forward){
+      cv_forward.wait(l);
+    }
+  }
+
+  /**
+   * by run() thread
+   */
+  void signalForwardEnd(){
+    std::unique_lock<std::mutex> l(mu_forward);
+    start_forward = false;
+    cv_forward.notify_all();
+  }
+
+  /**
+   * by process() thread
+   */
+  void signalAndJoinForward() {
+    std::unique_lock<std::mutex> l(mu_forward);
+    start_forward = true;
+    cv_forward.notify_all();
+    while(start_forward) {
+      cv_forward.wait(l);
+    }
+  }
+
+
+  /**
    * by main
    */
   void run(){
     LL << "worker run()";
-    LL << "worker run() over";
-  }
-
-  void process(const MessagePtr& msg) {
-    LL << "message received";
-    auto sgd = msg->task.sgd();
-    if (sgd.cmd() == SGDCall::UPDATE_MODEL) { // sync param to memory
-      LL << "update model received";
+    while(true) {
+      // wait signal to forward
+      waitForwardSignal();
+      LL << "run() forward signal received";
       pullWeight();
       swapWeight();
-      LL << "weight got";
       for (int i = 0; i < FLAGS_pushstep; i++) {
         solver->testPhase();
         solver->forwardBackwardPhase();
@@ -380,6 +413,19 @@ public:
       }
       LL << "pushstep " << FLAGS_pushstep << "reached.";
       pushDiff();
+      LL << "run() sending forward end signal";
+      signalForwardEnd();
+    }
+    LL << "worker run() over";
+  }
+
+  void process(const MessagePtr& msg) {
+    LL << "message received";
+    auto sgd = msg->task.sgd();
+    if (sgd.cmd() == SGDCall::UPDATE_MODEL) { // sync param to memory
+      LL << "process() update model received";
+      signalAndJoinForward();
+      LL << "process() forward end received";
     }
   }
 
