@@ -79,7 +79,7 @@ template<typename V>
 void StreamReader<V>::init(const DataConfig& data) {
   data_ = data;
   if (data_.format() == DataConfig::TEXT) {
-    text_parser_.init(data_.text(), data_.ignore_feature_group());
+    text_parser_.Init(data_.text(), data_.ignore_feature_group());
   }
   max_num_files_ = data_.file_size();
   if (data_.max_num_files_per_worker() >= 0) {
@@ -180,7 +180,7 @@ bool StreamReader<V>::readMatricesFromText() { // uint32 num_ex, MatrixPtrList<V
           result[--len] = '\0';
         }
         Example ex;
-        if (!text_parser_.toProto(result, &ex)) continue;
+        if (!text_parser_.ToProto(result, &ex)) continue;
         parseExample(ex, num_read);
         ++ num_read;
         break;

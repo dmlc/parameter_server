@@ -11,30 +11,30 @@ DEFINE_bool(shuffle_fea_id, false,
   "on downloading");
 
 // NOTICE: Do not use strtok, it is not thread-safe, use strtok_r instead
-void ExampleParser::init(TextFormat format, bool ignore_fea_slot) {
+void ExampleParser::Init(TextFormat format, bool ignore_fea_slot) {
   ignore_fea_slot_ = ignore_fea_slot;
   using namespace std::placeholders;
   switch (format) {
     case DataConfig::LIBSVM:
-      parser_ = std::bind(&ExampleParser::parseLibsvm, this, _1, _2);
+      parser_ = std::bind(&ExampleParser::ParseLibsvm, this, _1, _2);
       break;
     case DataConfig::ADFEA:
-      parser_ = std::bind(&ExampleParser::parseAdfea, this, _1, _2);
+      parser_ = std::bind(&ExampleParser::ParseAdfea, this, _1, _2);
       break;
     case DataConfig::TERAFEA:
-      parser_ = std::bind(&ExampleParser::parseTerafea, this, _1, _2);
+      parser_ = std::bind(&ExampleParser::ParseTerafea, this, _1, _2);
       break;
     case DataConfig::DENSE:
     case DataConfig::SPARSE:
     case DataConfig::SPARSE_BINARY:
-      parser_ = std::bind(&ExampleParser::parsePS, this, _1, _2, format);
+      parser_ = std::bind(&ExampleParser::ParsePS, this, _1, _2, format);
       break;
     default:
       CHECK(false) << "unknown text format " << format;
   }
 }
 
-bool ExampleParser::toProto(char* line, Example* ex) {
+bool ExampleParser::ToProto(char* line, Example* ex) {
   ex->Clear();
   return parser_(line, ex);
 }
@@ -45,7 +45,7 @@ bool ExampleParser::toProto(char* line, Example* ex) {
 //   label feature_id:weight feature_id:weight feature_id:weight ...
 //
 // assume feature_ids are ordered
-bool ExampleParser::parseLibsvm(char* buff, Example* ex) {
+bool ExampleParser::ParseLibsvm(char* buff, Example* ex) {
   char *saveptr;
   // label
   char * pch = strtok_r(buff, " \t\r\n", &saveptr);
@@ -84,7 +84,7 @@ bool ExampleParser::parseLibsvm(char* buff, Example* ex) {
 //   line_id 1 clicked_or_not key:grp_id key:grp_id ...
 //
 // same group_ids should appear together, but not necesary be ordered
-bool ExampleParser::parseAdfea(char* line, Example* ex) {
+bool ExampleParser::ParseAdfea(char* line, Example* ex) {
   uint64 key = -1;
   int pre_slot_id = 0;
   Slot* slot = ex->add_slot();
@@ -126,7 +126,7 @@ bool ExampleParser::parseAdfea(char* line, Example* ex) {
 //
 //  no guarantee that the same group ids stay contiguously
 //
-bool ExampleParser::parseTerafea(char* line, Example* ex) {
+bool ExampleParser::ParseTerafea(char* line, Example* ex) {
   // key:   group id
   // value: index in Example::slot[]
   std::unordered_map<uint32, uint32> gid_idx_map;
@@ -197,7 +197,7 @@ bool ExampleParser::parseTerafea(char* line, Example* ex) {
 // - weight: only valid for non-bianry sparse training data, a float number
 //   presenting the feature value.
 
-bool ExampleParser::parsePS(char* line, Example* ex, TextFormat format) {
+bool ExampleParser::ParsePS(char* line, Example* ex, TextFormat format) {
   char* saveptr;
   char* tk = strtok_r(line, ";", &saveptr);
 
@@ -249,6 +249,9 @@ bool ExampleParser::parsePS(char* line, Example* ex, TextFormat format) {
   return true;
 }
 
+bool ExampleParser::ParseCriteo(char*,  Example*) {
+
+}
 // vw: TODO
 //
 }

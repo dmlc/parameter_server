@@ -105,9 +105,9 @@ bool SlotReader::readOneFile(const DataConfig& data, int ith_file) {
   // read examples one by one
   if (data_.format() == DataConfig::TEXT) {
     ExampleParser text_parser;
-    text_parser.init(data.text(), data.ignore_feature_group());
+    text_parser.Init(data.text(), data.ignore_feature_group());
     std::function<void(char*)> handle = [&] (char *line) {
-      if (!text_parser.toProto(line, &ex)) return;
+      if (!text_parser.ToProto(line, &ex)) return;
       store();
     };
     FileLineReader reader(data);
