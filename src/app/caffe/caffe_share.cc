@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include <chrono>
 #include <thread>
 #include <google/protobuf/io/coded_stream.h>
@@ -10,12 +11,16 @@
 #include "caffe/caffe.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+using namespace caffe;
+using namespace std;
 using caffe::Blob;
 using caffe::Solver;
 using caffe::SolverParameter;
 using caffe::Caffe;
 using caffe::caffe_scal;
 using google::protobuf::io::CodedInputStream;
+using std::string;
+using std::vector;
 
 // caffe cmd flags
 
@@ -27,6 +32,8 @@ DEFINE_string(model, "",
     "The model definition protocol buffer text file..");
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
+DEFINE_string(workers, "W0",
+    "cwd if workers, subdirectory of current directory.");
 
 
 DEFINE_bool(fb_only, true,
@@ -307,6 +314,135 @@ App* CreateServerNode(const std::string& conf) {
   return new CaffeServer("app", conf);
 }
 
+
+class CaffeWorker;
+
+class NetForwarder {
+
+  bool terminated;
+  int id;
+  CaffeWorker* worker;
+  caffe::Solver<float>* solver;
+  std::mutex mu_forward;
+  std::condition_variable cv_forward;
+  bool start_forward;
+  std::unique_ptr<std::thread> internalThread;
+
+  bool needDisplay;
+
+public:
+  NetForwarder(CaffeWorker* parent, int id, Solver<float>* solver, bool display):
+    id(id),worker(parent),solver(solver),needDisplay(display){
+  }
+
+  /**
+   * by CaffeForwarder
+   */
+  void waitForwardSignal(){
+    std::unique_lock<std::mutex> l(mu_forward);
+    while(!start_forward){
+      cv_forward.wait(l);
+    }
+  }
+
+  /**
+   * by CaffeForwarder
+   */
+  void signalForwardEnd(){
+    std::unique_lock<std::mutex> l(mu_forward);
+    start_forward = false;
+    cv_forward.notify_all();
+  }
+
+  /**
+   * by CaffeWorker
+   */
+  void signalForward() {
+    std::unique_lock<std::mutex> l(mu_forward);
+    start_forward = true;
+    cv_forward.notify_all();
+  }
+
+  /**
+   * by CaffeWorker
+   */
+  void joinForwardEnd() {
+    if(!start_forward){
+      return;
+    }
+    {
+      std::unique_lock<std::mutex> l(mu_forward);
+      while(start_forward) {
+        cv_forward.wait(l);
+      }
+    }
+  }
+
+  void copyWeight();
+
+  void accumulateDiff();
+
+  void start() {
+    if (this->id >= 0) {
+      LOG(INFO) << "Net Use GPU with device ID " << FLAGS_gpu;
+      Caffe::SetDevice(this->id);
+      Caffe::set_mode(Caffe::GPU);
+    } else {
+      LOG(INFO) << "Use CPU.";
+      Caffe::set_mode(Caffe::CPU);
+    }
+//    this->net = initCaffeNet();
+    std::vector<Blob<float>*> bottom_vec;
+    while(true) {
+      // wait signal to forward
+      waitForwardSignal();
+      LL << "run() forward signal received";
+      copyWeight();
+      for (int i = 0; i < FLAGS_pushstep; i++) {
+        if(needDisplay){
+          solver->testPhase();
+        }
+        solver->forwardBackwardPhase();
+        this->accumulateDiff();
+        if(needDisplay){
+          solver->displayPhase();
+        }
+        // bypass all of computeUpdateValue
+        solver->stepEnd();
+      }
+      LL << "pushstep " << FLAGS_pushstep << " reached.";
+      LL << "run() sending forward end signal";
+      signalForwardEnd();
+    }
+  }
+
+  void startAsync(){
+    if(!internalThread.get()){
+      internalThread.reset(new thread(&NetForwarder::start, this));
+    }
+  }
+
+  void stop() {
+    //TODO
+  }
+};
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
 class CaffeWorker: public App{
 private:
 
@@ -319,16 +455,14 @@ private:
   std::condition_variable cv_forward;
   bool start_forward;
 
-  VVector<char> *solver_states; // individual data ptr, solver state to initialize workers
-
   VVector<float> *weights;// individual data ptr, same order/size as solver->net->params
   VVector<float> *diffs;// for accumulated diff, share memory with diffBlobs
   std::vector<Blob<float>*> diffBlobs;
   caffe::Solver<float>* solver;
 
-  volatile unsigned int tickDiff=0, tickStep=0;
-
   volatile bool _terminate = false;
+
+  std::vector<NetForwarder*> forwarders;
 
 public:
   CaffeWorker(const string& name, const string& conf):App(name){
@@ -346,9 +480,6 @@ public:
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
     diffs = new VVector<float>(V_DIFF);
-    solver_states = new VVector<char>(V_SOLVER);
-    solver_states->value(0) = {};
-    solver_states->setResizable(true);
 
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
@@ -357,6 +488,23 @@ public:
       diffBlobs.push_back(newBlob);
       diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
     }
+
+    //init forwarders
+    vector<string> workerRoots = split(FLAGS_workers, ',');
+    char* cwd = getcwd(nullptr,1024);
+    LL << "cwd: " << cwd;
+    CHECK(cwd != nullptr);
+    string cwdString(cwd);
+    for (int id = 0; id < workerRoots.size(); id++){
+      bool display = id == 0;
+      CHECK(0 == chdir((cwdString + "/" + workerRoots[id]).c_str()));
+      Solver<float>* solver = initCaffeSolver();
+      NetForwarder* forwarder = new NetForwarder(this, id, solver, display);
+      forwarders.push_back(forwarder);
+      forwarder->startAsync();
+    }
+    CHECK(0 == chdir(cwd));
+    free(cwd);
     LL << "worker init() over";
   }
 
@@ -402,17 +550,15 @@ public:
       waitForwardSignal();
       LL << "run() forward signal received";
       pullWeight();
-      swapWeight();
-      for (int i = 0; i < FLAGS_pushstep; i++) {
-        solver->testPhase();
-        solver->forwardBackwardPhase();
-        this->accumulateDiff();
-        solver->displayPhase();
-        // bypass all of computeUpdateValue
-        solver->stepEnd();
-        stepEnd();
+      for (int i = 0; i < forwarders.size(); i++){
+        NetForwarder* forwarder = forwarders[i];
+        forwarder->signalForward();
       }
-      LL << "pushstep " << FLAGS_pushstep << "reached.";
+      for (int i = 0; i < forwarders.size(); i++){
+        NetForwarder* forwarder = forwarders[i];
+        forwarder->joinForwardEnd();
+      }
+      LL << "all forwarder joined: " << forwarders.size();
       pushDiff();
       LL << "run() sending forward end signal";
       signalForwardEnd();
@@ -431,16 +577,15 @@ public:
   }
 
   /**
-   * notify accumulateDiff end, for pusher counting
+   * by forwarder
    */
-  void diffEnd(){
-    tickDiff++;
-  }
-  /**
-   * for puller counting
-   */
-  void stepEnd(){
-    tickStep++;
+  void gatherDiff(Solver<float>* another) {
+    Lock l(mu_diff);
+    for(int i = 0; i < another->net()->params().size(); i++){
+      auto acc = diffBlobs[i];
+      auto blob = another->net()->params()[i];
+      caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
+    }
   }
 
   /**
@@ -468,51 +613,6 @@ public:
   }
 
   /**
-   * by main
-   */
-  void accumulateDiff(){
-    {
-      Lock l(mu_diff);
-      for(int i = 0; i < solver->net()->params().size(); i++){
-        auto acc = diffBlobs[i];
-        auto blob = solver->net()->params()[i];
-        switch (Caffe::mode()) {
-          case Caffe::CPU:
-            caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
-            break;
-          case Caffe::GPU:
-            caffe::caffe_gpu_add(acc->count(), blob->gpu_diff(), acc->gpu_diff(), acc->mutable_gpu_diff());
-            break;
-          default:
-            LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-        }
-      }
-    }
-    diffEnd();
-  }
-
-  /**
-   * by main
-   */
-  void pullSolverState() {
-    MessagePtr msg(new Message(kServerGroup));
-    msg->key = {0};
-    int pull_time = solver_states->pull(msg);
-    solver_states->waitOutMsg(kServerGroup, pull_time);
-    Lock l(mu_weight);
-    SArray<char>src = solver_states->value(0);
-    LL << "solver state got: " << src.size();
-    caffe::SolverState state;
-    CodedInputStream cis((const uint8*) src.data(), src.size());
-    cis.SetTotalBytesLimit(INT_MAX, 536870912);
-    state.ParseFromCodedStream(&cis);
-
-    solver->RestoreSolverState(state);
-    solver->setIter(state.iter());
-    solver->setCurrentStep(state.current_step());
-  }
-
-  /**
    * by puller (except the initial pull), synchronized
    */
   void pullWeight(){
@@ -535,31 +635,35 @@ public:
     weight_ready = true;
     LL << "weight pulled from server, total:" << weights->totalSize();
   }
+
   /**
-   * by main, copy received weight into solver->net
+   * by forwarder
    */
-  void swapWeight(){
-    Lock l(mu_weight);
-    if(!weight_ready){
-      return;
-    }
+  void copyWeight(Solver<float>* another){
     float first,last;
-    for (int i = 0; i < solver->net()->params().size();i++){
-      auto blob = solver->net()->params()[i];
+    for (int i = 0; i < another->net()->params().size();i++){
+      auto blob = another->net()->params()[i];
       float* dest = blob->mutable_cpu_data();
       auto src = weights->value(i);
       memcpy(dest, src.data(), blob->data()->size());
       //TODO direct copy to GPU?
       if(i == 0){
         first = blob->cpu_data()[0];
-      }else if(i == solver->net()->params().size()-1){
+      }else if(i == another->net()->params().size()-1){
         last = blob->cpu_data()[blob->count()-1];
       }
     }
     LL << "weight from server:[" << first << ",...," << last << "]";
-    weight_ready = false;
   }
 };
+void NetForwarder::copyWeight() {
+  this->worker->copyWeight(this->solver);
+}
+
+void NetForwarder::accumulateDiff(){
+  this->worker->gatherDiff(this->solver);
+}
+
 } // namespace PS
 
 namespace PS {
