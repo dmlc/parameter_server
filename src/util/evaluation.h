@@ -72,10 +72,10 @@ V Evaluation<V>::logloss(const SArray<V>& label, const SArray<V>& predict) {
   V loss = 0;
   for (int i = 0; i < n; ++i) {
     V y = label[i] > 0;
-    V p = predict[i];
+    V p = 1 / (1 + exp(- predict[i]));
     loss += y * log(p) + (1 - y) * log(1 - p);
   }
-  return loss / n;
+  return - loss / n;
 }
 
 } // namespace PS

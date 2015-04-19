@@ -11,18 +11,10 @@ if [ ! -f train.txt ]; then
     tar -zxvf dac.tar.gz
 fi
 
+echo "split train.txt..."
+mkdir -p criteo/train
+split -n l/18 --numeric-suffixes=1 --suffix-length=3 train.txt criteo/train/part-
 
-name=(train test)
-for t in "${name[@]}"
-do
-    echo $t
-    mkdir -p criteo/${t}
-
-    # shuffle
-    # shuf $t.txt  >rnd
-
-    # split
-    split -n l/16 --numeric-suffixes=1 --suffix-length=3 $t.txt criteo/${t}/part-
-done
-
-# rm rnd
+echo "make a test set"
+mkdir -p criteo/test
+mv criteo/train/part-01[7-8] criteo/test

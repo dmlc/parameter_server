@@ -62,8 +62,11 @@ void ModelEvaluation::Run() {
       Xw[i] = re;
     }
     predict.append(Xw);
-    NOTICE("load %lu examples", label.size());
+    printf("\r                                             \r");
+    printf("  load %lu examples", label.size());
+    fflush(stdout);
   } while (good);
+  printf("\n");
 
   // label.writeToFile("label");
   // predict.writeToFile("predict");
