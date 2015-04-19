@@ -43,7 +43,7 @@ message BCDConfig {
 
   optional int32 save_model_every_n_iter = 16 [default = 0];
 
-
+  optional bool load_local_data = 17 [default = false];
   extensions 100 to 199;
 }
 

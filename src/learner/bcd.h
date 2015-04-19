@@ -256,7 +256,7 @@ class BCDWorker : public BCDCompNode<V> {
   void LoadData(const DataConfig& data, ExampleInfo* info, int *hit_cache) {
     *hit_cache = DataCache("train", true);
     if (!(*hit_cache)) {
-      slot_reader_.Init(data, bcd_conf_.local_cache());
+      slot_reader_.Init(searchFiles(data), bcd_conf_.local_cache());
       slot_reader_.Read(info);
     }
   }

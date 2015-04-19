@@ -13,7 +13,8 @@ class DarlinScheduler : public BCDScheduler {
  public:
   DarlinScheduler(const Config& conf)
       : BCDScheduler(conf.darlin()), conf_(conf) {
-    data_assigner_.set(conf_.training_data(), FLAGS_num_workers);
+    data_assigner_.set(conf_.training_data(), FLAGS_num_workers,
+                       bcd_conf_.load_local_data());
   }
   virtual ~DarlinScheduler() { }
 

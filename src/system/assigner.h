@@ -41,10 +41,12 @@ class NodeAssigner {
 class DataAssigner {
  public:
   DataAssigner() { }
-  DataAssigner(const DataConfig& data, int num) { set(data, num); }
+  DataAssigner(const DataConfig& data, int num, bool local) {
+    set(data, num, local);
+  }
   ~DataAssigner() { }
 
-  void set(const DataConfig& data, int num);
+  void set(const DataConfig& data, int num, bool local);
   bool next(DataConfig *data);
 
   int cur_i() { return cur_i_; }
