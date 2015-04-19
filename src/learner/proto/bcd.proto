@@ -41,6 +41,7 @@ message BCDConfig {
 
   repeated FilterConfig comm_filter = 15;
 
+  optional int32 save_model_every_n_iter = 16 [default = 0];
   extensions 100 to 199;
 }
 

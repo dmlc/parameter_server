@@ -129,11 +129,11 @@ void BCDScheduler::MergeProgress(int iter, const BCDProgress& recv) {
     p.set_nnz_active_set(p.nnz_active_set() + recv.nnz_active_set());
   }
 
-void BCDScheduler::SaveModel(const DataConfig& data) {
+int BCDScheduler::SaveModel(const DataConfig& data) {
   Task task;
   task.mutable_bcd()->set_cmd(BCDCall::SAVE_MODEL);
   *task.mutable_bcd()->mutable_data() = data;
-  Wait(Submit(task, kServerGroup));
+  return Submit(task, kCompGroup);
 }
 
 string BCDScheduler::ShowTime(int iter) {

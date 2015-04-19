@@ -93,6 +93,11 @@ class DarlinScheduler : public BCDScheduler {
       Wait(time);
       ShowProgress(iter);
 
+      int k = bcd_conf_.save_model_every_n_iter();
+      if (k > 0 && ((iter+1) % k == 0) && conf_.has_model_output()) {
+        time = SaveModel(ithFile(conf_.model_output(), 0, "_it_" + std::to_string(iter)));
+      }
+
       // update the kkt filter strategy
       Real vio = g_progress_[iter].violation();
       Real ratio = bcd_conf_.GetExtension(kkt_filter_threshold_ratio);
@@ -121,7 +126,7 @@ class DarlinScheduler : public BCDScheduler {
 
     // save model
     if (conf_.has_model_output()) {
-      SaveModel(conf_.model_output());
+      Wait(SaveModel(conf_.model_output()));
     }
   }
  protected:

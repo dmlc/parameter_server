@@ -270,8 +270,8 @@ bool ExampleParser::ParseCriteo(char* buff,  Example* ex) {
   slot->add_val(label > 0 ? 1.0 : -1.0);
   p = pp + 1;
 
-  slot = ex->add_slot();
-  slot->set_id(1);
+  // slot = ex->add_slot();
+  // slot->set_id(1);
 
   for (int i = 0; i < 13; ++i) {
     int cnt = 0;
@@ -282,13 +282,12 @@ bool ExampleParser::ParseCriteo(char* buff,  Example* ex) {
     *pp = '\0';
 
     if (strtoi32(p, &cnt)) {
+      if (i == 0 || !ignore_fea_slot_) {
+        slot = ex->add_slot();
+        slot->set_id(i+1);
+      }
       uint64 key = kMaxKey / 13 * i + cnt;
       slot->add_key(key);
-
-      if (!ignore_fea_slot_) {
-        slot = ex->add_slot();
-        slot->set_id(i+2);
-      }
     }
     p = pp + 1;
   }
@@ -302,19 +301,20 @@ bool ExampleParser::ParseCriteo(char* buff,  Example* ex) {
       *pp = '\0';
     }
 
-    if (pp-p > 4) {
-      MurmurHash3_x64_128(p, pp-p, 512927377, murmur_out);
+    int n = strlen(p);
+    if (n > 4) {
+      if (!ignore_fea_slot_) {
+        slot = ex->add_slot();
+        slot->set_id(i+14);
+      }
+      MurmurHash3_x64_128(p, n, 512927377, murmur_out);
       uint64 key = (murmur_out[0] ^ murmur_out[1]);
       slot->add_key(key);
-
-      if (!ignore_fea_slot_ && i < 25) {
-        slot = ex->add_slot();
-        slot->set_id(i+15);
-      }
     }
     p = pp + 1;
   }
 
+  // LL << ex->slot_size();
   // LL << ex->ShortDebugString();
   // LL << slot->key_size();
   return true;

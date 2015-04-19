@@ -31,7 +31,7 @@ class BCDScheduler : public App {
   /**
    * @brief issues model saving tasks to workers
    */
-  void SaveModel(const DataConfig& data);
+  int SaveModel(const DataConfig& data);
   /**
    * @brief returns the time string
    */
