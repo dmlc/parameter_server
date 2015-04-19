@@ -18,6 +18,7 @@ message DataConfig {
     LIBSVM = 5;
     TERAFEA = 6;
     VW = 7;
+    CRITEO = 9;
   }
   optional TextFormat text = 2;
 

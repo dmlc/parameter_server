@@ -24,6 +24,9 @@ void ExampleParser::Init(TextFormat format, bool ignore_fea_slot) {
     case DataConfig::TERAFEA:
       parser_ = std::bind(&ExampleParser::ParseTerafea, this, _1, _2);
       break;
+    case DataConfig::CRITEO:
+      parser_ = std::bind(&ExampleParser::ParseCriteo, this, _1, _2);
+      break;
     case DataConfig::DENSE:
     case DataConfig::SPARSE:
     case DataConfig::SPARSE_BINARY:
@@ -249,8 +252,70 @@ bool ExampleParser::ParsePS(char* line, Example* ex, TextFormat format) {
   return true;
 }
 
-bool ExampleParser::ParseCriteo(char*,  Example*) {
+// criteo ctr dataset:
+// The columns are tab separeted with the following schema:
+// <label> <integer feature 1> ... <integer feature 13> <categorical feature 1> ... <categorical feature 26>
+bool ExampleParser::ParseCriteo(char* buff,  Example* ex) {
+  // copy from tianqi's codes
+  char* p = buff;
+  char* pp = strchr(buff, '\t');
+  if (pp == NULL) return false;
+  *pp = '\0';
+  float label;
+  if (!strtofloat(p, &label)) return false;
 
+  auto slot = ex->add_slot();
+  slot->set_id(0);
+
+  slot->add_val(label > 0 ? 1.0 : -1.0);
+  p = pp + 1;
+
+  slot = ex->add_slot();
+  slot->set_id(1);
+
+  for (int i = 0; i < 13; ++i) {
+    int cnt = 0;
+    pp = strchr(p, '\t');
+    if (pp == NULL) return false;
+    *pp = '\0';
+
+    if (strtoi32(p, &cnt)) {
+      uint64 key = kMaxKey / 13 * i + cnt;
+      slot->add_key(key);
+
+      if (!ignore_fea_slot_) {
+        slot = ex->add_slot();
+        slot->set_id(i+2);
+      }
+    }
+    p = pp + 1;
+  }
+
+  uint64 murmur_out[2];
+  for (int i = 0; i < 26; ++i) {
+    pp = strchr(p, '\t');
+    if (pp == NULL) {
+      if (i != 25) return false;
+    } else {
+      *pp = '\0';
+    }
+
+    if (pp-p > 4) {
+      MurmurHash3_x64_128(p, pp-p, 512927377, murmur_out);
+      uint64 key = (murmur_out[0] ^ murmur_out[1]);
+      slot->add_key(key);
+
+      if (!ignore_fea_slot_ && i < 25) {
+        slot = ex->add_slot();
+        slot->set_id(i+15);
+      }
+    }
+    p = pp + 1;
+  }
+
+  // LL << ex->ShortDebugString();
+  // LL << slot->key_size();
+  return true;
 }
 // vw: TODO
 //
