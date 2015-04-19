@@ -8,7 +8,7 @@ namespace PS {
 // assign *node* with proper rank_id, key_range, etc..
 class NodeAssigner {
  public:
-  NodeAssigner(int num_servers, Range<Key> key_range = Range<Key>::All()) {
+  NodeAssigner(int num_servers, Range<Key> key_range) {
     num_servers_ = num_servers;
     key_range_ = key_range;
   }

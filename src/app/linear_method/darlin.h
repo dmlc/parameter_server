@@ -401,6 +401,7 @@ class DarlinWorker : public BCDWorker<Real>, public DarlinCompNode {
     // push the gradient into servers
     Task req = Parameter::Request(
         grp, time, {}, bcd_conf_.comm_filter(), g_key_range);
+
     model_.Push(req, model_[grp].key.Segment(col_range), {G,U});
   }
 

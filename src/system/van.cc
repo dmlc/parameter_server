@@ -17,7 +17,7 @@ DECLARE_int32(num_servers);
 
 Van::~Van() {
   Statistic();
-  LOG(INFO) << num_call_ << " " << send_time_ << " " << recv_time_;
+  // LOG(INFO) << num_call_ << " " << send_time_ << " " << recv_time_;
 
   for (auto& it : senders_) zmq_close(it.second);
   zmq_close(receiver_);
@@ -139,7 +139,7 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
   int n = has_key + msg->value.size();
 
   size_t data_size = 0;
-  auto tv = hwtic();
+  // auto tv = hwtic();
 
   // send task
   size_t task_size = msg->task.ByteSize();
@@ -177,7 +177,7 @@ bool Van::Send(Message* msg, size_t* send_bytes) {
     }
     data_size += data->size();
   }
-  send_time_ += hwtoc(tv);
+  // send_time_ += hwtoc(tv);
 
   // statistics
   *send_bytes += data_size;
@@ -207,7 +207,7 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
     size_t size = zmq_msg_size(zmsg);
     data_size += size;
 
-    auto tv = hwtic();
+    // auto tv = hwtic();
     if (i == 0) {
       // identify
       msg->sender = std::string(buf, size);
@@ -253,7 +253,7 @@ bool Van::Recv(Message* msg, size_t* recv_bytes) {
         msg->value.push_back(data);
       }
     }
-    recv_time_ += hwtoc(tv);
+    // recv_time_ += hwtoc(tv);
 
     if (!zmq_msg_more(zmsg)) { CHECK_GT(i, 0); break; }
   }

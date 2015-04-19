@@ -11,6 +11,9 @@ DECLARE_int32(report_interval);
 DEFINE_string(app_conf, "", "the string configuration of app");
 DEFINE_string(app_file, "", "the configuration file of app");
 
+DEFINE_uint64(key_start, 0, "global key range");
+DEFINE_uint64(key_end, kuint64max, "global key range");
+
 Manager::Manager() {}
 Manager::~Manager() {
   for (auto& it : customers_) {
@@ -30,7 +33,8 @@ void Manager::Init(char* argv0) {
              FLAGS_log_dir.c_str(), basename(argv0));
     }
 
-    node_assigner_ = new NodeAssigner(FLAGS_num_servers);
+    node_assigner_ = new NodeAssigner(
+        FLAGS_num_servers, Range<Key>(FLAGS_key_start, FLAGS_key_end));
     // create the app
     if (!FLAGS_app_file.empty()) {
       CHECK(readFileToString(FLAGS_app_file, &app_conf_))
