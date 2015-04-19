@@ -121,7 +121,7 @@ class DarlinScheduler : public BCDScheduler {
 
     // save model
     if (conf_.has_model_output()) {
-      // SaveModel(conf_.model_output());
+      SaveModel(conf_.model_output());
     }
   }
  protected:

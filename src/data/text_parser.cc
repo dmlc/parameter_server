@@ -276,7 +276,9 @@ bool ExampleParser::ParseCriteo(char* buff,  Example* ex) {
   for (int i = 0; i < 13; ++i) {
     int cnt = 0;
     pp = strchr(p, '\t');
-    if (pp == NULL) return false;
+    if (pp == NULL) {
+      return false;
+    }
     *pp = '\0';
 
     if (strtoi32(p, &cnt)) {

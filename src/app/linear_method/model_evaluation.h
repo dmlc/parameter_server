@@ -69,8 +69,10 @@ void ModelEvaluation::Run() {
   // predict.writeToFile("predict");
 
   // evaluation
+
   NOTICE("auc: %f", Evaluation<Real>::auc(label, predict));
   NOTICE("accuracy: %f", Evaluation<Real>::accuracy(label, predict));
+  NOTICE("logloss: %f", Evaluation<Real>::logloss(label, predict));
 }
 
 } // namespace LM
