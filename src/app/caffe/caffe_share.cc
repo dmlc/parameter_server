@@ -9,6 +9,7 @@
 #include "parameter/v_vector.h"
 #include "parameter/kv_vector.h"
 #include "caffe/caffe.hpp"
+#include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 using namespace caffe;
@@ -34,8 +35,6 @@ DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 DEFINE_string(workers, "W0",
     "cwd if workers, subdirectory of current directory.");
-
-
 DEFINE_bool(fb_only, true,
     "DEPRECATED; workers only ForwardBackward.");
 DEFINE_bool(synced, false,
@@ -46,10 +45,8 @@ DEFINE_int32(pushstep, 3,
 DEFINE_int32(pullstep, 3,
     "DEPRECATED interval, in minibatches, between pull operation.");
 
-
-
 caffe::SolverParameter solver_param;
-Solver<float>* initCaffeSolver(){
+Solver<float>* initCaffeSolver(int id){
 
   Solver<float>* solver;
 
@@ -57,15 +54,19 @@ Solver<float>* initCaffeSolver(){
 
   caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
 
-  if (FLAGS_gpu < 0
+  if (id < 0) {
+    id = FLAGS_gpu;
+  }
+
+  if (id < 0
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
-    FLAGS_gpu = solver_param.device_id();
+    id = solver_param.device_id();
   }
 
   // Set device id and mode
-  if (FLAGS_gpu >= 0) {
-    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
-    Caffe::SetDevice(FLAGS_gpu);
+  if (id >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << id;
+    Caffe::SetDevice(id);
     Caffe::set_mode(Caffe::GPU);
   } else {
     LOG(INFO) << "Use CPU.";
@@ -105,7 +106,7 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
   virtual void init() {
     LL << myNodeID() << ", this is server " << myRank();
 
-    solver = initCaffeSolver();
+    solver = initCaffeSolver(-1);
 
     // initialize the weight at server
     int total_weight = 0;
@@ -384,7 +385,7 @@ public:
 
   void start() {
     if (this->id >= 0) {
-      LOG(INFO) << "Net Use GPU with device ID " << FLAGS_gpu;
+      LOG(INFO) << "Net Use GPU with device ID " << this->id;
       Caffe::SetDevice(this->id);
       Caffe::set_mode(Caffe::GPU);
     } else {
@@ -402,6 +403,8 @@ public:
         if(needDisplay){
           solver->testPhase();
         }
+        LL<< "forwarder # " << id << " DeviceQuery";
+        Caffe::DeviceQuery();
         solver->forwardBackwardPhase();
         this->accumulateDiff();
         if(needDisplay){
@@ -476,7 +479,7 @@ public:
     LL << "worker init()";
     weight_ready = false;
     start_forward = false;
-    solver = initCaffeSolver();
+    solver = initCaffeSolver(-1);
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
     diffs = new VVector<float>(V_DIFF);
@@ -497,8 +500,10 @@ public:
     string cwdString(cwd);
     for (int id = 0; id < workerRoots.size(); id++){
       bool display = id == 0;
-      CHECK(0 == chdir((cwdString + "/" + workerRoots[id]).c_str()));
-      Solver<float>* solver = initCaffeSolver();
+      string workerRoot = cwdString + "/" + workerRoots[id];
+      LL << "creating forwarder in: " << workerRoot;
+      CHECK(0 == chdir(workerRoot.c_str()));
+      Solver<float>* solver = initCaffeSolver(id);
       NetForwarder* forwarder = new NetForwarder(this, id, solver, display);
       forwarders.push_back(forwarder);
       forwarder->startAsync();
