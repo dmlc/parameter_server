@@ -112,6 +112,21 @@ Solver<float>* initCaffeSolverInDir(int id, string root){
   return solver;
 }
 
+void checkNAN(int count, const float* data, string blobName){
+  bool isNan = false;
+  int nanIndex = -1;
+  for (int j = 0; j < count; j++){
+    if(isnan(data[j])){
+      isNan = true;
+      nanIndex = j;
+    }
+  }
+  if(isNan){
+    LL << "NAN in "<< blobName <<"[" << nanIndex << "]!";
+  }
+
+}
+
 class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
   CaffeServer(const string& name, const string& conf) : App(name) { }
@@ -252,17 +267,9 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
         last=blob->cpu_diff()[blob->count()-1];
       }
       //check
-      bool isNan = false;
-      int nanIndex = -1;
-      for (int j = 0; j < diffBlobs[i]->count(); j++){
-        if(isnan(src[j])){
-          isNan = true;
-          nanIndex = j;
-        }
-      }
-      if(isNan){
-        LL << "NAN in diffBlob[" << i << "][" << nanIndex << "]!";
-      }
+      ostringstream nameSt;
+      nameSt << "diffBlob[" << i <<"]";
+      checkNAN(blob->count(), diffBlobs[i]->cpu_diff(), nameSt.str());
       //scale down?
       if(FLAGS_pushstep != 0){
         caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), src);
@@ -357,7 +364,7 @@ class NetForwarder {
 
 public:
   NetForwarder(CaffeWorker* parent, int id, string workerRoot, bool display):
-    id(id),worker(parent),rootDir(workerRoot),needDisplay(display){
+    id(id),worker(parent),rootDir(workerRoot),solver(nullptr),needDisplay(display){
   }
 
   /**
@@ -615,6 +622,9 @@ public:
     for(int i = 0; i < another->net()->params().size(); i++){
       auto acc = diffBlobs[i];
       auto blob = another->net()->params()[i];
+      ostringstream name;
+      name << "gatherDiff:solver.blobs[" << i << "]";
+      checkNAN(blob->count(), blob->cpu_diff(), name.str());
       caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
     }
   }
