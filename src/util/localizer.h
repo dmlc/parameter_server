@@ -4,69 +4,98 @@
 #include "util/parallel_sort.h"
 #include "data/slot_reader.h"
 #include "util/crc32c.h"
+#include <limits>
 namespace PS {
 
-template<typename I, typename V> class Localizer;
-template<typename I, typename V> using LocalizerPtr = std::shared_ptr<Localizer<I,V>>;
-
-
+/**
+ * @brief Mapping a sparse matrix with general indices into continuous indices
+ * starting from 0
+ */
 template<typename I, typename V>
 class Localizer {
  public:
   Localizer() { }
-
-  // find the unique indeces with their number of occrus in *idx*
-  void countUniqIndex(const SArray<I>& idx, SArray<I>* uniq_idx) {
-    countUniqIndex<char>(idx, uniq_idx, nullptr);
-  }
-  void countUniqIndex(const MatrixPtr<V>&mat, SArray<I>* uniq_idx) {
-    countUniqIndex<char>(mat, uniq_idx, nullptr);
-  }
-  template<typename C> void countUniqIndex(
+  ~Localizer() { }
+  /**
+   * @brief count unique items
+   *
+   * temporal results will be stored to accelerate RemapIndex().
+   *
+   * @param idx the item list in any order
+   * @param uniq_idx returns the sorted unique items
+   * @param idx_frq returns the according occurrence counts
+   */
+  template<typename C>
+  void CountUniqIndex(
       const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq);
 
-  template<typename C> void countUniqIndex(
-      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq);
+  /**
+   * @brief count unique items in mat->index()
+   *
+   * @param mat should be a sparse matrix whose index has type I
+   * @param uniq_idx
+   * @param idx_frq
+   */
+  template<typename C>
+  void CountUniqIndex(
+      const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
+    mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
+    CountUniqIndex(mat_->index(), uniq_idx, idx_frq);
+  }
 
-  // return a matrix with index mapped: idx_dict[i] -> i. Any index does not exists
-  // in *idx_dict* is dropped. Assume *idx_dict* is ordered
-  MatrixPtr<V> remapIndex(int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
+  /**
+   * @brief Remaps the index.
+   *
+   * @param grp_id slot id
+   * @param idx_dict the index dictionary. Any index does not exists in this
+   * dictionary is dropped.
+   * @param reader slot reader
+   *
+   * @return a matrix with index mapped: idx_dict[i] -> i.
+   */
+  MatrixPtr<V> RemapIndex(
+      int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const;
 
-  // valid only if used countUniqIndex(mat, ...) before
-  MatrixPtr<V> remapIndex(const SArray<I>& idx_dict);
+  /**
+   * @brief Remaps the index. It's valid only if called CountUniqIndex(const
+  MatrixPtr<V>&) before.
+   *
+   * @param idx_dict the index dictionary. Any index does not exists in this
+   * dictionary is dropped.
+   *
+   * @return a matrix with index mapped: idx_dict[i] -> i.
+   */
+  MatrixPtr<V> RemapIndex(const SArray<I>& idx_dict);
 
-  MatrixPtr<V> remapIndex(
+  /**
+   * @brief Clears the temporal results
+   */
+  void Clear() { pair_.clear(); }
+
+  size_t MemSize() {
+    return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
+  }
+ private:
+  MatrixPtr<V> RemapIndex(
       const MatrixInfo& info, const SArray<size_t>& offset,
       const SArray<I>& index, const SArray<V>& value,
       const SArray<I>& idx_dict) const;
 
-  void clear() { pair_.clear(); }
-
-  size_t memSize() {
-    return pair_.size() * sizeof(Pair) + (mat_ == nullptr ? 0 : mat_->memSize());
-  }
- private:
+#pragma pack(push)
 #pragma pack(4)
   struct Pair {
     I k; uint32 i;
   };
+#pragma pack(pop)
   SArray<Pair> pair_;
   SparseMatrixPtr<I,V> mat_;
 };
 
-template<typename I, typename V>
-template<typename C>
-void Localizer<I,V>::countUniqIndex(
-     const MatrixPtr<V>& mat, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
-  mat_ = std::static_pointer_cast<SparseMatrix<I,V>>(mat);
-  countUniqIndex(mat_->index(), uniq_idx, idx_frq);
-}
-
 
 
 template<typename I, typename V>
 template<typename C>
-void Localizer<I,V>::countUniqIndex(
+void Localizer<I,V>::CountUniqIndex(
     const SArray<I>& idx, SArray<I>* uniq_idx, SArray<C>* idx_frq) {
   if (idx.empty()) return;
   CHECK(uniq_idx);
@@ -79,51 +108,52 @@ void Localizer<I,V>::countUniqIndex(
     pair_[i].k = idx[i];
     pair_[i].i = i;
   }
-  parallelSort(&pair_, FLAGS_num_threads, [](const Pair& a, const Pair& b) {
-      return a.k < b.k; });
+  ParallelSort(&pair_, FLAGS_num_threads,
+               [](const Pair& a, const Pair& b) {return a.k < b.k; });
 
   uniq_idx->clear();
   if (idx_frq) idx_frq->clear();
 
+  uint32 cnt_max = static_cast<uint32>(std::numeric_limits<C>::max());
   I curr = pair_[0].k;
   uint32 cnt = 0;
   for (const Pair& v : pair_) {
     if (v.k != curr) {
-      uniq_idx->pushBack(curr);
+      uniq_idx->push_back(curr);
       curr = v.k;
-      if (idx_frq) idx_frq->pushBack((C)cnt);
+      if (idx_frq) {
+        C c_cnt = static_cast<C>(std::min(cnt, cnt_max));
+        idx_frq->push_back(c_cnt);
+      }
       cnt = 0;
     }
     ++ cnt;
   }
-  uniq_idx->pushBack(curr);
-  if (idx_frq) idx_frq->pushBack((C)cnt);
 
-  // LL << pair_.size() << " " << idx.size() << " " << uniq_idx->size();
-  // LL << crc32c::Value((char*)uniq_idx->data(), uniq_idx->size()*sizeof(V));
-  // for debug
-  // index_.writeToFile("index");
-  // uniq_idx->writeToFile("uniq");
-  // idx_frq->writeToFile("cnt");
+  uniq_idx->push_back(curr);
+  if (idx_frq) {
+    C c_cnt = static_cast<C>(std::min(cnt, cnt_max));
+    idx_frq->push_back(c_cnt);
+  }
 }
 
 template<typename I, typename V>
-MatrixPtr<V> Localizer<I,V>::remapIndex(const SArray<I>& idx_dict) {
+MatrixPtr<V> Localizer<I,V>::RemapIndex(const SArray<I>& idx_dict) {
   CHECK(mat_);
-  return remapIndex(mat_->info(), mat_->offset(), mat_->index(), mat_->value(), idx_dict);
+  return RemapIndex(mat_->info(), mat_->offset(), mat_->index(), mat_->value(), idx_dict);
 }
 
 template<typename I, typename V>
-MatrixPtr<V> Localizer<I, V>::remapIndex(
+MatrixPtr<V> Localizer<I, V>::RemapIndex(
     int grp_id, const SArray<I>& idx_dict, SlotReader* reader) const {
   SArray<V> val;
   auto info = reader->info<V>(grp_id);
   if (info.type() == MatrixInfo::SPARSE) val = reader->value<V>(grp_id);
-  return remapIndex(info, reader->offset(grp_id), reader->index(grp_id), val, idx_dict);
+  return RemapIndex(info, reader->offset(grp_id), reader->index(grp_id), val, idx_dict);
 }
 
 template<typename I, typename V>
-MatrixPtr<V> Localizer<I, V>::remapIndex(
+MatrixPtr<V> Localizer<I, V>::RemapIndex(
     const MatrixInfo& info, const SArray<size_t>& offset,
     const SArray<I>& index, const SArray<V>& value,
     const SArray<I>& idx_dict) const {
@@ -182,9 +212,9 @@ MatrixPtr<V> Localizer<I, V>::remapIndex(
   new_info.set_nnz(new_index.size());
   SizeR local(0, idx_dict.size());
   if (new_info.row_major())  {
-    local.to(new_info.mutable_col());
+    local.To(new_info.mutable_col());
   } else {
-    local.to(new_info.mutable_row());
+    local.To(new_info.mutable_row());
   }
   // LL << curr_o << " " << local.end() << " " << curr_j;
   return MatrixPtr<V>(new SparseMatrix<uint32, V>(new_info, new_offset, new_index, new_value));

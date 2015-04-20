@@ -2,21 +2,24 @@
 #include "filter/compressing.h"
 #include "filter/key_caching.h"
 #include "filter/fixing_float.h"
+#include "filter/add_noise.h"
 
 namespace PS {
 
-FilterPtr Filter::create(const FilterConfig& conf) {
+Filter* Filter::create(const FilterConfig& conf) {
   switch (conf.type()) {
     case FilterConfig::KEY_CACHING:
-      return FilterPtr(new KeyCachingFilter());
+      return new KeyCachingFilter();
     case FilterConfig::COMPRESSING:
-      return FilterPtr(new CompressingFilter());
+      return new CompressingFilter();
     case FilterConfig::FIXING_FLOAT:
-      return FilterPtr(new FixingFloatFilter());
+      return new FixingFloatFilter();
+    case FilterConfig::NOISE:
+      return new AddNoiseFilter();
     default:
       CHECK(false) << "unknow filter type";
   }
-  return FilterPtr(nullptr);
+  return nullptr;
 }
 
 

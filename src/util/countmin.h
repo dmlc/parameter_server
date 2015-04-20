@@ -13,7 +13,7 @@ class CountMin : public Sketch {
   void resize(int n, int k, V v_max) {
     n_ = std::max(n, 64);
     data_.resize(n_);
-    data_.setZero();
+    data_.SetZero();
     k_ = std::min(30, std::max(1, k));
     v_max_ = v_max;
   }

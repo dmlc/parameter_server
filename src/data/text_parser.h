@@ -9,13 +9,14 @@ namespace PS {
 class ExampleParser {
  public:
   typedef DataConfig::TextFormat TextFormat;
-  void init(TextFormat format, bool ignore_fea_slot = false);
-  bool toProto(char*, Example*);
+  void Init(TextFormat format, bool ignore_fea_slot = false);
+  bool ToProto(char*, Example*);
  private:
-  bool parseLibsvm(char*,  Example*);
-  bool parseAdfea(char*,  Example*);
-  bool parseTerafea(char*,  Example*);
-  bool parsePS(char*, Example*, TextFormat);
+  bool ParseLibsvm(char*,  Example*);
+  bool ParseAdfea(char*,  Example*);
+  bool ParseTerafea(char*,  Example*);
+  bool ParsePS(char*, Example*, TextFormat);
+  bool ParseCriteo(char*,  Example*);
   std::function<bool(char*, Example*)> parser_;
   bool ignore_fea_slot_;
 };

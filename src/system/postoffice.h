@@ -1,104 +1,54 @@
 #pragma once
 #include "util/common.h"
 #include "system/message.h"
-#include "system/yellow_pages.h"
-#include "system/heartbeat_info.h"
 #include "util/threadsafe_queue.h"
-#include "system/dashboard.h"
+#include "system/manager.h"
+#include "system/heartbeat_info.h"
 namespace PS {
 
-
-DECLARE_int32(num_servers);
-DECLARE_int32(num_workers);
-DECLARE_int32(num_unused);
-DECLARE_int32(num_replicas);
-DECLARE_string(node_file);
-DECLARE_string(app);
-
-class App;
 class Postoffice {
  public:
   SINGLETON(Postoffice);
   ~Postoffice();
 
-  void start(int* argc, char***);
-  void stop();
-  // Run the system
-  void run();
+  /**
+   * @brief Starts the system
+   */
+  void Run(int* argc, char***);
+  /**
+   * @brief Stops the system
+   */
+  void Stop() { manager_.Stop(); }
 
-  // Queue a message into the sending buffer, which will be sent by the sending
-  // thread.
-  void queue(const MessagePtr& msg);
+  /**
+   * @brief Queue a message into the sending buffer, which will be sent by the
+   * sending thread. It is thread safe.
+   *
+   * @param msg it will be DELETE by system after sent successfully. so do NOT
+   * delete it before
+   */
+  void Queue(Message* msg);
 
-  // reply *task* from *recver* by *reply_msg*
-  void reply(const NodeID& recver,
-             const Task& task,
-             const string& reply_msg = string());
+  Manager& manager() { return manager_; }
+  HeartbeatInfo& pm() { return perf_monitor_; }
 
-  // reply message *msg* with protocal message *proto*
-  template <class P>
-  void replyProtocalMessage(const MessagePtr& msg,
-                            const P& proto);
-
-  App* app() { return CHECK_NOTNULL(app_); }
-  // accessors and mutators
-  YellowPages& yp() { return yellow_pages_; }
-  Node& myNode() { return yellow_pages_.van().myNode(); }
-  Node& scheduler() { return yellow_pages_.van().scheduler(); }
-
-  // HeartbeatInfo& hb() { return heartbeat_info_; };
  private:
-  DISALLOW_COPY_AND_ASSIGN(Postoffice);
   Postoffice();
+  void Send();
+  void Recv();
+  bool Process(Message* msg);
+  std::unique_ptr<std::thread> recv_thread_;
+  std::unique_ptr<std::thread> send_thread_;
+  ThreadsafeQueue<Message*> sending_queue_;
 
-  bool IamScheduler() { return myNode().role() == Node::SCHEDULER; }
-  void manageNode(Task& tk);
-  void manageApp(MessagePtr msg);
-  void finish(MessagePtr msg);
-  void send();
-  void recv();
+  Manager manager_;
+  HeartbeatInfo perf_monitor_;
 
-  // void addMyNode(const string& name, const Node& recver);
+  // key: <sender, customer_id>, value: messages will be packed
+  std::map<std::pair<NodeID, int>, std::vector<Message*>> pack_;
+  std::mutex pack_mu_;
 
-  // app info only available for the scheduler, check IamScheduler() before using
-  string app_conf_;
-  App* app_ = nullptr;
-  std::mutex mutex_;
-  bool done_ = false;
-
-  int finished_nodes_ = 0;
-  std::promise<void> nodes_are_done_;
-
-  std::promise<void> nodes_are_ready_;
-  std::promise<void> init_app_promise_;
-  std::promise<void> run_app_promise_;
-  MessagePtr app_msg_;
-  std::unique_ptr<std::thread> recving_;
-  std::unique_ptr<std::thread> sending_;
-  threadsafe_queue<MessagePtr> sending_queue_;
-
-  // yp_ should stay behind sending_queue_ so it will be destroied earlier
-  YellowPages yellow_pages_;
+  DISALLOW_COPY_AND_ASSIGN(Postoffice);
 };
 
-template <class P>
-void Postoffice::replyProtocalMessage(const MessagePtr& msg, const P& proto) {
-  string str; proto.SerializeToString(&str);
-  reply(msg->sender, msg->task, str);
-  msg->replied = true;
-}
-
 } // namespace PS
-
-
-  // string printDashboardTitle();
-  // string printHeartbeatReport(const string& node_id, const HeartbeatReport& report);
-  // std::unique_ptr<std::thread> heartbeating_;
-  // std::unique_ptr<std::thread> monitoring_;
-  // // heartbeat thread function
-  // void heartbeat();
-  // // monitor thread function only used by scheduler
-  // void monitor();
-  // // heartbeat info for workers/servers
-  // HeartbeatInfo heartbeat_info_;
-  // Dashboard dashboard_;

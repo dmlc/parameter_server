@@ -1,6 +1,8 @@
+// configuration of linear methods
 package PS.LM;
 import "data/proto/data.proto";
 import "learner/proto/bcd.proto";
+import "filter/proto/filter.proto";
 
 message Config {
   optional DataConfig training_data = 1;
@@ -42,6 +44,7 @@ message SGDConfig {
   optional int32 minibatch = 2 [default = 1000];
 
   optional int32 data_buf = 12 [default = 1000];  // in mb
+
   optional bool ada_grad = 5 [default = true];
 
   optional int32 max_delay = 4 [default = 0];
@@ -63,8 +66,8 @@ message SGDConfig {
   optional float countmin_n = 8 [default = 1e8];
   optional int32 countmin_k = 7 [default = 2];
 
-  // if > 0, then use *fixing_float_by_nbytes* bytes to encode float during communication
-  optional int32 fixing_float_by_nbytes = 13 [default = 0];
+  repeated FilterConfig push_filter = 13;
+  repeated FilterConfig pull_filter = 14;
 }
 
 message LossConfig {
@@ -90,7 +93,7 @@ message PenaltyConfig {
 message LearningRateConfig {
   enum Type {
     CONSTANT = 1;  // = alpha
-    DECAY = 2;  // = alpha / (beta + x), where x is defineable, such as sqrt(iter)
+    DECAY = 2;  // = alpha / (beta + x), where x is user-defined, such as sqrt(iter)
   }
   optional Type type = 1;
   optional double alpha = 2;

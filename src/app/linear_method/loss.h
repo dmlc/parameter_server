@@ -38,7 +38,7 @@ class ScalarLoss : public Loss<T> {
     SArray<T> y(data[0]->value());
     SArray<T> Xw(data[1]->value());
     CHECK_EQ(y.size(), Xw.size());
-    return evaluate(y.eigenArray(), Xw.eigenArray());
+    return evaluate(y.EigenArray(), Xw.EigenArray());
   }
 
   void compute(const MatrixPtrList<T>& data, MatrixPtrList<T> gradients) {
@@ -60,7 +60,7 @@ class ScalarLoss : public Loss<T> {
     if (diag_hessian.size() != 0) CHECK_EQ(diag_hessian.size(), X->cols());
 
     if (!y.size()) return;
-    compute(y.eigenArray(), X, Xw.eigenArray(), gradient.eigenArray(), diag_hessian.eigenArray());
+    compute(y.EigenArray(), X, Xw.EigenArray(), gradient.EigenArray(), diag_hessian.EigenArray());
   }
 
 };

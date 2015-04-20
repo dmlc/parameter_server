@@ -1,87 +1,68 @@
 #pragma once
-#include "system/proto/task.pb.h"
 #include "util/common.h"
-#include "system/task_tracker.h"
+#include "system/proto/task.pb.h"
 #include "system/van.h"
 #include "system/postoffice.h"
 #include "filter/filter.h"
 namespace PS {
 
-class Executor;
-class Postoffice;
+// The presentation of a remote node used by Executor. It's not thread
+// safe, do not use them directly.
 
-// a remote node that the local node (the node runs executor) can submit a task to
-// or receive a task from. (it is similar to remote precedure call)
-class RNode {
+// Track a request by its timestamp.
+class RequestTracker {
  public:
-  friend class Executor;
-  RNode(const Node& node, Executor& exec)
-      : sys_(Postoffice::instance()), exec_(exec), node_(node)  { }
-  ~RNode() { }
+  RequestTracker() { }
+  ~RequestTracker() { }
 
-  // info of the remote node
-  const NodeID& id() { return node_.id(); }
-  typename Node::Role role() { return node_.role(); }
-  Range<Key> keyRange() { return Range<Key>(node_.key()); }
-  // return number of node in this group or 1 otherwise
-  int size();
+  // Returns true if timestamp "ts" is marked as finished.
+  bool IsFinished(int ts) {
+    return ts < 0 || (((int)data_.size() > ts) && data_[ts]);
+  }
 
+  // Mark timestamp "ts" as finished.
+  void Finish(int ts) {
+    CHECK_GE(ts, 0);
+    CHECK_LT(ts, 1000000);
+    if ((int)data_.size() <= ts) data_.resize(ts*2+5);
+    data_[ts] = true;
+  }
+ private:
+  std::vector<bool> data_;
+};
 
-  // submit a message (task + data) to this remote node from the local
-  // node. return the timestamp of this task. This message will be sliced into
-  // this->size() messages, and each one goes to one remote node
-  int submit(const MessagePtr& msg);
-  int submit(const Task& task,
-             const Message::Callback& recv_handle = Message::Callback());
-  int submitAndWait(const Task& task,
-                    const Message::Callback& recv_handle = Message::Callback());
+// A remote node
+struct RemoteNode {
+ public:
+  RemoteNode() { }
+  ~RemoteNode() {
+    for (auto f : filters) delete f.second;
+  }
 
-  // submit msg[i] into node[i]. msg.size() must be equal to this->size()
-  int submit(MessagePtrList& msgs);
-  int submit(const std::vector<Task>& tasks,
-             const Message::Callback& recv_handle = Message::Callback());
-  int submitAndWait(const std::vector<Task>& tasks,
-                    const Message::Callback& recv_handle = Message::Callback());
+  void EncodeMessage(Message* msg);
+  void DecodeMessage(Message* msg);
 
-  // user defined filters
-  void encodeFilter(const MessagePtr& msg);
-  void decodeFilter(const MessagePtr& msg);
+  Node node;         // the remote node
+  bool alive = true; // aliveness
 
-  // wait a submitted task (send to the remote node from the local node) with
-  // timestamp _time_ until it finished (received all replied message)
-  void waitOutgoingTask(int time);
+  // timestamp tracker
+  RequestTracker sent_req_tracker;
+  RequestTracker recv_req_tracker;
 
-  // wait a received task (send from the remote node to the local node) until
-  // finished (this task has been marked as finished in TaskTracker)
-  void waitIncomingTask(int time);
-
-  bool tryWaitOutgoingTask(int time);
-  bool tryWaitIncomingTask(int time);
-
-  void finishOutgoingTask(int time);
-  void finishIncomingTask(int time);
-
-  int time() { Lock l(mu_); return time_; }
+  // node group info. if "node" is a node group, then "group" contains all node
+  // pointer in this group. otherwise, group contains "this"
+  void AddGroupNode(RemoteNode* rnode);
+  void RemoveGroupNode(RemoteNode* rnode);
+  std::vector<RemoteNode*> group;
+  // keys[i] is the key range of group[i]
+  std::vector<Range<Key>> keys;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(RNode);
-  FilterPtr findFilter(const FilterConfig& conf);
-  Postoffice& sys_;
-  Executor& exec_;
-  Node node_;  // the remote node
+  Filter* FindFilterOrCreate(const FilterConfig& conf);
+  // key: filter_type
+  std::unordered_map<int, Filter*> filters;
 
-  std::mutex mu_;
-  TaskTracker incoming_task_, outgoing_task_;
-  // current time
-  int time_ = Message::kInvalidTime;
-  // std::mutex time_mu_;
-
-  // request messages that have been sent but not received replies yet
-  std::unordered_map<int, MessagePtr> pending_msgs_;
-  std::unordered_map<int, Message::Callback> msg_receive_handle_;
-  std::unordered_map<int, Message::Callback> msg_finish_handle_;
-
-  std::unordered_map<int, FilterPtr> filter_;
-  std::mutex filter_mu_;
 };
+
+
 } // namespace PS

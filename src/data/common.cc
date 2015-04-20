@@ -7,13 +7,21 @@ namespace PS {
 DEFINE_string(input, "stdin", "stdin or a filename");
 DEFINE_string(output, "stdout", "stdout or a filename");
 DEFINE_string(format, "none", "proto, pserver, libsvm, vw, adfea, or others");
-
+DEFINE_uint64(hash_kernel, 0, "hash kernel size");
 DECLARE_bool(verbose);
 
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix) {
   CHECK_GE(i, 0); CHECK_LT(i, conf.file_size());
   auto f = conf; f.clear_file(); f.add_file(conf.file(i) + suffix);
   return f;
+}
+
+DataConfig appendFiles(const DataConfig& A, const DataConfig& B) {
+  DataConfig ret = A;
+  for (int i = 0; i < B.file_size(); ++i) {
+    ret.add_file(B.file(i));
+  }
+  return ret;
 }
 
 MatrixInfo readMatrixInfo(
@@ -116,12 +124,10 @@ DataConfig searchFiles(const DataConfig& config) {
     auto files = readFilenamesInDirectory(dir);
 
     // list all files found in dir
-    if (FLAGS_verbose) {
-      size_t file_idx = 1;
-      for (const auto& file : files) {
-        LI << "All files found in [" << dir.file(0) << "]; [" <<
+    size_t file_idx = 1;
+    for (const auto& file : files) {
+      VLOG(1) << "All files found in [" << dir.file(0) << "]; [" <<
           file_idx++ << "/" << files.size() << "] [" << file << "]";
-      }
     }
 
     for (auto& f : files) {
@@ -132,12 +138,10 @@ DataConfig searchFiles(const DataConfig& config) {
     }
 
     // list all matched files
-    if (FLAGS_verbose) {
-      size_t file_idx = 1;
-      for (const auto& file : matched_files) {
-        LI << "All matched files [" << file_idx++ << "/" << matched_files.size() <<
+    file_idx = 1;
+    for (const auto& file : matched_files) {
+      VLOG(1) << "All matched files [" << file_idx++ << "/" << matched_files.size() <<
           "] [" << file << "]";
-      }
     }
   }
   // remove duplicate files

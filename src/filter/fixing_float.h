@@ -5,11 +5,11 @@ namespace PS {
 
 class FixingFloatFilter : public Filter {
  public:
-  void encode(const MessagePtr& msg) {
+  void encode(Message* msg) {
     convert(msg, true);
   }
 
-  void decode(const MessagePtr& msg) {
+  void decode(Message* msg) {
     convert(msg, false);
   }
 
@@ -21,38 +21,45 @@ class FixingFloatFilter : public Filter {
   }
 
   // decode / encode a message
-  void convert(const MessagePtr& msg, bool encode) {
+  void convert(Message* msg, bool encode) {
     auto filter_conf = CHECK_NOTNULL(find(FilterConfig::FIXING_FLOAT, msg));
+    if (filter_conf->num_bytes() == 0) return;
     int n = msg->value.size();
     CHECK_EQ(n, msg->task.value_type_size());
     int k = 0;
     for (int i = 0; i < n; ++i) {
+      if (msg->value[i].size() == 0) continue;
       auto type = msg->task.value_type(i);
+      if (filter_conf->fixed_point_size() <= k) {
+        filter_conf->add_fixed_point();
+      }
       if (type == DataType::FLOAT) {
-        CHECK_GT(filter_conf->fixed_point_size(), k);
-        msg->value[i] = convert<float>(msg->value[i], encode, filter_conf->mutable_fixed_point(k++));
+        msg->value[i] = convert<float>(
+            msg->value[i], encode, filter_conf->num_bytes(),
+            filter_conf->mutable_fixed_point(k++));
       }
       if (type == DataType::DOUBLE) {
-        CHECK_GT(filter_conf->fixed_point_size(), k);
-        msg->value[i] = convert<double>(msg->value[i], encode, filter_conf->mutable_fixed_point(k++));
+        msg->value[i] = convert<double>(
+            msg->value[i], encode, filter_conf->num_bytes(),
+            filter_conf->mutable_fixed_point(k++));
       }
     }
   }
 
   // decode / encode an array
   template <typename V>
-  SArray<char> convert(const SArray<char>& array, bool encode, FilterConfig::FixedFloatConfig* conf) {
-    int nbytes = conf->num_bytes();
+  SArray<char> convert(const SArray<char>& array, bool encode, int nbytes,
+                       FilterConfig::FixedFloatConfig* conf) {
     CHECK_GT(nbytes, 0);
     CHECK_LT(nbytes, 8);
     double ratio = static_cast<double>(1 << (nbytes*8)) - 2;
 
     if (encode) {
       if (!conf->has_min_value()) {
-        conf->set_min_value(SArray<V>(array).eigenArray().minCoeff());
+        conf->set_min_value(SArray<V>(array).EigenArray().minCoeff());
       }
       if (!conf->has_max_value()) {
-        conf->set_max_value(SArray<V>(array).eigenArray().maxCoeff() + 1e-6); // to avoid max_v == min_v
+        conf->set_max_value(SArray<V>(array).EigenArray().maxCoeff() + 1e-6); // to avoid max_v == min_v
       }
     }
 

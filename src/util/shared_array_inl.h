@@ -6,6 +6,7 @@
 
 namespace PS {
 
+// static double sarray_time;
 template <typename V>
 void SArray<V>::resize(size_t n) {
   if (capacity_ >= n) { size_ = n; return; }
@@ -24,7 +25,7 @@ void SArray<V>::reserve(size_t n) {
 
 template <typename V>
 template <typename ForwardIt>
-void SArray<V>::copyFrom(const ForwardIt first, const ForwardIt last) {
+void SArray<V>::CopyFrom(const ForwardIt first, const ForwardIt last) {
   size_t size = std::distance(first, last);
   V* data = new V[size + 5];
   reset(data, size);
@@ -34,20 +35,20 @@ void SArray<V>::copyFrom(const ForwardIt first, const ForwardIt last) {
 }
 
 template <typename V>
-void SArray<V>::copyFrom(const SArray<V>& arr) {
-  copyFrom(arr.data(), arr.size());
+void SArray<V>::CopyFrom(const SArray<V>& arr) {
+  CopyFrom(arr.data(), arr.size());
 }
 
 template <typename V>
 template <typename W>
 SArray<V>::SArray(const std::initializer_list<W>& list) {
-  copyFrom(list.begin(), list.end());
+  CopyFrom(list.begin(), list.end());
 }
 
 template <typename V>
 template <typename W>
 void SArray<V>::operator=(const std::initializer_list<W>& list) {
-  copyFrom(list.begin(), list.end());
+  CopyFrom(list.begin(), list.end());
 }
 
 template <typename V>
@@ -88,7 +89,7 @@ bool SArray<V>::operator==(const SArray<W> &rhs) const {
 }
 
 template <typename V>
-void SArray<V>::pushBack(const V& val) {
+void SArray<V>::push_back(const V& val) {
   if (size_ == capacity_) reserve(size_*2+5);
   data_[size_++] = val;
 }
@@ -101,25 +102,25 @@ size_t SArray<V>::nnz() const {
 }
 
 template <typename V>
-void SArray<V>::setValue(V value) {
+void SArray<V>::SetValue(V value) {
   if (value == 0) {
-    setZero();
+    SetZero();
   } else {
     for (size_t i = 0; i < size_; ++i) data_[i] = value;
   }
 }
 
 template <typename V>
-void SArray<V>::setValue(const ParameterInitConfig& cf) {
-  typedef ParameterInitConfig Type;
+void SArray<V>::SetValue(const ParamInitConfig& cf) {
+  typedef ParamInitConfig Type;
   if (cf.type() == Type::ZERO) {
-    setZero();
+    SetZero();
   } else if (cf.type() == Type::CONSTANT) {
-    setValue((V)cf.constant());
+    SetValue((V)cf.constant());
   } else if (cf.type() == Type::GAUSSIAN) {
+    std::default_random_engine generator;
+    std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
     for (size_t i = 0; i < size_; ++i) {
-      std::default_random_engine generator;
-      std::normal_distribution<V> distribution((V)cf.mean(), (V)cf.std());
       data_[i] = distribution(generator);
     }
   } else if (cf.type() == Type::FILE) {
@@ -130,7 +131,7 @@ void SArray<V>::setValue(const ParameterInitConfig& cf) {
 }
 
 template <typename V>
-SArray<V> SArray<V>::segment(const Range<size_t>& range) const {
+SArray<V> SArray<V>::Segment(const Range<size_t>& range) const {
   CHECK(range.valid());
   CHECK_LE(range.end(), size());
   SArray<V> result = *this;
@@ -141,13 +142,19 @@ SArray<V> SArray<V>::segment(const Range<size_t>& range) const {
 }
 
 template <typename V>
-void SArray<V>::copyFrom(const V* src, size_t size) {
+void SArray<V>::CopyFrom(const V* src, size_t size) {
+  // auto tv = hwtic();
+
   resize(size);
   memcpy(data_, src, size*sizeof(V));
+
+  // sarray_time += hwtoc(tv);
+  // LOG_EVERY_N(ERROR, 1000) << sarray_time;
 }
 
+
 template <typename V>
-SArray<V> SArray<V>::setIntersection(const SArray<V>& other) const {
+SArray<V> SArray<V>::SetIntersection(const SArray<V>& other) const {
   SArray<V> result(std::min(other.size(), size())+1);
   V* last = std::set_intersection(
       begin(), end(), other.begin(), other.end(), result.begin());
@@ -157,7 +164,7 @@ SArray<V> SArray<V>::setIntersection(const SArray<V>& other) const {
 }
 
 template <typename V>
-SArray<V> SArray<V>::setUnion(const SArray<V>& other) const {
+SArray<V> SArray<V>::SetUnion(const SArray<V>& other) const {
   SArray<V> result(other.size() + size());
   V* last = std::set_union(
       begin(), end(), other.begin(), other.end(), result.begin());
@@ -166,7 +173,7 @@ SArray<V> SArray<V>::setUnion(const SArray<V>& other) const {
 }
 
 template <typename V>
-SizeR SArray<V>::findRange (const Range<V>& bound) const {
+SizeR SArray<V>::FindRange (const Range<V>& bound) const {
   if (empty()) return SizeR(0,0);
   CHECK(bound.valid());
   auto lb = std::lower_bound(begin(), end(), bound.begin());
@@ -175,29 +182,29 @@ SizeR SArray<V>::findRange (const Range<V>& bound) const {
 }
 
 template <typename V>
-bool SArray<V>::readFromFile(SizeR range, const string& file_name) {
+bool SArray<V>::ReadFromFile(SizeR range, const string& file_name) {
   DataConfig data;
   data.set_format(DataConfig::BIN);
   data.add_file(file_name);
-  return readFromFile(range, data);
+  return ReadFromFile(range, data);
 }
 
 template <typename V>
-MatrixPtr<V> SArray<V>::matrix(size_t rows, size_t cols) {
+MatrixPtr<V> SArray<V>::SMatrix(size_t rows, size_t cols) {
   // TODO rows and cols
   MatrixInfo info;
   info.set_type(MatrixInfo::DENSE);
   info.set_row_major(false);
-  SizeR(0, size_).to(info.mutable_row());
-  SizeR(0,1).to(info.mutable_col());
+  SizeR(0, size_).To(info.mutable_row());
+  SizeR(0,1).To(info.mutable_col());
   info.set_nnz(size_);
   info.set_sizeof_value(sizeof(V));
   return MatrixPtr<V>(new DenseMatrix<V>(info, *this));
 }
 
 template <typename V>
-bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
-  if (range == SizeR::all()) {
+bool SArray<V>::ReadFromFile(SizeR range, const DataConfig& data) {
+  if (range == SizeR::All()) {
     range = SizeR(0, File::size(data.file(0))/sizeof(V));
   }
   if (range.empty()) { clear(); return true; }
@@ -211,7 +218,7 @@ bool SArray<V>::readFromFile(SizeR range, const DataConfig& data) {
 }
 
 template <typename V>
-bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
+bool SArray<V>::WriteToFile(SizeR range, const string& file_name) const {
   if (range.empty()) return true;
   CHECK(range.valid());
   CHECK_LE(range.end(), size_);
@@ -223,7 +230,7 @@ bool SArray<V>::writeToFile(SizeR range, const string& file_name) const {
 }
 
 template <typename V>
-void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
+void SArray<V>::UncompressFrom(const char* src, size_t src_size) {
   if (src_size == 0) { clear(); return; }
   size_t dsize = 0;
   CHECK(snappy::GetUncompressedLength(src, src_size, &dsize));
@@ -235,7 +242,7 @@ void SArray<V>::uncompressFrom(const char* src, size_t src_size) {
 
 
 template <typename V>
-SArray<char> SArray<V>::compressTo() const {
+SArray<char> SArray<V>::CompressTo() const {
   // otherwise, snappy will add a 0 here...
   if (empty()) return SArray<char>();
   size_t ssize = size_ * sizeof(V);

@@ -2,7 +2,6 @@
 #include "util/shared_array_inl.h"
 #include "proto/example.pb.h"
 #include "data/common.h"
-
 namespace PS {
 
 // read all slots in *data* with multithreadd, save them into *cache*.
@@ -10,13 +9,13 @@ class SlotReader {
  public:
   SlotReader() { }
   SlotReader(const DataConfig& data, const DataConfig& cache) {
-    init(data, cache);
+    Init(data, cache);
   }
 
-  void init(const DataConfig& data, const DataConfig& cache);
+  void Init(const DataConfig& data, const DataConfig& cache);
 
   // first read, then save
-  int read(ExampleInfo* info = nullptr);
+  int Read(ExampleInfo* info = nullptr);
 
   template<typename V> MatrixInfo info(int slot_id) const {
     return readMatrixInfo(info_, slot_id, sizeof(uint64), sizeof(V));
@@ -53,8 +52,8 @@ template<typename V> SArray<V> SlotReader::value(int slot_id) const {
   if (nnzEle(slot_id) == 0) return val;
   for (int i = 0; i < data_.file_size(); ++i) {
     string file = cacheName(ithFile(data_, i), slot_id) + ".value";
-    SArray<char> comp; CHECK(comp.readFromFile(file));
-    SArray<float> uncomp; uncomp.uncompressFrom(comp);
+    SArray<char> comp; CHECK(comp.ReadFromFile(file));
+    SArray<float> uncomp; uncomp.UncompressFrom(comp);
     size_t n = val.size();
     val.resize(n+uncomp.size());
     for (size_t i = 0; i < uncomp.size(); ++i) val[n+i] = uncomp[i];

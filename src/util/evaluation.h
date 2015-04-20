@@ -16,6 +16,8 @@ class Evaluation {
                     const SArray<V>& predict,
                     V threshold = 0);
 
+  static V logloss(const SArray<V>& label,
+                   const SArray<V>& predict);
 };
 
 template <typename V>
@@ -60,6 +62,20 @@ V Evaluation<V>::accuracy(const SArray<V>& label, const SArray<V>& predict, V th
   }
   V acc = correct / (V) n;
   return acc > 0.5 ? acc : 1 - acc;
+}
+
+
+template <typename V>
+V Evaluation<V>::logloss(const SArray<V>& label, const SArray<V>& predict) {
+  int n = label.size();
+  CHECK_EQ(n, predict.size());
+  V loss = 0;
+  for (int i = 0; i < n; ++i) {
+    V y = label[i] > 0;
+    V p = 1 / (1 + exp(- predict[i]));
+    loss += y * log(p) + (1 - y) * log(1 - p);
+  }
+  return - loss / n;
 }
 
 } // namespace PS

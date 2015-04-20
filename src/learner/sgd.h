@@ -1,123 +1,99 @@
+/**
+ * @file   sgd.h
+ * @brief  The interface for a stochastic gradient descent solver
+ *
+ */
 #pragma once
+#include "ps.h"
 #include "util/producer_consumer.h"
 #include "learner/proto/sgd.pb.h"
 #include "system/monitor.h"
-#include "system/postmaster.h"
-#include "system/app.h"
-
+#include "system/assigner.h"
 #include "data/stream_reader.h"
 #include "util/localizer.h"
-#include "parameter/frequency_filter.h"
+#include "filter/frequency_filter.h"
+#include "learner/workload_pool.h"
 namespace PS {
 
-// interface for stochastic gradient descent solver
+/**
+ * @brief The base class of a scheduler node
+ */
 class ISGDScheduler : public App {
  public:
-  ISGDScheduler(const string& name)
-      : App(name), monitor_(this) { }
-  virtual ~ISGDScheduler() { }
+  ISGDScheduler() : App() { }
+  virtual ~ISGDScheduler();
 
+  virtual void Run();
+  virtual void ProcessResponse(Message* response);
+  virtual void ProcessRequest(Message* request);
  protected:
-  void saveModel() {
-    Task task;
-    task.mutable_sgd()->set_cmd(SGDCall::SAVE_MODEL);
-    port(kServerGroup)->submitAndWait(task);
-  }
+  // print the progress
+  virtual void ShowProgress(
+      double time, std::unordered_map<NodeID, SGDProgress>* progress);
+  // merge the progress report from a computation node
+  virtual void MergeProgress(const SGDProgress& src, SGDProgress* dst);
 
-  void updateModel(const DataConfig& data, int report_interval) {
-    // init monitor
-    using namespace std::placeholders;
-    monitor_.setMerger(std::bind(&ISGDScheduler::mergeProgress, this, _1, _2));
-    monitor_.setPrinter(
-        report_interval, std::bind(&ISGDScheduler::showProgress, this, _1, _2));
-
-    // ask the workers to commpute the gradients
-    auto conf = Postmaster::partitionData(data, sys_.yp().num_workers());
-    std::vector<Task> tasks(conf.size());
-    for (int i = 0; i < conf.size(); ++i) {
-      auto sgd = tasks[i].mutable_sgd();
-      sgd->set_cmd(SGDCall::UPDATE_MODEL);
-      *sgd->mutable_data() = conf[i];
-    }
-    port(kWorkerGroup)->submitAndWait(tasks);
-  }
-
-  virtual void showProgress(
-      double time, std::unordered_map<NodeID, SGDProgress>* progress) {
-    uint64 num_ex = 0, nnz_w = 0;
-    SArray<double> objv, auc, acc;
-    double weight_sum = 0, delta_sum = 1e-20;
-    for (const auto& it : *progress) {
-      auto& prog = it.second;
-      num_ex += prog.num_examples_processed();
-      nnz_w += prog.nnz();
-      for (int i = 0; i < prog.objective_size(); ++i) {
-        objv.pushBack(prog.objective(i));
-      }
-      for (int i = 0; i < prog.auc_size(); ++i) {
-        auc.pushBack(prog.auc(i));
-      }
-      for (int i = 0; i < prog.accuracy_size(); ++i) {
-        acc.pushBack(prog.accuracy(i));
-      }
-      weight_sum += prog.weight_sum();
-      delta_sum += prog.delta_sum();
-    }
-    progress->clear();
-    num_ex_processed_ += num_ex;
-    if (show_prog_head_) {
-      fprintf(stderr, " sec  examples    loss      auc   accuracy   |w|_0  updt ratio\n");
-      show_prog_head_ = false;
-    }
-    fprintf(stderr, "%4d  %.2e  %.3e  %.4f  %.4f  %.2e  %.2e\n",
-            (int)time,
-            (double)num_ex_processed_ ,
-            objv.sum()/(double)num_ex,
-            auc.mean(),
-            acc.mean(),
-            (double)nnz_w,
-            sqrt(delta_sum) / sqrt(weight_sum));
-  }
-
-  virtual void mergeProgress(const SGDProgress& src, SGDProgress* dst) {
-    auto old = *dst; *dst = src;
-    // TODO also append objv
-    dst->set_num_examples_processed(
-        dst->num_examples_processed() + old.num_examples_processed());
-  }
+  void SendWorkload(const NodeID& recver);
   MonitorMaster<SGDProgress> monitor_;
+
+  WorkloadPool *workload_pool_ = nullptr;
+
+  // display
   size_t num_ex_processed_ = 0;
   bool show_prog_head_ = true;
 };
 
+/**
+ * @brief The base class of a computation node
+ */
 class ISGDCompNode : public App {
  public:
-  ISGDCompNode(const string& name)
-      : App(name), reporter_(schedulerID(), this) { }
+  ISGDCompNode() : App(), reporter_(SchedulerID()) { }
   virtual ~ISGDCompNode() { }
 
  protected:
   MonitorSlaver<SGDProgress> reporter_;
 };
 
+/**
+ * @brief A multithread minibatch reader
+ * @tparam V the value type
+ */
 template <typename V>
 class MinibatchReader {
  public:
   MinibatchReader() { }
   ~MinibatchReader() { }
 
-  void setReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
+  /**
+   * @brief set the text reader
+   *
+   * @param file data file
+   * @param minibatch_size # of examples
+   * @param data_buf in MB
+   */
+  void InitReader(const DataConfig& file, int minibatch_size, int data_buf = 1000) {
     reader_.init(file);
     minibatch_size_ = minibatch_size;
     data_prefetcher_.setCapacity(data_buf);
   }
 
-  void setFilter(size_t n, int k, int freq) {
-    filter_.resize(n, k);
+  /**
+   * @brief tails features are filtered by the countmin sketch
+   *
+   * @param n countmin sketch parameter
+   * @param k countmin sketch parameter
+   * @param freq frequency threshold
+   */
+  void InitFilter(size_t n, int k, int freq) {
+    filter_.Resize(n, k);
     key_freq_ = freq;
   }
 
-  void start() {
+  /**
+   * @brief Start the reader thread
+   */
+  void Start() {
     data_prefetcher_.startProducer(
         [this](MatrixPtrList<V>* data, size_t* size)->bool {
           bool ret = reader_.readMatrices(minibatch_size_, data);
@@ -128,7 +104,17 @@ class MinibatchReader {
         });
   }
 
-  bool read(MatrixPtr<V>& Y, MatrixPtr<V>& X, SArray<Key>& key) {
+  /**
+   * @brief Reads a minibatch
+   *
+   * @param Y the *minibatch_size* x 1 label vector
+   * @param X the *minibatch_size* x p data matrix, all features are remapped to
+   * continues id starting from 0 to p-1
+   * @param key p length array contains the original feature id in the data
+   *
+   * @return false if end of file
+   */
+  bool Read(MatrixPtr<V>& Y, MatrixPtr<V>& X, SArray<Key>& key) {
     MatrixPtrList<V> data;
     if (!data_prefetcher_.pop(&data)) return false;
     CHECK_EQ(data.size(), 2);
@@ -138,16 +124,17 @@ class MinibatchReader {
     SArray<Key> uniq_key;
     SArray<uint8> key_cnt;
     Localizer<Key, V> localizer;
-    localizer.countUniqIndex(data[1], &uniq_key, &key_cnt);
+    localizer.CountUniqIndex(data[1], &uniq_key, &key_cnt);
 
     // filter keys
-    filter_.insertKeys(uniq_key, key_cnt);
-    key = filter_.queryKeys(uniq_key, key_freq_);
+    filter_.InsertKeys(uniq_key, key_cnt);
+    key = filter_.QueryKeys(uniq_key, key_freq_);
 
-    // to local keys
-    X = localizer.remapIndex(key);
+    // remap keys
+    X = localizer.RemapIndex(key);
     return true;
   }
+
  private:
   int minibatch_size_ = 1000;
   StreamReader<V> reader_;

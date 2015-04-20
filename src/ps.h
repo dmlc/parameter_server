@@ -1,8 +1,7 @@
 #pragma once
-#include "system/postoffice.h"
-#include "system/app.h"
+#include "system/customer.h"
 
-// A simple interface to write parameter server (PS) programs. see example in
+// A simple interface for writing parameter server (PS) programs. see example in
 // src/app/hello_world
 
 // A typical PS program should define the following two functions:
@@ -22,31 +21,60 @@ namespace PS {
 // and 'key:value'
 App* CreateServerNode(const std::string& conf);
 
-// Utility functions.
+// Utility functions:
 
 // The app this node runs
-inline App* MyApp() { return PS::Postoffice::instance().app(); }
+inline App* MyApp() { return Postoffice::instance().manager().app(); }
 
-inline Node MyNode() { return PS::Postoffice::instance().myNode(); }
-
-// Each node has an unique string id.
+// My node information
+inline Node MyNode() { return Postoffice::instance().manager().van().my_node(); }
+// Each unique string id of my node
 inline std::string MyNodeID() { return MyNode().id(); }
-
-// query the role of this node
+// Query the role of this node
 inline int IsWorker() { return MyNode().role() == Node::WORKER; }
 inline int IsServer() { return MyNode().role() == Node::SERVER; }
 inline int IsScheduler() { return MyNode().role() == Node::SCHEDULER; }
 
+inline Range<Key> MyKeyRange() { return Range<Key>(MyNode().key()); }
+inline std::string SchedulerID() {
+  return Postoffice::instance().manager().van().scheduler().id();
+}
+
+inline int NextCustomerID() {
+  return Postoffice::instance().manager().NextCustomerID();
+}
 
 // The rank ID of this node in its group. Assume this a worker node in a worker
 // group with N workers. Then this node will be assigned an unique ID from 0,
 // ..., N. Similarly for server and scheduler.
-inline int MyRank() { return MyApp()->myRank(); }
-
+inline int MyRank() { return MyNode().rank(); }
 // Total nodes in this node group.
 inline int RankSize() {
-  auto& yp = PS::Postoffice::instance().yp();
-  return IsWorker() ? yp.num_workers() : (IsServer() ? yp.num_servers() : 1);
+  auto& mng = Postoffice::instance().manager();
+  return IsWorker() ? mng.num_workers() : (IsServer() ? mng.num_servers() : 1);
+}
+
+// Wait until all FLAGS_num_servers servers are ready.
+inline void WaitServersReady() {
+  PS::Postoffice::instance().manager().WaitServersReady();
+}
+
+// Wait until all FLAGS_num_workers workers are ready.
+inline void WaitWorkersReady() {
+  PS::Postoffice::instance().manager().WaitWorkersReady();
+}
+
+inline void StartSystem(int argc, char *argv[]) {
+  PS::Postoffice::instance().Run(&argc, &argv);
+}
+
+inline void StopSystem() {
+  PS::Postoffice::instance().Stop();
+}
+
+inline int RunSystem(int argc, char *argv[]) {
+  StartSystem(argc, argv); StopSystem();
+  return 0;
 }
 
 } // namespace PS

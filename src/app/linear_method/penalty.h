@@ -5,25 +5,38 @@
 namespace PS {
 namespace LM {
 
-// interface for the penalty
+/**
+ * @brief Interface for the penalty
+ */
 template<typename T> class Penalty {
  public:
   Penalty() { }
   virtual ~Penalty() { }
-  // evaluate the objective
+  /**
+   * @brief evaluate the objective
+   *
+   * @param model
+   *
+   * @return objective value
+   */
   virtual T eval(const MatrixPtr<T>& model) = 0;
 
-  // solve the proximal operater
-  //  argmin_x 0.5/eta (x - z)^2 + h(x), where h denote this penatly
-  // in proximal gradient descent, z = w - eta * grad
+  /**
+   * @brief Solve the proximal operator
+   *
+   * \f$ \argmin_x 0.5/\eta (x - z)^2 + h(x)\f$, where h denote this penatly, and in
+   * proximal gradient descent, z = w - eta * grad
+   *
+   * @param z
+   * @param eta
+   * @return
+   */
   virtual T proximal(T z, T eta) = 0;
 };
 
-
-
-
-
-// lambda1 * |x|_1 + lambda2 * |x|_2
+/**
+ * @brief \f$ \lambda_1 * \|x\|_1 + \lambda_2 * \|x\|_2^2 \f$
+ */
 template <typename T>
 class ElasticNet : public Penalty<T> {
  public:
@@ -92,7 +105,7 @@ Penalty<T>* createPenalty(const PenaltyConfig& conf) {
 //   bool smooth() { return p_ > 1; }
 
 //   T evaluate(const MatrixPtr<T>& model) {
-//     auto w = model->value().eigenArray();
+//     auto w = model->value().EigenArray();
 //     return lambda_ * pow(w.abs(), p_).sum();
 //   }
 

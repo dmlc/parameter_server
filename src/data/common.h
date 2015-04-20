@@ -19,7 +19,8 @@ std::vector<DataConfig> divideFiles(const DataConfig& data, int num);
 // locate the i-th file in *conf*, append it with suffix, and keep the rest metadata
 DataConfig ithFile(const DataConfig& conf, int i, const string& suffix = "");
 
-// InstanceInfo mergeInstanceInfo(const InstanceInfo& A, const InstanceInfo& B);
+// return A + B
+DataConfig appendFiles(const DataConfig& A, const DataConfig& B);
 
 ExampleInfo mergeExampleInfo(const ExampleInfo& A, const ExampleInfo& B);
 
