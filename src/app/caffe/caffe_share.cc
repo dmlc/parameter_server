@@ -413,7 +413,7 @@ public:
         solver->stepEnd();
       }
       LL << "pushstep " << FLAGS_pushstep << " reached.";
-      LL << "run() sending forward end signal";
+      LL << "Forwarder sending forward end signal";
       signalForwardEnd();
     }
   }
@@ -562,7 +562,7 @@ public:
       }
       LL << "all forwarder joined: " << forwarders.size();
       pushDiff();
-      LL << "run() sending forward end signal";
+      LL << "Worker sending forward end signal";
       signalForwardEnd();
     }
     LL << "worker run() over";
