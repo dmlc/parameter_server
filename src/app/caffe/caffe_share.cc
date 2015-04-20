@@ -98,6 +98,20 @@ caffe::Net<float>* initCaffeNet(){
 #define V_DIFF "diff"
 #define V_SOLVER "solver"
 namespace PS {
+
+static std::mutex mu_pwd;
+Solver<float>* initCaffeSolverInDir(int id, string root){
+  Lock l(mu_pwd);
+  char* cwd = getcwd(nullptr,1024);
+  LL << "cwd: " << cwd;
+  CHECK(cwd != nullptr);
+  CHECK(0 == chdir(root.c_str()));
+  Solver<float>* solver = initCaffeSolver(id);
+  CHECK(0 == chdir(cwd));
+  free(cwd);
+  return solver;
+}
+
 class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
   CaffeServer(const string& name, const string& conf) : App(name) { }
@@ -237,7 +251,18 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
       }else if(i == solver->net()->params().size()-1){
         last=blob->cpu_diff()[blob->count()-1];
       }
-
+      //check
+      bool isNan = false;
+      int nanIndex = -1;
+      for (int j = 0; j < diffBlobs[i]->count(); j++){
+        if(isnan(src[j])){
+          isNan = true;
+          nanIndex = j;
+        }
+      }
+      if(isNan){
+        LL << "NAN in diffBlob[" << i << "][" << nanIndex << "]!";
+      }
       //scale down?
       if(FLAGS_pushstep != 0){
         caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), src);
@@ -321,6 +346,7 @@ class NetForwarder {
   bool terminated;
   int id;
   CaffeWorker* worker;
+  string rootDir;
   caffe::Solver<float>* solver;
   std::mutex mu_forward;
   std::condition_variable cv_forward;
@@ -330,8 +356,8 @@ class NetForwarder {
   bool needDisplay;
 
 public:
-  NetForwarder(CaffeWorker* parent, int id, Solver<float>* solver, bool display):
-    id(id),worker(parent),solver(solver),needDisplay(display){
+  NetForwarder(CaffeWorker* parent, int id, string workerRoot, bool display):
+    id(id),worker(parent),rootDir(workerRoot),needDisplay(display){
   }
 
   /**
@@ -382,6 +408,11 @@ public:
   void accumulateDiff();
 
   void start() {
+    if(nullptr == solver) {
+      solver = initCaffeSolverInDir(id, rootDir);
+      LL << "Inited solver On device id # " << id;
+    }
+    /*
     if (this->id >= 0) {
       LOG(INFO) << "Net Use GPU with device ID " << this->id;
       Caffe::SetDevice(this->id);
@@ -390,6 +421,7 @@ public:
       LOG(INFO) << "Use CPU.";
       Caffe::set_mode(Caffe::CPU);
     }
+    */
 //    this->net = initCaffeNet();
     std::vector<Blob<float>*> bottom_vec;
     while(true) {
@@ -497,13 +529,12 @@ public:
       bool display = id == 0;
       string workerRoot = cwdString + "/" + workerRoots[id];
       LL << "creating forwarder in: " << workerRoot;
-      CHECK(0 == chdir(workerRoot.c_str()));
-      Solver<float>* solver = initCaffeSolver(id);
-      NetForwarder* forwarder = new NetForwarder(this, id, solver, display);
+//      CHECK(0 == chdir(workerRoot.c_str()));
+      NetForwarder* forwarder = new NetForwarder(this, id, workerRoot, display);
       forwarders.push_back(forwarder);
       forwarder->startAsync();
     }
-    CHECK(0 == chdir(cwd));
+//    CHECK(0 == chdir(cwd));
     free(cwd);
     LL << "worker init() over";
   }
