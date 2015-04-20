@@ -227,11 +227,17 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
 
     Lock l(mu_accDiff);
     // append diffs to accDiffs
-//    float first,last, firstv, lastv;
+    float first,last;
     for (int i = 0; i < diffBlobs.size();i++) {
       auto blob = diffBlobs[i];
       float* dest = accDiffBlobs[i]->mutable_cpu_diff();
       float* src = diffBlobs[i]->mutable_cpu_diff();
+      if(i==0){
+        first=blob->cpu_diff()[0];
+      }else if(i == solver->net()->params().size()-1){
+        last=blob->cpu_diff()[blob->count()-1];
+      }
+
       //scale down?
       if(FLAGS_pushstep != 0){
         caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), src);
@@ -239,18 +245,10 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
 
       caffe::caffe_add(blob->count(), src, dest, dest);
 
-/*      if(i==0){
-	  first=blob->cpu_diff()[0];
-	  firstv = src[0];
-      }else if(i == solver->net()->params().size()-1){
-	  last=blob->cpu_diff()[blob->count()-1];
-	  lastv = src[src.size() - 1];
-      }
-*/
     }
     accDiffCount++;
 //    LL << "diff gathered: # " << accDiffCount;
-//    LL<< "got diff[" << first<<",...,"<<last<<"]/[" << firstv << ",...," << lastv <<"]";
+    LL<< "got diff[" << first<<",...,"<<last<<"]";
 
  }
   void vectorChanged(VVector<char>* data){
@@ -599,15 +597,22 @@ public:
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
     msg->task.set_key_channel(0);
+    float first, last;
     for(int i = 0; i < diffs->vcount();i++){
       auto acc = diffBlobs[i];
       acc->cpu_diff(); // sync to cpu
       auto diff = diffs->value(i);
       CHECK_EQ(acc->cpu_diff(), diff.data());
       msg->addValue(diff);
+      if(i == 0){
+        first = acc->cpu_diff()[0];
+      }else if(i == diffs->vcount() - 1){
+        last = acc->cpu_diff()[acc->count()-1];
+      }
     }
     int push_time = diffs->push(msg);
     diffs->waitOutMsg(kServerGroup, push_time);
+    LL << "Worker diff pushed:[" << first <<"," << last << "]";
     //clear previous diff
     for(auto acc : diffBlobs){
       memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
