@@ -449,7 +449,6 @@ class CaffeWorker: public App{
 private:
 
   std::mutex mu_weight; // protect write to weight_ready and weights
-  volatile bool weight_ready;
   std::mutex mu_diff;  //protect write to diffs
 
 
@@ -476,7 +475,6 @@ public:
 
   void init(){
     LL << "worker init()";
-    weight_ready = false;
     start_forward = false;
     solver = initCaffeSolver(-1);
     //init shared parameter at worker
@@ -626,17 +624,12 @@ public:
 //    port(kServerGroup)->submitAndWait(task);
 
     Lock l(mu_weight);
-    if(weight_ready){
-      LL << "weight_ready!";
-      return;
-    }
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
     LL << "begin pull";
     int pull_time = weights->pull(msg);
     LL << "begin waitOutMsg";
     weights->waitOutMsg(kServerGroup, pull_time);
-    weight_ready = true;
     LL << "weight pulled from server, total:" << weights->totalSize();
   }
 
