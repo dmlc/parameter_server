@@ -403,8 +403,7 @@ public:
         if(needDisplay){
           solver->testPhase();
         }
-        LL<< "forwarder # " << id << " DeviceQuery";
-        Caffe::DeviceQuery();
+        LL<< "forwarder # " << id;
         solver->forwardBackwardPhase();
         this->accumulateDiff();
         if(needDisplay){
