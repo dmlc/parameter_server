@@ -12,16 +12,17 @@ conf=$1
 tmp=$( mktemp )
 grep -v ^# $conf > $tmp
 conf=$tmp
-
+app=$( grep PS_PATH $conf | awk -F'/' '{print $NF;}' )
+echo "app: $app"
 echo "kill local"
 
-killall caffe
+killall caffe || killall $app
 
 echo "kill servers"
 # kill servers
-grep -E "WORKER|SERVER" $conf | awk '{print $2;}' | sort | uniq | awk  -v q="'" '
+grep -E "WORKER|SERVER" $conf | awk '{print $2;}' | sort | uniq | awk  -v q="'" -v app="$app" '
 {
-    cmd="ssh immars@" $0 " \"killall caffe\" ";
+    cmd="ssh immars@" $0 " \"killall caffe || killall " app " \" ";
     print cmd;
     system(cmd);
 }
