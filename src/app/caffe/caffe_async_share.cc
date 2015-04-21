@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <google/protobuf/io/coded_stream.h>
+#include <sys/time.h>
 
 #include "ps.h"
 #include "system/app.h"
@@ -337,7 +338,14 @@ public:
 
   void accumulateDiff();
 
+  inline unsigned long long tick(struct timeval* tv) {
+    gettimeofday(tv, NULL);
+    return tv->tv_sec * 1000000 + tv->tv_usec;
+  }
+
   void start() {
+    struct timeval tv;
+    unsigned long long t0,t1,t2, t3, t4, t5;
     if(nullptr == solver) {
       solver = initCaffeSolverInDir(id, rootDir);
       LL << "Inited solver On device id # " << id;
@@ -348,19 +356,31 @@ public:
     LL << "start() forward signal received";
     copyWeight();
     for (int i = 0; i < iter; i++) {
+      t0 = tick(&tv);
       tryCopyWeight();
+      t1 = tick(&tv);
       // wait signal to forward
       if(needDisplay){
         solver->testPhase();
       }
+      t2 = tick(&tv);
 //      LL<< "forwarder # " << id;
       solver->forwardBackwardPhase();
+      t3 = tick(&tv);
       this->accumulateDiff();
+      t4 = tick(&tv);
       if(needDisplay){
         solver->displayPhase();
       }
+      t5 = tick(&tv);
       // bypass all of computeUpdateValue
       solver->stepEnd();
+      LL << "tryCopyWeight\t"<< (t1-t0)
+              << "\ttestPhase\t"<< (t2-t1)
+              << "\tforwardBackward\t"<< (t3-t2)
+              << "\taccumulateDiff\t"<< (t4-t3)
+              << "\tdisplayPhase\t"<< (t5-t4);
+
     }
     LL << "Forwarder sending forward end signal";
     signalForwardEnd();
