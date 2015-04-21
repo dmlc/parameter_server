@@ -257,7 +257,7 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
       //check
       ostringstream nameSt;
       nameSt << "diffBlob[" << i <<"]";
-      checkNAN(blob->count(), diffBlobs[i]->cpu_diff(), nameSt.str());
+//      checkNAN(blob->count(), diffBlobs[i]->cpu_diff(), nameSt.str());
       //scale down?
       if(FLAGS_pushstep != 0){
         caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), src);
@@ -613,7 +613,7 @@ public:
       auto blob = another->net()->params()[i];
       ostringstream name;
       name << "gatherDiff:solver.blobs[" << i << "]";
-      checkNAN(blob->count(), blob->cpu_diff(), name.str());
+//      checkNAN(blob->count(), blob->cpu_diff(), name.str());
       caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
     }
   }
