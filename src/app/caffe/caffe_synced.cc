@@ -10,6 +10,7 @@
 #include "caffe/caffe.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "app/caffe/util.h"
 using caffe::Blob;
 using caffe::Solver;
 using caffe::SolverParameter;
@@ -476,6 +477,9 @@ public:
       for(int i = 0; i < solver->net()->params().size(); i++){
         auto acc = diffBlobs[i];
         auto blob = solver->net()->params()[i];
+        ostringstream name;
+        name << "accumulateDiff:net.params[" << i << "].diff";
+        checkNAN(blob->count(), blob->cpu_diff(), name.str());
         switch (Caffe::mode()) {
           case Caffe::CPU:
             caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());

@@ -12,6 +12,8 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "app/caffe/util.h"
+
 using namespace caffe;
 using namespace std;
 using caffe::Blob;
@@ -112,20 +114,6 @@ Solver<float>* initCaffeSolverInDir(int id, string root){
   return solver;
 }
 
-void checkNAN(int count, const float* data, string blobName){
-  bool isNan = false;
-  int nanIndex = -1;
-  for (int j = 0; j < count; j++){
-    if(isnan(data[j])){
-      isNan = true;
-      nanIndex = j;
-    }
-  }
-  if(isNan){
-    LL << "NAN in "<< blobName <<"[" << nanIndex << "]!";
-  }
-
-}
 
 class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
