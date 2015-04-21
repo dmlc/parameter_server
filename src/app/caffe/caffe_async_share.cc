@@ -284,7 +284,7 @@ class NetForwarder {
 public:
   NetForwarder(CaffeWorker* parent, int id, string workerRoot, bool display):
     id(id),worker(parent),rootDir(workerRoot),
-    solver(nullptr),weightVersion(0),start_forward(false),needDisplay(display){
+    solver(nullptr),weightVersion(-1),start_forward(false),needDisplay(display){
   }
 
   /**
@@ -341,17 +341,6 @@ public:
       solver = initCaffeSolverInDir(id, rootDir);
       LL << "Inited solver On device id # " << id;
     }
-    /*
-    if (this->id >= 0) {
-      LOG(INFO) << "Net Use GPU with device ID " << this->id;
-      Caffe::SetDevice(this->id);
-      Caffe::set_mode(Caffe::GPU);
-    } else {
-      LOG(INFO) << "Use CPU.";
-      Caffe::set_mode(Caffe::CPU);
-    }
-    */
-//    this->net = initCaffeNet();
     int iter = solver->param().max_iter() - solver->iter();
     LL << "start training loop # " << id;
     waitForwardSignal();
@@ -419,6 +408,7 @@ private:
   std::condition_variable cv_push;
   std::mutex mu_pull;
   std::condition_variable cv_pull;
+  bool start_pull;
 
   int weightVersion; // current version no. of weights, in iteration count
   int requestedVersion; // wanted version no. of weights, in iteration count
@@ -447,6 +437,7 @@ public:
   void init(){
     LL << "worker init()";
     start_forward = false;
+    start_pull = false;
     solver = initCaffeSolver(-1);
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
@@ -520,6 +511,7 @@ public:
     while(true){
       waitPullSignal();
       pullWeight();
+      signalPullEnd();
     }
     LL << "puller exit";
   }
@@ -553,13 +545,38 @@ public:
    */
   void waitPullSignal(){
     std::unique_lock<std::mutex> l(mu_pull);
-    cv_pull.wait(l);
+    while(!start_pull){
+      cv_pull.wait(l);
+    }
     LL << "pull signal received: " << requestedVersion << " vs " << weightVersion;
   }
 
+  /**
+   * by puller thread
+   */
+  void signalPullEnd(){
+    std::unique_lock<std::mutex> l(mu_pull);
+    start_pull = false;
+    cv_pull.notify_all();
+  }
+
+  /**
+   * by worker run(), wait for initial pull
+   */
+  void waitPullEnd(){
+    std::unique_lock<std::mutex> l(mu_pull);
+    while(start_pull){
+      cv_pull.wait(l);
+    }
+  }
+
+  /**
+   * by worker run() and forwarder.copy -> worker.tryCopyWeight()
+   */
   void signalPull(){
     std::unique_lock<std::mutex> l(mu_pull);
     LL << "signal pull on: " << requestedVersion << " vs " << weightVersion;
+    start_pull = true;
     cv_pull.notify_all();
   }
 
@@ -570,8 +587,17 @@ public:
    */
   void run(){
     LL << "worker run()";
-    while(true){
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    this->requestedVersion = 0; // mark initial pull version as 0: default forwarder version is -1
+    signalPull();
+    waitPullEnd();
+    LL << "initial pull over";
+    for (int i = 0; i < forwarders.size(); i++){
+      NetForwarder* forwarder = forwarders[i];
+      forwarder->signalForward();
+    }
+    for (int i = 0; i < forwarders.size(); i++){
+      NetForwarder* forwarder = forwarders[i];
+      forwarder->joinForwardEnd();
     }
     LL << "worker run() over";
   }
@@ -662,6 +688,7 @@ public:
    * by forwarder
    */
   void copyWeight(Solver<float>* another, int* version){
+    Lock l(mu_weight); // lock weight, prevent pulling while copying
     float first,last;
     for (int i = 0; i < another->net()->params().size();i++){
       auto blob = another->net()->params()[i];
@@ -686,6 +713,7 @@ public:
    */
   bool tryCopyWeight(Solver<float>* another, int* anotherCurrentVersion, int anotherWantedVersion){
     if(requestedVersion < anotherWantedVersion){
+      // mark newer version requested
       Lock l(mu_weight);
       if(requestedVersion < anotherWantedVersion){
         requestedVersion = anotherWantedVersion;
@@ -694,11 +722,11 @@ public:
         }
       }
     }
-    if(weightVersion < *anotherCurrentVersion){
-      // no need to copy; mark newer verion requested
+    if(weightVersion <= *anotherCurrentVersion){
+      // no need to copy
       Lock l(mu_weight);
       //double check
-      if(weightVersion < *anotherCurrentVersion){
+      if(weightVersion <= *anotherCurrentVersion){
         return false;
       }
     }
