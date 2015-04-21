@@ -352,7 +352,8 @@ class NetForwarder {
 
 public:
   NetForwarder(CaffeWorker* parent, int id, string workerRoot, bool display):
-    id(id),worker(parent),rootDir(workerRoot),solver(nullptr),needDisplay(display){
+    id(id),worker(parent),rootDir(workerRoot),
+    solver(nullptr),start_forward(false),needDisplay(display){
   }
 
   /**
