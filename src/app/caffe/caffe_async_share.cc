@@ -105,7 +105,7 @@ static std::mutex mu_pwd;
 Solver<float>* initCaffeSolverInDir(int id, string root){
   Lock l(mu_pwd);
   char* cwd = getcwd(nullptr,1024);
-  LL << "cwd: " << cwd;
+  LL << "previous cwd: " << cwd << " root: " << root;
   CHECK(cwd != nullptr);
   CHECK(0 == chdir(root.c_str()));
   Solver<float>* solver = initCaffeSolver(id);
@@ -155,7 +155,10 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
 
   void run() {
     LL << myNodeID() << ", server " << myRank() << " run()ing";
-
+    while(true){
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    LL << myNodeID() << ", server " << myRank() << " over";
   }
 
   void process(const MessagePtr& msg) {
@@ -567,6 +570,9 @@ public:
    */
   void run(){
     LL << "worker run()";
+    while(true){
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
     LL << "worker run() over";
   }
 
@@ -742,6 +748,7 @@ int main(int argc, char *argv[]) {
   sys.start(&argc, &argv);
 
   sys.stop();
+  LL << "system exit";
   return 0;
 }
 
