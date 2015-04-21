@@ -5,6 +5,8 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <sys/time.h>
 
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "ps.h"
 #include "system/app.h"
 #include "parameter/v_vector.h"
@@ -114,7 +116,37 @@ Solver<float>* initCaffeSolverInDir(int id, string root){
   free(cwd);
   return solver;
 }
+void enableP2P(int numGPUs){
+  for (int i=0; i<numGPUs; i++){
+    cudaSetDevice(i);
+    for (int j=0; j<numGPUs; j++){
+      int access;
+      cudaDeviceCanAccessPeer(&access,i,j);
+      if (access){
+        cudaDeviceEnablePeerAccess(j,0);
+        cudaGetLastError();
+      }
+    }
+  }
+}
+void disableP2P(int numGPUs){
+  for (int i=0; i<numGPUs; i++)
+  {
+    cudaSetDevice(i);
 
+    for (int j=0; j<numGPUs; j++)
+    {
+      int access;
+      cudaDeviceCanAccessPeer(&access, i, j);
+
+      if (access)
+      {
+        cudaDeviceDisablePeerAccess(j);
+        cudaGetLastError();
+      }
+    }
+  }
+}
 
 class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
@@ -498,6 +530,7 @@ public:
       forwarders.push_back(forwarder);
       forwarder->startAsync();
     }
+    enableP2P(forwarders.size());
 //    CHECK(0 == chdir(cwd));
     free(cwd);
     LL << "worker init() over";
@@ -627,6 +660,7 @@ public:
       NetForwarder* forwarder = forwarders[i];
       forwarder->joinForwardEnd();
     }
+    disableP2P(forwarders.size());
     LL << "worker run() over";
   }
 
@@ -661,6 +695,7 @@ public:
         default:
           LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
       }
+//      caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
     }
     diffCount++;
     if(diffCount >= FLAGS_pushstep) {

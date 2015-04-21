@@ -13,7 +13,7 @@ STATIC_THIRD_LIB=0
 ifeq ($(STATIC_THIRD_LIB), 1)
 THIRD_LIB=$(addprefix $(THIRD_PATH)/lib/, libgflags.a libzmq.a libprotobuf.a libglog.a libz.a  libsnappy.a)
 else
-THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy
+THIRD_LIB=-L$(THIRD_PATH)/lib -lgflags -lzmq -lprotobuf -lglog -lz -lsnappy -L$(CUDA_PATH)/lib64 -lcudart
 endif
 # THIRD_LIB+=-ltcmalloc_and_profiler
 
