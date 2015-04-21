@@ -429,7 +429,6 @@ public:
         if(needDisplay){
           solver->testPhase();
         }
-        LL<< "forwarder # " << id;
         solver->forwardBackwardPhase();
         this->accumulateDiff();
         if(needDisplay){

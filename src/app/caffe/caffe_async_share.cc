@@ -536,10 +536,12 @@ public:
   void waitPushSignal(){
     std::unique_lock<std::mutex> l(mu_push);
     cv_push.wait(l);
+    LL << "push signal received: " << diffCount;
   }
 
   void signalPush(){
     std::unique_lock<std::mutex> l(mu_push);
+    LL << "signal push on: " << diffCount;
     cv_push.notify_all();
   }
 
@@ -549,10 +551,12 @@ public:
   void waitPullSignal(){
     std::unique_lock<std::mutex> l(mu_pull);
     cv_pull.wait(l);
+    LL << "pull signal received: " << requestedVersion << " vs " << weightVersion;
   }
 
   void signalPull(){
     std::unique_lock<std::mutex> l(mu_pull);
+    LL << "signal pull on: " << requestedVersion << " vs " << weightVersion;
     cv_pull.notify_all();
   }
 
