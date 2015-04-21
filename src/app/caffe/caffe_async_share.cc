@@ -416,8 +416,6 @@ std::vector<std::string> split(const std::string &s, char delim) {
 class CaffeWorker: public App{
 private:
 
-  std::mutex mu_weight; // protect write to weight_ready and weights
-  std::mutex mu_diff;  //protect write to diffs
 
 
   std::mutex mu_forward;
@@ -426,15 +424,22 @@ private:
 
   std::mutex mu_push;
   std::condition_variable cv_push;
+
   std::mutex mu_pull;
   std::condition_variable cv_pull;
   bool start_pull;
 
+  std::mutex mu_version; // protect change to weightVersion and requestedVersion
   int weightVersion; // current version no. of weights, in iteration count
   int requestedVersion; // wanted version no. of weights, in iteration count
+
+  std::mutex mu_weight; // protect write to weights
   VVector<float> *weights;// individual data ptr, same order/size as solver->net->params
+
+  std::mutex mu_diff;  //protect write to diffs diffCount
   VVector<float> *diffs;// for accumulated diff, share memory with diffBlobs
   int diffCount; // accumulated diff count
+
   std::vector<Blob<float>*> diffBlobs;
   std::vector<Blob<float>*> diffBlobBuffer; // double buffer for diff push
   caffe::Solver<float>* solver;
@@ -712,7 +717,10 @@ public:
     int pull_time = weights->pull(msg);
     LL << "begin waitOutMsg";
     weights->waitOutMsg(kServerGroup, pull_time);
-    this->weightVersion = this->requestedVersion;
+    {
+      Lock l(mu_version);
+      this->weightVersion = this->requestedVersion;
+    }
     LL << "weight pulled from server, total:" << weights->totalSize();
   }
 
@@ -746,7 +754,7 @@ public:
   bool tryCopyWeight(Solver<float>* another, int* anotherCurrentVersion, int anotherWantedVersion){
     if(requestedVersion < anotherWantedVersion){
       // mark newer version requested
-      Lock l(mu_weight);
+      Lock l(mu_version);
       if(requestedVersion < anotherWantedVersion){
         requestedVersion = anotherWantedVersion;
         if(requestedVersion - weightVersion >= FLAGS_pullstep){
@@ -756,11 +764,7 @@ public:
     }
     if(weightVersion <= *anotherCurrentVersion){
       // no need to copy
-      Lock l(mu_weight);
-      //double check
-      if(weightVersion <= *anotherCurrentVersion){
-        return false;
-      }
+      return false;
     }
     // need to copy
     copyWeight(another, anotherCurrentVersion);
