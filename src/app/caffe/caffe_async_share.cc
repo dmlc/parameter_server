@@ -352,7 +352,7 @@ public:
       if(needDisplay){
         solver->testPhase();
       }
-      LL<< "forwarder # " << id;
+//      LL<< "forwarder # " << id;
       solver->forwardBackwardPhase();
       this->accumulateDiff();
       if(needDisplay){
@@ -360,9 +360,8 @@ public:
       }
       // bypass all of computeUpdateValue
       solver->stepEnd();
-      LL << "pushstep " << FLAGS_pushstep << " reached.";
-      LL << "Forwarder sending forward end signal";
     }
+    LL << "Forwarder sending forward end signal";
     signalForwardEnd();
   }
 
@@ -416,6 +415,7 @@ private:
   VVector<float> *diffs;// for accumulated diff, share memory with diffBlobs
   int diffCount; // accumulated diff count
   std::vector<Blob<float>*> diffBlobs;
+  std::vector<Blob<float>*> diffBlobBuffer; // double buffer for diff push
   caffe::Solver<float>* solver;
 
   std::unique_ptr<std::thread> pusher;
@@ -448,7 +448,9 @@ public:
       weights->value(i).resize(blob->count());
       Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
       diffBlobs.push_back(newBlob);
-      diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
+      newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      diffBlobBuffer.push_back(newBlob);
+      diffs->value(i).reset(diffBlobBuffer[i]->mutable_cpu_diff(), diffBlobBuffer[i]->count(), false);
     }
 
     //init pusher/puller
@@ -635,33 +637,42 @@ public:
    * by pusher, synchronized (block until message sent)
    */
   void pushDiff(){
-    Lock l(mu_diff);
+    {
+      // copy diff to diffBuffer
+      Lock l(mu_diff);
+      float first, last;
+      for(int i = 0; i < diffBlobs.size(); i++){
+        Blob<float>* src = diffBlobs[i];
+        Blob<float>* dest = diffBlobBuffer[i];
+        memcpy(dest->mutable_cpu_diff(), src->cpu_diff(), src->diff()->size());
+        if(i == 0){
+          first = dest->cpu_diff()[0];
+        }else if(i == diffs->vcount() - 1){
+          last = dest->cpu_diff()[dest->count()-1];
+        }
+      }
+      //clear previous diff
+      for(auto acc : diffBlobs){
+        memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
+      }
+      LL << "Worker diff("<< diffCount <<") copied to buffer:[" << first <<"," << last << "]";
+      // clear diff count
+      diffCount = 0;
+    }
     //push to app instead of
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
     msg->task.set_key_channel(0);
-    float first, last;
     for(int i = 0; i < diffs->vcount();i++){
-      auto acc = diffBlobs[i];
+      auto acc = diffBlobBuffer[i];
       acc->cpu_diff(); // sync to cpu
       auto diff = diffs->value(i);
       CHECK_EQ(acc->cpu_diff(), diff.data());
       msg->addValue(diff);
-      if(i == 0){
-        first = acc->cpu_diff()[0];
-      }else if(i == diffs->vcount() - 1){
-        last = acc->cpu_diff()[acc->count()-1];
-      }
     }
     int push_time = diffs->push(msg);
     diffs->waitOutMsg(kServerGroup, push_time);
-    LL << "Worker diff("<< diffCount <<") pushed:[" << first <<"," << last << "]";
-    //clear previous diff
-    for(auto acc : diffBlobs){
-      memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
-    }
-    // clear diff count
-    diffCount = 0;
+    LL << "Worker diff pushed to server";
   }
 
   /**
