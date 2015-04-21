@@ -651,7 +651,16 @@ public:
       ostringstream name;
       name << "gatherDiff:solver.blobs[" << i << "]";
 //      checkNAN(blob->count(), blob->cpu_diff(), name.str());
-      caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
+      switch (Caffe::mode()) {
+        case Caffe::CPU:
+          caffe::caffe_add(acc->count(), blob->cpu_diff(), acc->cpu_diff(), acc->mutable_cpu_diff());
+          break;
+        case Caffe::GPU:
+          caffe::caffe_gpu_add(acc->count(), blob->gpu_diff(), acc->gpu_diff(), acc->mutable_gpu_diff());
+          break;
+        default:
+          LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+      }
     }
     diffCount++;
     if(diffCount >= FLAGS_pushstep) {
