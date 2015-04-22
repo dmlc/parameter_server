@@ -208,7 +208,6 @@ bool readFileToString(const std::string& file_name, std::string* output) {
   File* file = File::open(file_name, "r");
   if (file == NULL) return false;
   size_t size = file->size();
-  LOG(INFO)<<"size : "<<size;
   return (size <= file->readToString(output, size*100));
 }
 
