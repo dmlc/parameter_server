@@ -20,8 +20,45 @@ namespace PS {
 
 DECLARE_bool(verbose);
 
+#if USE_S3
+bool s3file(const std::string& name) {
+  return (name.size() > 5 && std::string(name.begin(), name.begin()+5) == "s3://");
+}
+std::string s3Prefix(const std::string& path) {
+  size_t pos = path.find('/',5);
+  return std::string(path.begin()+pos+1,path.end());
+}
+std::string s3Bucket(const std::string& path) {
+  size_t pos = path.find('/',5);
+  return std::string(path.begin()+5,path.begin()+pos);
+}
+
+std::string s3DirectoryUrl(const std::string& path) {
+  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/?prefix="+s3Prefix(path);
+  return str;
+}
+std::string s3FileUrl(const std::string& path) {
+  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/"+s3Prefix(path);
+  return str;
+}
+#endif // USE_S3
 File* File::open(const std::string& name, const char* const flag) {
   File* f;
+#if USE_S3
+  if (s3file(name)) {
+    if(strcmp(flag,"r")==0) {
+      std::string cmd = "curl -s -X GET "+s3FileUrl(name);
+      // .gz
+      if (gzfile(name)) {
+        cmd += " | gunzip";
+      }
+      FILE* des = popen(cmd.c_str(), "r");
+      CHECK(des);
+      f = new File(des, name);
+      return f;
+    }
+  }
+#endif // USE_S3
   if (name == "stdin") {
     f = new File(stdin, name);
   } else if (name == "stdout") {
@@ -51,28 +88,7 @@ File* File::openOrDie(const std::string& name, const char* const flag) {
   CHECK(f != NULL && f->open());
   return f;
 }
-#if USE_S3
-bool s3file(const std::string& name) {
-  return (name.size() > 5 && std::string(name.begin(), name.begin()+5) == "s3://");
-}
-std::string s3Prefix(const std::string& path) {
-  size_t pos = path.find('/',5);
-  return std::string(path.begin()+pos+1,path.end());
-}
-std::string s3Bucket(const std::string& path) {
-  size_t pos = path.find('/',5);
-  return std::string(path.begin()+5,path.begin()+pos);
-}
 
-std::string s3DirectoryUrl(const std::string& path) {
-  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/?prefix="+s3Prefix(path);
-  return str;
-}
-std::string s3FileUrl(const std::string& path) {
-  std::string str = "http://"+s3Bucket(path)+".s3.amazonaws.com/"+s3Prefix(path);
-  return str;
-}
-#endif // USE_S3
 File* File::open(const DataConfig& name,  const char* const flag) {
   CHECK_EQ(name.file_size(), 1);
   auto filename = name.file(0);
@@ -93,19 +109,6 @@ File* File::open(const DataConfig& name,  const char* const flag) {
     auto f = new File(des, filename);
     return f;
   }
-#if USE_S3
-  else if (s3file(filename)) {
-    std::string cmd = "curl -s -X GET "+s3FileUrl(filename);
-    // .gz
-    if (gzfile(filename)) {
-      cmd += " | gunzip";
-    }
-    FILE* des = popen(cmd.c_str(), "r");
-    CHECK(des);
-    auto f = new File(des, filename);
-    return f;
-  }
-#endif // USE_S3
   else {
     return open(filename, flag);
   }
@@ -122,6 +125,12 @@ size_t File::size(const std::string& name) {
     LL << "didn't implement how to get a gz file size";
     return 0;
   }
+#if USE_S3
+  if (s3file(name)) {
+    LL << "didn't implement how to get a s3 file size";
+    return 50;
+  }
+#endif // USE_S3
   struct stat f_stat;
   stat(name.c_str(), &f_stat);
   return f_stat.st_size;
@@ -199,6 +208,7 @@ bool readFileToString(const std::string& file_name, std::string* output) {
   File* file = File::open(file_name, "r");
   if (file == NULL) return false;
   size_t size = file->size();
+  LOG(INFO)<<"size : "<<size;
   return (size <= file->readToString(output, size*100));
 }
 
@@ -421,3 +431,4 @@ bool createDir(const std::string& dir) {
 }
 
 } // namespace PS
+
