@@ -150,8 +150,24 @@ void disableP2P(int numGPUs){
 
 class CaffeServer : public App, public VVListener<float>, public VVListener<char> {
  public:
-  CaffeServer(const string& name, const string& conf) : App(name) { }
-  virtual ~CaffeServer() { }
+  CaffeServer(const string& name, const string& conf) : App(name) {
+    diffBlobFront = new std::vector<Blob<float>*>(); // for accumulate
+    diffBlobBack = new std::vector<Blob<float>*>(); // for push
+    start_update = false;
+  }
+  virtual ~CaffeServer() {
+    for(auto blob : (*diffBlobFront)){
+      delete blob;
+    }
+    for(auto blob : (*diffBlobBack)){
+      delete blob;
+    }
+    for(auto blob : diffBlobs){
+      delete blob;
+    }
+    delete diffBlobFront;
+    delete diffBlobBack;
+  }
 
   virtual void init() {
     LL << myNodeID() << ", this is server " << myRank();
@@ -167,9 +183,17 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       weights->value(i).reset(blob->mutable_cpu_data(), blob->count(), false);
-      Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      auto newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      memset(newBlob->mutable_cpu_diff(), 0, newBlob->diff()->size());
+      diffBlobFront->push_back(newBlob);
+      newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      memset(newBlob->mutable_cpu_diff(), 0, newBlob->diff()->size());
+      diffBlobBack->push_back(newBlob);
+
+      newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      memset(newBlob->mutable_cpu_diff(), 0, newBlob->diff()->size());
       diffBlobs.push_back(newBlob);
-      diffs->value(i).reset(newBlob->mutable_cpu_diff(), newBlob->count(), false);
+      diffs->value(i).reset(diffBlobs[i]->mutable_cpu_diff(), diffBlobs[i]->count(), false);
       total_weight += blob->data()->size();
     }
 
@@ -189,7 +213,10 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
   void run() {
     LL << myNodeID() << ", server " << myRank() << " run()ing";
     while(true){
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      if(diffCount == 0){
+        waitUpdateSignal();
+      }
+      computeUpdate();
     }
     LL << myNodeID() << ", server " << myRank() << " over";
   }
@@ -203,21 +230,60 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
     }
   }
 
-  void vectorChanged(VVector<float>* data){
-//    LL << "vector change received:" << data->name();
-    CHECK_EQ(data, this->diffs) << "server only accept diff changes";
+  /**
+   * by run()
+   */
+  void waitUpdateSignal(){
+    std::unique_lock<std::mutex> l(mu_update);
+    while(!start_update){
+      cv_update.wait(l);
+    }
+  }
 
+  /**
+   * by run()
+   */
+  void signalUpdateEnd(){
+    std::unique_lock<std::mutex> l(mu_update);
+    start_update = false;
+    cv_update.notify_all();
+  }
+
+  /**
+   * by vectorChanged()
+   */
+  void signalUpdate() {
+    std::unique_lock<std::mutex> l(mu_update);
+    start_update = true;
+    cv_update.notify_all();
+  }
+
+  /**
+   * by run()
+   */
+  void computeUpdate() {
+    int count = 1;
+    {
+      Lock l(mu_diff);
+      if(diffCount < 1){
+        LL << "no diff accumulated!";
+        return;
+      }
+      auto temp = diffBlobFront; diffBlobFront = diffBlobBack;diffBlobBack = temp;
+      LL << "diff (" << diffCount << ") swapped to back";
+      count = diffCount;
+      diffCount = 0;
+    }
     Lock l(mu_solver);
 //    float first,last, firstv, lastv;
     for (int i = 0; i < solver->net()->params().size();i++){
-      auto blob = solver->net()->params()[i];
-      float* dest = blob->mutable_cpu_diff();
-      auto src = diffs->value(i);
-      memcpy(dest, src.data(), blob->diff()->size());
-
+      auto dest = solver->net()->params()[i];
+      auto src = (*diffBlobBack)[i];
+      // clear diffBlobBack
+      memcpy(dest->mutable_cpu_diff(), src->cpu_diff(), dest->diff()->size());
       //scale down?
-      if(FLAGS_pushstep != 0){
-        caffe::caffe_scal(blob->count(), float(1.0 / FLAGS_pushstep), dest);
+      if(count > 1){
+        caffe::caffe_scal(dest->count(), float(1.0 / count), dest->mutable_cpu_diff());
       }
 /*      if(i==0){
     first=blob->cpu_diff()[0];
@@ -235,6 +301,25 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
     solver->net()->Update();
     solver->snapshotPhase();
     solver->stepEnd();
+
+    signalUpdateEnd();
+  }
+
+  void accumulateDiff() {
+    Lock l(mu_diff);
+    for(int i = 0; i < diffBlobFront->size();i++){
+      auto src = diffs->value(i);
+      auto dest = (*diffBlobFront)[i];
+      caffe::caffe_add(dest->count(), src.data(), dest->cpu_diff(), dest->mutable_cpu_diff());
+    }
+    diffCount++;
+    signalUpdate();
+  }
+
+  void vectorChanged(VVector<float>* data){
+//    LL << "vector change received:" << data->name();
+    CHECK_EQ(data, this->diffs) << "server only accept diff changes";
+    accumulateDiff();
 
  }
   void vectorChanged(VVector<char>* data){
@@ -284,11 +369,23 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
  private:
   VVector<char> *solver_states; // individual data ptr, solver state to initialize workers
   VVector<float> *weights; //share data ptr with solver->net->params->cpu_data
+
   VVector<float> *diffs; //individual data ptr with diffBlobs
-  std::vector<Blob<float>*> diffBlobs;
+  std::vector<Blob<float>*> diffBlobs; // for receiving from worker
+
+  std::mutex mu_diff; // protect change to diffBlobFront and diffCount
+  int diffCount; // how many diffBlobs accumulated in diffBlobFront
+  std::vector<Blob<float>*>* diffBlobFront; // for accumulating from diffBlobs
+
+  std::vector<Blob<float>*>* diffBlobBack; // for copying into solver
 
   std::mutex mu_solver;
   caffe::Solver<float>* solver;
+
+  std::mutex mu_update;
+  std::condition_variable cv_update;
+  bool start_update;
+
 };
 
 App* CreateServerNode(const std::string& conf) {
@@ -469,11 +566,11 @@ private:
   VVector<float> *weights;// individual data ptr, same order/size as solver->net->params
 
   std::mutex mu_diff;  //protect write to diffs diffCount
-  VVector<float> *diffs;// for accumulated diff, share memory with diffBlobs
+  VVector<float> *diffs;// for accumulated diff, share memory with diffBuffer (front/end)
   int diffCount; // accumulated diff count
 
-  std::vector<Blob<float>*> diffBlobs;
-  std::vector<Blob<float>*> diffBlobBuffer; // double buffer for diff push
+  std::vector<Blob<float>*>* diffBlobFront; // for accumulate
+  std::vector<Blob<float>*>* diffBlobBack; // for push
   caffe::Solver<float>* solver;
 
   std::unique_ptr<std::thread> pusher;
@@ -487,9 +584,18 @@ public:
   CaffeWorker(const string& name, const string& conf):App(name){
     weightVersion = 0;
     requestedVersion = 0;
+    diffBlobFront = new std::vector<Blob<float>*>();
+    diffBlobBack = new std::vector<Blob<float>*>();
   }
   ~CaffeWorker(){
-
+    for(auto blob : (*diffBlobFront)){
+      delete blob;
+    }
+    for(auto blob : (*diffBlobBack)){
+      delete blob;
+    }
+    delete diffBlobFront;
+    delete diffBlobBack;
   }
 
   void init(){
@@ -504,11 +610,13 @@ public:
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       weights->value(i).resize(blob->count());
-      Blob<float>* newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
-      diffBlobs.push_back(newBlob);
+      auto newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
+      memset(newBlob->mutable_cpu_diff(), 0, newBlob->diff()->size());
+      diffBlobFront->push_back(newBlob);
       newBlob = new Blob<float>(blob->num(), blob->channels(), blob->height(), blob->width());
-      diffBlobBuffer.push_back(newBlob);
-      diffs->value(i).reset(diffBlobBuffer[i]->mutable_cpu_diff(), diffBlobBuffer[i]->count(), false);
+      memset(newBlob->mutable_cpu_diff(), 0, newBlob->diff()->size());
+      diffBlobBack->push_back(newBlob);
+      diffs->value(i).reset((*diffBlobBack)[i]->mutable_cpu_diff(), (*diffBlobBack)[i]->count(), false);
     }
 
     //init pusher/puller
@@ -579,6 +687,7 @@ public:
 
   void pusherMain(){
     LL << "pusher start";
+    CUDA_CHECK(cudaSetDevice(0));
     while(true){
       waitPushSignal();
       pushDiff();
@@ -680,7 +789,7 @@ public:
   void gatherDiff(Solver<float>* another) {
     Lock l(mu_diff);
     for(int i = 0; i < another->net()->params().size(); i++){
-      auto acc = diffBlobs[i];
+      auto acc = (*diffBlobFront)[i];
       auto blob = another->net()->params()[i];
       ostringstream name;
       name << "gatherDiff:solver.blobs[" << i << "]";
@@ -711,30 +820,22 @@ public:
       // copy diff to diffBuffer
       Lock l(mu_diff);
       float first, last;
-      for(int i = 0; i < diffBlobs.size(); i++){
-        Blob<float>* src = diffBlobs[i];
-        Blob<float>* dest = diffBlobBuffer[i];
-        memcpy(dest->mutable_cpu_diff(), src->cpu_diff(), src->diff()->size());
-        if(i == 0){
-          first = dest->cpu_diff()[0];
-        }else if(i == diffs->vcount() - 1){
-          last = dest->cpu_diff()[dest->count()-1];
-        }
-      }
-      //clear previous diff
-      for(auto acc : diffBlobs){
-        memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
-      }
-      LL << "Worker diff("<< diffCount <<") copied to buffer:[" << first <<"," << last << "]";
+      auto temp = diffBlobFront; diffBlobFront = diffBlobBack; diffBlobBack = temp; // for accumulate
+      LL << "Worker diff("<< diffCount <<") swapped to back";
       // clear diff count
       diffCount = 0;
+    }
+    // reset diffs Vector pointer; sync blob diff to cpu
+    for(int i = 0; i < diffBlobBack->size(); i++){
+      auto blob = (*diffBlobBack)[i];
+      diffs->value(i).reset(blob->mutable_cpu_diff(), blob->count(), false);
     }
     //push to app instead of
     MessagePtr msg(new Message(kServerGroup));
     msg->key = {0};
     msg->task.set_key_channel(0);
     for(int i = 0; i < diffs->vcount();i++){
-      auto acc = diffBlobBuffer[i];
+      auto acc = (*diffBlobBack)[i];
       acc->cpu_diff(); // sync to cpu
       auto diff = diffs->value(i);
       CHECK_EQ(acc->cpu_diff(), diff.data());
@@ -742,6 +843,11 @@ public:
     }
     int push_time = diffs->push(msg);
     diffs->waitOutMsg(kServerGroup, push_time);
+    //clear previous diff
+    for(auto acc : (*diffBlobBack)){
+      memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
+    }
+
     LL << "Worker diff pushed to server";
   }
 
