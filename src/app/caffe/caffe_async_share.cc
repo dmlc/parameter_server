@@ -504,7 +504,7 @@ public:
       t5 = tick(&tv);
       // bypass all of computeUpdateValue
       solver->stepEnd();
-      LL << "tryCopyWeight\t"<< (t1-t0)
+      LL << "# " << id << "\ttryCopyWeight\t"<< (t1-t0)
               << "\ttestPhase\t"<< (t2-t1)
               << "\tforwardBackward\t"<< (t3-t2)
               << "\taccumulateDiff\t"<< (t4-t3)
