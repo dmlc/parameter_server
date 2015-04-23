@@ -845,7 +845,14 @@ public:
     diffs->waitOutMsg(kServerGroup, push_time);
     //clear previous diff
     for(auto acc : (*diffBlobBack)){
-      memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
+      switch(Caffe::mode()){
+        case Caffe::CPU:
+          memset(acc->mutable_cpu_diff(), 0, acc->diff()->size());
+          break;
+        case Caffe::GPU:
+          caffe_gpu_set(acc->count(), (float)0, acc->mutable_gpu_diff());
+          break;
+      }
     }
 
     LL << "Worker diff pushed to server";
