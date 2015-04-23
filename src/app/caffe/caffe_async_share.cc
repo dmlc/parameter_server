@@ -467,11 +467,6 @@ public:
 
   void accumulateDiff();
 
-  inline unsigned long long tick(struct timeval* tv) {
-    gettimeofday(tv, NULL);
-    return tv->tv_sec * 1000000 + tv->tv_usec;
-  }
-
   void start() {
     struct timeval tv;
     unsigned long long t0,t1,t2, t3, t4, t5;
@@ -787,7 +782,11 @@ public:
    * by forwarder
    */
   void gatherDiff(Solver<float>* another) {
+    struct timeval tv;
+    unsigned long long t0,t1,t2, t3, t4, t5;
+    t0 = tick(&tv);
     Lock l(mu_diff);
+    t1 = tick(&tv);
     for(int i = 0; i < another->net()->params().size(); i++){
       auto acc = (*diffBlobFront)[i];
       auto blob = another->net()->params()[i];
@@ -809,6 +808,10 @@ public:
     diffCount++;
     if(diffCount >= FLAGS_pushstep) {
       signalPush();
+    }
+    t2 = tick(&tv);
+    if(t2 - t0 > 100000){
+      LL << "long accumulate diff:\tlock\t" << (t1-t0) << "\tadd\t" << (t2-t1);
     }
   }
 

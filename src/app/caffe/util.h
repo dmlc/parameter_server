@@ -30,4 +30,9 @@ void checkNAN(int count, const float* data, string blobName){
   }
 }
 
+inline unsigned long long tick(struct timeval* tv) {
+  gettimeofday(tv, NULL);
+  return tv->tv_sec * 1000000 + tv->tv_usec;
+}
+
 #endif /* SRC_APP_CAFFE_UTIL_H_ */
