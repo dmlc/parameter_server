@@ -302,6 +302,9 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
     solver->snapshotPhase();
     solver->stepEnd();
 
+    for (auto blob : (*diffBlobBack)){
+      memset(blob->mutable_cpu_diff(), 0, blob->diff()->size());
+    }
     signalUpdateEnd();
   }
 
