@@ -118,12 +118,12 @@ void KVMap<K,V,E,S>::WriteToFile(std::string file) {
 #if USE_S3
   if (s3file(s3_file)) {
     // upload model
-    std::string cmd = "curl -s -X PUT '"+s3FileUrl(s3_file)+"?Content-Length="
-    +std::to_string(File::size(file))+"&x-amz-acl=public-read' --data @"+file;
+    std::string cmd = "curl -s '"+s3FileUrl(s3_file)+"?Content-Length="
+    +std::to_string(File::size(file))+"&x-amz-acl=public-read' --upload-file "+file;
     LOG(INFO)<<cmd;
     system(cmd.c_str());
     // remove local model
-    cmd="rm -rf "+getPath(file);
+    cmd="rm -rf "+file;
     system(cmd.c_str());
   }
 #endif // USE_S3

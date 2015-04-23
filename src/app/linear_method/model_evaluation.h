@@ -3,6 +3,15 @@
 #include "data/stream_reader.h"
 #include "util/evaluation.h"
 namespace PS {
+
+#if USE_S3
+bool s3file(const std::string& name);
+std::string s3Prefix(const std::string& path);
+std::string s3Bucket(const std::string& path);
+std::string s3FileUrl(const std::string& path);
+#endif // USE_S3
+
+
 namespace LM {
 
 class ModelEvaluation : public App {
@@ -22,13 +31,32 @@ void ModelEvaluation::Run() {
   auto model = searchFiles(conf_.model_input());
   NOTICE("find %d model files", model.file_size());
   for (int i = 0; i < model.file_size(); ++i) {
+#if USE_S3
+    std::ifstream in;
+    if (s3file(model.file(i))) {
+      // download file from s3
+      std::string cmd="curl -s -o model_file "+s3FileUrl(model.file(i));
+      LOG(INFO)<<cmd;
+      system(cmd.c_str());
+      in.open("model_file"); 
+    }
+    else {
+      in.open(model.file(i));
+    }
+#else
     std::ifstream in(model.file(i));
+#endif // USE_S3
     while (in.good()) {
       Key k; Real v;
       in >> k >> v;
       weight[k] = v;
     }
   }
+#if USE_S3
+ // remove local model after read done
+ std::string cmd="rm -rf model_file";
+ system(cmd.c_str());
+#endif // USE_S3
 
   NOTICE("load %lu model entries", weight.size());
 
