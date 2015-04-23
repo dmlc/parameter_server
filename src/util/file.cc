@@ -127,7 +127,7 @@ size_t File::size(const std::string& name) {
   }
 #if USE_S3
   if (s3file(name)) {
-    LL << "didn't implement how to get a s3 file size";
+    LOG(INFO) << "didn't implement how to get a s3 file size";
     return 50;
   }
 #endif // USE_S3

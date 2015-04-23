@@ -89,9 +89,23 @@ void KVMap<K,V,E,S>::SetValue(const Message* msg) {
   }
   state_.Update();
 }
+#if USE_S3
+bool s3file(const std::string& name);
+std::string s3Prefix(const std::string& path);
+std::string s3Bucket(const std::string& path);
+std::string s3FileUrl(const std::string& path);
+#endif // USE_S3
 
 template <typename K, typename V, typename E, typename S>
 void KVMap<K,V,E,S>::WriteToFile(std::string file) {
+#if USE_S3
+  std::string s3_file;
+  if (s3file(file)) {
+    s3_file=file;
+    // create a local model dir
+    file=s3Prefix(s3_file);
+  }
+#endif // USE_S3
   if (!dirExists(getPath(file))) {
     createDir(getPath(file));
   }
@@ -101,6 +115,18 @@ void KVMap<K,V,E,S>::WriteToFile(std::string file) {
     e.second.Get(&v, &state_);
     if (v != 0) out << e.first << "\t" << v << std::endl;
   }
+#if USE_S3
+  if (s3file(s3_file)) {
+    // upload model
+    std::string cmd = "curl -s -X PUT '"+s3FileUrl(s3_file)+"?Content-Length="
+    +std::to_string(File::size(file))+"&x-amz-acl=public-read' --data @"+file;
+    LOG(INFO)<<cmd;
+    system(cmd.c_str());
+    // remove local model
+    cmd="rm -rf "+getPath(file);
+    system(cmd.c_str());
+  }
+#endif // USE_S3
 }
 
 
