@@ -39,14 +39,16 @@ args=$@
 
 # stop all running containers
 echo "cleaning previous apps ..."
+eval "`docker-machine env --swarm $manager`"
 clean_list=`docker ps -q`
 docker stop $clean_list > /dev/null 2>&1
+echo "update parameter server image cluster wide ..."
+docker pull $image
 
 
 # launch scheduler
 echo "launching scheduler ..."
 eval "`docker-machine env $manager`"
-docker pull $image
 scheduler_port=8000
 env="\
     -e cloud_provider=$cloud_provider \
@@ -66,7 +68,6 @@ docker run -d -p $scheduler_port:$scheduler_port $env -e "args=$args" --name n0 
 #launch servers and workers
 echo "launching workers and servers ..."
 eval "`docker-machine env --swarm $manager`"
-docker pull $image
 for (( i = 1; i < $num_servers + $num_workers + 1; ++i )); do
     my_port=$(($scheduler_port + $i))
     if (( $i <= $num_servers )); then

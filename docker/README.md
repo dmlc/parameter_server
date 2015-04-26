@@ -26,7 +26,7 @@ Other than parameter server itself, this readme will also guild you step by step
 
 ## Bring up a docker swarm cluster
 
-Parameter Server Cloud can run on both mac and linux system. This example shows how to run on **mac**. Before the next steps please check again your computer **has docker installed and started**. You can check it by running.
+Before the next steps please check again your computer **has docker installed and started**. You can check it by running.
 ```bash
 docker version
 ```
@@ -37,7 +37,7 @@ Currently we only support cloud provider amazonec2(and spot instances). This exa
 cd docker
 ./fire_amazonec2.sh 3 c4.xlarge spot 0.08 <amazonec2-access-key> <amazonec2-secret-key> us-west-1 vpc-3c3de859 default b  
 ```
-This command will first clone docker-machine if you haven't it installed. Then it will use docker-machine to launch a docker-swarm master with 3 c4.xlarge Ubuntu 14.04 LTS spot instances bidding at $0.08, one as master, two as slaves. This fire_amazonec2.sh is just a template. To change the AMI please run "docker-machine create --help" and change the aws related parameters in fire_amazonec2.sh. For further info about docker-machine please look at [docker machine repository](https://github.com/docker/machine)
+This command will first clone and install right version of docker-machine according to your OS if you haven't it installed. Then it will use docker-machine to launch a docker-swarm master with 3 c4.xlarge Ubuntu 14.04 LTS spot instances bidding at $0.08, one as master, two as slaves. This fire_amazonec2.sh is just a template. To change the AMI please run "docker-machine create --help" and change the aws related parameters in fire_amazonec2.sh. For further info about docker-machine please look at [docker machine repository](https://github.com/docker/machine)
 
 Please wait for 5 minutes for the spot request fullfillment. If you want to save time, just change "spot" to "regular".
 
@@ -127,6 +127,9 @@ Then every node of your cluster will pull the newest version of your image, and 
 We have a special name n0 for scheduler. You can see the log of scheduler by running:
 
 ```bash
+#point docker client to your swarm manager
+eval "$(docker-machine env --swarm swarm-master)"
+#see the log of scheduler
 docker logs n0
 #you will see training iterations like
 #...
@@ -151,6 +154,7 @@ You can see your model at the s3 address you provide in your config file:
 Still you can see the evaluation result from the log of scheduler:
 
 ```bash
+eval "$(docker-machine env --swarm swarm-master)"
 docker logs n0
 [0426 15:57:49.845 manager.cc:33] Staring system. Logging into /tmp/linear.log.*
 [0426 15:57:49.919 model_evaluation.h:32] find 2 model files
@@ -175,8 +179,18 @@ The reason might be you forget to open the list and upload permission of your pa
 
 The reason might be your workers and servers scheduled on different machines can not talk to each other. You should check whether you have enabled traffic within your security group.
 
-**4. Why I wait for so long but cannot get all instances from amazon?**
+**4. Why parameter server get stuch when compiling in container after running build.sh?**
+
+You may request too poor machines to build the container such as t2.micro.
+
+**5. Why I wait for so long but cannot get all instances from amazon?**
 
 If you are using spot instances, you should go to aws console to see what's the problem with your spot requests. Your price might be too low or there are not enough machines.
+
+**6. Why I get the message "please point your docker client to the right docker server!" when running fire_amazonec2.sh?**
+
+You haven't started docker or haven't pointed to the right machine with docker installed. To check this, run docker version. 
+
+
 
 

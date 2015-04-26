@@ -4,12 +4,26 @@ if [[ $# -lt 10 ]]; then
     exit -1
 fi
 
+echo "check whether docker is ready ..."
+docker version
+if [[ $? = 1 ]]; then
+	echo "please point your docker client to the right docker server!"
+	exit -1
+fi
+
 if [[ ! `which docker-machine` ]]; then
 	rm -rf machine
 	git clone https://github.com/docker/machine
 	cd machine
-	script/build -osarch="darwin/amd64"
-	mv docker-machine_darwin* /usr/local/bin/docker-machine
+	# check platform
+	platform=`uname`
+    if [[ $platform = 'Darwin' ]];then
+    	platform='darwin'
+    else
+	    platform='linux'
+    fi
+	script/build -osarch="$platform/amd64"
+	mv docker-machine_$platform* /usr/local/bin/docker-machine
 	cd ..
 	rm -rf machine
 fi
