@@ -179,9 +179,9 @@ The reason might be you forget to open the list and upload permission of your pa
 
 The reason might be your workers and servers scheduled on different machines can not talk to each other. You should check whether you have enabled traffic within your security group.
 
-**4. Why parameter server get stuch when compiling in container after running build.sh?**
+**4. Why parameter server get stuck when compiling in container after running build.sh?**
 
-You may request too poor machines to build the container such as t2.micro.
+You may request too poor machines such as t2.micro to build the container.
 
 **5. Why I wait for so long but cannot get all instances from amazon?**
 
