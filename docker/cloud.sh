@@ -11,9 +11,10 @@ shift
 manager=$1
 shift
 
+mount="-v /tmp/parameter_server/data/cache:/home/parameter_server/data/cache"
 case $cloud_provider in
     amazonec2) 
-        mount="-v /var/log/cloud-init.log:/var/log/cloud-init.log"
+        mount="$mount -v /var/log/cloud-init.log:/var/log/cloud-init.log"
         scheduler_host=`docker-machine ssh $manager cat /var/log/cloud-init.log | awk '/update hostname/ {print $10}'`
     ;;
     *) 

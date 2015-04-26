@@ -10,6 +10,13 @@
 #include "util/localizer.h"
 #include "parameter/kv_vector.h"
 namespace PS {
+#if USE_S3
+bool s3file(const std::string& name);
+std::string s3Prefix(const std::string& path);
+std::string s3Bucket(const std::string& path);
+std::string s3FileUrl(const std::string& path);
+#endif // USE_S3
+
 
 /**
  * @brief The scheduler.
@@ -199,6 +206,14 @@ class BCDServer : public BCDCompNode<V> {
     if (output.format() == DataConfig::TEXT) {
       CHECK(output.file_size());
       std::string file = output.file(0) + "_" + MyNodeID();
+#if USE_S3
+      std::string s3_file;
+      if (s3file(file)) {
+        s3_file=file;
+        // create a local model dir
+        file=s3Prefix(s3_file);
+      }
+#endif // USE_S3
       if (!dirExists(getPath(file))) {
         createDir(getPath(file));
       }
@@ -213,7 +228,22 @@ class BCDServer : public BCDCompNode<V> {
           if (v != 0 && !(v != v)) out << key[i] << "\t" << v << "\n";
         }
       }
+#if USE_S3
+      if (s3file(s3_file)) {
+        // upload model
+        std::string cmd = "curl -s '"+s3FileUrl(s3_file)+"?Content-Length="
+        +std::to_string(File::size(file))+"&x-amz-acl=public-read' --upload-file "+file;
+        system(cmd.c_str());
+        // remove local model
+        cmd="rm -rf "+file;
+        system(cmd.c_str());
+        LI << MyNodeID() << " written the model to " << s3_file;
+      } else {
+        LI << MyNodeID() << " written the model to " << file;
+      }
+#else
       LI << MyNodeID() << " written the model to " << file;
+#endif // USE_S3
     }
   }
   USING_BCD_COMP_NODE;
