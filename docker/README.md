@@ -175,7 +175,7 @@ The reason might be you forget to open the list and upload permission of your pa
 
 The reason might be your workers and servers scheduled on different machines can not talk to each other. You should check whether you have enabled traffic within your security group.
 
-**4. Why I wait for so long but cannot get all instances from amazon?
+**4. Why I wait for so long but cannot get all instances from amazon?**
 
 If you are using spot instances, you should go to aws console to see what's the problem with your spot requests. Your price might be too low or there are not enough machines.
 
