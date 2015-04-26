@@ -14,5 +14,5 @@ repositories soon.
 - [Wiki](https://github.com/dmlc/parameter_server/wiki/)
 - How to [build](make/)
 - Examples
-  - [Linear method](example/linear)
+  - [Linear method](example/linear) [Linear method with Cloud](docker)
   - Deep neural network, see [CXXNET](https://github.com/dmlc/cxxnet) and [Minverva](https://github.com/minerva-developers/minerva)

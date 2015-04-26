@@ -1,6 +1,6 @@
-# Parameter Server Cloud
+# Parameter Server Cloud 
 
-Parameter Server Cloud runs workers and servers on cluster as docker containers managed by docker swarm, letting you develop, debug and scale up your machine learning applications in an easier way.
+Parameter Server Cloud runs workers and servers on cluster as docker containers managed by docker machine and docker swarm, letting you develop, debug and scale up your machine learning applications in an easier way without copying your data to each machine in your cluster, writing mpi/ssh, or compiling and running with strong OS and library dependencies.
 
 ## Requirements
 - A computer with [docker](https://www.docker.com/) installed. If it is Linux system, please ensure you can [run docker without sudo](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo) 
