@@ -1,11 +1,11 @@
 # Parameter Server Cloud 
 
-Parameter Server Cloud runs workers and servers on cluster as docker containers managed by docker machine and docker swarm, letting you develop, debug and scale up your machine learning applications in an easier way without copying your data to each machine in your cluster, writing mpi/ssh, or compiling and running with strong OS and library dependencies.
+Parameter Server Cloud runs workers and servers on cluster as [docker](https://github.com/docker/docker) containers managed by [docker machine](https://github.com/docker/machine) and [docker swarm](https://github.com/docker/swarm), letting you develop, debug and scale up your machine learning applications in an easier way without copying your data to each machine in your cluster, writing mpi/ssh, or compiling and running with strong OS and library dependencies.
 
 ## Requirements
 - A computer with [docker](https://www.docker.com/) installed. If it is Linux system, please ensure you can [run docker without sudo](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo) 
 - A [docker account](https://hub.docker.com/account/signup/) to enable push/pull containers to/from your dockerhub. 
-- Account to cloud providers (Currently support amazonec2)
+- Account to cloud providers (Currently support [amazonec2](http://aws.amazon.com/ec2/))
 
 Other than parameter server itself, this readme will also guild you step by step on the cloud providers in case you are not familiar with them.
 
@@ -102,7 +102,7 @@ Don't worry Parameter Server Cloud will create the model path for you even if it
  ./upload_s3.sh ../example/linear/ctr/eval_online.conf s3://qicongc-dev-bucket-ps/config/eval_online.conf
 ```
 
-Then your local config files given at 1st argument will be uploaded to the s3 paths given at 2nd argument and automatically granted public-read permission. Config file is different from data file, usually you want to change it frequently, so you may feel annoyed to use console update it and make it public again and again. This script will do all this for you. 
+Then your local config files given at 1st argument will be uploaded to the s3 paths given at 2nd argument and automatically granted public-read permission. Config file is different from data file that usually you want to change it frequently. So you may feel annoyed to use aws console to update it and make it public again and again. This script will do all these things for you. 
 
 Till now things about amazonec2 cloud are done. Let's launch our application.
 
@@ -114,7 +114,7 @@ vi ../make/config.mk
 # this will enable you to activate cloud function of parameter server
 ./build.sh swarm-master <your docker account>/parameter_server
 ```
-This command will copy the current source file and Makefile into a container on your swarm manager, compile the parameter server inside this container, and update it to your dockerhub. **For contributors** this is where you can compile your source code, build your container with no compiler/library dependencies. For further information please refer to the Dockerfile. Also you can change swarm-master to any name of machine in your "docker-machine ls".
+This command will copy the current source files and Makefiles into a container on your swarm manager, compile the parameter server inside this container, and update it to your dockerhub. **For contributors** this is where you can compile your source code, build your container with no compiler/library dependencies. For further information please refer to the Dockerfile. Also you can change swarm-master to any name of machine in your "docker-machine ls".
 
 ### Train your model
 ```bash
@@ -165,6 +165,12 @@ docker logs n0
 [0426 15:57:52.015 model_evaluation.h:105] accuracy: 0.608441
 [0426 15:57:52.015 model_evaluation.h:106] logloss: 0.657620
 ```
+
+### Safely shut down your 3-nodes swarm cluster
+```bash
+./shut.sh 3
+```
+
 
 ##Debugging FAQ:
 **1. Why in the scheduler of the log it says "failed to parse conf" or "find 0 data files"?**
