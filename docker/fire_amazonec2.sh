@@ -24,10 +24,14 @@ if [[ $1 = 'spot' ]]; then
 	shift
 	amazonec2_request_spot_instance="--amazonec2-request-spot-instance --amazonec2-spot-price $1"
 	shift
-elif [[ $1 != 'regular' ]]; then
+elif [[ $1 = 'regular' ]]; then
+	shift
+	shift
+else
 	echo "Currently only support regular and spot, but get $1."
 	exit -1
 fi
+
 
 
 amazonec2_access_key=$1
