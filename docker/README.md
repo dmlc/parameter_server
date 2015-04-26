@@ -190,7 +190,7 @@ file: "data/cache/ctr_train_"
 ...
 
 ```
-Parameter Server Cloud currently only supports the cache under data/cache/, which means you should fix your cache path as data/cache\<prefix\> as above. We do this to free users from dealing with docker volume mapping themselves. Advanced docker users can try to modify the cache volume mapping in cloud.sh. After also changing the paths of eval_batch.conf, you can upload these config files and train/test your model:
+Parameter Server Cloud currently only supports the cache under data/cache/, which means you should fix your cache path as data/cache/\<prefix\> as above. We do this to free users from dealing with docker volume mapping themselves. Advanced docker users can try to modify the cache volume mapping in cloud.sh. After also changing the paths of eval_batch.conf, you can upload these config files and train/test your model:
 ```bash
 ./upload_s3.sh ../example/linear/ctr/batch_l1lr.conf s3://qicongc-dev-bucket-ps/config/batch_l1lr.conf
 ./upload_s3.sh ../example/linear/ctr/eval_batch.conf s3://qicongc-dev-bucket-ps/config/eval_batch.conf
