@@ -156,15 +156,64 @@ Still you can see the evaluation result from the log of scheduler:
 ```bash
 eval "$(docker-machine env --swarm swarm-master)"
 docker logs n0
-[0426 15:57:49.845 manager.cc:33] Staring system. Logging into /tmp/linear.log.*
-[0426 15:57:49.919 model_evaluation.h:32] find 2 model files
-[0426 15:57:50.442 model_evaluation.h:61] load 303554 model entries
-[0426 15:57:50.479 model_evaluation.h:66] find 4 data files
-  load 31275 examples                        
-[0426 15:57:52.012 model_evaluation.h:104] auc: 0.651429
-[0426 15:57:52.015 model_evaluation.h:105] accuracy: 0.608441
-[0426 15:57:52.015 model_evaluation.h:106] logloss: 0.657620
+#[0426 15:57:49.845 manager.cc:33] Staring system. Logging into /tmp/linear.log.*
+#[0426 15:57:49.919 model_evaluation.h:32] find 2 model files
+#[0426 15:57:50.442 model_evaluation.h:61] load 303554 model entries
+#[0426 15:57:50.479 model_evaluation.h:66] find 4 data files
+#  load 31275 examples                        
+#[0426 15:57:52.012 model_evaluation.h:104] auc: 0.651429
+#[0426 15:57:52.015 model_evaluation.h:105] accuracy: 0.608441
+#[0426 15:57:52.015 model_evaluation.h:106] logloss: 0.657620
 ```
+
+### Using cache
+If you are running batch algorithms, you can cache your data on the machines of your swarm cluster. You should modify paths of training data and model output to s3 path, while leaving local cache as local path:
+```bash
+training_data {
+format: TEXT
+text: SPARSE_BINARY
+file: "s3://qicongc-dev-bucket-ps/data/ctr/train/part.*"
+}
+
+model_output {
+format: TEXT
+file: "s3://qicongc-dev-bucket-ps/model/ctr_batch"
+}
+
+...
+
+local_cache {
+format: BIN
+file: "data/cache/ctr_train_"
+}
+
+...
+
+```
+Parameter Server Cloud currently only supports the cache under data/cache/, which means you should fix your cache path as data/cache\<prefix\> as above. We do this to free users from dealing with docker volume mapping themselves. Advanced docker users can try to modify the cache volume mapping in cloud.sh. After also changing the paths of eval_batch.conf, you can upload these config files and train/test your model:
+```bash
+./upload_s3.sh ../example/linear/ctr/batch_l1lr.conf s3://qicongc-dev-bucket-ps/config/batch_l1lr.conf
+./upload_s3.sh ../example/linear/ctr/eval_batch.conf s3://qicongc-dev-bucket-ps/config/eval_batch.conf
+./cloud.sh amazonec2 swarm-master <your docker account>/parameter_server 2 4 s3://qicongc-dev-bucket-ps/config/batch_l1lr.conf
+eval "$(docker-machine env --swarm swarm-master)"
+docker logs n0
+#[0426 23:29:36.590 manager.cc:33] Staring system. Logging into /tmp/linear.log.*
+#[0426 23:29:36.650 model_evaluation.h:32] find 2 model files
+#[0426 23:29:36.715 model_evaluation.h:61] load 829 model entries
+#[0426 23:29:36.737 model_evaluation.h:66] find 4 data files
+#  load 31275 examples                        
+#[0426 23:29:38.020 model_evaluation.h:104] auc: 0.666663
+#[0426 23:29:38.022 model_evaluation.h:105] accuracy: 0.622542
+#[0426 23:29:38.022 model_evaluation.h:106] logloss: 0.649341
+```
+To see your cached data:
+```bash
+docker-machine ssh swarm-node-0
+cd /tmp/parameter_server/data/cache
+```
+The data will be cached in /tmp/parameter_server/data/cache of each machine on your swarm cluster.
+
+
 
 ### Safely shut down your 3-nodes swarm cluster
 ```bash
