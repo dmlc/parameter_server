@@ -195,6 +195,7 @@ Parameter Server Cloud currently only supports the cache under data/cache/, whic
 ./upload_s3.sh ../example/linear/ctr/batch_l1lr.conf s3://qicongc-dev-bucket-ps/config/batch_l1lr.conf
 ./upload_s3.sh ../example/linear/ctr/eval_batch.conf s3://qicongc-dev-bucket-ps/config/eval_batch.conf
 ./cloud.sh amazonec2 swarm-master <your docker account>/parameter_server 2 4 s3://qicongc-dev-bucket-ps/config/batch_l1lr.conf
+./cloud.sh amazonec2 swarm-master <your docker account>/parameter_server 1 1 s3://qicongc-dev-bucket-ps/config/eval_batch.conf
 eval "$(docker-machine env --swarm swarm-master)"
 docker logs n0
 #[0426 23:29:36.590 manager.cc:33] Staring system. Logging into /tmp/linear.log.*
