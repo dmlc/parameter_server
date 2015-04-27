@@ -49,31 +49,14 @@ BEGIN{port=9600;id=0;}
 grep WORKER $conf | awk -v bin=$bin -v sch=$Sch -v nums=$num_servers -v numw=$num_workers -vpullstep=$pullstep -vpushstep=$pushstep -v q="'" '
 BEGIN{port=9500;id=0;}
 {
-    ip=$2;wd=$3;solver=$4;gpu=$5;
-    cmd="ssh -f -n immars@" ip " \"source /etc/profile && cd " wd " && nohup " bin " -num_servers " nums " -num_workers " numw " -my_node \\\"role:WORKER,hostname:" q ip q ",port:" port ",id:" q "W" id q "\\\" -scheduler \\\"" sch "\\\" --solver=" solver " --pullstep=" pullstep " --pushstep=" pushstep " --gpu=" gpu " >" wd "/stdout.txt 2>&1 < /dev/null &\" ";
+    ip=$2;wd=$3;solver=$4;gpu=$5;workers=$6;
+    if(""!=workers){
+        workers = " --workers=" workers;
+    }
+    cmd="ssh -f -n immars@" ip " \"source /etc/profile && cd " wd " && nohup " bin " -num_servers " nums " -num_workers " numw " -my_node \\\"role:WORKER,hostname:" q ip q ",port:" port ",id:" q "W" id q "\\\" -scheduler \\\"" sch "\\\" --solver=" solver " --pullstep=" pullstep " --pushstep=" pushstep " --synced=true --gpu=" gpu " " workers " >" wd "/stdout.txt 2>&1 < /dev/null &\" ";
     print cmd;
     system(cmd);
     port=port+1;id=id+1;
 }
 '
-
-
-for ((i=0; i<${num_servers}; ++i)); do
-    port=$((9600 + ${i}))
-    id=S${i}
-    N="role:SERVER,hostname:'127.0.0.1',port:${port},id:'${id}'"
-    # HEAPPROFILE=/tmp/S${i} \
-    # CPUPROFILE=/tmp/S${i} \
-#    cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &
-done
-
-# start workers
-for ((i=0; i<${num_workers}; ++i)); do
-    port=$((9500 + ${i}))
-    id=W${i}
-    N="role:WORKER,hostname:'127.0.0.1',port:${port},id:'${id}'"
-    # HEAPPROFILE=/tmp/W${i} \
-    # CPUPROFILE=/tmp/W${i} \
-#    cd $root_dir/$id/ && ${bin} -my_node ${N} -scheduler ${Sch} --solver=$solver ${arg} >$root_dir/$id/stdout.txt 2>&1 &
-done
 
