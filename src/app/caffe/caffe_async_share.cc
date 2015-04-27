@@ -102,6 +102,7 @@ caffe::Net<float>* initCaffeNet(){
 #define V_WEIGHT "weight"
 #define V_DIFF "diff"
 #define V_SOLVER "solver"
+#define V_ITER "iteration"
 namespace PS {
 
 static std::mutex mu_pwd;
@@ -179,7 +180,8 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
     weights = new VVector<float>(V_WEIGHT, true, this);
     diffs = new VVector<float>(V_DIFF, false, this);
     solver_states = new VVector<char>(V_SOLVER, true, this);
-
+    iterations = new VVector<int>(V_ITER, true, nullptr);
+    iterations->value(0) = {solver->iter()};
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       weights->value(i).reset(blob->mutable_cpu_data(), blob->count(), false);
@@ -385,6 +387,8 @@ class CaffeServer : public App, public VVListener<float>, public VVListener<char
   std::mutex mu_solver;
   caffe::Solver<float>* solver;
 
+  VVector<int> *iterations;
+
   std::mutex mu_update;
   std::condition_variable cv_update;
   bool start_update;
@@ -470,6 +474,8 @@ public:
 
   void accumulateDiff();
 
+  void pullIterations();
+
   void start() {
     struct timeval tv;
     unsigned long long t0,t1,t2, t3, t4, t5;
@@ -482,6 +488,7 @@ public:
     waitForwardSignal();
     LL << "start() forward signal received";
     copyWeight();
+    pullIterations();
     for (int i = 0; i < iter; i++) {
       t0 = tick(&tv);
       tryCopyWeight();
@@ -572,6 +579,8 @@ private:
   std::vector<Blob<float>*>* diffBlobBack; // for push
   caffe::Solver<float>* solver;
 
+  VVector<int>* iterations;
+
   std::unique_ptr<std::thread> pusher;
   std::unique_ptr<std::thread> puller;
 
@@ -605,7 +614,8 @@ public:
     //init shared parameter at worker
     weights = new VVector<float>(V_WEIGHT);
     diffs = new VVector<float>(V_DIFF);
-
+    iterations = new VVector<int>(V_ITER);
+    iterations->value(0) = {0};
     for (int i = 0; i < solver->net()->params().size();i++){
       auto blob = solver->net()->params()[i];
       weights->value(i).resize(blob->count());
@@ -889,6 +899,21 @@ public:
   }
 
   /**
+   * by main
+   */
+  void pullIterations(Solver<float>* another) {
+    MessagePtr msg(new Message(kServerGroup));
+    msg->key = {0};
+    int pull_time = iterations->pull(msg);
+    iterations->waitOutMsg(kServerGroup, pull_time);
+    Lock l(mu_weight);
+    SArray<int>src = iterations->value(0);
+    LL << "iteration got: " << src.size() << "," << src[0];
+    another->setIter(src[0]);
+  }
+
+
+  /**
    * by forwarder
    */
   void copyWeight(Solver<float>* another, int* version){
@@ -950,6 +975,10 @@ void NetForwarder::tryCopyWeight() {
 
 void NetForwarder::accumulateDiff(){
   this->worker->gatherDiff(this->solver);
+}
+
+void NetForwarder::pullIterations(){
+  this->worker->pullIterations(this->solver);
 }
 
 } // namespace PS
