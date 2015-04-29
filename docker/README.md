@@ -37,7 +37,7 @@ Currently we only support cloud provider amazonec2(and spot instances). This exa
 cd docker
 ./fire_amazonec2.sh 3 c4.xlarge spot 0.08 <amazonec2-access-key> <amazonec2-secret-key> us-west-1 vpc-3c3de859 default b  
 ```
-This command will first clone and install right version of docker-machine according to your OS if you haven't it installed. Then it will use docker-machine to launch a docker-swarm master with 3 c4.xlarge Ubuntu 14.04 LTS spot instances bidding at $0.08, one as master, two as slaves. This fire_amazonec2.sh is just a template. To change the AMI please run "docker-machine create --help" and change the aws related parameters in fire_amazonec2.sh. For further info about docker-machine please look at [docker machine repository](https://github.com/docker/machine)
+This command will first clone and install right version of docker-machine according to your OS if you haven't it installed. Then it will use docker-machine to launch a docker-swarm cluster with 3 c4.xlarge Ubuntu 14.04 LTS spot instances bidding at $0.08, one as master, two as slaves. This fire_amazonec2.sh is just a template. To change the AMI please run "docker-machine create --help" and change the aws related parameters in fire_amazonec2.sh. For further info about docker-machine please look at [docker machine repository](https://github.com/docker/machine)
 
 Please wait for 5 minutes for the spot request fullfillment. If you want to save time, just change "spot" to "regular".
 
