@@ -10,8 +10,8 @@ for (( i = 0; i < n-1; i++ )); do
 	docker-machine stop swarm-node-$i > /dev/null 2>&1 &
 done
 wait
-docker-machine rm swarm-master &
+docker-machine rm -f swarm-master &
 for (( i = 0; i < n-1; i++ )); do
-	docker-machine rm swarm-node-$i &
+	docker-machine rm -f swarm-node-$i &
 done
 wait

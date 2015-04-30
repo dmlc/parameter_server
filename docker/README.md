@@ -3,7 +3,7 @@
 Parameter Server Cloud runs workers and servers on cluster as [docker](https://github.com/docker/docker) containers managed by [docker machine](https://github.com/docker/machine) and [docker swarm](https://github.com/docker/swarm), letting you develop, debug and scale up your machine learning applications in an easier way without copying your data to each machine in your cluster, writing mpi/ssh, or compiling and running with strong OS and library dependencies.
 
 ## Requirements
-- A computer with [docker](https://www.docker.com/) installed. If it is Linux system, please ensure you can [run docker without sudo](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo) 
+- A computer with [docker](https://www.docker.com/) installed. If you are using MAC, we recommend to install the command line docker [boot2docker](https://github.com/boot2docker/osx-installer/releases/tag/v1.6.0). If it is Linux system, please ensure you can [run docker without sudo](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo) 
 - A [docker account](https://hub.docker.com/account/signup/) to enable push/pull containers to/from your dockerhub. 
 - Account to cloud providers (Currently support [amazonec2](http://aws.amazon.com/ec2/))
 
@@ -26,9 +26,20 @@ Other than parameter server itself, this readme will also guild you step by step
 
 ## Bring up a docker swarm cluster
 
-Before the next steps please check again your computer **has docker installed and started**. You can check it by running.
+Before the next steps please check again your computer **has docker installed and started**.
+
+You can start docker by:
 ```bash
+boot2docker start
+#you should see something like:
+#To connect the Docker client to the Docker daemon, please set:
+#    export DOCKER_TLS_VERIFY=1
+#    export DOCKER_HOST=tcp://192.168.59.103:2376
+#    export DOCKER_CERT_PATH=/Users/yuchenluo/.boot2docker/certs/boot2docker-vm
+
+#please copy and run those three export commands, then run
 docker version
+#if no error, you succeed to start docker!
 ```
 
 Currently we only support cloud provider amazonec2(and spot instances). This example will go through the running process on ec2 spot instances for a cheaper test. If you want to save time, just change "spot" to "regular" later when running fire_amazonec2.sh.
@@ -225,11 +236,11 @@ The data will be cached in /tmp/parameter_server/data/cache of each machine on y
 ##Debugging FAQ:
 **1. Why in the scheduler of the log it says "failed to parse conf" or "find 0 data files"?**
 
-The reason might be you forget to make your data and config public. This can be done by either make it public on the s3 console or upload it with our upload_s3.sh script. And we strongly recommend you to revoke the permission right after you finish your experiments. We will support signature soon.
+The reason might be you forget to make your data and config public. This can be done by either making it public on the s3 console or uploading it with our upload_s3.sh script. And we strongly recommend you to revoke the permission right after you finish your experiments. We will support signature soon.
 
 **2. Why I cannot see my model, my config file on s3?**
 
-The reason might be you forget to open the list and upload permission of your parameter server s3 bucket. This can be done by go to the root directory of your bucket, click Properties->Permissions, tick the List and Upload permission to everyone. We strongly recommend you to revoke the permission right after you finish your experiments.
+The reason might be you forget to open the list and upload permission of your parameter server s3 bucket. This can be done by going to the root directory of your bucket, clicking Properties->Permissions, ticking the List and Upload permission to everyone. We strongly recommend you to revoke the permission right after you finish your experiments.
 
 **3. Why my parameter server application get stuck?**
 
@@ -245,8 +256,23 @@ If you are using spot instances, you should go to aws console to see what's the 
 
 **6. Why I get the message "please point your docker client to the right docker server!" when running fire_amazonec2.sh?**
 
-You haven't started docker or haven't pointed to the right machine with docker installed. To check this, run docker version. 
+You haven't started docker or haven't pointed to the right machine with docker installed. To check this, run "docker version". If you are mac boot2docker user and get an error from "docker version", you can quickly reconnect to your docker daemon by running "boot2docker start" and copy&run those three export commands again.
 
+**7. Why after running fire_amazonec2.sh I get the message:**
+```bash
+ERRO[0000] Error creating machine: Machine swarm-node-1 already exists 
+WARN[0000] You will want to check the provider to make sure the machine and associated resources were properly removed. 
+FATA[0000] Error creating machine                       
+ERRO[0000] Error creating machine: Machine swarm-master already exists 
+WARN[0000] You will want to check the provider to make sure the machine and associated resources were properly removed. 
+FATA[0000] Error creating machine                       
+ERRO[0000] Error creating machine: Machine swarm-node-0 already exists 
+WARN[0000] You will want to check the provider to make sure the machine and associated resources were properly removed. 
+FATA[0000] Error creating machine       
+```
+It is because last time you didn't use our script to safely shut down your ec2 machines, or you interrrupt the fire_amazonec2.sh launching process by ctrl+c/ctrl+z. You can recover in two steps:
+1)Running "./shut.sh 3"
+2)Go to aws console, in your target region manually cancel the related spot requests and instances, and delete related **key pairs**.  
 
 
 
