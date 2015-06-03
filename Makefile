@@ -1,6 +1,6 @@
 CC = g++
 
- OPT = -O0 -ggdb
+OPT = -O2 -ggdb
 
 THIRD_PATH=$(shell pwd)/third_party
 STATIC_THIRD_LIB=0
@@ -55,8 +55,8 @@ build/libminervaps.a: build/ps_main.o build/app/minerva/main.o build/app/minerva
 	@mkdir -p build/tmp/snappy; cd build/tmp/snappy; ar -x $(THIRD_PATH)/lib/libsnappy.a; cd -
 	ar -qc $@ $? build/tmp/gflags/*.o build/tmp/zmq/*.o build/tmp/protobuf/*.o build/tmp/glog/*.o build/tmp/z/*.o build/tmp/snappy/*.o
 
-#build/libminervaps.so: build/ps_main.o build/app/minerva/main.o build/app/minerva/minerva_ps.o $(sys_objs)
-#	$(CC) $(CFLAGS) $^ $(LDFLAGS) -shared -o $@
+build/libminervaps.so: build/ps_main.o build/app/minerva/main.o build/app/minerva/minerva_ps.o $(sys_objs)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -shared -o $@
 
 app_objs = $(addprefix build/app/, main/proto/app.pb.o linear_method/linear.o linear_method/proto/linear.pb.o)
 
