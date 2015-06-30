@@ -6,9 +6,7 @@ communications between worker machines and server machines. It also supports
 flexiable data consistency model, data filters, and flexiable server machine
 programming.
 
-NOTE: We are refactoring this repository in the lite branch, there is a simpler
-communication interface, and application codes will be moved to other DMLC
-repositories soon.
+NOTE: A new version is available at [ps-lite](https://github.com/dmlc/ps-lite)
 
 - [Document](doc/)
 - [Wiki](https://github.com/dmlc/parameter_server/wiki/)
