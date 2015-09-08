@@ -3,7 +3,7 @@
 The parameter server is a distributed system scaling to industry size machine
 learning problems. It provides asynchronous and zero-copy key-value pair
 communications between worker machines and server machines. It also supports
-flexiable data consistency model, data filters, and flexiable server machine
+flexible data consistency model, data filters, and flexible server machine
 programming.
 
 NOTE: A new version is available at [ps-lite](https://github.com/dmlc/ps-lite)
