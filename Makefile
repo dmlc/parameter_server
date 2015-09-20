@@ -18,11 +18,20 @@ endif
 
 WARN = -Wall -Wno-unused-function -finline-functions -Wno-sign-compare #-Wconversion
 INCPATH = -I./src -I$(THIRD_PATH)/include
+<<<<<<< HEAD
+CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH)
+LDFLAGS += $(THIRD_LIB) -lpthread
+OS := $(shell uname -s)
+ifeq ($(OS),Linux)
+	LFLAGS += -lrt
+endif
+=======
 CFLAGS = -std=c++0x $(WARN) $(OPT) $(INCPATH) $(EXTRA_CFLAGS)
 ifeq ($(USE_S3), 1)
 CFLAGS += -DUSE_S3=1
 endif
 LDFLAGS = $(EXTRA_LDFLAGS) $(THIRD_LIB) -lpthread # -lrt
+>>>>>>> upstream/master
 
 PS_LIB = build/libps.a
 PS_MAIN = build/libpsmain.a

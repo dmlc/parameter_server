@@ -3,7 +3,7 @@
 
 namespace PS {
 
-bool NodeIDCmp::operator()(const NodeID& a, const NodeID& b) {
+bool NodeIDCmp::operator()(const NodeID& a, const NodeID& b) const {
   string a_primary, a_secondary;
   splitNodeID(a, a_primary, a_secondary);
   string b_primary, b_secondary;
@@ -17,7 +17,7 @@ bool NodeIDCmp::operator()(const NodeID& a, const NodeID& b) {
   }
 }
 
-void NodeIDCmp::splitNodeID(const NodeID& in, string& primary, string& secondary) {
+void NodeIDCmp::splitNodeID(const NodeID& in, string& primary, string& secondary) const {
   size_t tailing_alpha_idx = in.find_last_not_of("0123456789");
   if (std::string::npos == tailing_alpha_idx) {
     primary = in;

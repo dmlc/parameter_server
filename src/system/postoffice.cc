@@ -115,6 +115,59 @@ void Postoffice::Recv() {
   }
 }
 
+<<<<<<< HEAD
+void Postoffice::manageNode(Task& tk) {
+  CHECK(tk.has_mng_node());
+  auto& mng = tk.mng_node();
+  switch (mng.cmd()) {
+    case ManageNode::CONNECT: {
+      CHECK(IamScheduler());
+      CHECK_EQ(mng.node_size(), 1);
+      // first add this node into app
+      Task add = tk;
+      add.set_customer(CHECK_NOTNULL(app_)->name());
+      add.mutable_mng_node()->set_cmd(ManageNode::ADD);
+      manageNode(add);
+      // create the app in this node
+      Task task;
+      task.set_request(true);
+      task.set_customer(app_->name());
+      task.set_type(Task::MANAGE);
+      task.set_time(1);
+      task.mutable_mng_app()->set_cmd(ManageApp::ADD);
+      task.mutable_mng_app()->set_conf(app_conf_);
+      app_->port(mng.node(0).id())->submit(task);
+      // check if all nodes are connected
+      if (yp().num_workers() >= FLAGS_num_workers &&
+          yp().num_servers() >= FLAGS_num_servers) {
+        nodes_are_ready_.set_value();
+      }
+      tk.set_customer(app_->name());  // otherwise the remote node doesn't know
+      // how to find the according customer
+      break;
+    }
+    case ManageNode::ADD:
+    case ManageNode::UPDATE: {
+      auto obj = yp().customer(tk.customer());
+      CHECK(obj) << "customer [" << tk.customer() << "] doesn't exists";
+      for (int i = 0; i < mng.node_size(); ++i) {
+        auto node = mng.node(i);
+        yp().addNode(node);
+        obj->exec().add(node);
+        for (auto c : yp().children(obj->name())) {
+          auto child = yp().customer(c);
+          if (child) child->exec().add(node);
+        }
+      }
+      break;
+    }
+    case ManageNode::REPLACE: {
+      break;
+    }
+    case ManageNode::REMOVE: {
+      break;
+    }
+=======
 bool Postoffice::Process(Message* msg) {
   if (!msg->task.request()) manager_.AddResponse(msg);
   // process this message
@@ -126,6 +179,7 @@ bool Postoffice::Process(Message* msg) {
     int id = msg->task.customer_id();
     // let the executor to delete "msg"
     manager_.customer(id)->executor()->Accept(msg);
+>>>>>>> upstream/master
   }
   return true;
 }
